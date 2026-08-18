@@ -63,7 +63,7 @@ public class GlobalConfigService {
                 "wx_pay_mch_id", "wx_pay_app_id", "wx_pay_api_key",
                 "wx_pay_enabled", "wx_pay_api_v3_key", "wx_pay_cert_path", "wx_pay_cert_serial",
                 "cross_store_return_percent", "test_pay_confirm_enabled",
-                "identity_qr_secret", "coupon_valid_days").contains(key)) {
+                "identity_qr_secret", "coupon_valid_days", "wx_pay_pub_key_id", "wx_pay_pub_key_path").contains(key)) {
             if ("wx_pay_enabled".equals(key) && !"0".equals(value) && !"1".equals(value)) {
                 throw new BizException("微信支付开关只能为 0 或 1");
             }

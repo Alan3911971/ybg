@@ -41,7 +41,7 @@ public class WxPayService {
             log.info("微信支付未开启(测试mock)，订单 {}", outTradeNo);
             return null;
         }
-        RSAAutoCertificateConfig config = buildConfig();
+        com.wechat.pay.java.core.Config config = buildConfig();
         NativePayService service = new NativePayService.Builder().config(config).build();
         PrepayRequest request = new PrepayRequest();
         request.setAppid(configService.get("wx_pay_app_id"));
@@ -70,7 +70,7 @@ public class WxPayService {
             return "NOTPAY";
         }
         try {
-            RSAAutoCertificateConfig config = buildConfig();
+            com.wechat.pay.java.core.Config config = buildConfig();
             NativePayService service = new NativePayService.Builder().config(config).build();
             com.wechat.pay.java.service.payments.nativepay.model.QueryOrderByOutTradeNoRequest q = new com.wechat.pay.java.service.payments.nativepay.model.QueryOrderByOutTradeNoRequest();
             q.setMchid(configService.get("wx_pay_mch_id"));
@@ -89,7 +89,7 @@ public class WxPayService {
             throw new BizException("微信支付未开启");
         }
         // RSAAutoCertificateConfig 直接实现 NotificationConfig，可作回调验签/解密配置
-        NotificationParser parser = new NotificationParser(buildConfig());
+        NotificationParser parser = new NotificationParser((com.wechat.pay.java.core.notification.NotificationConfig) buildConfig());
         RequestParam param = new RequestParam.Builder()
                 .serialNumber(wechatSerial)
                 .nonce(wechatNonce)
@@ -107,7 +107,7 @@ public class WxPayService {
         return "{\"code\":\"SUCCESS\"}";
     }
 
-    private RSAAutoCertificateConfig buildConfig() {
+    private com.wechat.pay.java.core.Config buildConfig() {
         String mchId = configService.get("wx_pay_mch_id", "");
         String appId = configService.get("wx_pay_app_id", "");
         String apiV3Key = configService.get("wx_pay_api_v3_key", "");
@@ -123,6 +123,20 @@ public class WxPayService {
             throw new BizException("商户证书读取失败: " + e.getMessage());
         }
         try {
+            // 公钥模式（微信新机制，绕过平台证书下载）：wx_pay_pub_key_id + wx_pay_pub_key_path 配置后优先
+            String pubKeyId = configService.get("wx_pay_pub_key_id", "");
+            String pubKeyPath = configService.get("wx_pay_pub_key_path", "");
+            if (!pubKeyId.isBlank() && !pubKeyPath.isBlank()) {
+                String pubKey = Files.readString(Paths.get(pubKeyPath));
+                return new com.wechat.pay.java.core.RSAPublicKeyConfig.Builder()
+                        .merchantId(mchId)
+                        .privateKey(privateKey)
+                        .merchantSerialNumber(certSerial)
+                        .publicKeyId(pubKeyId)
+                        .publicKey(pubKey)
+                        .apiV3Key(apiV3Key)
+                        .build();
+            }
             return new RSAAutoCertificateConfig.Builder()
                     .merchantId(mchId)
                     .privateKey(privateKey)
