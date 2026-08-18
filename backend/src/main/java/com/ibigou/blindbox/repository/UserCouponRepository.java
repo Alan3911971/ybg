@@ -27,6 +27,13 @@ public interface UserCouponRepository extends JpaRepository<UserCoupon, Long> {
             @org.springframework.data.repository.query.Param("phones") java.util.Collection<String> phones,
             @org.springframework.data.repository.query.Param("merchantNo") String merchantNo);
 
+    /** 核销 CAS：仅 status=0(未使用) 可置已核销，返回受影响行数（0=已被并发核销） */
+    @Modifying
+    @Query("update UserCoupon c set c.status = 1, c.verifyType = :vt, c.bizNo = :bizNo, c.updateTime = :now " +
+           "where c.couponId = :id and c.status = 0")
+    int verifyCas(@Param("id") Long id, @Param("vt") Integer vt, @Param("bizNo") String bizNo,
+                  @Param("now") LocalDateTime now);
+
     /** 流程闭环：批次内暂不可用券全部置可用 */
     @Modifying
     @Query("update UserCoupon c set c.canUseAfterDraw = 1, c.updateTime = :now " +

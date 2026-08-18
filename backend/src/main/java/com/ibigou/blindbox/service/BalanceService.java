@@ -101,7 +101,7 @@ public class BalanceService {
         if (deductAmount.compareTo(limit) > 0) {
             throw new BizException("余额抵扣金额超过最大抵扣上限");
         }
-        UserAccount account = accountRepository.findById(userPhone)
+        UserAccount account = accountRepository.findByIdForUpdate(userPhone)
                 .orElseThrow(() -> new BizException("用户余额账户不存在"));
         if (deductAmount.compareTo(account.getTotalBalance()) > 0) {
             throw new BizException("余额不足");
@@ -130,7 +130,7 @@ public class BalanceService {
         if (refundAmount == null || refundAmount.signum() <= 0) {
             throw new BizException("退款金额必须大于 0");
         }
-        UserAccount account = accountRepository.findById(userPhone)
+                UserAccount account = accountRepository.findByIdForUpdate(userPhone)
                 .orElseThrow(() -> new BizException("用户余额账户不存在"));
         account.setTotalBalance(account.getTotalBalance().add(refundAmount));
         account.setUpdateTime(LocalDateTime.now());
@@ -156,7 +156,7 @@ public class BalanceService {
         if (amount == null || amount.signum() <= 0) {
             return null;
         }
-        UserAccount account = accountRepository.findById(userPhone)
+        UserAccount account = accountRepository.findByIdForUpdate(userPhone)
                 .orElseThrow(() -> new BizException("用户余额账户不存在"));
         account.setTotalBalance(account.getTotalBalance().subtract(amount)); // 允许负
         account.setUpdateTime(LocalDateTime.now());
@@ -178,20 +178,20 @@ public class BalanceService {
     /** 流程闭环：批次内 can_use_after_draw=0 的发放流水置 1 并累加 total_balance */
     @Transactional
     public void activateDrawBatch(String drawBatchNo) {
-        if (drawBatchNo == null) {
+        if (drawBatchNo == null || drawBatchNo.isBlank()) {
             return;
         }
-        BigDecimal add = BigDecimal.ZERO;
-        for (UserBalanceFlow f : flowRepository.findByDrawBatchNoAndCanUseAfterDraw(drawBatchNo, 0)) {
-            f.setCanUseAfterDraw(1);
-            flowRepository.save(f);
-            add = add.add(f.getAmount());
+        // 原子激活：并发第二次 affected=0 直接返回，防余额双加
+        int affected = flowRepository.activateByBatch(drawBatchNo);
+        if (affected <= 0) {
+            return;
         }
-        if (add.signum() > 0) {
+        BigDecimal add = flowRepository.sumGrantByBatch(drawBatchNo);
+        if (add != null && add.signum() > 0) {
             String userPhone = flowRepository.findFirstByDrawBatchNoOrderByFlowIdAsc(drawBatchNo)
                     .map(UserBalanceFlow::getUserPhone).orElse(null);
             if (userPhone != null) {
-                UserAccount account = accountRepository.findById(userPhone).orElse(null);
+                UserAccount account = accountRepository.findByIdForUpdate(userPhone).orElse(null);
                 if (account == null) {
                     account = new UserAccount();
                     account.setUserPhone(userPhone);

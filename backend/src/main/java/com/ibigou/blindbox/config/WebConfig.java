@@ -14,6 +14,7 @@ public class WebConfig implements WebMvcConfigurer {
 
     private final AdminAuthInterceptor adminAuthInterceptor;
     private final CustomerAuthInterceptor customerAuthInterceptor;
+    private final MerchantAuthInterceptor merchantAuthInterceptor;
 
     @org.springframework.beans.factory.annotation.Value("${app.upload-dir:./uploads}")
     private String uploadDir;
@@ -33,5 +34,8 @@ public class WebConfig implements WebMvcConfigurer {
         registry.addInterceptor(customerAuthInterceptor)
                 .addPathPatterns("/api/customer/**")
                 .excludePathPatterns("/api/customer/auth/send-code", "/api/customer/auth/login");
+        registry.addInterceptor(merchantAuthInterceptor)
+                .addPathPatterns("/api/merchant/**")
+                .excludePathPatterns("/api/merchant/auth/login");
     }
 }

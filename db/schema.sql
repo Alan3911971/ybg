@@ -95,8 +95,10 @@ CREATE TABLE IF NOT EXISTS box_prize_limit_stat (
   prize_id      BIGINT      NOT NULL COMMENT '关联私有池id；公共奖品填public_id',
   pool_type     TINYINT     NOT NULL COMMENT '1私有池 2公共池 3美团专属池 4饿了么专属池 5抖音专属池',
   prize_type    TINYINT     NOT NULL COMMENT '奖品类型(冗余,便于限额统计)',
+  daily_key     VARCHAR(60)  DEFAULT NULL COMMENT '一天一次防刷键:merchant|user|date(YBG-20260818)',
   create_time   DATETIME    NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '中奖时间',
   PRIMARY KEY (stat_id),
+  UNIQUE KEY uk_daily (daily_key),
   KEY idx_stat_merchant_prize (merchant_no, prize_id, create_time),
   KEY idx_stat_user (user_phone, create_time)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='盲盒中奖统计表';
@@ -392,6 +394,22 @@ END //
 DELIMITER ;
 CALL ybg_return_add_cols();
 DROP PROCEDURE IF EXISTS ybg_return_add_cols;
+
+-- YBG 2026-08-18 一天一次唯一键（并发防刷）：box_prize_limit_stat 加 daily_key
+DROP PROCEDURE IF EXISTS sp_ybg_daily_key;
+DELIMITER //
+CREATE PROCEDURE sp_ybg_daily_key()
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema=DATABASE() AND table_name='box_prize_limit_stat' AND column_name='daily_key') THEN
+    ALTER TABLE box_prize_limit_stat ADD COLUMN daily_key VARCHAR(60) DEFAULT NULL COMMENT '一天一次防刷键:merchant|user|date';
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM information_schema.statistics WHERE table_schema=DATABASE() AND table_name='box_prize_limit_stat' AND index_name='uk_daily') THEN
+    ALTER TABLE box_prize_limit_stat ADD UNIQUE KEY uk_daily (daily_key);
+  END IF;
+END //
+DELIMITER ;
+CALL sp_ybg_daily_key();
+DROP PROCEDURE IF EXISTS sp_ybg_daily_key;
 
 -- 平台管理员初始账号由 AdminService 启动时用 BCrypt 真实加密创建（admin / Admin@2026）
 

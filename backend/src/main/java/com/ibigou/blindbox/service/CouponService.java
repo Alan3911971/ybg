@@ -62,11 +62,15 @@ public class CouponService {
         if (!c.getSourceMerchantNo().equals(merchantNo)) {
             throw new BizException("无权核销：该券为其他商家发行");
         }
-        c.setStatus(CouponStatus.VERIFIED.getCode());
+        // CAS 核销：并发双核销时第二个 affected=0 被拦截
+        int n = couponRepository.verifyCas(couponId, VerifyType.OFFLINE_AUTO.getCode(), bizNo, LocalDateTime.now());
+        if (n <= 0) {
+            throw new BizException("该券已被核销，请勿重复操作");
+        }
         c.setVerifyType(VerifyType.OFFLINE_AUTO.getCode());
         c.setBizNo(bizNo);
-        c.setUpdateTime(LocalDateTime.now());
-        return couponRepository.save(c);
+        c.setStatus(CouponStatus.VERIFIED.getCode());
+        return c;
     }
 
     /** 宜必购渠道核销：不限制发行商家，看 is_support_ibigou */
@@ -76,11 +80,14 @@ public class CouponService {
         if (c.getIsSupportIbigou() == null || c.getIsSupportIbigou() != 1) {
             throw new BizException("该券不支持宜必购渠道使用");
         }
-        c.setStatus(CouponStatus.VERIFIED.getCode());
+        int n = couponRepository.verifyCas(couponId, VerifyType.IBIGOU.getCode(), bizNo, LocalDateTime.now());
+        if (n <= 0) {
+            throw new BizException("该券已被核销，请勿重复操作");
+        }
         c.setVerifyType(VerifyType.IBIGOU.getCode());
         c.setBizNo(bizNo);
-        c.setUpdateTime(LocalDateTime.now());
-        return couponRepository.save(c);
+        c.setStatus(CouponStatus.VERIFIED.getCode());
+        return c;
     }
 
     /** 商家 H5 手工核销（异常兜底）：仅发行商家可核销，外来公共券禁止 */
@@ -90,10 +97,13 @@ public class CouponService {
         if (!c.getSourceMerchantNo().equals(operatorMerchantNo)) {
             throw new BizException("无权操作：此券为其他商家发行，本店仅可查看");
         }
-        c.setStatus(CouponStatus.VERIFIED.getCode());
+        int n = couponRepository.verifyCas(couponId, VerifyType.MANUAL.getCode(), null, LocalDateTime.now());
+        if (n <= 0) {
+            throw new BizException("该券已被核销，请勿重复操作");
+        }
         c.setVerifyType(VerifyType.MANUAL.getCode());
-        c.setUpdateTime(LocalDateTime.now());
-        return couponRepository.save(c);
+        c.setStatus(CouponStatus.VERIFIED.getCode());
+        return c;
     }
 
     /** 退款全额：恢复未核销状态（verify_type 清 0，biz_no 保留原单便于追溯） */

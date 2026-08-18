@@ -19,6 +19,17 @@ public interface UserBalanceFlowRepository extends JpaRepository<UserBalanceFlow
 
     Optional<UserBalanceFlow> findFirstByDrawBatchNoOrderByFlowIdAsc(String drawBatchNo);
 
+    /** 原子激活批次内暂不可用流水（返回受影响行数，并发第二次=0 防余额双加） */
+    @org.springframework.data.jpa.repository.Modifying
+    @org.springframework.data.jpa.repository.Query("update UserBalanceFlow f set f.canUseAfterDraw = 1 " +
+            "where f.drawBatchNo = :batch and f.canUseAfterDraw = 0")
+    int activateByBatch(@org.springframework.data.repository.query.Param("batch") String batch);
+
+    /** 批次发放流水金额合计（amount>0 的发放流水） */
+    @org.springframework.data.jpa.repository.Query("select sum(f.amount) from UserBalanceFlow f " +
+            "where f.drawBatchNo = :batch and f.amount > 0")
+    java.math.BigDecimal sumGrantByBatch(@org.springframework.data.repository.query.Param("batch") String batch);
+
     List<UserBalanceFlow> findByUserPhoneOrderByFlowIdDesc(String userPhone);
 
     List<UserBalanceFlow> findByMerchantNoAndFlowTypeAndCreateTimeBetween(

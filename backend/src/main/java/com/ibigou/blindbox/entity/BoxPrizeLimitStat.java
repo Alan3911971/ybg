@@ -37,6 +37,8 @@ public class BoxPrizeLimitStat {
     /** 奖品类型冗余，便于限额统计 */
     @Column(nullable = false)
     private Integer prizeType;
+    /** 一天一次防刷键（merchant|user|date，唯一约束并发防双击） */
+    private String dailyKey;
 
     @Column(nullable = false, updatable = false)
     private LocalDateTime createTime;

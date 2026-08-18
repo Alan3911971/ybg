@@ -23,6 +23,8 @@ spring:
     properties:
       hibernate:
         format_sql: true
+        connection:
+          isolation: 2  # READ_COMMITTED（全局，防丢失更新）
         jdbc:
           time_zone: Asia/Shanghai
 

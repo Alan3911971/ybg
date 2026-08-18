@@ -235,7 +235,7 @@ public class OfflineOrderService {
     @Transactional
     public OfflineOrder confirmOrderB(String orderNo, String operatorMerchantNo) {
         memberService.requireWriteAllowed(operatorMerchantNo);
-        OfflineOrder order = orderRepository.findById(orderNo)
+        OfflineOrder order = orderRepository.findByIdForUpdate(orderNo)
                 .orElseThrow(() -> new BizException("订单不存在"));
         if (order.getOrderStatus() != 0) {
             throw new BizException("订单状态不可确认（非待确认状态）");

@@ -105,7 +105,7 @@ public class AdminController {
 
     @PostMapping("/merchant/{merchantNo}/delete")
     public Result<Void> deleteMerchant(@PathVariable String merchantNo,
-                                       @RequestParam String adminPassword) {
+                                       @RequestHeader("X-Admin-Pwd") String adminPassword) {
         adminService.deleteMerchant(merchantNo, adminPassword);
         return Result.ok();
     }
@@ -219,7 +219,7 @@ public class AdminController {
     @PostMapping("/member/audits/{logId}/revoke")
     public Result<AuditLog> revokeAudit(@PathVariable Long logId,
                                         @RequestHeader("X-Admin-Token") String token,
-                                        @RequestParam String adminPassword) {
+                                        @RequestHeader("X-Admin-Pwd") String adminPassword) {
         // BUG-003：撤销审计（恢复资产）需管理员密码验证
         adminService.verifyAdminPassword(adminPassword);
         return Result.ok(auditLogService.revoke(logId, "admin"));

@@ -12,6 +12,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.time.DayOfWeek;
 import java.time.LocalDateTime;
+import java.time.LocalDate;
 import java.time.temporal.TemporalAdjusters;
 import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
@@ -224,8 +225,14 @@ public class DrawService {
         stat.setPrizeId(prizeId);
         stat.setPoolType(poolType);
         stat.setPrizeType(prizeType);
+        // 一天一次防刷唯一键（并发双击第二个 INSERT 唯一冲突 → 事务回滚 → 转"今日已参与"）
+        stat.setDailyKey(merchantNo + "|" + userPhone + "|" + LocalDate.now());
         stat.setCreateTime(LocalDateTime.now());
-        statRepository.save(stat);
+        try {
+            statRepository.save(stat);
+        } catch (org.springframework.dao.DataIntegrityViolationException e) {
+            throw new BizException("今日已参与过本店盲盒，请明天再来");
+        }
     }
 
     private void checkConfigured(Merchant merchant) {

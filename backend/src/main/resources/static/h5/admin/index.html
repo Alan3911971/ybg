@@ -274,6 +274,10 @@ function toast(msg, type){
   setTimeout(function(){ t.classList.remove("show"); setTimeout(function(){ t.remove(); }, 220); }, 2600);
 }
 
+async function apiH(url, body, extraHeaders){
+  const r = await fetch(url, { method: "POST", headers: Object.assign({}, { "X-Admin-Token": localStorage.getItem("ibigou_admin_token") }, extraHeaders), body: JSON.stringify(body || {}) });
+  try { return await r.json(); } catch (e) { return { code: -1, msg: "响应解析失败" }; }
+}
 async function api(url, body, method){
   const opt = { method: method || "POST", headers: Object.assign({}, H) };
   if (body) {
@@ -325,7 +329,7 @@ async function resetPwd(no){
 async function deleteMerchant(no){
   const pwd = prompt("⚠️ 删除商家「" + no + "」将删除其全部私有配置（档位/专属盲盒/投放/会话），历史订单与流水保留。" + String.fromCharCode(10) + "请输入管理员密码确认：", "");
   if (!pwd) return;
-  const r = await api(A + "/merchant/" + no + "/delete", { adminPassword: pwd });
+  const r = await apiH(A + "/merchant/" + no + "/delete", {}, { "X-Admin-Pwd": pwd });
   toast(r.code === 0 ? "商家已删除" : (r.msg || "删除失败（请检查管理员密码）"), r.code === 0 ? "success" : "danger");
   loadMerchants();
 }
@@ -485,7 +489,7 @@ async function loadAudits(){
 async function revokeAudit(logId){
   const pwd = prompt("⚠️ 撤销将恢复余额/券状态，不可重复撤销。" + String.fromCharCode(10) + "请输入管理员密码确认：", "");
   if (!pwd) return;
-  const r = await api(A + "/member/audits/" + logId + "/revoke", { adminPassword: pwd });
+  const r = await apiH(A + "/member/audits/" + logId + "/revoke", {}, { "X-Admin-Pwd": pwd });
   toast(r.code === 0 ? "已撤销并恢复资产" : (r.msg || "撤销失败"), r.code === 0 ? "success" : "danger");
   loadAudits();
 }

@@ -156,7 +156,7 @@ def main():
     # ================= 链路B：余额 -> 宜必购抵扣 -> 退款 =================
 
     # 11. 抽到余额奖品（目标类型3）
-    r, baldraw, b_phone = draw_until("13800000001", 3)
+    r, baldraw, b_phone = draw_until("13800000101", 3)  # base 错开，避免与链路A用户重叠（一天一次）
     check("抽到余额奖品", baldraw is not None, f"batch={baldraw.get('drawBatchNo') if baldraw else None}")
     r = req("POST", "/api/customer/group/register", {
         "merchantNo": "M001", "userPhone": b_phone, "channel": 2,

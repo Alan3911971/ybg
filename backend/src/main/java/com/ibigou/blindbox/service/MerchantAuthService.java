@@ -47,6 +47,14 @@ public class MerchantAuthService {
         return token;
     }
 
+    /** 统一鉴权：token 无效/过期抛业务异常（拦截器用） */
+    public void requireMerchant(String token) {
+        if (token == null || token.isBlank()) {
+            throw new BizException("请先登录");
+        }
+        merchantNoByToken(token);
+    }
+
     /** 校验 token 并返回商家编号 */
     public String merchantNoByToken(String token) {
         MerchantSession session = sessionRepository.findById(token).orElse(null);
