@@ -91,7 +91,8 @@ def main():
     audits = req("/api/admin/member/audits", None, AH).get("data") or []
     vlog = next((x for x in audits if x.get("action") == "manual_verify" and x.get("revoked") != 1), None)
     check("审计含手工核销", vlog is not None, f"logId={vlog and vlog.get('logId')}")
-    r = req(f"/api/admin/member/audits/{vlog['logId']}/revoke", {"adminPassword": "Admin@2026"}, AH)
+    hdrs = dict(AH); hdrs["X-Admin-Pwd"] = "Admin@2026"
+    r = req(f"/api/admin/member/audits/{vlog['logId']}/revoke", None, hdrs, method="POST")
     check("撤销手工核销", r.get("code") == 0)
     w2 = req("/api/customer/wallet/" + b_phone, None, {"X-User-Token": ut_b}).get("data") or {}
     restored = [x for x in (w2.get("available") or []) if x.get("couponId") == own["couponId"]]

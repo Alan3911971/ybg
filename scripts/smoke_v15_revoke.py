@@ -71,11 +71,14 @@ def main():
     # ---------- 场景1：手工核销券 → 撤销恢复 ----------
     # YBG-C-RETURN-001：团购登记折算作废券；未闭环券手工核销应拦截（正向 verify_type=2 由 smoke_v15_manualverify.py 覆盖）
     coupon_id = None
-    for _ in range(30):
-        r = req("POST", "/api/customer/draw/normal", {"merchantNo": "M001", "userPhone": "13800000060"})
+    # 一天一次（YBG）：每轮新用户，避免被当日参与限制拦截
+    base = 13800000060
+    for i in range(30):
+        ph = str(base + i)
+        r = req("POST", "/api/customer/draw/normal", {"merchantNo": "M001", "userPhone": ph})
         d = r.get("data") or {}
         if d.get("isCoupon"):
-            w = req("GET", "/api/customer/wallet/13800000060").get("data") or {}
+            w = req("GET", "/api/customer/wallet/" + ph).get("data") or {}
             pend = [x for x in (w.get("pending") or []) if x.get("prizeType") == 2]
             if pend:
                 coupon_id = pend[0]["couponId"]
@@ -86,35 +89,38 @@ def main():
           f"msg={r.get('msg')}")
 
     # ---------- 场景2：兜底完成 → 撤销退回余额+额度 ----------
-    # 抽余额闭环
-    for _ in range(30):
-        r = req("POST", "/api/customer/draw/normal", {"merchantNo": "M001", "userPhone": "13800000061"})
+    # 抽余额闭环（一天一次：每轮新用户）
+    ph2 = None
+    for i in range(30):
+        ph2 = str(13800000061 + i)
+        r = req("POST", "/api/customer/draw/normal", {"merchantNo": "M001", "userPhone": ph2})
         d = r.get("data") or {}
         if d.get("drawBatchNo"):
             req("POST", "/api/customer/group/register",
-                {"merchantNo": "M001", "userPhone": "13800000061", "channel": 1,
+                {"merchantNo": "M001", "userPhone": ph2, "channel": 1,
                  "groupAmount": "10", "drawBatchNo": d.get("drawBatchNo")})
         if d.get("prizeType") == 3:
             break
-    w0 = req("GET", "/api/customer/wallet/13800000061").get("data") or {}
+    w0 = req("GET", "/api/customer/wallet/" + ph2).get("data") or {}
     bal0 = float(w0.get("balance") or 0)
     r = req("POST", "/api/merchant/balance/manual-deduct",
-            {"userPhone": "13800000061", "orderAmount": "100.00"}, h)
+            {"userPhone": ph2, "orderAmount": "100.00"}, h)
     check("兜底完成订单", r.get("code") == 0)
     audits = req("GET", "/api/admin/member/audits", None, ah).get("data") or []
     comp_log = next((x for x in audits if x.get("action") == "manual_complete" and x.get("revoked") != 1), None)
     check("审计含兜底完成", comp_log is not None and comp_log.get("revokeType") == "BALANCE_RETURN")
-    r = req("POST", f"/api/admin/member/audits/{comp_log['logId']}/revoke", {"adminPassword": "Admin@2026"}, ah)
+    _ah = dict(ah); _ah["X-Admin-Pwd"] = "Admin@2026"
+    r = req("POST", f"/api/admin/member/audits/{comp_log['logId']}/revoke", None, _ah)
     check("撤销兜底完成", r.get("code") == 0)
-    w1 = req("GET", "/api/customer/wallet/13800000061").get("data") or {}
+    w1 = req("GET", "/api/customer/wallet/" + ph2).get("data") or {}
     check("撤销后余额退回", float(w1.get("balance") or 0) == bal0, f"before={bal0} after={w1.get('balance')}")
 
     # ---------- 场景3：退款 → 撤销反向 ----------
     # 用模式A下单（用户有余额50）→ 退款 → 撤销退款
-    w = req("GET", "/api/customer/wallet/13800000061").get("data") or {}
+    w = req("GET", "/api/customer/wallet/" + ph2).get("data") or {}
     bal_before = float(w.get("balance") or 0)
     r = req("POST", "/api/customer/offline/order",
-            {"userPhone": "13800000061", "merchantNo": "M001", "orderAmount": "100.00", "paidAmount": "50.00"})
+            {"userPhone": ph2, "merchantNo": "M001", "orderAmount": "100.00", "paidAmount": "50.00"})
     o = r.get("data") or {}
     check("下单成功", r.get("code") == 0 and o.get("offlineOrderNo"), f"deduct={o.get('deductBalance')}")
     order_no = o.get("offlineOrderNo")
@@ -123,10 +129,11 @@ def main():
     audits = req("GET", "/api/admin/member/audits", None, ah).get("data") or []
     refund_log = next((x for x in audits if x.get("action") == "refund" and x.get("revoked") != 1), None)
     check("审计含退款", refund_log is not None and refund_log.get("revokeType") == "REFUND_REVERSE")
-    r = req("POST", f"/api/admin/member/audits/{refund_log['logId']}/revoke", {"adminPassword": "Admin@2026"}, ah)
+    _ah = dict(ah); _ah["X-Admin-Pwd"] = "Admin@2026"
+    r = req("POST", f"/api/admin/member/audits/{refund_log['logId']}/revoke", None, _ah)
     check("撤销退款", r.get("code") == 0, f"msg={r.get('msg')}")
     # 订单回到未退款状态
-    w = req("GET", "/api/customer/wallet/13800000061").get("data") or {}
+    w = req("GET", "/api/customer/wallet/" + ph2).get("data") or {}
     check("撤销退款后余额回退(扣除抵扣)", float(w.get("balance") or 0) < bal_before,
           f"before={bal_before} after={w.get('balance')}")
 
@@ -138,12 +145,14 @@ def main():
     check("审计含调整有效期", adj_log is not None and adj_log.get("revokeType") == "EXPIRE_DECREASE")
     st = req("GET", "/api/merchant/member/status", None, h).get("data") or {}
     expire_before = st.get("expireTime")
-    r = req("POST", f"/api/admin/member/audits/{adj_log['logId']}/revoke", {"adminPassword": "Admin@2026"}, ah)
+    _ah = dict(ah); _ah["X-Admin-Pwd"] = "Admin@2026"
+    r = req("POST", f"/api/admin/member/audits/{adj_log['logId']}/revoke", None, _ah)
     check("撤销调整有效期", r.get("code") == 0)
     st2 = req("GET", "/api/merchant/member/status", None, h).get("data") or {}
     check("有效期减回12个月", st2.get("expireTime") is not None and st2.get("expireTime") < expire_before,
           f"before={expire_before} after={st2.get('expireTime')}")
-    r = req("POST", f"/api/admin/member/audits/{adj_log['logId']}/revoke", {"adminPassword": "Admin@2026"}, ah)
+    _ah2 = dict(ah); _ah2["X-Admin-Pwd"] = "Admin@2026"
+    r = req("POST", f"/api/admin/member/audits/{adj_log['logId']}/revoke", None, _ah2)
     check("重复撤销拦截", r.get("code") != 0, f"msg={r.get('msg')}")
 
     print("\n===== 审计撤销验证全部通过 =====")
