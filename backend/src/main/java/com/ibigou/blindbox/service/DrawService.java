@@ -299,11 +299,11 @@ public class DrawService {
 
     /** 权重随机：leftWeight/rightWeight，返回 true=命中左侧（leftWeight 区间） */
     private boolean randomPick(int leftWeight, int rightWeight) {
-        int total = leftWeight + rightWeight;
+        long total = (long) leftWeight + rightWeight; // long 防 int 溢出（P3）
         if (total <= 0) {
             throw new BizException("权重配置错误");
         }
-        return ThreadLocalRandom.current().nextInt(total) < leftWeight;
+        return ThreadLocalRandom.current().nextLong(total) < leftWeight;
     }
 
     /** 按权重随机选档位（weight<=0 的档位不会被选中） */
