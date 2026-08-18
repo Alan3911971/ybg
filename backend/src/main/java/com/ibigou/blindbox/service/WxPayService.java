@@ -53,8 +53,15 @@ public class WxPayService {
         amount.setTotal(amountYuan.multiply(BigDecimal.valueOf(100)).intValue());
         amount.setCurrency("CNY");
         request.setAmount(amount);
-        PrepayResponse resp = service.prepay(request);
-        return resp.getCodeUrl();
+        try {
+            PrepayResponse resp = service.prepay(request);
+            return resp.getCodeUrl();
+        } catch (com.wechat.pay.java.core.exception.ServiceException e) {
+            // 微信侧错误（如证书/密钥/绑定问题）友好提示，携带微信返回信息便于联调定位
+            throw new BizException("微信支付下单失败: " + e.getMessage() + " " + (e.getResponseBody() == null ? "" : e.getResponseBody()));
+        } catch (Exception e) {
+            throw new BizException("微信支付下单失败: " + e.getMessage());
+        }
     }
 
     /** 查单：返回交易状态（SUCCESS/CLOSED/NOTPAY 等）；未配置返回 NOTPAY */
@@ -115,11 +122,16 @@ public class WxPayService {
         } catch (Exception e) {
             throw new BizException("商户证书读取失败: " + e.getMessage());
         }
-        return new RSAAutoCertificateConfig.Builder()
-                .merchantId(mchId)
-                .privateKey(privateKey)
-                .merchantSerialNumber(certSerial)
-                .apiV3Key(apiV3Key)
-                .build();
+        try {
+            return new RSAAutoCertificateConfig.Builder()
+                    .merchantId(mchId)
+                    .privateKey(privateKey)
+                    .merchantSerialNumber(certSerial)
+                    .apiV3Key(apiV3Key)
+                    .build();
+        } catch (Exception e) {
+            // 证书/密钥/平台证书下载错误友好提示（含微信返回信息）
+            throw new BizException("微信支付配置校验失败: " + e.getMessage());
+        }
     }
 }
