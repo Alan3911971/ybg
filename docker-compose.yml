@@ -41,6 +41,9 @@ services:
       IBIGOU_DOMAIN: ${IBIGOU_DOMAIN:-https://ybgtc.com}
       IBIGOU_ADMIN_INIT_PWD: ${IBIGOU_ADMIN_INIT_PWD:?必须设置默认管理员初始密码}
       TZ: Asia/Shanghai
+    volumes:
+      - ./certs:/app/certs:ro   # 微信支付商户证书（apiclient_key.pem 等，权限 600）
+      - ./uploads:/app/uploads  # 商家收款码等上传文件
     ports:
       - "8085:8085"
 

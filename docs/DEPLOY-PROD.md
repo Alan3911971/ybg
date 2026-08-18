@@ -110,3 +110,16 @@ docs/DEPLOY-PROD.md            # 本手册
 | IBIGOU_DB_HOST/PORT/NAME/USER/PASSWORD | 数据库连接 |
 | IBIGOU_DOMAIN | 对外域名（https://ybgtc.com） |
 | **IBIGOU_ADMIN_INIT_PWD** | 默认管理员初始密码（**必须设置**，首登后立即修改） |
+
+## 微信支付商户证书（生产必装）
+1. 从 NAS `/volume1/Download/ybg/certs/` 复制到生产 compose 目录 `./certs/`：
+   - apiclient_cert.pem / apiclient_key.pem / apiclient_cert.p12
+   - 权限：`chmod 600 apiclient_key.pem`（私钥敏感）
+2. 平台后台配置：
+   - `wx_pay_cert_path = /app/certs/apiclient_key.pem`（compose 已挂载 ./certs:/app/certs:ro）
+   - `wx_pay_cert_serial = 598230E1FFEBADCDA744EB31739DD843460232AE`
+   - `wx_pay_api_v3_key = <商户平台设置的值>`（生产由用户在平台后台 UI 配置）
+   - `wx_pay_app_id = wx05a588674344ed25`、`wx_pay_mch_id = 1440071102`
+   - `wx_pay_enabled = 1`（生产仅微信回调确认支付）
+3. 注意：测试环境微信侧返回 NOT_ENOUGH"平台证书已过期失效"（商户号证书状态问题），
+   生产部署前请先在微信商户平台核实证书状态（API 安全 → 证书管理）+ 联系微信技术支持。
