@@ -1,0 +1,1049 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#2563eb">
+<title>商家后台 · 宜必购</title>
+<link rel="icon" href="data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='80' font-size='90'%3E%F0%9F%8F%AA%3C/text%3E%3C/svg%3E">
+<style>
+  :root{
+    --c-primary:#2563eb; --c-primary-600:#1d4ed8; --c-primary-100:#dbeafe;
+    --c-accent:#10b981; --c-success:#16a34a; --c-success-bg:#e8f7ee; --c-warning:#f59e0b; --c-warning-bg:#fff6e0;
+    --c-danger:#dc2626; --c-danger-bg:#fde8e8; --c-info:#2563eb; --c-info-bg:#e6efff;
+    --c-text:#1a2233; --c-text-2:#4d556a; --c-text-3:#8089a0;
+    --c-bg:#f5f7fb; --c-surface:#fff; --c-border:#e6e8ef; --c-divider:#eef0f4;
+    --c-grad-1:linear-gradient(135deg,#2563eb 0%,#3b82f6 100%);
+    --r-sm:6px; --r-md:10px; --r-lg:14px; --r-pill:999px;
+    --sh-1:0 1px 2px rgba(20,23,40,.04),0 1px 4px rgba(20,23,40,.06);
+    --sh-press:0 0 0 4px rgba(37,99,235,.16);
+  }
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+  html,body{font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei","Helvetica Neue",Arial,sans-serif;color:var(--c-text);background:var(--c-bg);-webkit-font-smoothing:antialiased;}
+  body{min-height:100vh;padding-bottom:24px;}
+  a{color:inherit;text-decoration:none;}
+  input,select,button{font-size:16px;}
+  button{font-family:inherit;}
+  .top{background:var(--c-grad-1);color:#fff;padding:12px 16px;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:30;box-shadow:0 2px 10px rgba(37,99,235,.18);}
+  .top .title{display:flex;align-items:center;gap:8px;font-size:16px;font-weight:600;}
+  .top .right{display:flex;align-items:center;gap:8px;}
+  .top .icon-btn{color:#fff;font-size:13px;cursor:pointer;padding:6px 10px;background:rgba(255,255,255,.16);border-radius:999px;display:flex;align-items:center;gap:4px;}
+  .tabs{display:flex;background:#fff;overflow-x:auto;border-bottom:1px solid var(--c-divider);position:sticky;top:50px;z-index:20;padding:0 4px;-webkit-overflow-scrolling:touch;}
+  .tabs::-webkit-scrollbar{height:0;}
+  .tab{padding:12px 14px;font-size:14px;white-space:nowrap;cursor:pointer;color:var(--c-text-2);border-bottom:3px solid transparent;font-weight:500;}
+  .tab.active{color:var(--c-primary);border-bottom-color:var(--c-primary);font-weight:600;}
+  .wrap{max-width:720px;margin:0 auto;padding:16px;}
+  @media (min-width:768px){ .wrap{max-width:1080px;} }
+  .panel{display:none;animation:fadeIn .2s ease-out;}
+  .panel.active{display:block;}
+  @keyframes fadeIn{from{opacity:0;transform:translateY(4px);} to{opacity:1;transform:none;}}
+  .card{background:var(--c-surface);border-radius:var(--r-lg);padding:18px;margin-bottom:14px;box-shadow:var(--sh-1);border:1px solid var(--c-border);}
+  .sec{display:flex;align-items:center;gap:8px;font-weight:600;margin:0 0 12px;font-size:15px;}
+  .sec .ic{width:26px;height:26px;border-radius:8px;background:var(--c-primary-100);color:var(--c-primary);display:inline-flex;align-items:center;justify-content:center;font-size:14px;flex:0 0 26px;}
+  .sec .sp{flex:1;}
+  label{display:block;font-size:13px;color:var(--c-text-2);margin:10px 0 4px;font-weight:500;}
+  .input,.select{width:100%;height:46px;padding:0 12px;border:1px solid var(--c-border);border-radius:var(--r-md);font-size:15px;color:var(--c-text);background:#fff;transition:border-color .15s,box-shadow .15s;-webkit-appearance:none;appearance:none;}
+  .input:focus,.select:focus{outline:none;border-color:var(--c-primary);box-shadow:var(--sh-press);}
+  .row{display:flex;gap:10px;flex-wrap:wrap;}
+  .row > div{flex:1;min-width:130px;}
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:11px 16px;border:none;border-radius:var(--r-md);background:var(--c-primary);color:#fff;font-size:14px;font-weight:600;cursor:pointer;transition:transform .12s,box-shadow .15s,background .15s;box-shadow:0 2px 6px rgba(37,99,235,.18);}
+  .btn:active{transform:scale(.98);}
+  .btn--block{width:100%;}
+  .btn.green{background:var(--c-success);box-shadow:0 2px 6px rgba(22,163,74,.20);}
+  .btn.orange{background:#f59e0b;box-shadow:0 2px 6px rgba(245,158,11,.20);}
+  .btn.red{background:var(--c-danger);box-shadow:0 2px 6px rgba(220,38,38,.20);}
+  .btn.gray{background:#9aa0a6;box-shadow:none;}
+  .btn.ghost{background:transparent;color:var(--c-primary);border:1px solid var(--c-primary);box-shadow:none;}
+  .btn[disabled]{opacity:.5;cursor:not-allowed;}
+  .btn--sm{padding:7px 12px;font-size:13px;border-radius:8px;}
+  .warn{background:var(--c-warning-bg);border:1px solid #fde6a7;color:#7a4a00;padding:10px 12px;border-radius:8px;font-size:12px;margin:10px 0;line-height:1.7;}
+  .info-bar{background:var(--c-info-bg);border:1px solid #c3d8fd;color:#1d4ed8;padding:10px 12px;border-radius:8px;font-size:12px;margin:10px 0;line-height:1.7;}
+  .list-item{display:flex;align-items:center;padding:12px 0;border-bottom:1px solid var(--c-divider);gap:10px;flex-wrap:wrap;}
+  .list-item:last-child{border-bottom:none;}
+  .list-item .main{flex:1;min-width:0;}
+  .list-item .t{font-size:14px;font-weight:600;}
+  .list-item .s{font-size:12px;color:var(--c-text-3);margin-top:2px;line-height:1.5;}
+  .list-item .v{font-size:14px;font-weight:600;color:var(--c-primary);text-align:right;}
+  .list-item .ops{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end;}
+  .badge{display:inline-block;padding:3px 8px;border-radius:999px;font-size:11px;background:#eef0f4;color:var(--c-text-2);}
+  .badge.green{background:var(--c-success-bg);color:#15803d;}
+  .badge.orange{background:var(--c-warning-bg);color:#b45309;}
+  .badge.red{background:var(--c-danger-bg);color:#b91c1c;}
+  .badge.blue{background:var(--c-info-bg);color:#1d4ed8;}
+  .stat-row{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:14px;}
+  .stat{background:#fff;border:1px solid var(--c-border);border-radius:var(--r-lg);padding:14px;text-align:center;box-shadow:var(--sh-1);}
+  .stat .num{font-size:22px;font-weight:800;color:var(--c-primary);}
+  .stat .lab{font-size:12px;color:var(--c-text-3);margin-top:4px;}
+  .empty{padding:26px 16px;text-align:center;color:var(--c-text-3);font-size:13px;}
+  .qrbox{margin:10px auto;width:220px;height:220px;background:#fafbff;border:1px solid var(--c-border);border-radius:14px;padding:10px;display:flex;align-items:center;justify-content:center;}
+  .qrbox svg,.qrbox img{width:100%;height:100%;}
+  .member-banner{border-radius:var(--r-lg);padding:16px;color:#fff;margin-bottom:14px;}
+  .member-banner.trial{background:linear-gradient(135deg,#f59e0b,#fbbf24);}
+  .member-banner.paid{background:linear-gradient(135deg,#10b981,#34d399);}
+  .member-banner.expired{background:linear-gradient(135deg,#dc2626,#f87171);}
+  .member-banner .m-title{font-size:16px;font-weight:700;}
+  .member-banner .m-sub{font-size:12px;opacity:.95;margin-top:4px;line-height:1.6;}
+  .msg-item{padding:10px 0;border-bottom:1px solid var(--c-divider);font-size:13px;line-height:1.6;}
+  .msg-item:last-child{border-bottom:none;}
+  .msg-item .t{font-weight:600;font-size:14px;}
+  .msg-item .s{font-size:12px;color:var(--c-text-3);}
+  .diff-red{color:var(--c-danger);font-weight:700;}
+  .toast-host{position:fixed;top:18px;left:50%;transform:translateX(-50%);z-index:99;display:flex;flex-direction:column;gap:8px;pointer-events:none;}
+  .toast{padding:10px 16px;border-radius:10px;background:rgba(0,0,0,.84);color:#fff;font-size:14px;opacity:0;transform:translateY(-6px);transition:opacity .2s,transform .2s;}
+  .toast.show{opacity:1;transform:none;}
+  .toast.success{background:#16a34a;} .toast.warning{background:#f59e0b;} .toast.danger{background:#dc2626;} .toast.info{background:#2563eb;}
+  .mask{position:fixed;inset:0;background:rgba(10,12,24,.55);z-index:95;display:none;align-items:center;justify-content:center;}
+  .mask.show{display:flex;}
+  .modal{background:#fff;width:90%;max-width:400px;border-radius:16px;padding:20px;max-height:85vh;overflow-y:auto;}
+  .modal h3{font-size:16px;margin-bottom:10px;}
+  .scanner-video{width:100%;border-radius:10px;background:#000;margin-top:8px;}
+  .qr-status-card{display:flex;align-items:center;gap:12px;padding:14px;border-radius:12px;border:1px solid var(--c-border);background:#fff;margin:12px 0;box-shadow:var(--sh-1);}
+  .qr-status-card.pending{background:#fff6e0;border-color:#fde6a7;color:#7a4a00;}
+  .qr-status-card.approved{background:#e8f7ee;border-color:#b5e4c1;color:#15803d;}
+  .qr-status-card.rejected{background:#fde8e8;border-color:#f5b3b3;color:#b91c1c;}
+  .qr-status-card.none{background:#eef0f4;border-color:#d8dbe6;color:#5a6072;}
+  .qr-status-icon{font-size:26px;width:38px;height:38px;border-radius:10px;background:rgba(255,255,255,.6);display:flex;align-items:center;justify-content:center;flex:0 0 38px;}
+  .qr-status-main{flex:1;}
+  .qr-status-title{font-size:14px;font-weight:700;line-height:1.4;}
+  .qr-status-sub{font-size:12px;opacity:.85;margin-top:2px;line-height:1.6;}
+</style>
+</head>
+<body>
+<div class="top">
+  <div class="title"><span>🏪</span>商家后台</div>
+  <div class="right">
+    <span class="icon-btn" id="announceToggle" onclick="toggleAnnounce()">🔊<span id="announceState">开</span></span>
+    <span class="icon-btn" onclick="showMessages()">🔔<span id="msgCount">0</span></span>
+    <span class="icon-btn" id="logout" style="background:rgba(255,255,255,.28);">退出</span>
+  </div>
+</div>
+<div class="tabs" id="tabs">
+  <div class="tab active" data-p="p1">概览</div>
+  <div class="tab" data-p="p2">奖品池</div>
+  <div class="tab" data-p="p3">专属盲盒</div>
+  <div class="tab" data-p="p4">手工核销</div>
+  <div class="tab" data-p="p5">流水报表</div>
+  <div class="tab" data-p="p6">外来券</div>
+  <div class="tab" data-p="p7">会员续费</div>
+  <div class="tab" data-p="p8">订单收款</div>
+</div>
+<div class="wrap">
+
+<!-- p1 概览 -->
+<div class="panel active" id="p1">
+  <div class="stat-row">
+    <div class="stat"><div class="num" id="stOrders">--</div><div class="lab">本店订单</div></div>
+    <div class="stat"><div class="num" id="stAmount">--</div><div class="lab">营业额（实付）</div></div>
+  </div>
+  <div class="stat-row">
+    <div class="stat"><div class="num" id="stPending">--</div><div class="lab">待确认订单</div></div>
+    <div class="stat"><div class="num" id="stMember">--</div><div class="lab">会员状态</div></div>
+  </div>
+  <div class="card">
+    <div class="sec"><span class="ic">📢</span>实时播报<span class="sp"></span><button class="btn btn--sm" id="btnAnnounceList">历史播报</button></div>
+    <div id="announceList"><div class="empty">暂无播报</div></div>
+  </div>
+</div>
+
+<!-- p2 奖品池 -->
+<div class="panel" id="p2">
+  <div class="card">
+    <div class="sec"><span class="ic">⚙️</span>门店抵扣与收款参数</div>
+    <div class="row">
+      <div><label>余额抵扣百分比（0-100，0=本店禁止）</label><input id="dcPercent" class="input" type="number" min="0" max="100"></div>
+      <div><label>单人单日抵扣上限（0=不限）</label><input id="dcDaily" class="input" type="number" min="0" step="0.01"></div>
+    </div>
+    <div class="row">
+      <div><label>收款模式</label><select id="dcMode" class="select"><option value="1">模式A · 上传收款码</option><option value="2">模式B · 扫码枪核验</option></select></div>
+      <div><label>跨店返还比例（平台配置，只读）</label><input id="returnPercent" class="input" readonly value="--"></div>
+    </div>
+    <button class="btn btn--block" id="btnDcSave" style="margin-top:12px;">保存门店参数</button>
+    <div class="warn">抵扣基数为盲盒优惠后金额；模式A 需上传微信/支付宝收款码（平台审核后生效），模式B 生成一次性凭证码。</div>
+  </div>
+  <div class="card">
+    <div class="sec"><span class="ic">📷</span>收款码上传（模式A）</div>
+    <div class="row">
+      <div>
+        <label>微信收款码</label>
+        <input type="file" id="qrWechatFile" accept="image/*" style="font-size:13px;">
+        <button class="btn btn--sm" id="btnUpWechat" style="margin-top:6px;">上传微信收款码</button>
+        <img id="qrWechatPrev" style="max-width:100%;max-height:110px;display:none;margin-top:6px;border:1px solid #eee;border-radius:6px;">
+      </div>
+      <div>
+        <label>支付宝收款码</label>
+        <input type="file" id="qrAlipayFile" accept="image/*" style="font-size:13px;">
+        <button class="btn btn--sm" id="btnUpAlipay" style="margin-top:6px;">上传支付宝收款码</button>
+        <img id="qrAlipayPrev" style="max-width:100%;max-height:110px;display:none;margin-top:6px;border:1px solid #eee;border-radius:6px;">
+      </div>
+    </div>
+    <div class="qr-status-card" id="qrAuditCard">
+      <span class="qr-status-icon" id="qrStatusIcon">⏳</span>
+      <div class="qr-status-main">
+        <div class="qr-status-title" id="qrStatusTitle">收款码审核状态加载中…</div>
+        <div class="qr-status-sub" id="qrStatusSub">--</div>
+      </div>
+      <span class="badge qr-status-badge" id="qrStatusBadge">--</span>
+    </div>
+    <div class="info-bar" id="qrAuditTip" style="display:none;">收款码上传后需平台审核通过方可展示给顾客；上传成功自动切换为模式A。</div>
+  </div>
+  <div class="card">
+    <div class="sec"><span class="ic">⚖️</span>抽奖权重（第一层：私有池 vs 公共池）</div>
+    <div class="row">
+      <div><label>私有池权重</label><input id="wPrivate" class="input" type="number" min="0"></div>
+      <div><label>公共池权重</label><input id="wPublic" class="input" type="number" min="0"></div>
+    </div>
+    <div class="sec" style="margin-top:6px;"><span class="ic">📊</span>大类权重（折扣 vs 立减&amp;余额）</div>
+    <div class="row">
+      <div><label>折扣大类权重</label><input id="wDiscount" class="input" type="number" min="0"></div>
+      <div><label>立减&amp;余额大类权重</label><input id="wCoupon" class="input" type="number" min="0"></div>
+    </div>
+    <button class="btn btn--block" id="btnWeights" style="margin-top:12px;">保存权重</button>
+    <div class="warn">私有池与公共池权重不能同时为 0；折扣大类与立减余额大类不能同时为 0。</div>
+  </div>
+  <div class="card">
+    <div class="sec"><span class="ic">🎁</span>本店普通档位（私有池）</div>
+    <div class="row">
+      <div><label>奖品类型</label><select id="fType" class="select"><option value="1">折扣券</option><option value="2">立减券</option><option value="3">普通余额</option><option value="4">团购免单余额</option></select></div>
+      <div><label>优惠数值</label><input id="fValue" class="input" type="number" step="0.01" placeholder="折扣券填 8 折/其他填金额"></div>
+      <div><label>权重</label><input id="fWeight" class="input" type="number" min="1" placeholder="≥1"></div>
+    </div>
+    <div class="row">
+      <div><label>宜必购</label><select id="fIbigou" class="select"><option value="1">支持宜必购</option><option value="0">仅线下</option></select></div>
+      <div><label>限额范围</label><select id="fScope" class="select"><option value="1">平台全局</option><option value="2">单商家</option><option value="3">单用户</option></select></div>
+      <div><label>限额周期</label><select id="fCycle" class="select"><option value="3">不限</option><option value="1">每日</option><option value="2">每周</option></select></div>
+      <div><label>最大中奖次数</label><input id="fMax" class="input" type="number" min="0" placeholder="0=不限"></div>
+    </div>
+    <button class="btn green btn--block" id="btnAddPrize" style="margin-top:12px;">+ 新增档位</button>
+    <div id="prizeList" style="margin-top:12px;"></div>
+  </div>
+  <div class="card">
+    <div class="sec"><span class="ic">🌐</span>我投放的公共券</div>
+    <div id="publicList"></div>
+    <div class="warn">下架公共档位不影响已发放到用户手里的券。</div>
+  </div>
+  <div class="card">
+    <div class="sec"><span class="ic">🔗</span>本店盲盒二维码</div>
+    <div class="qrbox" id="myQrBox">点击下方按钮生成</div>
+    <button class="btn btn--block" id="btnMyQr" style="margin-top:10px;">生成本店盲盒二维码</button>
+    <div class="warn">顾客扫码后自动带入本店编号，进入抽奖页。</div>
+  </div>
+</div>
+
+<!-- p3 专属盲盒 -->
+<div class="panel" id="p3">
+  <div class="card">
+    <div class="sec"><span class="ic">👥</span>美团 / 饿了么 / 抖音专属盲盒（独立奖品池）</div>
+    <div class="row">
+      <div><label>渠道</label><select id="gChannel" class="select"><option value="1">美团</option><option value="2">饿了么</option><option value="3">抖音</option></select></div>
+      <div><label>奖品类型</label><select id="gType" class="select"><option value="3">普通余额</option><option value="1">折扣券</option><option value="2">立减券</option><option value="4">团购免单余额</option></select></div>
+    </div>
+    <div class="row">
+      <div><label>优惠数值</label><input id="gValue" class="input" type="number" step="0.01" placeholder="折扣券填折扣率如 8"></div>
+      <div><label>权重</label><input id="gWeight" class="input" type="number" min="1" placeholder="≥1"></div>
+    </div>
+    <button class="btn green btn--block" id="btnAddGroup" style="margin-top:12px;">+ 新增专属档位</button>
+    <div id="groupList" style="margin-top:12px;"></div>
+  </div>
+  <div class="card">
+    <div class="sec"><span class="ic">📊</span>专属盲盒大类权重（0/0 = 按档位权重直抽）</div>
+    <div class="row">
+      <div><label>折扣大类权重</label><input id="gDisc" class="input" type="number" min="0"></div>
+      <div><label>立减&amp;余额大类权重</label><input id="gCou" class="input" type="number" min="0"></div>
+    </div>
+    <button class="btn btn--block" id="btnGroupWeights" style="margin-top:12px;">保存大类权重</button>
+  </div>
+  <div class="card">
+    <div class="sec"><span class="ic">🔗</span>专属盲盒二维码</div>
+    <div class="qrbox" id="groupQrBox">选择渠道后点击生成</div>
+    <button class="btn btn--block" id="btnQr" style="margin-top:10px;">获取当前渠道专属二维码</button>
+    <div class="warn">美团 / 饿了么 / 抖音专属盲盒二维码专供团购到店客户；用户扫码后填写团购消费金额即可抽奖。本系统仅做业务登记与复购奖励发放，团购券请在美团 / 饿了么 / 抖音 App 正常核销。奖励本次团购不可用，可用于下次本店自营消费或宜必购渠道。三套盲盒奖品池独立，不与本店普通盲盒、公共池互通。</div>
+  </div>
+</div>
+
+<!-- p4 手工核销 -->
+<div class="panel" id="p4">
+  <div class="card">
+    <div class="sec"><span class="ic">🎫</span>优惠券手工核销（异常兜底）</div>
+    <div class="row">
+      <div><label>券编号 couponId</label><input id="couponNo" class="input" placeholder="请输入券编号"></div>
+    </div>
+    <button class="btn orange btn--block" id="btnVerifyCoupon" style="margin-top:12px;">核销该券（verify_type=2）</button>
+    <div class="warn">仅发行商家可核销；外来券请引导顾客去所属门店或宜必购渠道处理。</div>
+  </div>
+  <div class="card">
+    <div class="sec"><span class="ic">💳</span>余额兜底扣减（系统自动四重 min 抵扣）</div>
+    <div class="row">
+      <div><label>顾客手机号</label><input id="dPhone" class="input" inputmode="numeric" maxlength="11" placeholder="11 位手机号"></div>
+      <div><label>订单金额（元）</label><input id="dAmount" class="input" type="number" inputmode="decimal" min="0.01" step="0.01" placeholder="如 100"></div>
+    </div>
+    <button class="btn green btn--block" id="btnDeduct" style="margin-top:12px;">完成扣减并生成订单</button>
+    <div class="info-bar">V1.5：只需手机号+订单金额，系统自动按「券后金额×抵扣比例、单日上限、余额、跨店返还」四重 min 计算。</div>
+  </div>
+  <div class="card">
+    <div class="sec"><span class="ic">🔍</span>扫码识别</div>
+    <button class="btn btn--block" id="btnScan">📷 打开摄像头扫码（券 / 动态码 / 凭证）</button>
+    <video id="scanner" class="scanner-video" style="display:none;" autoplay playsinline></video>
+    <div class="info-bar" id="scanTip">支持：顾客动态核销码（qr/verify）、长期身份码（identity/verify）、模式B 凭证（order/voucher）。识别后自动填入下方。</div>
+  </div>
+  <div class="card">
+    <div class="sec"><span class="ic">🪪</span>动态码 / 身份码 / 凭证核验</div>
+    <div class="row">
+      <div><label>动态码 token</label><input id="qrToken" class="input" placeholder="输入动态码内容"></div>
+      <div><label>身份码内容</label><input id="idContent" class="input" placeholder="YBGT-ID:...（或扫身份码自动填入）"></div>
+      <div><label>凭证 token</label><input id="voucherToken" class="input" placeholder="输入模式B凭证"></div>
+    </div>
+    <div class="row" style="margin-top:10px;">
+      <button class="btn" id="btnVerifyQr">核验动态码</button>
+      <button class="btn" id="btnVerifyId">核验身份码</button>
+      <button class="btn orange" id="btnVerifyVoucher">核验凭证</button>
+    </div>
+    <div id="verifyOut"></div>
+  </div>
+</div>
+
+<!-- p5 流水报表 -->
+<div class="panel" id="p5">
+  <div class="card">
+    <div class="sec"><span class="ic">💸</span>余额流水</div>
+    <div class="row">
+      <div><label>类型</label><select id="flowType" class="select"><option value="">全部</option><option value="grant">发放</option><option value="consume">消费</option></select></div>
+      <div><label>开始日期</label><input id="flowFrom" class="input" type="date"></div>
+      <div><label>结束日期</label><input id="flowTo" class="input" type="date"></div>
+    </div>
+    <div class="row" style="margin-top:10px;">
+      <button class="btn" id="btnFlows">查询</button>
+      <button class="btn gray" id="btnFlowsXlsx">导出Excel</button>
+    </div>
+    <div id="flowTable" style="margin-top:12px;"></div>
+  </div>
+  <div class="card">
+    <div class="sec"><span class="ic">👥</span>团购登记记录</div>
+    <div class="row">
+      <div><label>渠道</label><select id="grChannel" class="select"><option value="">全部</option><option value="1">美团</option><option value="2">饿了么</option><option value="3">抖音</option></select></div>
+      <div><label>开始日期</label><input id="grFrom" class="input" type="date"></div>
+      <div><label>结束日期</label><input id="grTo" class="input" type="date"></div>
+    </div>
+    <div class="row" style="margin-top:10px;">
+      <button class="btn" id="btnGroupRecords">查询</button>
+      <button class="btn gray" id="btnGroupXlsx">导出Excel</button>
+    </div>
+    <div id="grTable" style="margin-top:12px;"></div>
+  </div>
+  <div class="card">
+    <div class="sec"><span class="ic">🛍</span>宜必购渠道消费对账</div>
+    <div class="row">
+      <div><label>开始日期</label><input id="rbFrom" class="input" type="date"></div>
+      <div><label>结束日期</label><input id="rbTo" class="input" type="date"></div>
+    </div>
+    <div class="row" style="margin-top:10px;">
+      <button class="btn" id="btnRecon">查询</button>
+      <button class="btn gray" id="btnReconXlsx">导出Excel</button>
+    </div>
+    <div id="rbTable" style="margin-top:12px;"></div>
+  </div>
+</div>
+
+<!-- p6 外来券 -->
+<div class="panel" id="p6">
+  <div class="card">
+    <div class="sec"><span class="ic">🎟</span>外来流入优惠券</div>
+    <div class="row" style="margin-bottom:10px;">
+      <button class="btn" id="btnExternal">查询</button>
+      <button class="btn gray" id="btnExternalXlsx">导出Excel</button>
+    </div>
+    <div id="extTable"></div>
+    <div class="warn">此券为其他商家发行，本店仅可查看；请引导用户前往券所属商家门店或宜必购渠道处理。</div>
+  </div>
+</div>
+
+<!-- p7 会员续费 -->
+<div class="panel" id="p7">
+  <div class="member-banner trial" id="memberBanner">
+    <div class="m-title" id="memberTitle">会员状态加载中…</div>
+    <div class="m-sub" id="memberSub">--</div>
+  </div>
+  <div class="card">
+    <div class="sec"><span class="ic">📦</span>当前套餐</div>
+    <div id="memberPlan">--</div>
+    <div id="giftTip" class="warn" style="display:none;"></div>
+    <button class="btn orange btn--block" id="btnRenew" style="margin-top:12px;">立即续费（年费）</button>
+  </div>
+  <div class="card">
+    <div class="sec"><span class="ic">📋</span>续费记录</div>
+    <div id="memberOrders"></div>
+  </div>
+</div>
+
+<!-- p8 订单收款 -->
+<div class="panel" id="p8">
+  <div class="card">
+    <div class="sec"><span class="ic">🧾</span>本店全部订单（对账 / 退款定位 / 流水号）</div>
+    <div class="row">
+      <div><label>按手机号筛选</label><input id="ordPhone" class="input" placeholder="11 位手机号"></div>
+      <div><label>订单状态</label><select id="ordStatus" class="select"><option value="">全部</option><option value="pending">待确认</option><option value="done">已完成</option><option value="refunded">已退款</option></select></div>
+    </div>
+    <div class="row">
+      <div><label>开始日期</label><input id="ordFrom" class="input" type="date"></div>
+      <div><label>结束日期</label><input id="ordTo" class="input" type="date"></div>
+    </div>
+    <div class="row" style="margin-top:10px;">
+      <button class="btn" id="btnOrders">查询</button>
+      <button class="btn ghost btn--sm" id="btnOrdersReset">重置</button>
+      <button class="btn gray" id="btnOrdersXlsx">导出Excel</button>
+    </div>
+    <div id="orderStat" style="font-size:12px;color:var(--c-text-3);margin-top:8px;line-height:1.7;"></div>
+    <div id="orderTable" style="margin-top:12px;"></div>
+  </div>
+</div>
+
+</div>
+
+<!-- 消息弹窗 -->
+<div class="mask" id="msgMask">
+  <div class="modal">
+    <h3>🔔 站内消息</h3>
+    <div id="msgList"></div>
+    <button class="btn btn--block" id="btnMsgClose" style="margin-top:12px;">关闭</button>
+  </div>
+</div>
+
+<!-- 播报弹窗 -->
+<div class="mask" id="announceMask">
+  <div class="modal">
+    <h3>📢 播报记录</h3>
+    <div id="announceHistory"></div>
+    <button class="btn btn--block" id="btnAnnounceClose" style="margin-top:12px;">关闭</button>
+  </div>
+</div>
+
+<div class="toast-host" id="toastHost"></div>
+<script>
+const TOKEN = localStorage.getItem("ibigou_merchant_token");
+if (!TOKEN) location.href = "login.html";
+const H = { "X-Merchant-Token": TOKEN };
+const CFG = "/api/merchant/config";
+const M = "/api/merchant";
+const $ = id => document.getElementById(id);
+
+function toast(msg, type){
+  const host = $("toastHost"); if (!host) return;
+  const t = document.createElement("div"); t.className = "toast " + (type || ""); t.textContent = msg;
+  host.appendChild(t);
+  requestAnimationFrame(function(){ t.classList.add("show"); });
+  setTimeout(function(){ t.classList.remove("show"); setTimeout(function(){ t.remove(); }, 220); }, 2600);
+}
+
+async function api(url, body, method){
+  const opt = { method: method || "POST", headers: Object.assign({}, H) };
+  if (body) {
+    opt.headers["Content-Type"] = "application/x-www-form-urlencoded";
+    opt.body = new URLSearchParams(body).toString();
+  }
+  return fetch(url, opt).then(function(r){ return r.json(); });
+}
+function get(url){ return fetch(url, { headers: H }).then(function(r){ return r.json(); }); }
+function fmtT(t){ return (t || "").replace("T", " ").slice(0, 19); }
+function dflt(from, to){
+  const d = new Date();
+  const mm = String(d.getMonth() + 1).padStart(2, "0");
+  return [from || (d.getFullYear() + "-" + mm + "-01"), to || d.toISOString().slice(0, 10)];
+}
+function money(v){ return (Number(v || 0)).toFixed(2); }
+function esc(s){ return String(s == null ? "" : s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"); }
+const tname = { 1:"折扣券", 2:"立减券", 3:"普通余额", 4:"团购免单余额" };
+
+// ---------- tab 切换 ----------
+document.querySelectorAll(".tab").forEach(function(t){
+  t.onclick = function(){
+    document.querySelectorAll(".tab").forEach(function(x){ x.classList.remove("active"); });
+    document.querySelectorAll(".panel").forEach(function(x){ x.classList.remove("active"); });
+    t.classList.add("active");
+    $("p" + t.dataset.p.slice(1)).classList.add("active");
+  };
+});
+$("logout").onclick = function(){ localStorage.removeItem("ibigou_merchant_token"); location.href = "login.html"; };
+
+// ---------- 门店抵扣参数 ----------
+async function renderQrStatus(st, reason){
+  const card = $("qrAuditCard"); if (!card) return;
+  const icon = $("qrStatusIcon"), title = $("qrStatusTitle"), sub = $("qrStatusSub"), badge = $("qrStatusBadge");
+  card.classList.remove("pending","approved","rejected","none");
+  if (st === 0) {
+    card.classList.add("pending"); icon.textContent = "⏳"; title.textContent = "收款码审核中";
+    sub.textContent = "已提交平台审核，通常 24 小时内完成；审核通过前顾客端将展示默认占位。";
+    badge.className = "badge orange"; badge.textContent = "待审核";
+  } else if (st === 1) {
+    card.classList.add("approved"); icon.textContent = "✅"; title.textContent = "收款码已通过审核";
+    sub.textContent = "顾客端可正常展示您的微信/支付宝收款码，下单自动显示。";
+    badge.className = "badge green"; badge.textContent = "已通过";
+  } else if (st === 2) {
+    card.classList.add("rejected"); icon.textContent = "❌"; title.textContent = "收款码被驳回";
+    const r = reason ? reason : "未填写";
+    sub.textContent = "原因：" + r + "。请重新上传清晰的微信/支付宝商户收款码（非个人转账码）。";
+    badge.className = "badge red"; badge.textContent = "已驳回";
+  } else {
+    card.classList.add("none"); icon.textContent = "📷"; title.textContent = "尚未上传收款码";
+    sub.textContent = "上传微信/支付宝收款码后，顾客下单将自动展示（模式A）；未上传时将自动降级为模式B（凭证核销）。";
+    badge.className = "badge gray"; badge.textContent = "未上传";
+  }
+}
+function loadDeductConfig(){
+  const r = await get(CFG + "/deduct-config");
+  if (r.code !== 0 || !r.data) return;
+  const m = r.data;
+  $("dcPercent").value = m.balanceDeductPercent == null ? "" : m.balanceDeductPercent;
+  $("dcDaily").value = m.dailyDeductLimit == null ? "" : m.dailyDeductLimit;
+  $("dcMode").value = m.receiveMode || 1;
+  if (m.receiveQrImgWechat) { $("qrWechatPrev").src = m.receiveQrImgWechat; $("qrWechatPrev").style.display = "block"; }
+  if (m.receiveQrImgAlipay) { $("qrAlipayPrev").src = m.receiveQrImgAlipay; $("qrAlipayPrev").style.display = "block"; }
+  renderQrStatus(m.receiveQrStatus, m.receiveQrRejectReason);
+}
+async function uploadQr(type){
+  const input = type === "wechat" ? $("qrWechatFile") : $("qrAlipayFile");
+  if (!input.files || !input.files[0]) { toast("请先选择图片", "warning"); return; }
+  const fd = new FormData();
+  fd.append("file", input.files[0]);
+  fd.append("type", type);
+  const r = await fetch(CFG + "/upload-qr", { method: "POST", headers: H, body: fd }).then(function(r){ return r.json(); });
+  if (r.code === 0) {
+    toast((type === "wechat" ? "微信" : "支付宝") + "收款码已上传", "success");
+    const img = type === "wechat" ? $("qrWechatPrev") : $("qrAlipayPrev");
+    if (r.data) { img.src = r.data; img.style.display = "block"; }
+    loadDeductConfig();
+  } else { toast(r.msg || "上传失败", "danger"); }
+}
+$("btnUpWechat").onclick = function(){ uploadQr("wechat"); };
+$("btnUpAlipay").onclick = function(){ uploadQr("alipay"); };
+$("btnDcSave").onclick = async function(){
+  const body = {
+    balanceDeductPercent: $("dcPercent").value || "",
+    dailyDeductLimit: $("dcDaily").value || "",
+    receiveMode: $("dcMode").value,
+    receiveQrImg: ""
+  };
+  const r = await api(CFG + "/deduct-config", body);
+  if (r.code === 0) toast("门店参数已保存", "success");
+  else toast(r.msg || "保存失败", "danger");
+};
+
+// ---------- 权重 ----------
+async function loadWeights(){
+  const r = await get(CFG + "/weights");
+  if (r.code !== 0) return;
+  const m = r.data;
+  $("wPrivate").value = m.privatePoolWeight;
+  $("wPublic").value = m.publicPoolWeight;
+  $("wDiscount").value = m.boxDiscountTotalWeight;
+  $("wCoupon").value = m.boxCouponTotalWeight;
+  window.myMerchantNo = m.merchantNo || "";
+}
+$("btnWeights").onclick = async function(){
+  const r = await api(CFG + "/weights", {
+    privatePoolWeight: $("wPrivate").value, publicPoolWeight: $("wPublic").value,
+    boxDiscountTotalWeight: $("wDiscount").value, boxCouponTotalWeight: $("wCoupon").value });
+  if (r.code === 0) toast("权重已保存", "success");
+  else toast(r.msg || "保存失败", "danger");
+};
+
+// ---------- 档位（私有池） ----------
+async function loadPrizes(){
+  const r = await get(CFG + "/prize-pools");
+  const list = r.data || [];
+  const el = $("prizeList");
+  if (!list.length) { el.innerHTML = '<div class="empty">暂无档位，请新增</div>'; return; }
+  el.innerHTML = list.map(function(p){
+    const ops = '<button class="btn btn--sm ghost" onclick="togglePrize(' + p.prizeId + ',' + (p.enabled === 1 ? 0 : 1) + ')">' + (p.enabled === 1 ? "禁用" : "启用") + '</button>'
+      + '<button class="btn btn--sm gray" onclick="delPrize(' + p.prizeId + ')">删除</button>'
+      + '<button class="btn btn--sm green" onclick="putPublic(' + p.prizeId + ')">投放公共池</button>';
+    return '<div class="list-item">'
+      + '<div class="main"><div class="t">' + (tname[p.prizeType] || "档位") + ' · ' + p.prizeValue + '（权重 ' + p.weight + '）</div>'
+      + '<div class="s">#' + p.prizeId + ' · 宜必购：' + (p.isSupportIbigou === 1 ? "支持" : "仅线下") + ' · 限额 ' + (p.limitScope || "-") + '/' + (p.limitCycle || "-") + '/' + (p.limitMax || "不限") + '</div></div>'
+      + '<div class="v">' + (p.enabled === 1 ? '<span class="badge green">启用</span>' : '<span class="badge red">禁用</span>') + '</div>'
+      + '<div class="ops">' + ops + '</div></div>';
+  }).join("");
+}
+async function togglePrize(id, en){ const r = await api(CFG + "/prize-pools/" + id + (en ? "/enable" : "/disable")); toast(r.code === 0 ? "已更新" : (r.msg || "失败"), r.code === 0 ? "success" : "danger"); loadPrizes(); }
+async function delPrize(id){ if (!confirm("确认删除该档位？已发放券不受影响。")) return; const r = await api(CFG + "/prize-pools/" + id, null, "DELETE"); toast(r.code === 0 ? "已删除" : (r.msg || "失败"), r.code === 0 ? "success" : "danger"); loadPrizes(); }
+async function putPublic(id){ const r = await api(CFG + "/prize-pools/" + id + "/put-public"); toast(r.code === 0 ? "已投放公共池" : (r.msg || "失败"), r.code === 0 ? "success" : "danger"); loadPublics(); }
+$("btnAddPrize").onclick = async function(){
+  const val = $("fValue").value;
+  if (val === "" || !(parseFloat(val) > 0)) { toast("请填写优惠数值", "warning"); return; }
+  if (!(parseFloat($("fWeight").value) > 0)) { toast("请填写权重（≥1）", "warning"); return; }
+  const r = await api(CFG + "/prize-pools", {
+    prizeType: $("fType").value, prizeValue: val, weight: $("fWeight").value,
+    isSupportIbigou: $("fIbigou").value, limitScope: $("fScope").value,
+    limitCycle: $("fCycle").value, limitMax: $("fMax").value || "0", isPutPublic: 0 });
+  toast(r.code === 0 ? "档位已新增" : (r.msg || "新增失败"), r.code === 0 ? "success" : "danger");
+  loadPrizes();
+};
+
+// ---------- 公共投放 ----------
+async function loadPublics(){
+  const r = await get(CFG + "/public-pools");
+  const list = r.data || [];
+  const el = $("publicList");
+  if (!list.length) { el.innerHTML = '<div class="empty">暂无投放</div>'; return; }
+  el.innerHTML = list.map(function(p){
+    return '<div class="list-item">'
+      + '<div class="main"><div class="t">#' + p.publicId + ' · ' + (tname[p.prizeType] || "券") + ' · ' + p.prizeValue + '</div>'
+      + '<div class="s">宜必购：' + (p.isSupportIbigou === 1 ? "支持" : "仅线下") + '</div></div>'
+      + '<div class="v">' + (p.enabled === 1 ? '<span class="badge green">上架</span>' : '<span class="badge red">下架</span>') + '</div>'
+      + '<div class="ops"><button class="btn btn--sm ghost" onclick="togglePub(' + p.publicId + ',' + (p.enabled === 1 ? 0 : 1) + ')">' + (p.enabled === 1 ? "下架" : "上架") + '</button></div></div>';
+  }).join("");
+}
+async function togglePub(id, en){ const r = await api(CFG + "/public-pools/" + id + (en ? "/up" : "/down")); toast(r.code === 0 ? "已更新" : (r.msg || "失败"), r.code === 0 ? "success" : "danger"); loadPublics(); }
+
+// ---------- 专属盲盒 ----------
+async function loadGroups(){
+  const ch = $("gChannel").value;
+  const r = await get(CFG + "/group-pools?channel=" + ch);
+  const list = r.data || [];
+  const el = $("groupList");
+  if (!list.length) { el.innerHTML = '<div class="empty">暂无专属档位</div>'; return; }
+  el.innerHTML = list.map(function(p){
+    return '<div class="list-item">'
+      + '<div class="main"><div class="t">' + (tname[p.prizeType] || "档位") + ' · ' + p.prizeValue + '（权重 ' + p.weight + '）</div>'
+      + '<div class="s">#' + p.groupPoolId + ' · 宜必购：' + (p.isSupportIbigou === 1 ? "支持" : "仅线下") + '</div></div>'
+      + '<div class="v">' + (p.enabled === 1 ? '<span class="badge green">启用</span>' : '<span class="badge red">禁用</span>') + '</div>'
+      + '<div class="ops"><button class="btn btn--sm ghost" onclick="toggleGp(' + p.groupPoolId + ',' + (p.enabled === 1 ? 0 : 1) + ')">' + (p.enabled === 1 ? "禁用" : "启用") + '</button>'
+      + '<button class="btn btn--sm gray" onclick="delGp(' + p.groupPoolId + ')">删除</button></div></div>';
+  }).join("");
+}
+async function toggleGp(id, en){ const r = await api(CFG + "/group-pools/" + id + (en ? "/enable" : "/disable")); toast(r.code === 0 ? "已更新" : (r.msg || "失败"), r.code === 0 ? "success" : "danger"); loadGroups(); }
+async function delGp(id){ if (!confirm("确认删除该专属档位？")) return; const r = await api(CFG + "/group-pools/" + id, null, "DELETE"); toast(r.code === 0 ? "已删除" : (r.msg || "失败"), r.code === 0 ? "success" : "danger"); loadGroups(); }
+async function loadGroupWeights(){
+  const ch = $("gChannel").value;
+  const r = await get(CFG + "/group-pool-weights?channel=" + ch);
+  const cfg = r.data;
+  $("gDisc").value = cfg ? cfg.discountTotalWeight : 0;
+  $("gCou").value = cfg ? cfg.couponBalanceTotalWeight : 0;
+}
+$("gChannel").onchange = function(){ loadGroups(); loadGroupWeights(); };
+$("btnGroupWeights").onclick = async function(){
+  const r = await api(CFG + "/group-pool-weights", {
+    channel: $("gChannel").value, discountTotalWeight: $("gDisc").value, couponBalanceTotalWeight: $("gCou").value });
+  toast(r.code === 0 ? "大类权重已保存" : (r.msg || "保存失败"), r.code === 0 ? "success" : "danger");
+};
+$("btnAddGroup").onclick = async function(){
+  const val = $("gValue").value;
+  if (val === "" || !(parseFloat(val) > 0)) { toast("请填写优惠数值", "warning"); return; }
+  if (!(parseFloat($("gWeight").value) > 0)) { toast("请填写权重（≥1）", "warning"); return; }
+  const r = await api(CFG + "/group-pools", {
+    channel: $("gChannel").value, prizeType: $("gType").value, prizeValue: val,
+    weight: $("gWeight").value, isSupportIbigou: 1 });
+  toast(r.code === 0 ? "专属档位已新增" : (r.msg || "新增失败"), r.code === 0 ? "success" : "danger");
+  loadGroups();
+};
+$("btnQr").onclick = async function(){
+  const ch = $("gChannel").value;
+  const r = await get(CFG + "/group-qr?channel=" + ch);
+  if (r.code !== 0) { toast(r.msg || "生成失败", "danger"); return; }
+  const box = $("groupQrBox");
+  box.innerHTML = "生成中…";
+  const svg = await api(CFG + "/qr-svg", { content: r.data });
+  if (svg.code === 0 && svg.data && svg.data.svg) box.innerHTML = svg.data.svg;
+  else box.textContent = r.data;
+};
+$("btnMyQr").onclick = async function(){
+  const r = await get(CFG + "/weights");
+  const no = (r.data && r.data.merchantNo) || "";
+  const url = "https://ybgtc.com/h5/customer/index.html?merchantNo=" + no;
+  const box = $("myQrBox");
+  box.innerHTML = "生成中…";
+  const svg = await api(CFG + "/qr-svg", { content: url });
+  if (svg.code === 0 && svg.data && svg.data.svg) box.innerHTML = svg.data.svg;
+  else box.textContent = url;
+};
+
+// ---------- 手工核销 / 扣减 ----------
+$("btnVerifyCoupon").onclick = async function(){
+  const id = $("couponNo").value.trim();
+  if (!id) { toast("请输入券编号", "warning"); return; }
+  const r = await api(M + "/coupon/verify-manual", { couponId: id });
+  toast(r.code === 0 ? "核销成功（verify_type=2）" : (r.msg || "核销失败"), r.code === 0 ? "success" : "danger");
+};
+$("btnDeduct").onclick = async function(){
+  const ph = $("dPhone").value.trim();
+  const amt = $("dAmount").value;
+  if (!/^1[3-9]\d{9}$/.test(ph)) { toast("请输入正确手机号", "warning"); return; }
+  if (!(parseFloat(amt) > 0)) { toast("请输入订单金额", "warning"); return; }
+  const r = await api(M + "/balance/manual-deduct", { userPhone: ph, orderAmount: amt });
+  toast(r.code === 0 ? "扣减成功，订单已生成" : (r.msg || "扣减失败"), r.code === 0 ? "success" : "danger");
+};
+
+// ---------- 扫码识别 ----------
+let scannerStream = null;
+$("btnScan").onclick = async function(){
+  const video = $("scanner");
+  if (scannerStream) { scannerStream.getTracks().forEach(function(t){ t.stop(); }); scannerStream = null; video.style.display = "none"; return; }
+  try {
+    scannerStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
+    video.srcObject = scannerStream;
+    video.style.display = "block";
+    $("scanTip").textContent = "请将二维码对准摄像头（再次点击关闭）；无摄像头可用手动录入。";
+    tickScan();
+  } catch (e) {
+    toast("无法打开摄像头，请手动录入", "warning");
+  }
+};
+function tickScan(){
+  const video = $("scanner");
+  if (!scannerStream || video.readyState < 2) { setTimeout(tickScan, 500); return; }
+  try {
+    const canvas = document.createElement("canvas");
+    canvas.width = video.videoWidth; canvas.height = video.videoHeight;
+    canvas.getContext("2d").drawImage(video, 0, 0);
+    if (window.jsQR) {
+      const code = jsQR(canvas.getContext("2d").getImageData(0, 0, canvas.width, canvas.height).data, canvas.width, canvas.height);
+      if (code && code.data) handleScanText(code.data);
+    }
+  } catch (e) { /* 单帧失败继续 */ }
+  setTimeout(tickScan, 400);
+}
+function handleScanText(text){
+  const s = String(text || "").trim();
+  if (!s) return;
+  $("scanTip").textContent = "已识别：" + s.slice(0, 40);
+  if (/^YBGT-ID:/i.test(s)) { $("idContent").value = s; return; }
+  if (s.indexOf("couponId") !== -1) { const m = s.match(/couponId[=:]\s*(\d+)/i); if (m) { $("couponNo").value = m[1]; return; } }
+  if (s.length > 16) { $("voucherToken").value = s; $("qrToken").value = s; return; }
+  $("qrToken").value = s;
+}
+
+// ---------- 动态码 / 身份码 / 凭证核验 ----------
+$("btnVerifyQr").onclick = async function(){
+  const t = $("qrToken").value.trim();
+  if (!t) { toast("请输入动态码", "warning"); return; }
+  const r = await get(M + "/qr/verify?qrToken=" + encodeURIComponent(t));
+  if (r.code !== 0) { toast(r.msg || "核验失败", "danger"); return; }
+  const d = r.data;
+  let html = '<div class="info-bar">✅ 用户：<b>' + esc(d.userPhone) + '</b>　余额：<b>¥' + money(d.balance) + '</b>　本店可用券：<b>' + (d.coupons || []).length + '</b> 张</div>';
+  if (d.coupons && d.coupons.length) {
+    html += d.coupons.map(function(c){
+      return '<div class="list-item"><div class="main"><div class="t">' + (tname[c.prizeType] || "券") + ' ' + c.prizeValue + '</div><div class="s">#' + c.couponId + ' · 发行 ' + (c.sourceMerchantNo || "-") + '</div></div><div class="ops"><button class="btn btn--sm orange" onclick="verifyByQr(' + c.couponId + ')">核销</button></div></div>';
+    }).join("");
+  }
+  $("verifyOut").innerHTML = html;
+  $("dPhone").value = d.userPhone;
+};
+window.verifyByQr = async function(couponId){
+  const r = await api(M + "/coupon/verify-manual", { couponId: couponId });
+  toast(r.code === 0 ? "核销成功" : (r.msg || "核销失败"), r.code === 0 ? "success" : "danger");
+};
+$("btnVerifyId").onclick = async function(){
+  const c = $("idContent").value.trim();
+  if (!c) { toast("请输入身份码内容", "warning"); return; }
+  const r = await get(M + "/identity/verify?content=" + encodeURIComponent(c));
+  if (r.code !== 0) { toast(r.msg || "核验失败", "danger"); return; }
+  const d = r.data;
+  let html = '<div class="info-bar">✅ 用户：<b>' + esc(d.userPhone) + '</b>　历史订单：<b>' + (d.orders || []).length + '</b> 笔</div>';
+  (d.orders || []).slice(0, 10).forEach(function(o){
+    html += '<div class="list-item"><div class="main"><div class="t">' + (o.offlineOrderNo || "-") + '</div><div class="s">金额 ' + money(o.orderAmount) + ' · 实付 ' + money(o.payAmount) + ' · ' + fmtT(o.createTime) + '</div></div>'
+      + '<div class="ops">' + (o.refundStatus === 0 ? '<button class="btn btn--sm red" onclick="markRefund(\'' + o.offlineOrderNo + '\')">标记退款</button>' : '<span class="badge red">已退款</span>') + '</div></div>';
+  });
+  $("verifyOut").innerHTML = html;
+  $("dPhone").value = d.userPhone;
+};
+window.markRefund = async function(orderNo){
+  if (!confirm("确认对订单 " + orderNo + " 标记退款？将恢复用户券/余额并记录审计。")) return;
+  const r = await api(M + "/order/" + orderNo + "/refund");
+  toast(r.code === 0 ? "已标记退款" : (r.msg || "退款失败"), r.code === 0 ? "success" : "danger");
+};
+$("btnVerifyVoucher").onclick = async function(){
+  const t = $("voucherToken").value.trim();
+  if (!t) { toast("请输入凭证 token", "warning"); return; }
+  const r = await get(M + "/order/voucher?voucherToken=" + encodeURIComponent(t));
+  if (r.code !== 0) { toast(r.msg || "凭证无效或已失效", "danger"); return; }
+  const o = r.data;
+  $("verifyOut").innerHTML = '<div class="info-bar">✅ 凭证有效：订单 <b>' + esc(o.offlineOrderNo) + '</b> · 用户 ' + esc(o.userPhone) + ' · 应付 ¥' + money(o.payAmount) + '</div>'
+    + '<button class="btn green btn--block" onclick="confirmVoucher(\'' + o.offlineOrderNo + '\')" style="margin-top:10px;">确认完成（扣余额/核销券）</button>';
+  $("dPhone").value = o.userPhone;
+};
+window.confirmVoucher = async function(orderNo){
+  if (!confirm("确认完成该订单？将扣减余额/核销券并发放返还。")) return;
+  const r = await api(M + "/order/" + orderNo + "/confirm");
+  toast(r.code === 0 ? "订单已完成" : (r.msg || "确认失败"), r.code === 0 ? "success" : "danger");
+};
+
+// ---------- 订单列表 ----------
+function buildOrderQuery(){
+  const params = [];
+  const p = $("ordPhone").value.trim(); if (p) params.push("userPhone=" + encodeURIComponent(p));
+  const from = $("ordFrom").value; if (from) params.push("from=" + from);
+  '  const to = $("ordTo").value; if (to) params.push("to=" + to);
+  return params.length ? "?" + params.join("&") : "";
+}
+$("btnOrdersReset").onclick = function(){
+  $("ordPhone").value = ""; $("ordFrom").value = ""; $("ordTo").value = ""; $("ordStatus").value = ""; loadOrders();
+};
+function statusBadge(x){
+  if (x.refundStatus === 1) return '<span class="badge red">已退款</span>';
+  if (x.orderStatus === 0) return '<span class="badge orange">待确认</span>';
+  return '<span class="badge green">已完成</span>';
+}
+$("btnOrders").onclick = function(){ loadOrders(); };
+$("btnOrdersXlsx").onclick = exportOrders;
+async function loadOrders(){
+  const qs = buildOrderQuery();
+  const r = await get(M + "/orders" + qs);
+  let list = r.data || [];
+  const statusFilter = $("ordStatus").value;
+  if (statusFilter === "pending") list = list.filter(function(x){ return x.refundStatus === 0 && x.orderStatus === 0; });
+  else if (statusFilter === "done") list = list.filter(function(x){ return x.refundStatus === 0 && x.orderStatus !== 0; });
+  else if (statusFilter === "refunded") list = list.filter(function(x){ return x.refundStatus === 1; });
+  let totalAmount = 0, totalRefund = 0;
+  list.forEach(function(x){ if (x.refundStatus === 0) totalAmount += Number(x.payAmount || 0); if (x.refundStatus === 1) totalRefund += Number(x.payAmount || 0); });
+  $("orderStat").innerHTML = '<b>当前筛选</b>：' + list.length + ' 笔 · 实付合计 ¥' + money(totalAmount) + ' · 退款合计 ¥' + money(totalRefund);
+  const el = $("orderTable");
+  if (!list.length) { el.innerHTML = '<div class="empty">暂无订单</div>'; return; }
+  el.innerHTML = list.map(function(x){
+    const diff = (Number(x.orderAmount) - Number(x.payAmount || 0)).toFixed(2);
+    return '<div class="list-item">'
+      + '<div class="main"><div class="t">' + esc(x.offlineOrderNo) + '</div>'
+      + '<div class="s">' + esc(x.userPhone) + ' · ' + fmtT(x.createTime) + '<br>原价 ¥' + money(x.orderAmount) + ' · 抵扣 ¥' + money(x.deductBalance) + ' · 实付 ¥' + money(x.payAmount) + ' · 优惠 <span class="diff-red">¥' + diff + '</span>' + (x.merchantTradeNo ? ' · 流水 ' + esc(x.merchantTradeNo) : '') + '</div></div>'
+      + '<div class="v">' + statusBadge(x) + '</div>'
+      + '<div class="ops">'
+      + '<button class="btn btn--sm" onclick="setTradeNo(\'' + x.offlineOrderNo + '\')">录流水号</button>'
+      + (x.refundStatus === 0 ? '<button class="btn btn--sm red" onclick="markRefund(\'' + x.offlineOrderNo + '\')">标记退款</button>' : '')
+      + '</div></div>';
+  }).join("");
+}
+async function setTradeNo(orderNo){
+  const t = prompt("请输入本单微信/支付宝交易流水号（退款时去商户后台办理）：", "");
+  if (!t) return;
+  const r = await api(M + "/order/" + orderNo + "/trade-no", { tradeNo: t });
+  toast(r.code === 0 ? "流水号已记录" : (r.msg || "保存失败"), r.code === 0 ? "success" : "danger");
+  loadOrders();
+}
+async function exportOrders(){
+  const qs = buildOrderQuery();
+  const r = await fetch(M + "/orders/export" + qs, { headers: H });
+  if (!r.ok) { toast("导出失败", "danger"); return; }
+  const blob = await r.blob();
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "orders.xlsx";
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+
+// ---------- 会员续费 ----------
+async function loadMember(){
+  const s = await get(M + "/member/status");
+  const p = await get(M + "/member/plan");
+  if (s.code === 0 && s.data) {
+    const st = s.data;
+    const banner = $("memberBanner");
+    if (st.state === 0) { banner.className = "member-banner trial"; $("memberTitle").textContent = "免费试用中（剩 " + (st.remainDays || 0) + " 天）"; }
+    else if (st.state === 1) { banner.className = "member-banner paid"; $("memberTitle").textContent = "会员有效期至 " + (st.expireTime || "").replace("T", " ").slice(0, 10); }
+    else { banner.className = "member-banner expired"; $("memberTitle").textContent = "⚠️ 会员已到期"; }
+    $("memberSub").textContent = "剩余天数：" + (st.remainDays != null ? st.remainDays + " 天" : "--") + "　写操作：" + (st.writeAllowed ? "可用" : "已锁定（续费后恢复）");
+  }
+  const cfg = await get(M + "/config");
+  if (cfg.code === 0 && cfg.data) $("returnPercent").value = cfg.data.crossStoreReturnPercent;
+  if (p.code === 0 && p.data) {
+    const pl = p.data;
+    $("memberPlan").innerHTML = '<div class="list-item"><div class="main"><div class="t">套餐单价 ' + pl.monthlyPrice + ' 元/月</div><div class="s">免费试用 ' + pl.freeTrialDays + ' 天；年费合计 ' + pl.annualPrice + ' 元</div></div></div>';
+    if (pl.giftSwitchOn && pl.giftMonths > 0) {
+      $("giftTip").style.display = "block";
+      $("giftTip").textContent = "🎁 活动：现在一次性缴纳年费，赠送 " + pl.giftMonths + " 个月会员";
+    } else { $("giftTip").style.display = "none"; }
+  }
+  const o = await get(M + "/member/orders");
+  const list = o.data || [];
+  const stName = { 0:"待支付", 1:"已支付", 2:"已取消" };
+  const el = $("memberOrders");
+  if (!list.length) { el.innerHTML = '<div class="empty">暂无续费记录</div>'; return; }
+  el.innerHTML = list.map(function(x){
+    const ops = x.status === 0
+      ? '<button class="btn btn--sm" onclick="wxPayRenew(\'' + x.orderNo + '\')">微信支付</button><button class="btn btn--sm green" onclick="confirmRenew(\'' + x.orderNo + '\')">确认支付(测试)</button>'
+      : "";
+    return '<div class="list-item"><div class="main"><div class="t">' + esc(x.orderNo) + '</div>'
+      + '<div class="s">金额 ¥' + money(x.amount) + ' · 购 ' + (x.buyMonths || 0) + ' 赠 ' + (x.giftMonths || 0) + ' · 总 ' + (x.totalMonths || 0) + ' 个月<br>有效期 ' + fmtT(x.validFrom) + ' ~ ' + fmtT(x.validTo) + '</div></div>'
+      + '<div class="v">' + (stName[x.status] || x.status) + '</div><div class="ops">' + ops + '</div></div>';
+  }).join("");
+}
+async function confirmRenew(no){
+  const r = await api(M + "/member/renew-order/" + no + "/confirm");
+  toast(r.code === 0 ? "续费成功，有效期已叠加" : (r.msg || "确认失败"), r.code === 0 ? "success" : "danger");
+  loadMember();
+}
+async function wxPayRenew(no){
+  const r = await api(M + "/member/renew-order/" + no + "/pay");
+  if (r.code !== 0) { toast(r.msg || "支付失败", "danger"); return; }
+  const p = r.data;
+  if (p.realPay && p.codeUrl) {
+    toast("微信支付下单成功，请扫码支付：" + p.codeUrl, "info");
+  } else {
+    toast((p.msg || "请使用测试确认") + "（生产接入微信后自动拉起支付）", "warning");
+  }
+}
+$("btnRenew").onclick = async function(){
+  const r = await api(M + "/member/renew-order");
+  if (r.code !== 0) { toast(r.msg || "下单失败", "danger"); return; }
+  toast("续费订单已生成：" + r.data.orderNo + "，金额 " + money(r.data.amount) + " 元（含赠送 " + (r.data.giftMonths || 0) + " 个月）", "success");
+  if (confirm("测试环境：直接确认支付？")) confirmRenew(r.data.orderNo);
+};
+
+// ---------- 流水报表 ----------
+$("btnFlows").onclick = function(){ loadFlows(false); };
+$("btnFlowsXlsx").onclick = function(){ loadFlows(true); };
+async function loadFlows(xlsx){
+  const ft = dflt($("flowFrom").value, $("flowTo").value);
+  const f = ft[0], t = ft[1];
+  const type = $("flowType").value;
+  if (xlsx) return downloadXlsx(CFG + "/balance-flows/export?type=" + type + "&from=" + f + "&to=" + t);
+  const r = await get(CFG + "/balance-flows?type=" + type + "&from=" + f + "&to=" + t);
+  const list = r.data || [];
+  const el = $("flowTable");
+  if (!list.length) { el.innerHTML = '<div class="empty">暂无流水</div>'; return; }
+  const ftName = { 1:"发放", 2:"抵扣", 3:"退款", 4:"跨店返还" };
+  el.innerHTML = list.map(function(x){
+    return '<div class="list-item"><div class="main"><div class="t">' + esc(x.userPhone) + ' · ' + (ftName[x.flowType] || x.flowType) + '</div>'
+      + '<div class="s">单号 ' + esc(x.bizNo || "-") + ' · 核销 ' + (x.verifyType || "-") + ' · ' + fmtT(x.createTime) + '</div></div>'
+      + '<div class="v">¥' + money(x.amount) + '</div></div>';
+  }).join("");
+}
+$("btnGroupRecords").onclick = function(){ loadGr(false); };
+$("btnGroupXlsx").onclick = function(){ loadGr(true); };
+async function loadGr(xlsx){
+  const ft = dflt($("grFrom").value, $("grTo").value);
+  const f = ft[0], t = ft[1];
+  const ch = $("grChannel").value;
+  if (xlsx) return downloadXlsx(CFG + "/group-records/export?channel=" + ch + "&from=" + f + "&to=" + t);
+  const r = await get(CFG + "/group-records?channel=" + ch + "&from=" + f + "&to=" + t);
+  const list = r.data || [];
+  const el = $("grTable");
+  if (!list.length) { el.innerHTML = '<div class="empty">暂无团购登记</div>'; return; }
+  el.innerHTML = list.map(function(x){
+    const rb = x.returnBalance && Number(x.returnBalance) > 0 ? ' · 返还 ¥' + money(x.returnBalance) : '';
+    return '<div class="list-item"><div class="main"><div class="t">' + esc(x.userPhone) + ' · ' + (x.channel === 1 ? "美团" : x.channel === 3 ? "抖音" : "饿了么") + ' · 团购 ¥' + money(x.groupAmount) + rb + '</div>'
+      + '<div class="s">' + esc((x.returnDesc || x.prizeInfo || "").slice(0, 60)) + ' · ' + fmtT(x.createTime) + '</div></div></div>';
+  }).join("");
+}
+$("btnRecon").onclick = function(){ loadRecon(false); };
+$("btnReconXlsx").onclick = function(){ loadRecon(true); };
+async function loadRecon(xlsx){
+  const ft = dflt($("rbFrom").value, $("rbTo").value);
+  const f = ft[0], t = ft[1];
+  if (xlsx) return downloadXlsx(CFG + "/ibigou-recon/export?from=" + f + "&to=" + t);
+  const r = await get(CFG + "/ibigou-recon?from=" + f + "&to=" + t);
+  const list = r.data || [];
+  const el = $("rbTable");
+  if (!list.length) { el.innerHTML = '<div class="empty">暂无宜必购订单</div>'; return; }
+  const ftName = { 0:"未退款", 1:"全额退款", 2:"部分退款" };
+  el.innerHTML = list.map(function(x){
+    return '<div class="list-item"><div class="main"><div class="t">' + esc(x.ibigouOrderNo) + ' · ' + esc(x.userPhone) + '</div>'
+      + '<div class="s">券 ' + esc(x.couponId || "-") + ' · 余额 ' + money(x.deductBalance) + ' · 实付 ' + money(x.payAmount) + ' · ' + (ftName[x.refundStatus] || x.refundStatus) + ' · ' + fmtT(x.createTime) + '</div></div></div>';
+  }).join("");
+}
+async function downloadXlsx(url){
+  const r = await fetch(url, { headers: H });
+  if (!r.ok) { toast("导出失败", "danger"); return; }
+  const blob = await r.blob();
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "report.xlsx";
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+
+// ---------- 外来券 ----------
+$("btnExternal").onclick = function(){ loadExt(false); };
+$("btnExternalXlsx").onclick = function(){ loadExt(true); };
+async function loadExt(xlsx){
+  if (xlsx) return downloadXlsx(CFG + "/external-coupons/export");
+  const r = await get(CFG + "/external-coupons");
+  const list = r.data || [];
+  const el = $("extTable");
+  if (!list.length) { el.innerHTML = '<div class="empty">暂无外来券</div>'; return; }
+  const stName = { 0:"未使用", 1:"已使用", 2:"已过期", 3:"已作废" };
+  el.innerHTML = list.map(function(x){
+    return '<div class="list-item"><div class="main"><div class="t">#' + esc(x.couponId) + ' · ' + (tname[x.prizeType] || "券") + ' ' + (x.prizeType === 1 ? x.prizeValue + "折" : "¥" + x.prizeValue) + '</div>'
+      + '<div class="s">用户 ' + esc(x.userPhone) + ' · 发行商家 ' + esc(x.sourceMerchantNo) + ' · 核销 ' + (x.verifyType || "-") + '</div></div>'
+      + '<div class="v"><span class="badge orange">' + (stName[x.status] || x.status) + '</span></div></div>';
+  }).join("");
+}
+
+// ---------- 播报 ----------
+let announceOn = true;
+let lastAnnounceId = 0;
+async function pollAnnounce(){
+  if (!announceOn) return;
+  const r = await get(M + "/announce/poll?afterId=" + lastAnnounceId);
+  const list = r.data || [];
+  list.forEach(function(a){
+    lastAnnounceId = Math.max(lastAnnounceId, a.announceId);
+    if ("speechSynthesis" in window) {
+      try {
+        const u = new SpeechSynthesisUtterance(a.content || "");
+        u.lang = "zh-CN";
+        speechSynthesis.speak(u);
+      } catch (e) { /* 忽略 */ }
+    }
+  });
+  if (list.length) loadOverview();
+}
+function toggleAnnounce(){
+  announceOn = !announceOn;
+  $("announceState").textContent = announceOn ? "开" : "关";
+  if (announceOn) pollAnnounce();
+}
+$("btnAnnounceList").onclick = async function(){
+  const r = await get(M + "/announce/list");
+  const list = r.data || [];
+  $("announceHistory").innerHTML = list.length
+    ? list.map(function(a){ return '<div class="msg-item"><div class="t">' + esc(a.content || "") + '</div><div class="s">' + fmtT(a.createTime) + '</div></div>'; }).join("")
+    : '<div class="empty">暂无播报</div>';
+  $("announceMask").classList.add("show");
+};
+$("btnAnnounceClose").onclick = function(){ $("announceMask").classList.remove("show"); };
+
+// ---------- 消息 ----------
+async function refreshMsgCount(){
+  const r = await get(M + "/messages/unread-count");
+  if (r.code === 0) $("msgCount").textContent = r.data || 0;
+}
+async function showMessages(){
+  const r = await get(M + "/messages");
+  const list = r.data || [];
+  $("msgList").innerHTML = list.length
+    ? list.map(function(m){ return '<div class="msg-item"><div class="t">' + (m.isRead === 1 ? "✅ " : "🔔 ") + esc(m.title || "通知") + '</div><div class="s">' + esc(m.content || "") + '<br>' + fmtT(m.createTime) + '</div></div>'; }).join("")
+    : '<div class="empty">暂无消息</div>';
+  $("msgMask").classList.add("show");
+  await api(M + "/messages/read-all");
+  refreshMsgCount();
+}
+$("btnMsgClose").onclick = function(){ $("msgMask").classList.remove("show"); };
+
+// ---------- 概览 ----------
+async function loadOverview(){
+  const r = await get(M + "/orders");
+  const list = r.data || [];
+  let amount = 0, pending = 0;
+  list.forEach(function(o){
+    if (o.refundStatus === 0 && o.orderStatus !== 0) amount += Number(o.payAmount || 0);
+    if (o.orderStatus === 0) pending++;
+  });
+  $("stOrders").textContent = list.length;
+  $("stAmount").textContent = money(amount);
+  $("stPending").textContent = pending;
+  const s = await get(M + "/member/status");
+  if (s.code === 0 && s.data) {
+    $("stMember").textContent = s.data.state === 0 ? "试用" : (s.data.state === 1 ? "会员" : "过期");
+  }
+  const a = await get(M + "/announce/list");
+  const al = a.data || [];
+  $("announceList").innerHTML = al.length
+    ? al.slice(0, 5).map(function(x){ return '<div class="msg-item"><div class="t">' + esc(x.content || "") + '</div><div class="s">' + fmtT(x.createTime) + '</div></div>'; }).join("")
+    : '<div class="empty">暂无播报</div>';
+}
+
+// ---------- 初始化 ----------
+loadWeights(); loadPrizes(); loadPublics(); loadGroups(); loadGroupWeights(); loadDeductConfig(); loadMember(); loadOverview(); refreshMsgCount();
+setInterval(pollAnnounce, 5000);
+</script>
+<!-- jsQR 1.4 本地引用（无 CDN 依赖，p4 Tab 扫码时延迟加载） -->
+<script src="static/jsQR.js" defer></script>
+</body>
+</html>

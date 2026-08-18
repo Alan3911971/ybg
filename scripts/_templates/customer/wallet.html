@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#ff5b3e">
+<title>我的钱包 · 宜必购</title>
+<link rel="icon" href="data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='80' font-size='90'%3E%F0%9F%92%B0%3C/text%3E%3C/svg%3E">
+<style>
+  :root{
+    --c-primary:#ff5b3e; --c-primary-600:#e84a2f; --c-primary-100:#ffe9e3;
+    --c-accent:#ffb547; --c-success:#16a34a; --c-success-bg:#e8f7ee; --c-warning:#f59e0b; --c-warning-bg:#fff6e0;
+    --c-danger:#dc2626; --c-danger-bg:#fde8e8; --c-info:#2563eb; --c-info-bg:#e6efff;
+    --c-text:#1f2330; --c-text-2:#5a6072; --c-text-3:#8a90a2;
+    --c-bg:#f6f7fb; --c-surface:#fff; --c-border:#ececf3; --c-divider:#f0f1f6;
+    --c-grad-1:linear-gradient(135deg,#ff7150 0%,#ff9567 100%);
+    --r-md:10px; --r-lg:14px; --r-pill:999px;
+    --sh-1:0 1px 2px rgba(20,23,40,.04),0 1px 4px rgba(20,23,40,.06);
+    --sh-2:0 6px 16px rgba(20,23,40,.08);
+    --sh-press:0 0 0 4px rgba(255,91,62,.12);
+  }
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+  html,body{font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei","Helvetica Neue",Arial,sans-serif;color:var(--c-text);background:var(--c-bg);-webkit-font-smoothing:antialiased;}
+  body{min-height:100vh;padding-bottom:calc(76px + env(safe-area-inset-bottom));}
+  a{color:inherit;text-decoration:none;}
+  input,select,button{font-size:16px;}
+  button{font-family:inherit;}
+  .hero{background:var(--c-grad-1);color:#fff;padding:36px 20px 56px;border-bottom-left-radius:24px;border-bottom-right-radius:24px;position:relative;overflow:hidden;}
+  .hero::after{content:"\01F4B0";position:absolute;font-size:130px;opacity:.16;right:-12px;top:-8px;transform:rotate(-8deg);pointer-events:none;}
+  .hero h1{font-size:24px;font-weight:700;}
+  .hero .sub{margin-top:6px;font-size:14px;opacity:.92;}
+  .balance{display:flex;align-items:flex-end;gap:8px;margin-top:18px;}
+  .balance .sym{font-size:22px;opacity:.9;padding-bottom:6px;}
+  .balance .num{font-size:42px;font-weight:800;letter-spacing:.5px;line-height:1;}
+  .balance-row{display:flex;gap:10px;margin-top:14px;flex-wrap:wrap;}
+  .pill{display:inline-flex;align-items:center;padding:3px 10px;border-radius:var(--r-pill);font-size:12px;background:rgba(255,255,255,.18);color:#fff;border:1px solid rgba(255,255,255,.3);}
+  .container{max-width:640px;margin:-32px 16px 0;padding:0 0 24px;}
+  @media (min-width:768px){ .container{margin-left:auto;margin-right:auto;} body{background:#eceef4;} }
+  .qr-card{display:flex;gap:14px;align-items:center;padding:18px;background:#fff;border-radius:var(--r-lg);box-shadow:var(--sh-1);margin-bottom:14px;border:1px solid var(--c-border);}
+  .qr-card .qr{width:120px;height:120px;border-radius:12px;background:#fafbff;display:flex;align-items:center;justify-content:center;color:#888;font-size:12px;overflow:hidden;flex:0 0 120px;}
+  .qr-card .qr img,.qr-card .qr svg{width:100%;height:100%;}
+  .qr-card .info{flex:1;}
+  .qr-card .info h3{font-size:16px;font-weight:600;margin-bottom:4px;}
+  .qr-card .info p{font-size:12px;color:var(--c-text-3);line-height:1.6;}
+  .qr-card .actions{display:flex;gap:8px;margin-top:10px;}
+  .section-card{background:#fff;border-radius:var(--r-lg);padding:16px;box-shadow:var(--sh-1);margin-bottom:14px;border:1px solid var(--c-border);}
+  .section-title{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
+  .section-title b{font-size:15px;}
+  .section-title .more{font-size:12px;color:var(--c-primary);cursor:pointer;}
+  .seg{display:inline-flex;background:#eef0f4;border-radius:999px;padding:3px;margin:8px 0 12px;}
+  .seg button{appearance:none;border:none;background:transparent;padding:8px 14px;font-size:13px;color:var(--c-text-2);border-radius:999px;cursor:pointer;}
+  .seg button.active{background:#fff;color:var(--c-primary);box-shadow:0 1px 4px rgba(0,0,0,.06);font-weight:600;}
+  .coupon{display:flex;gap:12px;align-items:stretch;background:linear-gradient(180deg,#fff8f3 0%,#fff 70%);border:1px dashed #ffc8b4;border-radius:var(--r-lg);margin-bottom:10px;overflow:hidden;}
+  .coupon .left{flex:0 0 92px;background:var(--c-grad-1);color:#fff;padding:14px 8px;text-align:center;position:relative;display:flex;flex-direction:column;justify-content:center;}
+  .coupon .left::after{content:"";position:absolute;right:-6px;top:50%;transform:translateY(-50%);width:12px;height:12px;background:#fff;border-radius:50%;}
+  .coupon .left .v{font-size:24px;font-weight:800;line-height:1;}
+  .coupon .left .u{font-size:11px;margin-top:2px;opacity:.85;}
+  .coupon .right{flex:1;padding:12px 14px 12px 18px;}
+  .coupon .name{font-size:14px;font-weight:600;color:var(--c-text);}
+  .coupon .desc{font-size:12px;color:var(--c-text-3);margin-top:4px;line-height:1.5;}
+  .coupon .meta{display:flex;gap:6px;align-items:center;margin-top:8px;}
+  .coupon.used{opacity:.65;filter:grayscale(.4);border-color:#e0e0e6;}
+  .coupon.used .left{background:#9aa0a6;}
+  .flow{display:flex;align-items:center;padding:12px 0;border-bottom:1px solid var(--c-divider);}
+  .flow:last-child{border-bottom:none;}
+  .flow .ic{width:36px;height:36px;border-radius:10px;background:var(--c-primary-100);color:var(--c-primary);display:flex;align-items:center;justify-content:center;margin-right:10px;flex:0 0 36px;font-size:14px;}
+  .flow.in .ic{background:#e8f7ee;color:#16a34a;}
+  .flow.out .ic{background:#fde8e8;color:#dc2626;}
+  .flow .main{flex:1;}
+  .flow .main .t{font-size:14px;color:var(--c-text);}
+  .flow .main .s{font-size:12px;color:var(--c-text-3);margin-top:2px;line-height:1.5;}
+  .flow .amt{font-size:16px;font-weight:700;}
+  .flow.in .amt{color:#16a34a;} .flow.out .amt{color:#dc2626;}
+  .empty{padding:32px 16px;text-align:center;color:var(--c-text-3);font-size:14px;}
+  .empty .emoji{font-size:38px;margin-bottom:8px;}
+  .tabs{position:fixed;bottom:0;left:0;right:0;height:calc(56px + env(safe-area-inset-bottom));background:rgba(255,255,255,.96);backdrop-filter:blur(8px);display:flex;border-top:1px solid var(--c-border);z-index:50;padding-bottom:env(safe-area-inset-bottom);}
+  .tab{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;color:var(--c-text-3);font-size:11px;cursor:pointer;}
+  .tab .ic{font-size:20px;} .tab.active{color:var(--c-primary);font-weight:600;}
+  .toast-host{position:fixed;top:18px;left:50%;transform:translateX(-50%);z-index:80;display:flex;flex-direction:column;gap:8px;pointer-events:none;}
+  .toast{padding:10px 16px;border-radius:10px;background:rgba(0,0,0,.82);color:#fff;font-size:14px;opacity:0;transform:translateY(-6px);transition:opacity .2s,transform .2s;}
+  .toast.show{opacity:1;transform:none;}
+  .toast.success{background:#16a34a;} .toast.warning{background:#f59e0b;} .toast.danger{background:#dc2626;} .toast.info{background:#2563eb;}
+  .input{width:100%;height:46px;padding:0 14px;border:1px solid var(--c-border);border-radius:10px;background:#fff;font-size:15px;}
+  .input:focus{outline:none;border-color:var(--c-primary);box-shadow:var(--sh-press);}
+  .mask{position:fixed;inset:0;background:rgba(10,12,24,.55);z-index:90;display:none;align-items:center;justify-content:center;}
+  .mask.show{display:flex;}
+  .modal{background:#fff;width:90%;max-width:380px;border-radius:18px;padding:24px 22px;text-align:center;}
+  .modal h3{font-size:18px;margin-bottom:10px;}
+  .modal .qrbox{margin:12px auto;width:220px;height:220px;background:#fafbff;border-radius:14px;padding:10px;}
+  .modal .qrbox img,.modal .qrbox svg{width:100%;height:100%;}
+  .btn{display:inline-flex;align-items:center;justify-content:center;height:40px;padding:0 14px;border:none;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;}
+  .btn--primary{background:var(--c-grad-1);color:#fff;}
+  .btn--ghost{background:transparent;color:var(--c-primary);border:1px solid var(--c-primary);}
+  .btn--block{width:100%;}
+  .badge{display:inline-block;padding:2px 8px;border-radius:999px;font-size:11px;background:#eef0f4;color:#5a6072;}
+  .msg-item{padding:12px 0;border-bottom:1px solid var(--c-divider);display:flex;gap:10px;}
+  .msg-item:last-child{border-bottom:none;}
+  .msg-item .ic{width:34px;height:34px;border-radius:10px;background:var(--c-info-bg);color:var(--c-info);display:flex;align-items:center;justify-content:center;flex:0 0 34px;font-size:15px;}
+  .msg-item .main{flex:1;font-size:13px;line-height:1.6;color:var(--c-text-2);}
+  .msg-item .main .t{font-size:14px;color:var(--c-text);font-weight:600;}
+  .msg-item .main .s{font-size:12px;color:var(--c-text-3);}
+  .msg-item.unread .ic{background:var(--c-danger-bg);color:var(--c-danger);}
+</style>
+</head>
+<body>
+<div class="hero">
+  <h1>我的钱包 💰</h1>
+  <div class="sub">优惠券 / 余额 / 流水 / 身份码，一站式管理。</div>
+  <div class="balance">
+    <span class="sym">¥</span><span id="balNum" class="num">--</span>
+  </div>
+  <div class="balance-row">
+    <span class="pill">📃 优惠券：<b id="couponCnt">0</b> 张</span>
+    <span class="pill">🔔 未读消息：<b id="msgCnt">0</b></span>
+  </div>
+</div>
+
+<div class="container">
+
+  <div class="qr-card">
+    <div class="qr" id="qrDynamic" aria-label="动态码">加载中</div>
+    <div class="info">
+      <h3>动态码 <span class="badge">120 秒刷新</span></h3>
+      <p>到店出示给商家核销 / 抵扣；过期勿用。</p>
+      <div class="actions">
+        <button class="btn btn--primary" id="btnRefreshQr">🔄 刷新</button>
+        <button class="btn btn--ghost" id="btnShowIdentity">🪪 身份码</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="section-card" id="loginCard">
+    <div class="section-title"><b>登录账号</b></div>
+    <div style="display:flex;gap:8px;">
+      <input id="phoneIn" class="input" placeholder="请输入手机号" inputmode="numeric" maxlength="11">
+      <button class="btn btn--primary" id="btnLogin" style="flex:0 0 auto;">登录</button>
+    </div>
+    <div style="font-size:12px;color:#8a90a2;margin-top:8px;">测试环境验证码固定为 <b>123456</b>。</div>
+  </div>
+
+  <div class="section-card" id="couponCard">
+    <div class="section-title"><b>我的优惠券</b><span class="more" id="couponHint">--</span></div>
+    <div class="seg" id="couponSeg">
+      <button class="active" data-st="0">未使用</button>
+      <button data-st="1">已使用</button>
+      <button data-st="2">已过期</button>
+    </div>
+    <div id="couponList"></div>
+  </div>
+
+  <div class="section-card" id="flowCard">
+    <div class="section-title"><b>余额流水</b><span class="more">最近 20 条</span></div>
+    <div id="flowList"></div>
+  </div>
+
+  <div class="section-card" id="msgCard">
+    <div class="section-title"><b>消息中心</b><span class="more" id="msgMore"></span></div>
+    <div id="msgList"></div>
+  </div>
+
+</div>
+
+<div class="mask" id="identityMask">
+  <div class="modal">
+    <h3>🪪 我的身份码</h3>
+    <div class="qrbox" id="identityQr">加载中</div>
+    <p style="font-size:12px;color:#8a90a2;">给商家扫一下即可核销会员身份与余额；退款时商家可凭此码定位历史订单。</p>
+    <button class="btn btn--primary btn--block" id="btnCloseIdentity" style="margin-top:16px;">关闭</button>
+  </div>
+</div>
+
+<div class="toast-host" id="toastHost"></div>
+
+<nav class="tabs" aria-label="主导航">
+  <div class="tab" data-go="index.html"><span class="ic">🎯</span><span>抽盒</span></div>
+  <div class="tab active" data-go="wallet.html"><span class="ic">💰</span><span>钱包</span></div>
+  <div class="tab" data-go="ibigou.html"><span class="ic">🛍</span><span>商城</span></div>
+</nav>
+<script>
+const $ = id => document.getElementById(id);
+const A = "/api/customer";
+
+function toast(msg, type){
+  const host = $("toastHost"); if (!host) return;
+  const t = document.createElement("div"); t.className = "toast " + (type || ""); t.textContent = msg;
+  host.appendChild(t);
+  requestAnimationFrame(function(){ t.classList.add("show"); });
+  setTimeout(function(){ t.classList.remove("show"); setTimeout(function(){ t.remove(); }, 220); }, 2400);
+}
+
+async function api(path, method, body){
+  const params = new URLSearchParams();
+  if (body) Object.keys(body).forEach(function(k){ const v = body[k]; if (v !== undefined && v !== null && v !== "") params.append(k, v); });
+  const headers = {};
+  const tk = localStorage.getItem("ibigou_user_token");
+  if (tk) headers["X-User-Token"] = tk;
+  const opt = { method: method || "GET", headers: headers };
+  if (method === "POST" || method === "PUT" || method === "DELETE") { headers["Content-Type"] = "application/x-www-form-urlencoded"; opt.body = params.toString(); }
+  const r = await fetch(A + path, opt).then(function(r){ return r.json(); });
+  if (r.code === 401) { localStorage.removeItem("ibigou_user_token"); toast("登录已过期，请重新登录", "warning"); }
+  return r;
+}
+const typeName = { 1:"折扣券", 2:"立减券", 3:"余额赠送", 4:"团购免单" };
+const statusName = { 0:"未使用", 1:"已使用", 2:"已过期", 3:"已作废" };
+
+document.querySelectorAll(".tab").forEach(function(el){
+  el.addEventListener("click", function(){
+    const href = el.dataset.go; if (href && location.pathname.indexOf(href) === -1) location.href = href;
+  });
+});
+
+let currentTab = 0;
+document.querySelectorAll("#couponSeg button").forEach(function(b){
+  b.addEventListener("click", function(){
+    document.querySelectorAll("#couponSeg button").forEach(function(x){ x.classList.remove("active"); });
+    b.classList.add("active"); currentTab = Number(b.dataset.st); loadCoupons();
+  });
+});
+
+const lastPhone = localStorage.getItem("ibigou_phone");
+if (lastPhone) $("phoneIn").value = lastPhone;
+
+$("btnLogin").onclick = async function(){
+  const ph = $("phoneIn").value.trim();
+  if (!/^1[3-9]\d{9}$/.test(ph)) { toast("手机号格式不正确", "warning"); return; }
+  $("btnLogin").disabled = true;
+  try {
+    await api("/auth/send-code", "POST", { userPhone: ph });
+    const r = await api("/auth/login", "POST", { userPhone: ph, code: "123456" });
+    if (r.code === 0) {
+      localStorage.setItem("ibigou_user_token", r.data);
+      localStorage.setItem("ibigou_phone", ph);
+      toast("登录成功", "success"); refreshAll();
+    } else { toast(r.msg || "登录失败", "danger"); }
+  } catch (err) { toast("网络异常", "danger"); }
+  finally { $("btnLogin").disabled = false; }
+};
+
+$("btnRefreshQr").onclick = refreshAll;
+$("btnShowIdentity").onclick = function(){ $("identityMask").classList.add("show"); loadIdentityQr(); };
+$("btnCloseIdentity").onclick = function(){ $("identityMask").classList.remove("show"); };
+
+async function loadWallet(){
+  const ph = localStorage.getItem("ibigou_phone");
+  if (!ph) { $("balNum").textContent = "--"; return; }
+  const r = await api("/wallet/" + ph, "GET");
+  if (r.code === 0 && r.data) {
+    $("balNum").textContent = (r.data.balance != null ? Number(r.data.balance) : 0).toFixed(2);
+    $("couponCnt").textContent = (r.data.available || []).length;
+  } else { $("balNum").textContent = "0.00"; }
+}
+
+async function loadCoupons(){
+  const ph = localStorage.getItem("ibigou_phone");
+  if (!ph) { $("couponList").innerHTML = '<div class="empty"><div class="emoji">🎫</div>请先登录</div>'; return; }
+  const r = await api("/wallet/" + ph, "GET");
+  const all = (r.data && r.data.coupons) || [];
+  const list = all.filter(function(c){
+    if (currentTab === 0) return c.status === 0;
+    if (currentTab === 1) return c.status === 1;
+    return c.status === 2 || c.status === 3;
+  });
+  $("couponHint").textContent = "共 " + list.length + " 张";
+  if (!list.length) {
+    $("couponList").innerHTML = '<div class="empty"><div class="emoji">🎫</div>暂无优惠券</div>';
+    return;
+  }
+  $("couponList").innerHTML = list.map(function(c){
+    const used = c.status !== 0;
+    const v = c.prizeType === 1 ? (c.prizeValue + "折") : ("¥" + c.prizeValue);
+    const expire = c.validEnd || c.expireTime || "";
+    const desc = (expire ? expire.replace("T", " ").slice(0, 16) + " 到期" : "") + (c.sourceMerchantNo ? " · 发行 " + c.sourceMerchantNo : "");
+    return '<div class="coupon' + (used ? " used" : "") + '">'
+      + '<div class="left"><div class="v">' + v + '</div><div class="u">' + (typeName[c.prizeType] || "优惠券") + '</div></div>'
+      + '<div class="right"><div class="name">' + (typeName[c.prizeType] || "优惠券") + ' · ' + (c.couponId || "") + '</div>'
+      + '<div class="desc">' + desc + '</div>'
+      + '<div class="meta"><span class="badge">' + (statusName[c.status] || "") + '</span>'
+      + (c.canUseAfterDraw === 0 ? '<span class="badge" style="background:#fff6e0;color:#b45309;">待激活</span>' : '')
+      + '</div></div></div>';
+  }).join("");
+}
+
+async function loadFlow(){
+  const ph = localStorage.getItem("ibigou_phone");
+  if (!ph) { $("flowList").innerHTML = '<div class="empty"><div class="emoji">📊</div>暂无流水</div>'; return; }
+  const r = await api("/wallet/" + ph, "GET");
+  const flows = (r.data && r.data.flows) || [];
+  if (!flows.length) {
+    $("flowList").innerHTML = '<div class="empty"><div class="emoji">📊</div>暂无流水</div>';
+    return;
+  }
+  const ftName = { 1:"发放", 2:"抵扣", 3:"退款", 4:"跨店返还", 5:"宜必购抵扣" };
+  $("flowList").innerHTML = flows.slice(0, 20).map(function(f){
+    const isIn = f.flowType === 1 || f.flowType === 3 || f.flowType === 4;
+    return '<div class="flow ' + (isIn ? "in" : "out") + '">'
+      + '<div class="ic">' + (isIn ? "+" : "−") + '</div>'
+      + '<div class="main"><div class="t">' + (ftName[f.flowType] || "流水") + '</div>'
+      + '<div class="s">' + ((f.createTime || "").replace("T", " ").slice(0, 16))
+      + (f.bizNo ? " · " + f.bizNo : "") + (f.remark ? " · " + f.remark : "") + '</div></div>'
+      + '<div class="amt">' + (isIn ? "+" : "−") + '¥' + (Number(f.amount || 0)).toFixed(2) + '</div>'
+      + '</div>';
+  }).join("");
+}
+
+async function loadMessages(){
+  const ph = localStorage.getItem("ibigou_phone");
+  if (!ph) { $("msgList").innerHTML = '<div class="empty"><div class="emoji">🔔</div>暂无消息</div>'; $("msgCnt").textContent = 0; return; }
+  const r = await api("/messages/" + ph, "GET");
+  let data = r.data || [];
+  if (!Array.isArray(data)) data = data.list || [];
+  const unread = await api("/messages/" + ph + "/unread-count", "GET");
+  $("msgCnt").textContent = (unread.data != null ? unread.data : 0);
+  if (!data.length) { $("msgList").innerHTML = '<div class="empty"><div class="emoji">🔔</div>暂无消息</div>'; return; }
+  $("msgList").innerHTML = data.slice(0, 15).map(function(m){
+    const read = m.read === 1 || m.isRead === 1 || m.readStatus === 1;
+    return '<div class="msg-item' + (read ? "" : " unread") + '" onclick="markRead(' + (m.messageId || m.id || 0) + ')">'
+      + '<div class="ic">📣</div>'
+      + '<div class="main"><div class="t">' + (m.title || "系统通知") + '</div>'
+      + '<div class="s">' + (m.content || "") + '<br>' + ((m.createTime || "").replace("T", " ").slice(0, 16)) + '</div></div>'
+      + '</div>';
+  }).join("");
+  $("msgMore").innerHTML = '<a style="color:#ff5b3e;cursor:pointer;" onclick="markAllRead()">全部已读</a>';
+}
+window.markRead = async function(id){
+  const ph = localStorage.getItem("ibigou_phone");
+  if (!id) return;
+  await api("/messages/" + id + "/read", "POST", { userPhone: ph });
+  loadMessages();
+};
+window.markAllRead = async function(){
+  const ph = localStorage.getItem("ibigou_phone");
+  const r = await api("/messages/read-all", "POST", { userPhone: ph });
+  if (r.code === 0) { toast("已全部标记为已读", "success"); loadMessages(); }
+};
+
+async function loadDynamicQr(){
+  const ph = localStorage.getItem("ibigou_phone");
+  const el = $("qrDynamic");
+  if (!ph) { el.textContent = "请先登录"; return; }
+  el.innerHTML = "加载中…";
+  const r = await api("/qr/dynamic/" + ph, "GET");
+  if (r.code === 0 && r.data) {
+    const content = r.data.content || r.data.token || "";
+    if (r.data.qrSvg) { el.innerHTML = r.data.qrSvg; return; }
+    const svg = await api("/qr-svg", "POST", { content: content });
+    if (svg.code === 0 && svg.data && svg.data.svg) el.innerHTML = svg.data.svg;
+    else el.textContent = content;
+  } else { el.textContent = "请稍后"; }
+}
+
+async function loadIdentityQr(){
+  const ph = localStorage.getItem("ibigou_phone");
+  const el = $("identityQr");
+  if (!ph) { el.textContent = "请先登录"; return; }
+  el.innerHTML = "加载中…";
+  const r = await api("/identity-qr/" + ph, "GET");
+  if (r.code === 0 && r.data) {
+    const svg = await api("/qr-svg", "POST", { content: r.data });
+    if (svg.code === 0 && svg.data && svg.data.svg) el.innerHTML = svg.data.svg;
+    else el.textContent = r.data;
+  } else { el.textContent = "请稍后"; }
+}
+
+function refreshAll(){ loadWallet(); loadCoupons(); loadFlow(); loadMessages(); loadDynamicQr(); }
+
+setInterval(function(){ if (localStorage.getItem("ibigou_phone")) loadDynamicQr(); }, 120000);
+refreshAll();
+</script>
+</body>
+</html>

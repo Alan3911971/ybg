@@ -1,0 +1,62 @@
+# ============================================================================
+# 生产编排（样例）：MySQL + 应用 + Nginx(ybgtc.com)
+# 使用前：
+#   1. 把 .env 放到本目录并填好 IBIGOU_DB_PASSWORD 等
+#   2. docker compose up -d
+#   3. 首次建库：docker exec -i ibigou-mysql mysql -uroot -p"$MYSQL_ROOT_PASSWORD" < db/schema.sql
+# 说明：Nginx 挂载 conf 目录后重载；HTTPS 证书放 ./nginx/certs
+# ============================================================================
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: ibigou-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${IBIGOU_DB_PASSWORD:?必须设置 IBIGOU_DB_PASSWORD}
+      MYSQL_DATABASE: ibigou_blindbox
+      TZ: Asia/Shanghai
+    volumes:
+      - mysql-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  app:
+    build: .
+    image: ibigou-blindbox:1.0.0
+    container_name: ibigou-app
+    restart: unless-stopped
+    depends_on:
+      mysql:
+        condition: service_healthy
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      IBIGOU_DB_HOST: mysql
+      IBIGOU_DB_PORT: "3306"
+      IBIGOU_DB_NAME: ibigou_blindbox
+      IBIGOU_DB_USER: root
+      IBIGOU_DB_PASSWORD: ${IBIGOU_DB_PASSWORD:?必须设置 IBIGOU_DB_PASSWORD}
+      IBIGOU_DOMAIN: ${IBIGOU_DOMAIN:-https://ybgtc.com}
+      IBIGOU_ADMIN_INIT_PWD: ${IBIGOU_ADMIN_INIT_PWD:?必须设置默认管理员初始密码}
+      TZ: Asia/Shanghai
+    ports:
+      - "8085:8085"
+
+  nginx:
+    image: nginx:1.27-alpine
+    container_name: ibigou-nginx
+    restart: unless-stopped
+    depends_on:
+      - app
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/conf:/etc/nginx/conf.d:ro
+      - ./nginx/certs:/etc/nginx/certs:ro
+      - ./nginx/logs:/var/log/nginx
+
+volumes:
+  mysql-data:

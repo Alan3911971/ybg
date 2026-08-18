@@ -1,0 +1,53 @@
+server:
+  port: 8085
+
+spring:
+  application:
+    name: ibigou-blindbox
+  datasource:
+    url: jdbc:mysql://127.0.0.1:3306/ibigou_blindbox?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&useSSL=false&allowPublicKeyRetrieval=true
+    username: root
+    password: ${IBIGOU_DB_PASSWORD:root}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+    baseline-version: 1
+    locations: classpath:db/migration
+  jpa:
+    hibernate:
+      # 表结构由 db/schema.sql 统一管理，禁止 Hibernate 自动改表
+      ddl-auto: none
+    open-in-view: false
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+        jdbc:
+          time_zone: Asia/Shanghai
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+
+logging:
+  level:
+    com.ibigou.blindbox: info
+
+# 产品域名（ybgtc.com）：二维码、H5 链接生成统一走这里，禁止硬编码
+admin:
+  init:
+    password: ${IBIGOU_ADMIN_INIT_PWD:Admin@2026}  # 默认管理员初始密码（生产必须环境变量注入）
+
+app:
+  domain: https://ybgtc.com
+  qr-base-path: /qr        # 盲盒二维码解析入口
+  customer-path: /h5/customer
+  merchant-path: /h5/merchant
+  admin-path: /h5/admin
+  upload-dir: ./uploads        # 商家收款码等上传文件目录（生产挂载持久卷）
+spring.servlet.multipart:
+  max-file-size: 5MB
+  max-request-size: 10MB

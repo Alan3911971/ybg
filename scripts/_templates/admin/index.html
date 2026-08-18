@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#4338ca">
+<title>平台后台 · 宜必购</title>
+<link rel="icon" href="data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='80' font-size='90'%3E%F0%9F%9B%A1%EF%B8%8F%3C/text%3E%3C/svg%3E">
+<style>
+  :root{
+    --c-primary:#4338ca; --c-primary-600:#3730a3; --c-primary-100:#e0e7ff;
+    --c-accent:#06b6d4; --c-success:#16a34a; --c-success-bg:#e8f7ee; --c-warning:#f59e0b; --c-warning-bg:#fff6e0;
+    --c-danger:#dc2626; --c-danger-bg:#fde8e8; --c-info:#2563eb; --c-info-bg:#e6efff;
+    --c-text:#1a2233; --c-text-2:#4d556a; --c-text-3:#8089a0;
+    --c-bg:#f5f7fb; --c-surface:#fff; --c-border:#e6e8ef; --c-divider:#eef0f4;
+    --c-grad-1:linear-gradient(135deg,#4338ca 0%,#6d28d9 100%);
+    --r-sm:6px; --r-md:10px; --r-lg:14px; --r-pill:999px;
+    --sh-1:0 1px 2px rgba(20,23,40,.04),0 1px 4px rgba(20,23,40,.06);
+    --sh-press:0 0 0 4px rgba(67,56,202,.16);
+  }
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+  html,body{font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei","Helvetica Neue",Arial,sans-serif;color:var(--c-text);background:var(--c-bg);-webkit-font-smoothing:antialiased;}
+  body{min-height:100vh;padding-bottom:24px;}
+  a{color:inherit;text-decoration:none;}
+  input,select,button{font-size:16px;}
+  button{font-family:inherit;}
+  .top{background:var(--c-grad-1);color:#fff;padding:12px 16px;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:30;box-shadow:0 2px 10px rgba(67,56,202,.20);}
+  .top .title{display:flex;align-items:center;gap:8px;font-size:16px;font-weight:600;}
+  .top .right{display:flex;align-items:center;gap:8px;}
+  .top .icon-btn{color:#fff;font-size:13px;cursor:pointer;padding:6px 10px;background:rgba(255,255,255,.16);border-radius:999px;}
+  .tabs{display:flex;background:#fff;overflow-x:auto;border-bottom:1px solid var(--c-divider);position:sticky;top:50px;z-index:20;padding:0 4px;-webkit-overflow-scrolling:touch;}
+  .tabs::-webkit-scrollbar{height:0;}
+  .tab{padding:12px 14px;font-size:14px;white-space:nowrap;cursor:pointer;color:var(--c-text-2);border-bottom:3px solid transparent;font-weight:500;}
+  .tab.active{color:var(--c-primary);border-bottom-color:var(--c-primary);font-weight:600;}
+  .wrap{max-width:720px;margin:0 auto;padding:16px;}
+  @media (min-width:768px){ .wrap{max-width:1080px;} }
+  .panel{display:none;animation:fadeIn .2s ease-out;}
+  .panel.active{display:block;}
+  @keyframes fadeIn{from{opacity:0;transform:translateY(4px);} to{opacity:1;transform:none;}}
+  .card{background:var(--c-surface);border-radius:var(--r-lg);padding:18px;margin-bottom:14px;box-shadow:var(--sh-1);border:1px solid var(--c-border);}
+  .sec{display:flex;align-items:center;gap:8px;font-weight:600;margin:0 0 12px;font-size:15px;}
+  .sec .ic{width:26px;height:26px;border-radius:8px;background:var(--c-primary-100);color:var(--c-primary);display:inline-flex;align-items:center;justify-content:center;font-size:14px;flex:0 0 26px;}
+  .sec .sp{flex:1;}
+  label{display:block;font-size:13px;color:var(--c-text-2);margin:10px 0 4px;font-weight:500;}
+  .input,.select{width:100%;height:46px;padding:0 12px;border:1px solid var(--c-border);border-radius:var(--r-md);font-size:15px;color:var(--c-text);background:#fff;transition:border-color .15s,box-shadow .15s;-webkit-appearance:none;appearance:none;}
+  .input:focus,.select:focus{outline:none;border-color:var(--c-primary);box-shadow:var(--sh-press);}
+  .row{display:flex;gap:10px;flex-wrap:wrap;}
+  .row > div{flex:1;min-width:130px;}
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:11px 16px;border:none;border-radius:var(--r-md);background:var(--c-primary);color:#fff;font-size:14px;font-weight:600;cursor:pointer;transition:transform .12s,box-shadow .15s,background .15s;box-shadow:0 2px 6px rgba(67,56,202,.18);}
+  .btn:active{transform:scale(.98);}
+  .btn--block{width:100%;}
+  .btn.green{background:var(--c-success);box-shadow:0 2px 6px rgba(22,163,74,.20);}
+  .btn.orange{background:#f59e0b;box-shadow:0 2px 6px rgba(245,158,11,.20);}
+  .btn.red{background:var(--c-danger);box-shadow:0 2px 6px rgba(220,38,38,.20);}
+  .btn.gray{background:#9aa0a6;box-shadow:none;}
+  .btn.ghost{background:transparent;color:var(--c-primary);border:1px solid var(--c-primary);box-shadow:none;}
+  .btn[disabled]{opacity:.5;cursor:not-allowed;}
+  .btn--sm{padding:7px 12px;font-size:13px;border-radius:8px;}
+  .warn{background:var(--c-warning-bg);border:1px solid #fde6a7;color:#7a4a00;padding:10px 12px;border-radius:8px;font-size:12px;margin:10px 0;line-height:1.7;}
+  .info-bar{background:var(--c-info-bg);border:1px solid #c3d8fd;color:#1d4ed8;padding:10px 12px;border-radius:8px;font-size:12px;margin:10px 0;line-height:1.7;}
+  .list-item{display:flex;align-items:center;padding:12px 0;border-bottom:1px solid var(--c-divider);gap:10px;flex-wrap:wrap;}
+  .list-item:last-child{border-bottom:none;}
+  .list-item .main{flex:1;min-width:0;}
+  .list-item .t{font-size:14px;font-weight:600;}
+  .list-item .s{font-size:12px;color:var(--c-text-3);margin-top:2px;line-height:1.5;}
+  .list-item .v{font-size:14px;font-weight:600;color:var(--c-primary);text-align:right;}
+  .list-item .ops{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end;}
+  .badge{display:inline-block;padding:3px 8px;border-radius:999px;font-size:11px;background:#eef0f4;color:var(--c-text-2);}
+  .badge.green{background:var(--c-success-bg);color:#15803d;}
+  .badge.orange{background:var(--c-warning-bg);color:#b45309;}
+  .badge.red{background:var(--c-danger-bg);color:#b91c1c;}
+  .badge.blue{background:var(--c-info-bg);color:#1d4ed8;}
+  .stat-row{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:14px;}
+  .stat{background:#fff;border:1px solid var(--c-border);border-radius:var(--r-lg);padding:14px;text-align:center;box-shadow:var(--sh-1);}
+  .stat .num{font-size:22px;font-weight:800;color:var(--c-primary);}
+  .stat .lab{font-size:12px;color:var(--c-text-3);margin-top:4px;}
+  .empty{padding:26px 16px;text-align:center;color:var(--c-text-3);font-size:13px;}
+  .msg-item{padding:10px 0;border-bottom:1px solid var(--c-divider);font-size:13px;line-height:1.6;}
+  .msg-item:last-child{border-bottom:none;}
+  .msg-item .t{font-weight:600;font-size:14px;}
+  .msg-item .s{font-size:12px;color:var(--c-text-3);}
+  .toast-host{position:fixed;top:18px;left:50%;transform:translateX(-50%);z-index:99;display:flex;flex-direction:column;gap:8px;pointer-events:none;}
+  .toast{padding:10px 16px;border-radius:10px;background:rgba(0,0,0,.84);color:#fff;font-size:14px;opacity:0;transform:translateY(-6px);transition:opacity .2s,transform .2s;}
+  .toast.show{opacity:1;transform:none;}
+  .toast.success{background:#16a34a;} .toast.warning{background:#f59e0b;} .toast.danger{background:#dc2626;} .toast.info{background:#2563eb;}
+  .mask{position:fixed;inset:0;background:rgba(10,12,24,.55);z-index:95;display:none;align-items:center;justify-content:center;}
+  .mask.show{display:flex;}
+  .modal{background:#fff;width:90%;max-width:400px;border-radius:16px;padding:20px;max-height:85vh;overflow-y:auto;}
+  .modal h3{font-size:16px;margin-bottom:10px;}
+</style>
+</head>
+<body>
+<div class="top">
+  <div class="title"><span>🛡️</span>平台后台</div>
+  <div class="right">
+    <span class="icon-btn" onclick="showAlerts()">⚠️<span id="alertCnt">0</span></span>
+    <span class="icon-btn" id="logout" style="background:rgba(255,255,255,.28);">退出</span>
+  </div>
+</div>
+<div class="tabs" id="tabs">
+  <div class="tab active" data-p="p1">概览</div>
+  <div class="tab" data-p="p2">商家管理</div>
+  <div class="tab" data-p="p3">全局参数</div>
+  <div class="tab" data-p="p4">公共池</div>
+  <div class="tab" data-p="p5">报表</div>
+  <div class="tab" data-p="p6">审计会员</div>
+  <div class="tab" data-p="p7">告警</div>
+</div>
+<div class="wrap">
+
+<!-- p1 概览 -->
+<div class="panel active" id="p1">
+  <div class="stat-row">
+    <div class="stat"><div class="num" id="stMerchants">--</div><div class="lab">商家总数</div></div>
+    <div class="stat"><div class="num" id="stAlerts">--</div><div class="lab">未处理告警</div></div>
+  </div>
+  <div class="stat-row">
+    <div class="stat"><div class="num" id="stCoupons">--</div><div class="lab">优惠券</div></div>
+    <div class="stat"><div class="num" id="stMember">--</div><div class="lab">有效会员</div></div>
+  </div>
+  <div class="card">
+    <div class="sec"><span class="ic">⚠️</span>最新告警</div>
+    <div id="overviewAlerts"><div class="empty">暂无告警</div></div>
+  </div>
+</div>
+
+<!-- p2 商家管理 -->
+<div class="panel" id="p2">
+  <div class="card">
+    <div class="sec"><span class="ic">➕</span>新增商家账号</div>
+    <div class="row">
+      <div><label>商家编号 *</label><input id="mNo" class="input" placeholder="如 m003"></div>
+      <div><label>门店名称 *</label><input id="mName" class="input" placeholder="门店名称"></div>
+    </div>
+    <div class="row">
+      <div><label>登录账号 *</label><input id="mAcc" class="input" placeholder="登录账号"></div>
+      <div><label>初始密码 *（≥6 位）</label><input id="mPwd" class="input" type="password" placeholder="初始密码"></div>
+    </div>
+    <button class="btn green btn--block" id="btnAddMerchant" style="margin-top:12px;">新增商家</button>
+  </div>
+  <div class="card">
+    <div class="sec"><span class="ic">🏪</span>商家列表<span class="sp"></span><button class="btn btn--sm" id="btnMerchants">刷新</button></div>
+    <div id="mTable"></div>
+  </div>
+</div>
+
+<!-- p3 全局参数 -->
+<div class="panel" id="p3">
+  <div class="card">
+    <div class="sec"><span class="ic">⚙️</span>全局系统参数</div>
+    <div class="warn">balance_deduct_rate=0 代表全平台关闭余额抵扣；ibigou_channel_switch=0 关闭宜必购渠道（所有端隐藏入口并拒绝下单）。</div>
+    <div class="row">
+      <div><label>余额最大抵扣百分比 balance_deduct_rate（0-100）</label><input id="gRate" class="input" type="number" min="0" max="100"></div>
+      <div><label>宜必购渠道总开关 ibigou_channel_switch（0/1）</label><input id="gSwitch" class="input" type="number" min="0" max="1"></div>
+    </div>
+    <button class="btn btn--block" id="btnSaveConfig" style="margin-top:12px;">保存</button>
+  </div>
+  <div class="card">
+    <div class="sec"><span class="ic">💰</span>平台微信支付参数（密钥脱敏展示）</div>
+    <div class="row">
+      <div><label>开关 wx_pay_enabled（0 mock / 1 真实）</label><input id="gWxEnabled" class="input" type="number" min="0" max="1"></div>
+      <div><label>商户号 wx_pay_mch_id</label><input id="gWxMch" class="input"></div>
+    </div>
+    <div class="row">
+      <div><label>AppID wx_pay_app_id</label><input id="gWxAppid" class="input"></div>
+      <div><label>API密钥 wx_pay_api_key</label><input id="gWxApiKey" class="input"></div>
+    </div>
+    <div class="row">
+      <div><label>API v3密钥 wx_pay_api_v3_key</label><input id="gWxV3Key" class="input"></div>
+      <div><label>证书路径 wx_pay_cert_path</label><input id="gWxCertPath" class="input"></div>
+    </div>
+    <div class="row">
+      <div><label>证书序列号 wx_pay_cert_serial</label><input id="gWxCertSerial" class="input"></div>
+      <div><label>测试确认开关 test_pay_confirm_enabled（0/1）</label><input id="gTestConfirm" class="input" type="number" min="0" max="1"></div>
+    </div>
+    <button class="btn btn--block" id="btnSaveWx" style="margin-top:12px;">保存微信支付参数</button>
+  </div>
+  <div class="card">
+    <div class="sec"><span class="ic">📋</span>全部配置（脱敏）</div>
+    <div id="configList"></div>
+  </div>
+</div>
+
+<!-- p4 公共池 -->
+<div class="panel" id="p4">
+  <div class="card">
+    <div class="sec"><span class="ic">🌐</span>公共共享奖品池大盘<span class="sp"></span><button class="btn btn--sm" id="btnBoard">刷新</button><button class="btn btn--sm gray" id="btnBoardXlsx">导出Excel</button></div>
+    <div id="boardTable"></div>
+  </div>
+</div>
+
+<!-- p5 报表 -->
+<div class="panel" id="p5">
+  <div class="card">
+    <div class="sec"><span class="ic">📊</span>全平台报表（全部支持 Excel 导出）</div>
+    <div class="row" style="margin-bottom:10px;">
+      <button class="btn btn--sm" id="btnRCoupon">优惠券明细</button>
+      <button class="btn btn--sm gray" id="btnRCouponXlsx">导出</button>
+      <button class="btn btn--sm" id="btnRFlow">余额流水</button>
+      <button class="btn btn--sm gray" id="btnRFlowXlsx">导出</button>
+      <button class="btn btn--sm" id="btnRGrp">团购登记</button>
+      <button class="btn btn--sm gray" id="btnRGrpXlsx">导出</button>
+      <button class="btn btn--sm" id="btnRIbg">宜必购交易</button>
+      <button class="btn btn--sm gray" id="btnRIbgXlsx">导出</button>
+    </div>
+    <div id="reportTable"></div>
+  </div>
+</div>
+
+<!-- p6 审计会员 -->
+<div class="panel" id="p6">
+  <div class="card">
+    <div class="sec"><span class="ic">🎫</span>会员管理（人工调整有效期）</div>
+    <div class="row">
+      <div><label>商家编号</label><input id="adjNo" class="input" placeholder="如 m001"></div>
+      <div><label>增加月数</label><input id="adjMonths" class="input" type="number" min="1" placeholder="如 6"></div>
+    </div>
+    <button class="btn orange btn--block" id="btnAdjust" style="margin-top:12px;">人工调整有效期（+月数）</button>
+    <div id="memberTable" style="margin-top:12px;"></div>
+  </div>
+  <div class="card">
+    <div class="sec"><span class="ic">📋</span>全平台续费订单<span class="sp"></span><button class="btn btn--sm" id="btnMOrders">刷新</button></div>
+    <div id="mOrderTable"></div>
+  </div>
+  <div class="card">
+    <div class="sec"><span class="ic">🧾</span>人工操作审计日志（可撤销）<span class="sp"></span><button class="btn btn--sm" id="btnAudits">刷新</button></div>
+    <div id="auditTable"></div>
+  </div>
+</div>
+
+<!-- p7 告警 -->
+<div class="panel" id="p7">
+  <div class="card">
+    <div class="sec"><span class="ic">⚠️</span>系统告警（未处理异常/任务失败/支付异常）<span class="sp"></span><button class="btn btn--sm" id="btnAlerts">刷新</button></div>
+    <div id="alertTable"></div>
+  </div>
+</div>
+
+</div>
+
+<div class="toast-host" id="toastHost"></div>
+<script>
+const A = "/api/admin";
+const TOKEN = localStorage.getItem("ibigou_admin_token");
+if (!TOKEN) location.href = "login.html";
+const H = { "X-Admin-Token": TOKEN };
+const $ = id => document.getElementById(id);
+
+function toast(msg, type){
+  const host = $("toastHost"); if (!host) return;
+  const t = document.createElement("div"); t.className = "toast " + (type || ""); t.textContent = msg;
+  host.appendChild(t);
+  requestAnimationFrame(function(){ t.classList.add("show"); });
+  setTimeout(function(){ t.classList.remove("show"); setTimeout(function(){ t.remove(); }, 220); }, 2600);
+}
+
+async function api(url, body, method){
+  const opt = { method: method || "POST", headers: Object.assign({}, H) };
+  if (body) {
+    opt.headers["Content-Type"] = "application/x-www-form-urlencoded";
+    opt.body = new URLSearchParams(body).toString();
+  }
+  return fetch(url, opt).then(function(r){ return r.json(); });
+}
+function get(url){ return fetch(url, { headers: H }).then(function(r){ return r.json(); }); }
+function fmtT(t){ return (t || "").replace("T", " ").slice(0, 19); }
+function esc(s){ return String(s == null ? "" : s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"); }
+const tname = { 1:"折扣券", 2:"立减券", 3:"普通余额", 4:"团购免单余额" };
+
+document.querySelectorAll(".tab").forEach(function(t){
+  t.onclick = function(){
+    document.querySelectorAll(".tab").forEach(function(x){ x.classList.remove("active"); });
+    document.querySelectorAll(".panel").forEach(function(x){ x.classList.remove("active"); });
+    t.classList.add("active");
+    $("p" + t.dataset.p.slice(1)).classList.add("active");
+  };
+});
+$("logout").onclick = function(){ localStorage.removeItem("ibigou_admin_token"); location.href = "login.html"; };
+
+// ---------- 商家管理 ----------
+async function loadMerchants(){
+  const r = await get(A + "/merchant/list");
+  const list = r.data || [];
+  const el = $("mTable");
+  if (!list.length) { el.innerHTML = '<div class="empty">暂无商家</div>'; return; }
+  el.innerHTML = list.map(function(m){
+    return '<div class="list-item">'
+      + '<div class="main"><div class="t">' + esc(m.merchantName || m.merchantNo) + '（' + esc(m.merchantNo) + '）</div>'
+      + '<div class="s">账号 ' + esc(m.loginAccount) + (m.memberExpireTime ? ' · 会员至 ' + fmtT(m.memberExpireTime) : '') + '</div></div>'
+      + '<div class="v">' + (m.status === 1 ? '<span class="badge green">启用</span>' : '<span class="badge red">禁用</span>') + '</div>'
+      + '<div class="ops">'
+      + '<button class="btn btn--sm" onclick="toggleM(\'' + m.merchantNo + '\',' + (m.status === 1 ? 0 : 1) + ')">' + (m.status === 1 ? "禁用" : "启用") + '</button>'
+      + '<button class="btn btn--sm orange" onclick="resetPwd(\'' + m.merchantNo + '\')">重置密码</button>'
+      + '<button class="btn btn--sm red" onclick="deleteMerchant(\'' + m.merchantNo + '\')">删除</button>'
+      + '</div></div>';
+  }).join("");
+}
+async function toggleM(no, en){ const r = await api(A + "/merchant/" + no + (en ? "/enable" : "/disable")); toast(r.code === 0 ? "已更新" : (r.msg || "失败"), r.code === 0 ? "success" : "danger"); loadMerchants(); }
+async function resetPwd(no){
+  const p = prompt("请输入「" + no + "」的新密码（≥6 位）：", "");
+  if (!p || p.length < 6) { toast("密码至少 6 位", "warning"); return; }
+  const r = await api(A + "/merchant/" + no + "/reset-pwd", { newPwd: p });
+  toast(r.code === 0 ? "密码已重置" : (r.msg || "重置失败"), r.code === 0 ? "success" : "danger");
+}
+async function deleteMerchant(no){
+  const pwd = prompt("⚠️ 删除商家「" + no + "」将删除其全部私有配置（档位/专属盲盒/投放/会话），历史订单与流水保留。" + String.fromCharCode(10) + "请输入管理员密码确认：", "");
+  if (!pwd) return;
+  const r = await api(A + "/merchant/" + no + "/delete", { adminPassword: pwd });
+  toast(r.code === 0 ? "商家已删除" : (r.msg || "删除失败（请检查管理员密码）"), r.code === 0 ? "success" : "danger");
+  loadMerchants();
+}
+$("btnAddMerchant").onclick = async function(){
+  const no = $("mNo").value.trim(), name = $("mName").value.trim(), acc = $("mAcc").value.trim(), pwd = $("mPwd").value;
+  if (!no || !name || !acc) { toast("商家编号/名称/登录账号必填", "warning"); return; }
+  if (!pwd || pwd.length < 6) { toast("初始密码至少 6 位", "warning"); return; }
+  const r = await api(A + "/merchant/create", { merchantNo: no, merchantName: name, loginAccount: acc, loginPwd: pwd });
+  toast(r.code === 0 ? "商家已创建" : (r.msg || "创建失败"), r.code === 0 ? "success" : "danger");
+  if (r.code === 0) { $("mNo").value = ""; $("mName").value = ""; $("mAcc").value = ""; $("mPwd").value = ""; }
+  loadMerchants();
+};
+$("btnMerchants").onclick = loadMerchants;
+
+// ---------- 全局参数 ----------
+async function loadConfig(){
+  const r = await get(A + "/config/list");
+  const list = r.data || [];
+  const map = {};
+  list.forEach(function(c){ map[c.configKey] = c.configValue; });
+  $("gRate").value = map["balance_deduct_rate"] != null ? map["balance_deduct_rate"] : "";
+  $("gSwitch").value = map["ibigou_channel_switch"] != null ? map["ibigou_channel_switch"] : "";
+  $("gWxEnabled").value = map["wx_pay_enabled"] != null ? map["wx_pay_enabled"] : "";
+  $("gWxMch").value = map["wx_pay_mch_id"] || "";
+  $("gWxAppid").value = map["wx_pay_app_id"] || "";
+  // BUG-002：密钥类不回填明文（仅提示已配置；留空=保存时不修改）
+  if (map["wx_pay_api_key"]) $("gWxApiKey").placeholder = "已配置（留空则不修改）";
+  if (map["wx_pay_api_v3_key"]) $("gWxV3Key").placeholder = "已配置（留空则不修改）";
+  if (map["wx_pay_cert_path"]) $("gWxCertPath").placeholder = "已配置（留空则不修改）";
+  if (map["wx_pay_cert_serial"]) $("gWxCertSerial").placeholder = "已配置（留空则不修改）";
+  $("gTestConfirm").value = map["test_pay_confirm_enabled"] != null ? map["test_pay_confirm_enabled"] : "";
+  $("configList").innerHTML = list.length
+    ? list.map(function(c){ return '<div class="list-item"><div class="main"><div class="t">' + esc(c.configKey) + '</div><div class="s">' + esc(c.remark || "") + '</div></div><div class="v">' + esc(c.configValue || "") + '</div></div>'; }).join("")
+    : '<div class="empty">暂无配置</div>';
+}
+$("btnSaveConfig").onclick = async function(){
+  const r1 = await api(A + "/config/update", { key: "balance_deduct_rate", value: $("gRate").value || "0" });
+  const r2 = await api(A + "/config/update", { key: "ibigou_channel_switch", value: $("gSwitch").value || "0" });
+  if (r1.code === 0 && r2.code === 0) { toast("全局参数已保存", "success"); loadConfig(); }
+  else toast((r1.msg || r2.msg || "保存失败"), "danger");
+};
+$("btnSaveWx").onclick = async function(){
+  const pairs = [
+    ["wx_pay_enabled", $("gWxEnabled").value], ["wx_pay_mch_id", $("gWxMch").value],
+    ["wx_pay_app_id", $("gWxAppid").value], ["wx_pay_api_key", $("gWxApiKey").value],
+    ["wx_pay_api_v3_key", $("gWxV3Key").value], ["wx_pay_cert_path", $("gWxCertPath").value],
+    ["wx_pay_cert_serial", $("gWxCertSerial").value], ["test_pay_confirm_enabled", $("gTestConfirm").value]
+  ];
+  let ok = true, msg = "";
+  const secretKeys = ["wx_pay_api_key", "wx_pay_api_v3_key", "wx_pay_cert_path", "wx_pay_cert_serial"];
+  for (const pair of pairs) {
+    // BUG-002：密钥留空=不修改（不回填明文、不覆盖成空）
+    if (secretKeys.includes(pair[0]) && (!pair[1] || !pair[1].trim())) continue;
+    const r = await api(A + "/config/update", { key: pair[0], value: pair[1] });
+    if (r.code !== 0) { ok = false; msg = r.msg; }
+  }
+  toast(ok ? "微信支付参数已保存（密钥脱敏展示）" : ("保存失败: " + msg), ok ? "success" : "danger");
+  loadConfig();
+};
+
+// ---------- 公共池大盘 ----------
+$("btnBoard").onclick = function(){ loadBoard(false); };
+$("btnBoardXlsx").onclick = function(){ loadBoard(true); };
+async function loadBoard(xlsx){
+  if (xlsx) return downloadXlsx(A + "/public-pool-board/export");
+  const r = await get(A + "/public-pool-board");
+  const list = r.data || [];
+  const el = $("boardTable");
+  if (!list.length) { el.innerHTML = '<div class="empty">暂无公共档位</div>'; return; }
+  el.innerHTML = list.map(function(p){
+    return '<div class="list-item"><div class="main"><div class="t">#' + esc(p.publicId) + ' · ' + (tname[p.prizeType] || "券") + ' · ' + p.prizeValue + '</div>'
+      + '<div class="s">投放商家 ' + esc(p.sourceMerchantNo) + ' · 宜必购 ' + (p.isSupportIbigou === 1 ? "支持" : "仅线下") + '</div></div>'
+      + '<div class="v">' + (p.enabled === 1 ? '<span class="badge green">上架</span>' : '<span class="badge red">下架</span>') + '</div></div>';
+  }).join("");
+}
+
+// ---------- 报表 ----------
+let reportMode = "coupons";
+$("btnRCoupon").onclick = function(){ reportMode = "coupons"; loadReport(false); };
+$("btnRCouponXlsx").onclick = function(){ loadReport(true); };
+$("btnRFlow").onclick = function(){ reportMode = "flows"; loadReport(false); };
+$("btnRFlowXlsx").onclick = function(){ loadReport(true); };
+$("btnRGrp").onclick = function(){ reportMode = "groups"; loadReport(false); };
+$("btnRGrpXlsx").onclick = function(){ loadReport(true); };
+$("btnRIbg").onclick = function(){ reportMode = "ibigou"; loadReport(false); };
+$("btnRIbgXlsx").onclick = function(){ loadReport(true); };
+async function loadReport(xlsx){
+  const urlMap = {
+    coupons: ["/report/coupons", "/report/coupons/export"],
+    flows: ["/report/balance-flows", "/report/balance-flows/export"],
+    groups: ["/report/group-records", "/report/group-records/export"],
+    ibigou: ["/report/ibigou-orders", "/report/ibigou-orders/export"]
+  };
+  const pair = urlMap[reportMode];
+  if (xlsx) return downloadXlsx(A + pair[1]);
+  const r = await get(A + pair[0]);
+  const list = r.data || [];
+  const el = $("reportTable");
+  if (!list.length) { el.innerHTML = '<div class="empty">暂无数据</div>'; return; }
+  el.innerHTML = list.slice(0, 50).map(function(x){
+    const vals = Object.keys(x).map(function(k){ return k + ": " + esc(x[k]); });
+    return '<div class="list-item"><div class="main"><div class="t">' + esc(x.bizNo || x.couponId || x.userPhone || x.ibigouOrderNo || "-") + '</div><div class="s">' + vals.join(" · ").slice(0, 140) + '</div></div></div>';
+  }).join("");
+}
+async function downloadXlsx(url){
+  const r = await fetch(url, { headers: H });
+  if (!r.ok) { toast("导出失败", "danger"); return; }
+  const blob = await r.blob();
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "report.xlsx";
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+
+// ---------- 会员管理 ----------
+async function loadMemberTable(){
+  const r = await get(A + "/member/list");
+  const list = r.data || [];
+  const el = $("memberTable");
+  if (!list.length) { el.innerHTML = '<div class="empty">暂无商家</div>'; return; }
+  el.innerHTML = list.map(function(m){
+    const exp = m.memberExpireTime;
+    let st = '<span class="badge blue">永久</span>';
+    if (exp) {
+      const days = Math.ceil((new Date(exp) - new Date()) / 86400000);
+      st = days > 0 ? '<span class="badge green">剩 ' + days + ' 天</span>' : '<span class="badge red">已过期</span>';
+    }
+    return '<div class="list-item"><div class="main"><div class="t">' + esc(m.merchantName || m.merchantNo) + '（' + esc(m.merchantNo) + '）</div>'
+      + '<div class="s">会员到期 ' + (exp ? fmtT(exp) : "永久") + '</div></div><div class="v">' + st + '</div></div>';
+  }).join("");
+}
+async function loadMOrders(){
+  const r = await get(A + "/member/orders");
+  const list = r.data || [];
+  const el = $("mOrderTable");
+  if (!list.length) { el.innerHTML = '<div class="empty">暂无续费订单</div>'; return; }
+  const stName = { 0:"待支付", 1:"已支付", 2:"已取消" };
+  el.innerHTML = list.map(function(x){
+    return '<div class="list-item"><div class="main"><div class="t">' + esc(x.orderNo) + ' · ' + esc(x.merchantNo) + '</div>'
+      + '<div class="s">金额 ¥' + esc(x.amount) + ' · 购 ' + (x.buyMonths || 0) + ' 赠 ' + (x.giftMonths || 0) + ' · 总 ' + (x.totalMonths || 0) + ' 个月<br>有效期 ' + fmtT(x.validFrom) + ' ~ ' + fmtT(x.validTo) + '</div></div>'
+      + '<div class="v">' + (stName[x.status] || x.status) + '</div></div>';
+  }).join("");
+}
+async function loadAudits(){
+  const r = await get(A + "/member/audits");
+  const list = r.data || [];
+  const el = $("auditTable");
+  if (!list.length) { el.innerHTML = '<div class="empty">暂无审计记录</div>'; return; }
+  const actName = { manual_verify:"手工核销券", manual_complete:"兜底完成订单", refund:"标记退款", adjust_expire:"调整有效期", renew_paid:"续费支付" };
+  el.innerHTML = list.map(function(a){
+    return '<div class="list-item"><div class="main"><div class="t">#' + a.logId + ' · ' + esc(a.merchantNo || "-") + ' · ' + (actName[a.action] || a.action) + '</div>'
+      + '<div class="s">操作人 ' + esc(a.operator || "-") + ' · 用户 ' + esc(a.userPhone || "-") + ' · 金额 ' + esc(a.amount || "-") + '<br>' + esc((a.detail || "").slice(0, 80)) + '</div></div>'
+      + '<div class="v">' + (a.revoked === 1 ? '<span class="badge gray">已撤销</span>' : '<button class="btn btn--sm red" onclick="revokeAudit(' + a.logId + ')">撤销</button>') + '</div></div>';
+  }).join("");
+}
+async function revokeAudit(logId){
+  const pwd = prompt("⚠️ 撤销将恢复余额/券状态，不可重复撤销。" + String.fromCharCode(10) + "请输入管理员密码确认：", "");
+  if (!pwd) return;
+  const r = await api(A + "/member/audits/" + logId + "/revoke", { adminPassword: pwd });
+  toast(r.code === 0 ? "已撤销并恢复资产" : (r.msg || "撤销失败"), r.code === 0 ? "success" : "danger");
+  loadAudits();
+}
+$("btnAdjust").onclick = async function(){
+  const no = $("adjNo").value.trim(), months = $("adjMonths").value;
+  if (!no || !(parseInt(months) > 0)) { toast("请输入商家编号和增加月数", "warning"); return; }
+  const r = await api(A + "/member/" + no + "/adjust", { months: months });
+  toast(r.code === 0 ? "有效期已调整 +" + months + " 个月（已记录审计）" : (r.msg || "调整失败"), r.code === 0 ? "success" : "danger");
+  loadMemberTable(); loadMOrders(); loadAudits();
+};
+$("btnAudits").onclick = loadAudits;
+$("btnMOrders").onclick = loadMOrders;
+
+// ---------- 告警 ----------
+$("btnAlerts").onclick = function(){ loadAlerts(); };
+async function loadAlerts(){
+  const r = await get(A + "/alerts");
+  const list = r.data || [];
+  const el = $("alertTable");
+  if (!list.length) { el.innerHTML = '<div class="empty">暂无告警</div>'; return; }
+  el.innerHTML = list.map(function(x){
+    return '<div class="list-item"><div class="main"><div class="t">#' + x.alertId + ' · ' + esc(x.alertType || "告警") + '</div>'
+      + '<div class="s">' + esc((x.content || "").slice(0, 80)) + '<br>' + fmtT(x.createTime) + '</div></div>'
+      + '<div class="v">' + (x.status === 1 ? '<span class="badge green">已处理</span>' : '<button class="btn btn--sm green" onclick="handleAlert(' + x.alertId + ')">标记处理</button>') + '</div></div>';
+  }).join("");
+  const unhandled = list.filter(function(x){ return x.status === 0; }).length;
+  $("alertCnt").textContent = unhandled;
+}
+window.handleAlert = async function(id){
+  const r = await api(A + "/alerts/" + id + "/handle");
+  if (r.code === 0) { toast("已标记处理", "success"); loadAlerts(); loadOverview(); }
+  else toast(r.msg || "操作失败", "danger");
+};
+window.showAlerts = function(){ loadAlerts(); };
+
+// ---------- 概览 ----------
+async function loadOverview(){
+  const ms = await get(A + "/merchant/list");
+  const merchants = ms.data || [];
+  $("stMerchants").textContent = merchants.length;
+  const mb = merchants.filter(function(m){ return m.status === 1; }).length;
+  $("stMember").textContent = mb + " 启用";
+  const al = await get(A + "/alerts");
+  const alerts = al.data || [];
+  const un = alerts.filter(function(x){ return x.status === 0; });
+  $("stAlerts").textContent = un.length;
+  $("overviewAlerts").innerHTML = un.length
+    ? un.slice(0, 5).map(function(x){ return '<div class="msg-item"><div class="t">#' + x.alertId + ' ' + esc((x.content || "").slice(0, 60)) + '</div><div class="s">' + fmtT(x.createTime) + '</div></div>'; }).join("")
+    : '<div class="empty">暂无告警</div>';
+  const rp = await get(A + "/report/coupons");
+  $("stCoupons").textContent = (rp.data || []).length;
+}
+
+// ---------- 初始化 ----------
+loadMerchants(); loadConfig(); loadBoard(false); loadMemberTable(); loadMOrders(); loadAudits(); loadAlerts(); loadOverview();
+</script>
+</body>
+</html>

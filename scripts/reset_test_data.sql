@@ -1,0 +1,25 @@
+-- 冒烟前重置业务数据（幂等，测试环境专用）
+USE ibigou_blindbox;
+SET FOREIGN_KEY_CHECKS=0;
+TRUNCATE user_balance_flow;
+TRUNCATE daily_deduct_quota;
+TRUNCATE member_order;
+TRUNCATE audit_log;
+TRUNCATE merchant_message;
+TRUNCATE announce_log;
+TRUNCATE customer_session;
+TRUNCATE user_message;
+TRUNCATE sys_alert;
+DELETE FROM user_coupon;
+DELETE FROM user_account;
+DELETE FROM box_prize_limit_stat;
+DELETE FROM third_group_verify_record;
+DELETE FROM ibigou_order;
+DELETE FROM offline_order;
+DELETE FROM box_group_prize_pool;
+DELETE FROM box_group_pool_config;
+DELETE FROM box_prize_pool;
+DELETE FROM box_public_pool;
+DELETE FROM merchant;
+DELETE FROM merchant_session;
+SET FOREIGN_KEY_CHECKS=1;

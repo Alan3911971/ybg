@@ -1,0 +1,51 @@
+# ============================================================================
+# 生产环境配置：所有敏感项一律环境变量注入，禁止写死
+# 环境变量清单（部署前必须设置）：
+#   IBIGOU_DB_HOST / IBIGOU_DB_PORT / IBIGOU_DB_NAME / IBIGOU_DB_USER / IBIGOU_DB_PASSWORD
+#   IBIGOU_DOMAIN（如 https://ybgtc.com）
+# 生产部署由 Hermes 执行（见 docs/DEPLOY-PROD.md）
+# ============================================================================
+server:
+  port: 8085
+  shutdown: graceful
+
+spring:
+  datasource:
+    url: jdbc:mysql://${IBIGOU_DB_HOST:127.0.0.1}:${IBIGOU_DB_PORT:3306}/${IBIGOU_DB_NAME:ibigou_blindbox}?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&useSSL=true&requireSSL=false&allowPublicKeyRetrieval=true
+    username: ${IBIGOU_DB_USER}
+    password: ${IBIGOU_DB_PASSWORD}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    hikari:
+      maximum-pool-size: 20
+      minimum-idle: 5
+  jpa:
+    hibernate:
+      ddl-auto: none          # 表结构一律由 db/schema.sql 管理
+    open-in-view: false
+    show-sql: false
+    properties:
+      hibernate:
+        jdbc:
+          time_zone: Asia/Shanghai
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+
+logging:
+  level:
+    root: warn
+    com.ibigou.blindbox: info
+
+app:
+  domain: ${IBIGOU_DOMAIN:https://ybgtc.com}
+  qr-base-path: /qr
+  customer-path: /h5/customer
+  merchant-path: /h5/merchant
+  admin-path: /h5/admin
+  upload-dir: ${IBIGOU_UPLOAD_DIR:/app/uploads}
+spring.servlet.multipart:
+  max-file-size: 5MB
+  max-request-size: 10MB

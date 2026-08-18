@@ -1,0 +1,1403 @@
+{
+  "services": [
+    {
+      "name": "AdminAuthService",
+      "type": "service",
+      "injects": [
+        "adminUserRepository"
+      ],
+      "methods": [
+        "initDefaultAdmin",
+        "login",
+        "changePwd",
+        "requireAdmin"
+      ],
+      "scheduled": []
+    },
+    {
+      "name": "AdminService",
+      "type": "service",
+      "injects": [
+        "merchantRepository",
+        "memberService",
+        "adminUserRepository",
+        "boxPrizePoolRepository",
+        "boxPublicPoolRepository",
+        "boxGroupPrizePoolRepository",
+        "merchantSessionRepository",
+        "boxPrizeLimitStatRepository"
+      ],
+      "methods": [
+        "createMerchant",
+        "toggleMerchant",
+        "resetPwd",
+        "listMerchants",
+        "verifyAdminPassword",
+        "deleteMerchant"
+      ],
+      "scheduled": []
+    },
+    {
+      "name": "AlertService",
+      "type": "service",
+      "injects": [
+        "alertRepository"
+      ],
+      "methods": [
+        "record",
+        "list",
+        "unhandledCount",
+        "markHandled"
+      ],
+      "scheduled": []
+    },
+    {
+      "name": "AnnounceService",
+      "type": "service",
+      "injects": [
+        "announceRepository"
+      ],
+      "methods": [
+        "record",
+        "list",
+        "poll"
+      ],
+      "scheduled": []
+    },
+    {
+      "name": "AuditLogService",
+      "type": "service",
+      "injects": [
+        "auditLogRepository",
+        "couponService",
+        "balanceService",
+        "orderCalcService",
+        "offlineOrderRepository",
+        "merchantRepository"
+      ],
+      "methods": [
+        "record",
+        "revoke",
+        "all"
+      ],
+      "scheduled": []
+    },
+    {
+      "name": "BalanceService",
+      "type": "service",
+      "injects": [
+        "accountRepository",
+        "flowRepository"
+      ],
+      "methods": [
+        "grant",
+        "grantAvailable",
+        "availableBalance",
+        "deductLimit",
+        "deduct",
+        "refund",
+        "clawbackReturn",
+        "activateDrawBatch"
+      ],
+      "scheduled": []
+    },
+    {
+      "name": "ConfigCryptoService",
+      "type": "service",
+      "injects": [],
+      "methods": [
+        "isSensitive",
+        "encrypt",
+        "decrypt"
+      ],
+      "scheduled": []
+    },
+    {
+      "name": "CouponService",
+      "type": "service",
+      "injects": [
+        "configService",
+        "couponRepository"
+      ],
+      "methods": [
+        "grant",
+        "verifyOffline",
+        "verifyIbigou",
+        "verifyManual",
+        "restore",
+        "voidCoupon",
+        "availableForOffline",
+        "availableForIbigou",
+        "get",
+        "afterCoupon"
+      ],
+      "scheduled": []
+    },
+    {
+      "name": "CustomerAuthService",
+      "type": "service",
+      "injects": [
+        "smsService",
+        "sessionRepository"
+      ],
+      "methods": [
+        "sendCode",
+        "login",
+        "requireUser"
+      ],
+      "scheduled": []
+    },
+    {
+      "name": "DrawResult",
+      "type": "service",
+      "injects": [],
+      "methods": [
+        "DrawResult"
+      ],
+      "scheduled": []
+    },
+    {
+      "name": "DrawService",
+      "type": "service",
+      "injects": [
+        "merchantRepository",
+        "prizePoolRepository",
+        "publicPoolRepository",
+        "groupPoolRepository",
+        "groupPoolConfigRepository",
+        "statRepository",
+        "couponService",
+        "balanceService",
+        "configService",
+        "orderCalcService",
+        "memberService",
+        "announceService"
+      ],
+      "methods": [
+        "drawNormal",
+        "drawGroup"
+      ],
+      "scheduled": []
+    },
+    {
+      "name": "DynamicQrService",
+      "type": "service",
+      "injects": [],
+      "methods": [
+        "issue",
+        "verify",
+        "DynamicCode"
+      ],
+      "scheduled": []
+    },
+    {
+      "name": "FlowCloseService",
+      "type": "service",
+      "injects": [
+        "couponRepository",
+        "balanceService"
+      ],
+      "methods": [
+        "closeByDrawBatch"
+      ],
+      "scheduled": []
+    },
+    {
+      "name": "GlobalConfigService",
+      "type": "service",
+      "injects": [
+        "configRepository",
+        "cryptoService"
+      ],
+      "methods": [
+        "balanceDeductRate",
+        "get",
+        "get",
+        "ibigouChannelOpen",
+        "update"
+      ],
+      "scheduled": []
+    },
+    {
+      "name": "GroupRecordService",
+      "type": "service",
+      "injects": [
+        "recordRepository",
+        "userCouponRepository",
+        "userBalanceFlowRepository",
+        "couponService",
+        "balanceService",
+        "userMessageService",
+        "globalConfigService",
+        "flowCloseService"
+      ],
+      "methods": [
+        "register"
+      ],
+      "scheduled": []
+    },
+    {
+      "name": "IbigouService",
+      "type": "service",
+      "injects": [
+        "configService",
+        "goodsRepository",
+        "orderRepository",
+        "couponService",
+        "balanceService",
+        "flowCloseService"
+      ],
+      "methods": [
+        "checkChannelOpen",
+        "listGoods",
+        "availableAssets",
+        "createOrder",
+        "refund",
+        "myOrders",
+        "IbigouAssets"
+      ],
+      "scheduled": []
+    },
+    {
+      "name": "IdentityQrService",
+      "type": "service",
+      "injects": [
+        "configService"
+      ],
+      "methods": [
+        "issue",
+        "verify"
+      ],
+      "scheduled": []
+    },
+    {
+      "name": "JobService",
+      "type": "service",
+      "injects": [
+        "couponRepository",
+        "flowRepository",
+        "flowCloseService",
+        "messageService",
+        "alertService"
+      ],
+      "methods": [
+        "expireCoupons",
+        "expireRemind",
+        "compensateDrawBatch",
+        "payReconciler",
+        "archiveClean"
+      ],
+      "scheduled": [
+        {
+          "cron": "0 5 * * * ?",
+          "method": "expireCoupons"
+        },
+        {
+          "cron": "0 30 9 * * ?",
+          "method": "expireRemind"
+        },
+        {
+          "cron": "0 */5 * * * ?",
+          "method": "compensateDrawBatch"
+        },
+        {
+          "cron": "0 */5 * * * ?",
+          "method": "payReconciler"
+        },
+        {
+          "cron": "0 20 3 * * ?",
+          "method": "archiveClean"
+        }
+      ]
+    },
+    {
+      "name": "ManualService",
+      "type": "service",
+      "injects": [
+        "couponService",
+        "balanceService",
+        "orderCalcService",
+        "memberService",
+        "auditLogService",
+        "announceService"
+      ],
+      "methods": [
+        "manualVerifyCoupon",
+        "manualCompleteOrder"
+      ],
+      "scheduled": []
+    },
+    {
+      "name": "MemberService",
+      "type": "service",
+      "injects": [
+        "merchantRepository",
+        "orderRepository",
+        "auditLogRepository",
+        "configService",
+        "auditLogService"
+      ],
+      "methods": [
+        "freeTrialDays",
+        "monthlyPrice",
+        "giftSwitchOn",
+        "giftMonths",
+        "annualPrice",
+        "status",
+        "requireWriteAllowed",
+        "createRenewOrder",
+        "confirmRenewPaid",
+        "orders",
+        "allOrders",
+        "getOrder",
+        "adminAdjustExpire",
+        "audit",
+        "allAudits",
+        "MemberStatus"
+      ],
+      "scheduled": []
+    },
+    {
+      "name": "MerchantAuthService",
+      "type": "service",
+      "injects": [
+        "merchantRepository",
+        "sessionRepository"
+      ],
+      "methods": [
+        "login",
+        "merchantNoByToken"
+      ],
+      "scheduled": []
+    },
+    {
+      "name": "MerchantConfigService",
+      "type": "service",
+      "injects": [
+        "merchantRepository",
+        "prizePoolRepository",
+        "publicPoolRepository",
+        "groupPoolRepository",
+        "groupPoolConfigRepository"
+      ],
+      "methods": [
+        "saveWeights",
+        "savePrizePool",
+        "togglePrizePool",
+        "deletePrizePool",
+        "putPublic",
+        "togglePublic",
+        "saveGroupPool",
+        "toggleGroupPool",
+        "deleteGroupPool",
+        "saveDeductConfig",
+        "saveGroupWeights"
+      ],
+      "scheduled": []
+    },
+    {
+      "name": "MessageService",
+      "type": "service",
+      "injects": [
+        "messageRepository",
+        "merchantRepository"
+      ],
+      "methods": [
+        "list",
+        "unreadCount",
+        "markRead",
+        "markAllRead",
+        "generateExpireReminders"
+      ],
+      "scheduled": []
+    },
+    {
+      "name": "OfflineOrderService",
+      "type": "service",
+      "injects": [
+        "orderRepository",
+        "couponService",
+        "balanceService",
+        "orderCalcService",
+        "flowCloseService",
+        "memberService",
+        "globalConfigService",
+        "auditLogService",
+        "announceService",
+        "userMessageService"
+      ],
+      "methods": [
+        "createOrder",
+        "refund",
+        "saveTradeNo",
+        "createOrderB",
+        "voucherInfo",
+        "confirmOrderB"
+      ],
+      "scheduled": []
+    },
+    {
+      "name": "OrderCalcService",
+      "type": "service",
+      "injects": [
+        "merchantRepository",
+        "quotaRepository",
+        "balanceService",
+        "configService",
+        "couponService"
+      ],
+      "methods": [
+        "calc",
+        "remainingDailyQuota",
+        "addQuota",
+        "refundQuota",
+        "OrderCalc"
+      ],
+      "scheduled": []
+    },
+    {
+      "name": "ReportService",
+      "type": "service",
+      "injects": [
+        "couponRepository",
+        "flowRepository",
+        "groupRecordRepository",
+        "ibigouOrderRepository",
+        "publicPoolRepository",
+        "statRepository",
+        "accountRepository"
+      ],
+      "methods": [
+        "grantFlows",
+        "consumeFlows",
+        "groupRecords",
+        "ibigouRecon",
+        "externalCoupons",
+        "publicPoolWonCount",
+        "publicPoolBoard",
+        "allCoupons",
+        "allBalanceFlows",
+        "allGroupRecords",
+        "allIbigouOrders",
+        "toExcel",
+        "exportCoupons",
+        "exportBalanceFlows",
+        "exportGroupRecords",
+        "exportIbigouOrders",
+        "exportPublicPools"
+      ],
+      "scheduled": []
+    },
+    {
+      "name": "SmsService",
+      "type": "service",
+      "injects": [],
+      "methods": [
+        "sendCode",
+        "verifyCode"
+      ],
+      "scheduled": []
+    },
+    {
+      "name": "UserMessageService",
+      "type": "service",
+      "injects": [
+        "messageRepository"
+      ],
+      "methods": [
+        "record",
+        "list",
+        "unreadCount",
+        "markRead",
+        "markAllRead"
+      ],
+      "scheduled": []
+    },
+    {
+      "name": "WalletService",
+      "type": "service",
+      "injects": [
+        "couponRepository",
+        "flowRepository",
+        "balanceService"
+      ],
+      "methods": [
+        "wallet",
+        "Wallet"
+      ],
+      "scheduled": []
+    },
+    {
+      "name": "WxPayService",
+      "type": "service",
+      "injects": [
+        "configService",
+        "memberService"
+      ],
+      "methods": [
+        "enabled",
+        "nativePay",
+        "queryOrderState",
+        "handleNotify"
+      ],
+      "scheduled": []
+    }
+  ],
+  "repositories": [
+    {
+      "name": "AdminUserRepository",
+      "extends": "JpaRepository",
+      "entity": "AdminUser"
+    },
+    {
+      "name": "AnnounceLogRepository",
+      "extends": "JpaRepository",
+      "entity": "AnnounceLog"
+    },
+    {
+      "name": "AuditLogRepository",
+      "extends": "JpaRepository",
+      "entity": "AuditLog"
+    },
+    {
+      "name": "BoxGroupPoolConfigRepository",
+      "extends": "JpaRepository",
+      "entity": "BoxGroupPoolConfig"
+    },
+    {
+      "name": "BoxGroupPrizePoolRepository",
+      "extends": "JpaRepository",
+      "entity": "BoxGroupPrizePool"
+    },
+    {
+      "name": "BoxPrizeLimitStatRepository",
+      "extends": "JpaRepository",
+      "entity": "BoxPrizeLimitStat"
+    },
+    {
+      "name": "BoxPrizePoolRepository",
+      "extends": "JpaRepository",
+      "entity": "BoxPrizePool"
+    },
+    {
+      "name": "BoxPublicPoolRepository",
+      "extends": "JpaRepository",
+      "entity": "BoxPublicPool"
+    },
+    {
+      "name": "CustomerSessionRepository",
+      "extends": "JpaRepository",
+      "entity": "CustomerSession"
+    },
+    {
+      "name": "DailyDeductQuotaRepository",
+      "extends": "JpaRepository",
+      "entity": "DailyDeductQuota"
+    },
+    {
+      "name": "IbigouGoodsRepository",
+      "extends": "JpaRepository",
+      "entity": "IbigouGoods"
+    },
+    {
+      "name": "IbigouOrderRepository",
+      "extends": "JpaRepository",
+      "entity": "IbigouOrder"
+    },
+    {
+      "name": "MemberOrderRepository",
+      "extends": "JpaRepository",
+      "entity": "MemberOrder"
+    },
+    {
+      "name": "MerchantMessageRepository",
+      "extends": "JpaRepository",
+      "entity": "MerchantMessage"
+    },
+    {
+      "name": "MerchantRepository",
+      "extends": "JpaRepository",
+      "entity": "Merchant"
+    },
+    {
+      "name": "MerchantSessionRepository",
+      "extends": "JpaRepository",
+      "entity": "MerchantSession"
+    },
+    {
+      "name": "OfflineOrderRepository",
+      "extends": "JpaRepository",
+      "entity": "OfflineOrder"
+    },
+    {
+      "name": "SysAlertRepository",
+      "extends": "JpaRepository",
+      "entity": "SysAlert"
+    },
+    {
+      "name": "SysGlobalConfigRepository",
+      "extends": "JpaRepository",
+      "entity": "SysGlobalConfig"
+    },
+    {
+      "name": "ThirdGroupVerifyRecordRepository",
+      "extends": "JpaRepository",
+      "entity": "ThirdGroupVerifyRecord"
+    },
+    {
+      "name": "UserAccountRepository",
+      "extends": "JpaRepository",
+      "entity": "UserAccount"
+    },
+    {
+      "name": "UserBalanceFlowRepository",
+      "extends": "JpaRepository",
+      "entity": "UserBalanceFlow"
+    },
+    {
+      "name": "UserCouponRepository",
+      "extends": "JpaRepository",
+      "entity": "UserCoupon"
+    },
+    {
+      "name": "UserMessageRepository",
+      "extends": "JpaRepository",
+      "entity": "UserMessage"
+    }
+  ],
+  "entities": [
+    {
+      "name": "AdminUser",
+      "table": "admin_user",
+      "fields": 6
+    },
+    {
+      "name": "AnnounceLog",
+      "table": "announce_log",
+      "fields": 5
+    },
+    {
+      "name": "AuditLog",
+      "table": "audit_log",
+      "fields": 12
+    },
+    {
+      "name": "BoxGroupPoolConfig",
+      "table": "box_group_pool_config",
+      "fields": 7
+    },
+    {
+      "name": "BoxGroupPrizePool",
+      "table": "box_group_prize_pool",
+      "fields": 13
+    },
+    {
+      "name": "BoxPrizeLimitStat",
+      "table": "box_prize_limit_stat",
+      "fields": 7
+    },
+    {
+      "name": "BoxPrizePool",
+      "table": "box_prize_pool",
+      "fields": 14
+    },
+    {
+      "name": "BoxPublicPool",
+      "table": "box_public_pool",
+      "fields": 13
+    },
+    {
+      "name": "CustomerSession",
+      "table": "customer_session",
+      "fields": 4
+    },
+    {
+      "name": "DailyDeductQuota",
+      "table": "daily_deduct_quota",
+      "fields": 6
+    },
+    {
+      "name": "IbigouGoods",
+      "table": "ibigou_goods",
+      "fields": 6
+    },
+    {
+      "name": "IbigouOrder",
+      "table": "ibigou_order",
+      "fields": 13
+    },
+    {
+      "name": "MemberOrder",
+      "table": "member_order",
+      "fields": 12
+    },
+    {
+      "name": "Merchant",
+      "table": "merchant",
+      "fields": 19
+    },
+    {
+      "name": "MerchantMessage",
+      "table": "merchant_message",
+      "fields": 7
+    },
+    {
+      "name": "MerchantSession",
+      "table": "merchant_session",
+      "fields": 4
+    },
+    {
+      "name": "OfflineOrder",
+      "table": "offline_order",
+      "fields": 20
+    },
+    {
+      "name": "SysAlert",
+      "table": "sys_alert",
+      "fields": 5
+    },
+    {
+      "name": "SysGlobalConfig",
+      "table": "sys_global_config",
+      "fields": 4
+    },
+    {
+      "name": "ThirdGroupVerifyRecord",
+      "table": "third_group_verify_record",
+      "fields": 10
+    },
+    {
+      "name": "UserAccount",
+      "table": "user_account",
+      "fields": 4
+    },
+    {
+      "name": "UserBalanceFlow",
+      "table": "user_balance_flow",
+      "fields": 12
+    },
+    {
+      "name": "UserCoupon",
+      "table": "user_coupon",
+      "fields": 15
+    },
+    {
+      "name": "UserMessage",
+      "table": "user_message",
+      "fields": 7
+    }
+  ],
+  "controllers": [
+    {
+      "name": "AdminController",
+      "base": "/api/admin",
+      "endpoints": [
+        {
+          "method": "Post",
+          "path": "/auth/login"
+        },
+        {
+          "method": "Post",
+          "path": "/auth/change-pwd"
+        },
+        {
+          "method": "Get",
+          "path": "/config/list"
+        },
+        {
+          "method": "Post",
+          "path": "/config/update"
+        },
+        {
+          "method": "Post",
+          "path": "/merchant/create"
+        },
+        {
+          "method": "Post",
+          "path": "/merchant/{merchantNo}/enable"
+        },
+        {
+          "method": "Post",
+          "path": "/merchant/{merchantNo}/disable"
+        },
+        {
+          "method": "Post",
+          "path": "/merchant/{merchantNo}/delete"
+        },
+        {
+          "method": "Post",
+          "path": "/merchant/{merchantNo}/reset-pwd"
+        },
+        {
+          "method": "Get",
+          "path": "/merchant/list"
+        },
+        {
+          "method": "Get",
+          "path": "/merchant/{merchantNo}/config-audit"
+        },
+        {
+          "method": "Get",
+          "path": "/public-pool-board"
+        },
+        {
+          "method": "Get",
+          "path": "/public-pool-board/export"
+        },
+        {
+          "method": "Get",
+          "path": "/report/coupons"
+        },
+        {
+          "method": "Get",
+          "path": "/report/coupons/export"
+        },
+        {
+          "method": "Get",
+          "path": "/report/balance-flows"
+        },
+        {
+          "method": "Get",
+          "path": "/report/balance-flows/export"
+        },
+        {
+          "method": "Get",
+          "path": "/report/group-records"
+        },
+        {
+          "method": "Get",
+          "path": "/report/group-records/export"
+        },
+        {
+          "method": "Get",
+          "path": "/report/ibigou-orders"
+        },
+        {
+          "method": "Get",
+          "path": "/report/ibigou-orders/export"
+        },
+        {
+          "method": "Get",
+          "path": "/member/list"
+        },
+        {
+          "method": "Get",
+          "path": "/member/orders"
+        },
+        {
+          "method": "Post",
+          "path": "/member/{merchantNo}/adjust"
+        },
+        {
+          "method": "Get",
+          "path": "/member/audits"
+        },
+        {
+          "method": "Post",
+          "path": "/member/audits/{logId}/revoke"
+        },
+        {
+          "method": "Get",
+          "path": "/alerts"
+        },
+        {
+          "method": "Post",
+          "path": "/alerts/{id}/handle"
+        },
+        {
+          "method": "Post",
+          "path": "/merchant/{merchantNo}/qr-audit"
+        }
+      ],
+      "injects": [
+        "adminAuthService",
+        "adminService",
+        "configService",
+        "reportService",
+        "configRepository",
+        "memberService",
+        "auditLogService",
+        "merchantRepository",
+        "prizePoolRepository",
+        "publicPoolRepository",
+        "groupPoolRepository"
+      ]
+    },
+    {
+      "name": "CustomerController",
+      "base": "/api/customer",
+      "endpoints": [
+        {
+          "method": "Post",
+          "path": "/auth/send-code"
+        },
+        {
+          "method": "Post",
+          "path": "/auth/login"
+        },
+        {
+          "method": "Post",
+          "path": "/draw/normal"
+        },
+        {
+          "method": "Post",
+          "path": "/draw/group"
+        },
+        {
+          "method": "Post",
+          "path": "/group/register"
+        },
+        {
+          "method": "Post",
+          "path": "/offline/order-b"
+        },
+        {
+          "method": "Post",
+          "path": "/offline/calc"
+        },
+        {
+          "method": "Post",
+          "path": "/offline/order"
+        },
+        {
+          "method": "Post",
+          "path": "/offline/order/{orderNo}/refund"
+        },
+        {
+          "method": "Post",
+          "path": "/qr-svg"
+        },
+        {
+          "method": "Get",
+          "path": "/identity-qr/{userPhone}"
+        },
+        {
+          "method": "Get",
+          "path": "/messages/{userPhone}"
+        },
+        {
+          "method": "Get",
+          "path": "/messages/{userPhone}/unread-count"
+        },
+        {
+          "method": "Post",
+          "path": "/messages/{id}/read"
+        },
+        {
+          "method": "Post",
+          "path": "/messages/read-all"
+        },
+        {
+          "method": "Get",
+          "path": "/qr/dynamic/{userPhone}"
+        },
+        {
+          "method": "Get",
+          "path": "/wallet/{userPhone}"
+        },
+        {
+          "method": "Get",
+          "path": "/ibigou/goods"
+        },
+        {
+          "method": "Get",
+          "path": "/ibigou/assets/{userPhone}"
+        },
+        {
+          "method": "Post",
+          "path": "/ibigou/order"
+        },
+        {
+          "method": "Post",
+          "path": "/ibigou/order/{orderNo}/refund"
+        },
+        {
+          "method": "Get",
+          "path": "/ibigou/orders/{userPhone}"
+        }
+      ],
+      "injects": [
+        "drawService",
+        "groupRecordService",
+        "offlineOrderService",
+        "orderCalcService",
+        "dynamicQrService",
+        "customerAuthService",
+        "identityQrService",
+        "userMessageService",
+        "walletService",
+        "ibigouService"
+      ]
+    },
+    {
+      "name": "MerchantConfigController",
+      "base": "/api/merchant/config",
+      "endpoints": [
+        {
+          "method": "Post",
+          "path": "/qr-svg"
+        },
+        {
+          "method": "Get",
+          "path": "/weights"
+        },
+        {
+          "method": "Post",
+          "path": "/weights"
+        },
+        {
+          "method": "Get",
+          "path": "/prize-pools"
+        },
+        {
+          "method": "Post",
+          "path": "/prize-pools"
+        },
+        {
+          "method": "Post",
+          "path": "/prize-pools/{id}/enable"
+        },
+        {
+          "method": "Post",
+          "path": "/prize-pools/{id}/disable"
+        },
+        {
+          "method": "Delete",
+          "path": "/prize-pools/{id}"
+        },
+        {
+          "method": "Post",
+          "path": "/prize-pools/{id}/put-public"
+        },
+        {
+          "method": "Get",
+          "path": "/public-pools"
+        },
+        {
+          "method": "Post",
+          "path": "/public-pools/{id}/up"
+        },
+        {
+          "method": "Post",
+          "path": "/public-pools/{id}/down"
+        },
+        {
+          "method": "Get",
+          "path": "/group-pools"
+        },
+        {
+          "method": "Post",
+          "path": "/group-pools"
+        },
+        {
+          "method": "Post",
+          "path": "/group-pools/{id}/enable"
+        },
+        {
+          "method": "Post",
+          "path": "/group-pools/{id}/disable"
+        },
+        {
+          "method": "Delete",
+          "path": "/group-pools/{id}"
+        },
+        {
+          "method": "Get",
+          "path": "/deduct-config"
+        },
+        {
+          "method": "Post",
+          "path": "/deduct-config"
+        },
+        {
+          "method": "Get",
+          "path": "/group-pool-weights"
+        },
+        {
+          "method": "Post",
+          "path": "/group-pool-weights"
+        },
+        {
+          "method": "Get",
+          "path": "/group-qr"
+        },
+        {
+          "method": "Get",
+          "path": "/external-coupons"
+        },
+        {
+          "method": "Get",
+          "path": "/external-coupons/export"
+        },
+        {
+          "method": "Get",
+          "path": "/balance-flows"
+        },
+        {
+          "method": "Get",
+          "path": "/balance-flows/export"
+        },
+        {
+          "method": "Get",
+          "path": "/group-records"
+        },
+        {
+          "method": "Get",
+          "path": "/group-records/export"
+        },
+        {
+          "method": "Get",
+          "path": "/ibigou-recon"
+        },
+        {
+          "method": "Get",
+          "path": "/ibigou-recon/export"
+        }
+      ],
+      "injects": [
+        "authService",
+        "configService",
+        "reportService",
+        "merchantRepository",
+        "prizePoolRepository",
+        "publicPoolRepository",
+        "groupPoolRepository",
+        "groupPoolConfigRepository"
+      ]
+    },
+    {
+      "name": "MerchantController",
+      "base": "/api/merchant",
+      "endpoints": [
+        {
+          "method": "Post",
+          "path": "/auth/login"
+        },
+        {
+          "method": "Post",
+          "path": "/coupon/verify-manual"
+        },
+        {
+          "method": "Post",
+          "path": "/balance/manual-deduct"
+        },
+        {
+          "method": "Get",
+          "path": "/config"
+        },
+        {
+          "method": "Get",
+          "path": "/user/{userPhone}/assets"
+        },
+        {
+          "method": "Get",
+          "path": "/qr/verify"
+        },
+        {
+          "method": "Get",
+          "path": "/identity/verify"
+        },
+        {
+          "method": "Get",
+          "path": "/messages"
+        },
+        {
+          "method": "Get",
+          "path": "/messages/unread-count"
+        },
+        {
+          "method": "Post",
+          "path": "/messages/{id}/read"
+        },
+        {
+          "method": "Post",
+          "path": "/messages/read-all"
+        },
+        {
+          "method": "Get",
+          "path": "/announce/poll"
+        },
+        {
+          "method": "Get",
+          "path": "/announce/list"
+        },
+        {
+          "method": "Get",
+          "path": "/orders"
+        },
+        {
+          "method": "Get",
+          "path": "/orders/export"
+        },
+        {
+          "method": "Post",
+          "path": "/order/{orderNo}/trade-no"
+        },
+        {
+          "method": "Get",
+          "path": "/order/voucher"
+        },
+        {
+          "method": "Post",
+          "path": "/order/{orderNo}/confirm"
+        },
+        {
+          "method": "Get",
+          "path": "/member/status"
+        },
+        {
+          "method": "Get",
+          "path": "/member/plan"
+        },
+        {
+          "method": "Post",
+          "path": "/member/renew-order"
+        },
+        {
+          "method": "Post",
+          "path": "/member/renew-order/{orderNo}/confirm"
+        },
+        {
+          "method": "Post",
+          "path": "/member/renew-order/{orderNo}/pay"
+        },
+        {
+          "method": "Get",
+          "path": "/member/orders"
+        }
+      ],
+      "injects": [
+        "authService",
+        "manualService",
+        "configService",
+        "couponService",
+        "balanceService",
+        "walletService",
+        "memberService",
+        "offlineOrderService",
+        "wxPayService",
+        "messageService",
+        "dynamicQrService",
+        "announceService",
+        "identityQrService",
+        "reportService"
+      ]
+    },
+    {
+      "name": "PayNotifyController",
+      "base": "/api/pay/wx",
+      "endpoints": [
+        {
+          "method": "Post",
+          "path": "/notify"
+        }
+      ],
+      "injects": [
+        "wxPayService"
+      ]
+    },
+    {
+      "name": "UploadController",
+      "base": "/api/merchant/config",
+      "endpoints": [
+        {
+          "method": "Post",
+          "path": "/upload-qr"
+        }
+      ],
+      "injects": [
+        "authService",
+        "merchantRepository"
+      ]
+    }
+  ],
+  "enums": [
+    {
+      "name": "CouponStatus",
+      "values": [
+        "UNUSED",
+        "VERIFIED",
+        "EXPIRED",
+        "VOIDED"
+      ]
+    },
+    {
+      "name": "FlowType",
+      "values": [
+        "GRANT",
+        "DEDUCT",
+        "REFUND"
+      ]
+    },
+    {
+      "name": "GroupChannel",
+      "values": [
+        "MEITUAN",
+        "ELEME",
+        "DOUYIN"
+      ]
+    },
+    {
+      "name": "LimitCycle",
+      "values": [
+        "DAILY",
+        "WEEKLY",
+        "NONE"
+      ]
+    },
+    {
+      "name": "LimitScope",
+      "values": [
+        "GLOBAL",
+        "MERCHANT",
+        "USER"
+      ]
+    },
+    {
+      "name": "PoolType",
+      "values": [
+        "PRIVATE",
+        "PUBLIC",
+        "MEITUAN",
+        "ELEME",
+        "DOUYIN"
+      ]
+    },
+    {
+      "name": "PrizeType",
+      "values": [
+        "DISCOUNT",
+        "CUT",
+        "BALANCE",
+        "GROUP_FREE"
+      ]
+    },
+    {
+      "name": "RefundStatus",
+      "values": [
+        "NONE",
+        "FULL",
+        "PARTIAL"
+      ]
+    },
+    {
+      "name": "VerifyType",
+      "values": [
+        "NONE",
+        "OFFLINE_AUTO",
+        "MANUAL",
+        "IBIGOU"
+      ]
+    }
+  ],
+  "config": [],
+  "stats": {
+    "services": 30,
+    "repositories": 24,
+    "entities": 24,
+    "controllers": 6,
+    "enums": 9,
+    "endpoints": 107,
+    "scheduled_jobs": 5
+  }
+}
