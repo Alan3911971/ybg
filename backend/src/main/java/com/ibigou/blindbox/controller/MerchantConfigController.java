@@ -3,6 +3,8 @@ package com.ibigou.blindbox.controller;
 import com.ibigou.blindbox.common.Result;
 import com.ibigou.blindbox.entity.*;
 import com.ibigou.blindbox.repository.*;
+import com.ibigou.blindbox.entity.BoxPrizeLimitStat;
+import com.ibigou.blindbox.repository.BoxPrizeLimitStatRepository;
 import com.ibigou.blindbox.service.MerchantAuthService;
 import com.ibigou.blindbox.service.MerchantConfigService;
 import com.ibigou.blindbox.service.ReportService;
@@ -13,6 +15,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
+import java.util.Map;
+import java.util.stream.Collectors;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
@@ -31,6 +35,9 @@ public class MerchantConfigController {
     @org.springframework.beans.factory.annotation.Value("${app.domain}")
     private String appDomain;
 
+    @org.springframework.beans.factory.annotation.Value("${app.upload-dir:./uploads}")
+    private String uploadDir;
+
     private final MerchantAuthService authService;
     private final MerchantConfigService configService;
     private final ReportService reportService;
@@ -39,6 +46,8 @@ public class MerchantConfigController {
     private final BoxPublicPoolRepository publicPoolRepository;
     private final BoxGroupPrizePoolRepository groupPoolRepository;
     private final BoxGroupPoolConfigRepository groupPoolConfigRepository;
+    private final BoxPrizeLimitStatRepository statRepository;
+    private final IbigouGoodsRepository goodsRepository;
 
     // ---------------- 5.2.1 盲盒奖品池配置 ----------------
 
@@ -86,9 +95,11 @@ public class MerchantConfigController {
                                               @RequestParam(required = false) Integer limitScope,
                                               @RequestParam(required = false) Integer limitCycle,
                                               @RequestParam(required = false) Integer limitMax,
-                                              @RequestParam(required = false) String remark) {
+                                              @RequestParam(required = false) String remark,
+            @RequestParam(required = false) String expireTime) {
         return Result.ok(configService.savePrizePool(authService.merchantNoByToken(token), prizeId, prizeType,
-                prizeValue, weight, isPutPublic, isSupportIbigou, limitScope, limitCycle, limitMax, remark));
+                prizeValue, weight, isPutPublic, isSupportIbigou, limitScope, limitCycle, limitMax, remark,
+                expireTime != null && !expireTime.isBlank() ? LocalDateTime.parse(expireTime.replace(' ', 'T')) : null));
     }
 
     @PostMapping("/prize-pools/{id}/enable")
@@ -107,6 +118,36 @@ public class MerchantConfigController {
     public Result<Void> deletePrizePool(@RequestHeader("X-Merchant-Token") String token, @PathVariable Long id) {
         configService.deletePrizePool(authService.merchantNoByToken(token), id);
         return Result.ok();
+    }
+
+    // ---------------- 5.3 奖品中奖报表 ----------------
+
+    @GetMapping("/prize-stats")
+    public Result<List<Map<String, Object>>> prizeStats(@RequestHeader("X-Merchant-Token") String token) {
+        String merchantNo = authService.merchantNoByToken(token);
+        List<BoxPrizeLimitStat> stats = statRepository.findByMerchantNoOrderByCreateTimeDesc(merchantNo);
+        List<BoxPrizePool> pools = prizePoolRepository.findByMerchantNoOrderByPrizeIdDesc(merchantNo);
+        Map<Long, BoxPrizePool> poolMap = pools.stream()
+                .collect(Collectors.toMap(BoxPrizePool::getPrizeId, p -> p, (a, b) -> a));
+        List<Map<String, Object>> result = new java.util.ArrayList<>();
+        for (BoxPrizeLimitStat s : stats) {
+            Map<String, Object> row = new java.util.LinkedHashMap<>();
+            row.put("userPhone", s.getUserPhone());
+            row.put("prizeId", s.getPrizeId());
+            row.put("poolType", s.getPoolType());
+            row.put("prizeType", s.getPrizeType());
+            row.put("createTime", s.getCreateTime());
+            BoxPrizePool p = poolMap.get(s.getPrizeId());
+            if (p != null) {
+                row.put("remark", p.getRemark());
+                row.put("isPutPublic", p.getIsPutPublic());
+            } else {
+                row.put("remark", "已删除");
+                row.put("isPutPublic", null);
+            }
+            result.add(row);
+        }
+        return Result.ok(result);
     }
 
     // ---------------- 5.2.2 我投放出去的公共券 ----------------
@@ -322,4 +363,167 @@ public class MerchantConfigController {
                 .contentType(MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
                 .body(data);
     }
+
+    // ---------------- 商品管理 ----------------
+
+    @GetMapping("/goods")
+    public Result<List<IbigouGoods>> listGoods(@RequestHeader("X-Merchant-Token") String token) {
+        String mno = authService.merchantNoByToken(token);
+        return Result.ok(goodsRepository.findByMerchantNoOrderBySortOrderDesc(mno));
+    }
+
+    @PostMapping("/goods")
+    public Result<IbigouGoods> createGoods(@RequestHeader("X-Merchant-Token") String token,
+                                           @RequestParam String goodsName,
+                                           @RequestParam java.math.BigDecimal price,
+                                           @RequestParam(required = false) String description,
+                                           @RequestParam(required = false) String images) {
+        String mno = authService.merchantNoByToken(token);
+        IbigouGoods g = new IbigouGoods();
+        g.setMerchantNo(mno);
+        g.setGoodsName(goodsName);
+        g.setPrice(price);
+        g.setDescription(description == null ? "" : description);
+        g.setImages(images == null ? "" : images);
+        g.setEnabled(0);
+        g.setSortOrder(0);
+        g.setSalesCount(0);
+        g.setCreateTime(java.time.LocalDateTime.now());
+        g.setUpdateTime(java.time.LocalDateTime.now());
+        return Result.ok(goodsRepository.save(g));
+    }
+
+    @PostMapping("/goods/{id}")
+    public Result<IbigouGoods> updateGoods(@RequestHeader("X-Merchant-Token") String token,
+                                           @PathVariable Long id,
+                                           @RequestParam(required = false) String goodsName,
+                                           @RequestParam(required = false) java.math.BigDecimal price,
+                                           @RequestParam(required = false) String description,
+                                           @RequestParam(required = false) String images,
+                                           @RequestParam(required = false) Integer sortOrder) {
+        String mno = authService.merchantNoByToken(token);
+        IbigouGoods g = goodsRepository.findById(id).orElseThrow(() -> new com.ibigou.blindbox.common.BizException("商品不存在"));
+        if (!mno.equals(g.getMerchantNo())) throw new com.ibigou.blindbox.common.BizException("无权操作");
+        if (goodsName != null && !goodsName.isBlank()) g.setGoodsName(goodsName);
+        if (price != null) g.setPrice(price);
+        if (description != null) g.setDescription(description);
+        if (images != null) g.setImages(images);
+        if (sortOrder != null) g.setSortOrder(sortOrder);
+        g.setUpdateTime(java.time.LocalDateTime.now());
+        return Result.ok(goodsRepository.save(g));
+    }
+
+    @PostMapping("/goods/{id}/enable")
+    public Result<Void> enableGoods(@RequestHeader("X-Merchant-Token") String token, @PathVariable Long id) {
+        String mno = authService.merchantNoByToken(token);
+        IbigouGoods g = goodsRepository.findById(id).orElseThrow(() -> new com.ibigou.blindbox.common.BizException("商品不存在"));
+        if (!mno.equals(g.getMerchantNo())) throw new com.ibigou.blindbox.common.BizException("无权操作");
+        g.setEnabled(1);
+        g.setUpdateTime(java.time.LocalDateTime.now());
+        goodsRepository.save(g);
+        return Result.ok();
+    }
+
+    @PostMapping("/goods/{id}/disable")
+    public Result<Void> disableGoods(@RequestHeader("X-Merchant-Token") String token, @PathVariable Long id) {
+        String mno = authService.merchantNoByToken(token);
+        IbigouGoods g = goodsRepository.findById(id).orElseThrow(() -> new com.ibigou.blindbox.common.BizException("商品不存在"));
+        if (!mno.equals(g.getMerchantNo())) throw new com.ibigou.blindbox.common.BizException("无权操作");
+        g.setEnabled(0);
+        g.setUpdateTime(java.time.LocalDateTime.now());
+        goodsRepository.save(g);
+        return Result.ok();
+    }
+
+    @DeleteMapping("/goods/{id}")
+    public Result<Void> deleteGoods(@RequestHeader("X-Merchant-Token") String token, @PathVariable Long id) {
+        String mno = authService.merchantNoByToken(token);
+        IbigouGoods g = goodsRepository.findById(id).orElseThrow(() -> new com.ibigou.blindbox.common.BizException("商品不存在"));
+        if (!mno.equals(g.getMerchantNo())) throw new com.ibigou.blindbox.common.BizException("无权操作");
+        goodsRepository.delete(g);
+        return Result.ok();
+    }
+
+    /** 收款码上传：type=wechat/alipay/unionpay/other */
+    @PostMapping("/qr-upload")
+    public Result<String> uploadQrCode(@RequestHeader("X-Merchant-Token") String token,
+                                        @RequestParam("file") org.springframework.web.multipart.MultipartFile file,
+                                        @RequestParam String type) {
+        String mno = authService.merchantNoByToken(token);
+        if (!java.util.List.of("wechat", "alipay", "unionpay", "other").contains(type)) {
+            throw new com.ibigou.blindbox.common.BizException("收款码类型不合法");
+        }
+        try {
+            String originalName = file.getOriginalFilename();
+            String ext = ".png";
+            if (originalName != null && originalName.contains(".")) {
+                ext = originalName.substring(originalName.lastIndexOf("."));
+            }
+            String filename = type + ext;
+            java.nio.file.Path dir = java.nio.file.Paths.get(uploadDir, "qr", mno).toAbsolutePath().normalize();
+            java.nio.file.Files.createDirectories(dir);
+            java.nio.file.Path target = dir.resolve(filename);
+            file.transferTo(target.toFile());
+            String url = "/uploads/qr/" + mno + "/" + filename;
+            // Save to merchant entity
+            com.ibigou.blindbox.entity.Merchant m = merchantRepository.findById(mno)
+                    .orElseThrow(() -> new com.ibigou.blindbox.common.BizException("商家不存在"));
+            switch (type) {
+                case "wechat" -> m.setReceiveQrImgWechat(url);
+                case "alipay" -> m.setReceiveQrImgAlipay(url);
+                case "unionpay" -> m.setReceiveQrImgUnionpay(url);
+                case "other" -> m.setReceiveQrImgOther(url);
+            }
+            if (m.getReceiveQrStatus() == null || m.getReceiveQrStatus() == 0) {
+                m.setReceiveQrStatus(1);
+            }
+            m.setReceiveMode(1);
+            m.setUpdateTime(java.time.LocalDateTime.now());
+            merchantRepository.save(m);
+            return Result.ok(url);
+        } catch (Exception e) {
+            throw new com.ibigou.blindbox.common.BizException("收款码上传失败: " + e.getMessage());
+        }
+    }
+
+    @PostMapping("/qr-remove")
+    public Result<Void> removeQrCode(@RequestHeader("X-Merchant-Token") String token,
+                                      @RequestParam String type) {
+        String mno = authService.merchantNoByToken(token);
+        com.ibigou.blindbox.entity.Merchant m = merchantRepository.findById(mno)
+                .orElseThrow(() -> new com.ibigou.blindbox.common.BizException("商家不存在"));
+        switch (type) {
+            case "wechat" -> m.setReceiveQrImgWechat(null);
+            case "alipay" -> m.setReceiveQrImgAlipay(null);
+            case "unionpay" -> m.setReceiveQrImgUnionpay(null);
+            case "other" -> m.setReceiveQrImgOther(null);
+        }
+        if (m.getReceiveQrImgWechat() == null && m.getReceiveQrImgAlipay() == null
+                && m.getReceiveQrImgUnionpay() == null && m.getReceiveQrImgOther() == null) {
+            m.setReceiveQrStatus(0);
+        }
+        m.setUpdateTime(java.time.LocalDateTime.now());
+        merchantRepository.save(m);
+        return Result.ok();
+    }
+
+    @PostMapping("/goods/upload-image")
+    public Result<String> uploadGoodsImage(@RequestHeader("X-Merchant-Token") String token,
+                                           @RequestParam("file") org.springframework.web.multipart.MultipartFile file) {
+        String mno = authService.merchantNoByToken(token);
+        if (file == null || file.isEmpty()) throw new com.ibigou.blindbox.common.BizException("请选择图片");
+        String original = file.getOriginalFilename() == null ? "" : file.getOriginalFilename().toLowerCase();
+        String ext = original.contains(".") ? original.substring(original.lastIndexOf(".")) : ".jpg";
+        try {
+            java.nio.file.Path dir = java.nio.file.Paths.get(uploadDir, "goods", mno).toAbsolutePath().normalize();
+            java.nio.file.Files.createDirectories(dir);
+            String filename = "goods-" + System.currentTimeMillis() + ext;
+            file.transferTo(dir.resolve(filename));
+            return Result.ok("/uploads/goods/" + mno + "/" + filename);
+        } catch (java.io.IOException e) {
+            throw new com.ibigou.blindbox.common.BizException("上传失败: " + e.getMessage());
+        }
+    }
+
+
 }

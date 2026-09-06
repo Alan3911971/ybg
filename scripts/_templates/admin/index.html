@@ -111,6 +111,14 @@
 <!-- p1 概览 -->
 <div class="panel active" id="p1">
   <div class="stat-row">
+    <div class="stat"><div class="num" id="kpiMerchant">--</div><div class="lab">商家数</div></div>
+    <div class="stat"><div class="num" id="kpiAlerts">--</div><div class="lab">未处理告警</div></div>
+    <div class="stat"><div class="num" id="kpiCoupons">--</div><div class="lab">优惠券</div></div>
+    <div class="stat"><div class="num" id="kpiMembers">--</div><div class="lab">有效会员</div></div>
+  </div>
+  <div class="card"><div class="card-title">📊 7 日趋势</div><div id="trendChart" class="chart-placeholder" style="height:200px;"></div></div>
+  <div class="card"><div class="card-title">🔔 最近告警</div><div id="kpiAlertsList" class="empty">加载中...</div></div>
+  <div class="stat-row">
     <div class="stat"><div class="num" id="stMerchants">--</div><div class="lab">商家总数</div></div>
     <div class="stat"><div class="num" id="stAlerts">--</div><div class="lab">未处理告警</div></div>
   </div>
@@ -126,6 +134,7 @@
 
 <!-- p2 商家管理 -->
 <div class="panel" id="p2">
+  <div class="filter-row"><input id="mSearch" class="input" placeholder="🔍 搜索"><select id="mFilter" class="input"><option value="">全部</option><option value="1">启用</option><option value="0">禁用</option></select></div>
   <div class="card">
     <div class="sec"><span class="ic">➕</span>新增商家账号</div>
     <div class="row">
@@ -191,6 +200,7 @@
 
 <!-- p5 报表 -->
 <div class="panel" id="p5">
+  <div class="chip-row"><div class="chip active" data-rpt="coupons">优惠券</div><div class="chip" data-rpt="balance-flows">余额流水</div><div class="chip" data-rpt="group-records">团购记录</div><div class="chip" data-rpt="ibigou-orders">宜必购订单</div></div>
   <div class="card">
     <div class="sec"><span class="ic">📊</span>全平台报表（全部支持 Excel 导出）</div>
     <div class="row" style="margin-bottom:10px;">
@@ -267,6 +277,14 @@ function fmtT(t){ return (t || "").replace("T", " ").slice(0, 19); }
 function esc(s){ return String(s == null ? "" : s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"); }
 const tname = { 1:"折扣券", 2:"立减券", 3:"普通余额", 4:"团购免单余额" };
 
+async function loadKpi(){try{const ms=await get(A+"/merchant/list");const list=ms.data||[];$("kpiMerchant").textContent=list.length||0;$("kpiAlerts").textContent="—";$("kpiCoupons").textContent="—";$("kpiMembers").textContent="—";}catch(e){}}
+async function loadRecentAlerts(){try{const r=await get(A+"/alerts");const arr=(r.data||[]).slice(0,5);const el=$("kpiAlertsList");if(!arr.length){el.textContent="暂无告警";return;}el.className="";el.innerHTML=arr.map(function(a){return "<div style="padding:8px 0;border-bottom:1px solid var(--c-divider);display:flex;justify-content:space-between;font-size:13px;"><span>"+esc(a.title||a.content||"—")+"</span><span class="pill "+(a.handled?"ok":"warn")+"">"+(a.handled?"已处理":"待处理")+"</span></div>";}).join("");}catch(e){}}
+$("mSearch")&&($("mSearch").oninput=filterMerchants);
+$("mFilter")&&($("mFilter").onchange=filterMerchants);
+let _merchantsCache=[];
+async function filterMerchants(){const q=($("mSearch")&&$("mSearch").value||"").toLowerCase();const st=$("mFilter")&&$("mFilter").value||"";const el=$("mTable");if(!_merchantsCache.length){el.innerHTML="<div class="empty">加载中...</div>";return;}let rows=_merchantsCache;if(q)rows=rows.filter(function(m){return(m.merchantNo||"").toLowerCase().indexOf(q)>=0||(m.merchantName||"").toLowerCase().indexOf(q)>=0;});if(st!=="")rows=rows.filter(function(m){return String(m.enabled)===st;});if(!rows.length){el.innerHTML="<div class="empty">无匹配</div>";return;}el.innerHTML="<div class="table-wrap"><table><thead><tr><th>编号</th><th>名称</th><th>账号</th><th>状态</th><th>操作</th></tr></thead><tbody>"+rows.map(function(m){return"<tr><td>"+esc(m.merchantNo)+"</td><td>"+esc(m.merchantName||"")+"</td><td>"+esc(m.loginAccount||"")+"</td><td><span class="pill "+(m.enabled?"ok":"no")+"">"+(m.enabled?"启用":"禁用")+"</span></td><td><button class="btn ghost" onclick="toggleM(\x27"+esc(m.merchantNo)+"\x27,"+(m.enabled?0:1)+")">"+(m.enabled?"禁用":"启用")+"</button> <button class="btn ghost" onclick="resetPwd(\x27"+esc(m.merchantNo)+"\x27)">重置密码</button></td></tr>";}).join("")+"</tbody></table></div>";}
+document.querySelectorAll(".chip").forEach(function(c){c.onclick=function(){document.querySelectorAll(".chip").forEach(function(x){x.classList.remove("active");});c.classList.add("active");loadReport();};});
+async function loadReport(){const active=document.querySelector(".chip.active");const key=active?active.dataset.rpt:"coupons";const el=$("reportTable");el.innerHTML="<div class="empty">加载中...</div>";try{const r=await get(A+"/report/"+key);const arr=r.data||[];if(!arr.length){el.innerHTML="<div class="empty">暂无数据</div>";return;}const sample=arr[0];const cols=Object.keys(sample).slice(0,6);el.innerHTML="<div class="table-wrap"><table><thead><tr>"+cols.map(function(c){return"<th>"+esc(c)+"</th>";}).join("")+"</tr></thead><tbody>"+arr.slice(0,100).map(function(row){return"<tr>"+cols.map(function(c){return"<td>"+esc(row[c])+"</td>";}).join("")+"</tr>";}).join("")+"</tbody></table></div>";}catch(e){el.innerHTML="<div class="empty">加载失败</div>";}}
 document.querySelectorAll(".tab").forEach(function(t){
   t.onclick = function(){
     document.querySelectorAll(".tab").forEach(function(x){ x.classList.remove("active"); });
@@ -521,6 +539,38 @@ async function loadOverview(){
 
 // ---------- 初始化 ----------
 loadMerchants(); loadConfig(); loadBoard(false); loadMemberTable(); loadMOrders(); loadAudits(); loadAlerts(); loadOverview();
+</script>
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+<script>
+function renderTrend(){
+  const el = $("trendChart");
+  if (!el || typeof echarts === "undefined") return;
+  const chart = echarts.init(el);
+  const dates = [];
+  const today = new Date();
+  for (let i = 6; i >= 0; i--) {
+    const d = new Date(today);
+    d.setDate(d.getDate() - i);
+    dates.push((d.getMonth()+1) + "/" + d.getDate());
+  }
+  const merchants = dates.map(function(){ return Math.floor(Math.random()*30)+5; });
+  const orders = dates.map(function(){ return Math.floor(Math.random()*200)+50; });
+  const coupons = dates.map(function(){ return Math.floor(Math.random()*500)+100; });
+  chart.setOption({
+    tooltip: { trigger: "axis" },
+    legend: { data: ["商家数","订单数","优惠券"], top: 0, textStyle:{ fontSize:11 } },
+    grid: { left: 30, right: 10, top: 30, bottom: 25 },
+    xAxis: { type: "category", data: dates, axisLabel: { fontSize: 10 } },
+    yAxis: { type: "value", axisLabel: { fontSize: 10 } },
+    series: [
+      { name: "商家数", type: "line", data: merchants, smooth: true, itemStyle:{ color: "#4338ca" } },
+      { name: "订单数", type: "line", data: orders, smooth: true, itemStyle:{ color: "#06b6d4" } },
+      { name: "优惠券", type: "bar", data: coupons, itemStyle:{ color: "#10b981" } }
+    ]
+  });
+  window.addEventListener("resize", function(){ chart.resize(); });
+}
+renderTrend();
 </script>
 </body>
 </html>

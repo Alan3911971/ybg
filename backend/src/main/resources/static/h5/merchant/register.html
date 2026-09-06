@@ -1,0 +1,122 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#2563eb">
+<title>商家注册 · 宜必购</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+  body{font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif;background:#f5f7fb;color:#1a2233;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;}
+  .card{background:#fff;border-radius:14px;padding:28px 24px;width:100%;max-width:400px;box-shadow:0 8px 24px rgba(37,99,235,.15);}
+  .brand{text-align:center;margin-bottom:20px;}
+  .brand .logo{font-size:40px;}
+  .brand h1{font-size:18px;font-weight:700;margin-top:6px;}
+  .brand .sub{font-size:12px;color:#8089a0;margin-top:4px;}
+  .field{margin-bottom:14px;}
+  .field label{display:block;font-size:13px;font-weight:600;margin-bottom:5px;color:#4d556a;}
+  .field input{width:100%;padding:13px 14px;border:1px solid #e6e8ef;border-radius:10px;font-size:16px;}
+  .field input:focus{outline:none;border-color:#2563eb;box-shadow:0 0 0 3px rgba(37,99,235,.15);}
+  .btn{width:100%;padding:14px;border:none;border-radius:10px;background:linear-gradient(135deg,#2563eb,#3b82f6);color:#fff;font-size:16px;font-weight:600;cursor:pointer;}
+  .btn:active{transform:scale(.98);}
+  .btn:disabled{opacity:.6;}
+  .result{display:none;text-align:center;padding:20px 0;}
+  .result .icon{font-size:48px;}
+  .result .acct{background:#f0f5ff;border:1px solid #c3dafe;border-radius:10px;padding:14px;margin:16px 0;text-align:left;}
+  .result .acct .row{display:flex;justify-content:space-between;padding:4px 0;font-size:14px;}
+  .result .acct .row b{color:#2563eb;}
+  .err{color:#dc2626;background:#fde8e8;border-radius:8px;padding:8px 10px;font-size:13px;margin-bottom:12px;display:none;}
+  .err.show{display:block;}
+  .hint{font-size:12px;color:#8089a0;text-align:center;margin-top:12px;}
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="brand">
+    <div class="logo">🏪</div>
+    <h1>宜必购 · 商家入驻</h1>
+    <div class="sub">扫码注册，自动开通商家账号</div>
+  </div>
+  <div class="err" id="err"></div>
+  <div id="form">
+    <div class="field"><label>商家手机号 *</label><input id="phone" placeholder="请输入手机号" maxlength="11"></div>
+    <div class="field"><label>商家名称 *</label><input id="name" placeholder="如：鲜果时光·宜必购合作店"></div>
+    <div class="field"><label>商家简称 *</label><input id="shortName" placeholder="如：鲜果时光（系统自动加「宜必购盲盒商家店」）"></div>
+    <div class="field"><label>商家地址</label><input id="address" placeholder="如：上海市浦东新区张江路88号"></div>
+    <button class="btn" id="btnSubmit">提交注册</button>
+    <div class="hint">提交后系统自动开通，请保存返回的账号密码</div>
+  </div>
+  <div class="result" id="result">
+    <div class="icon">🎉</div>
+    <div style="font-size:16px;font-weight:700;margin-top:8px;">注册成功！</div>
+    <div class="acct" id="acctInfo"></div>
+    <button class="btn" id="btnLogin" style="margin-top:8px;">前往登录</button>
+  </div>
+</div>
+<script>
+const $ = id => document.getElementById(id);
+const params = new URLSearchParams(location.search);
+const tk = params.get('tk') || '';
+
+// 简称自动补后缀
+$('shortName').addEventListener('blur', function(){
+  var v = this.value.trim();
+  if (v && v.indexOf('宜必购盲盒商家店') < 0) {
+    this.value = v + '·宜必购盲盒商家店';
+  }
+});
+
+$('btnSubmit').onclick = async function(){
+  $('err').style.display = 'none';
+  var phone = $('phone').value.trim();
+  var name = $('name').value.trim();
+  var shortName = $('shortName').value.trim();
+  var addr = $('address').value.trim();
+  if (!phone || !name || !shortName) { showErr('请填写手机号、商家名称和简称'); return; }
+  if (!tk) { showErr('注册码无效，请重新扫码'); return; }
+
+  // 登录账号=手机号, 密码固定 123321
+  var merchantNo = 'M' + Date.now().toString().slice(-8);
+  var loginAccount = phone;
+  var loginPwd = '123321';
+
+  $('btnSubmit').disabled = true;
+  $('btnSubmit').textContent = '注册中...';
+  try {
+    var body = 'merchantNo=' + encodeURIComponent(merchantNo)
+      + '&merchantName=' + encodeURIComponent(name)
+      + '&loginAccount=' + encodeURIComponent(loginAccount)
+      + '&loginPwd=' + encodeURIComponent(loginPwd);
+    var resp = await fetch('/api/admin/merchant/create', {
+      method: 'POST',
+      body: body,
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'X-Admin-Token': tk }
+    });
+    var r = await resp.json();
+    if (r.code === 0 && r.data) {
+      $('form').style.display = 'none';
+      $('result').style.display = 'block';
+      $('acctInfo').innerHTML =
+        '<div class="row"><span>商家编号</span><b>' + merchantNo + '</b></div>'
+        + '<div class="row"><span>商家名称</span><b>' + name + '</b></div>'
+        + '<div class="row"><span>商家简称</span><b>' + shortName + '</b></div>'
+        + '<div class="row"><span>登录账号</span><b>' + loginAccount + '</b></div>'
+        + '<div class="row"><span>初始密码</span><b>' + loginPwd + '</b></div>';
+    } else {
+      showErr(r.msg || '注册失败');
+      $('btnSubmit').disabled = false;
+      $('btnSubmit').textContent = '提交注册';
+    }
+  } catch(e) {
+    showErr('网络异常：' + (e.message || ''));
+    $('btnSubmit').disabled = false;
+    $('btnSubmit').textContent = '提交注册';
+  }
+};
+
+$('btnLogin').onclick = function(){ location.href = '/h5/merchant/login.html'; };
+
+function showErr(msg){ $('err').textContent = msg; $('err').style.display = 'block'; }
+</script>
+</body>
+</html>

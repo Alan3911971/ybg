@@ -5,6 +5,7 @@ import com.ibigou.blindbox.repository.UserCouponRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -40,6 +41,7 @@ public class JobService {
 
     /** 过期券标记：每小时执行 */
     @Scheduled(cron = "0 5 * * * ?")
+    @Transactional
     public void expireCoupons() {
         int n = couponRepository.markExpired(LocalDateTime.now());
         if (n > 0) {

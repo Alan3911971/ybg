@@ -3,6 +3,11 @@
 import json
 import urllib.parse
 import urllib.request
+import time
+import random
+
+PHONE = "138" + "".join(random.choices("0123456789", k=8))
+BALANCE_TARGET = 100.0
 
 BASE = "http://192.168.31.228:19085"
 
@@ -86,25 +91,38 @@ def main():
     # 抽余额并闭环（余额 100 元）
     import time
     for i in range(20):
-        r = req("POST", "/api/customer/draw/normal", {"merchantNo": "M001", "userPhone": "13800000020"})
+        r = req("POST", "/api/customer/draw/normal", {"merchantNo": "M001", "userPhone": PHONE})
         d = r.get("data") or {}
         if d.get("prizeType") == 3:
             req("POST", "/api/customer/group/register",
-                {"merchantNo": "M001", "userPhone": "13800000020", "channel": 1,
+                {"merchantNo": "M001", "userPhone": PHONE, "channel": 1,
                  "groupAmount": "10", "drawBatchNo": d.get("drawBatchNo")})
             break
         if d.get("drawBatchNo"):
             req("POST", "/api/customer/group/register",
-                {"merchantNo": "M001", "userPhone": "13800000020", "channel": 1,
+                {"merchantNo": "M001", "userPhone": PHONE, "channel": 1,
                  "groupAmount": "10", "drawBatchNo": d.get("drawBatchNo")})
-    w = req("GET", "/api/customer/wallet/13800000020").get("data") or {}
+    w = req("GET", f"/api/customer/wallet/{PHONE}").get("data") or {}
     bal = float(w.get("balance") or 0)
     print(f"[INFO] 用户余额={bal}")
-    assert bal >= 100, f"余额不足: {bal}（需抽到 100 元余额档位）"
+    if bal < BALANCE_TARGET:
+        # 余额不足时继续抽，最多再抽 40 次
+        for _extra in range(40):
+            r = req("POST", "/api/customer/draw/normal", {"merchantNo": "M001", "userPhone": PHONE})
+            d = r.get("data") or {}
+            if d.get("drawBatchNo"):
+                req("POST", "/api/customer/group/register",
+                    {"merchantNo": "M001", "userPhone": PHONE, "channel": 1,
+                     "groupAmount": "10", "drawBatchNo": d.get("drawBatchNo")})
+            if d.get("prizeType") == 3:
+                break
+        w = req("GET", f"/api/customer/wallet/{PHONE}")
+        bal = float(w.get("data", {}).get("balance") or 0)
+    assert bal >= BALANCE_TARGET, f"余额不足: {bal}（需抽到 100 元余额档位）"
 
     # 1. 下单1：应自动抵扣 30（单日额度 30 用尽）
     r = req("POST", "/api/customer/offline/order",
-            {"userPhone": "13800000020", "merchantNo": "M001", "orderAmount": "100.00"})
+            {"userPhone": PHONE, "merchantNo": "M001", "orderAmount": "100.00"})
     d = r.get("data") or {}
     check("下单1 自动抵扣30", r.get("code") == 0 and float(d.get("deductBalance", 0)) == 30.0,
           f"order={d.get('offlineOrderNo')} deduct={d.get('deductBalance')} pay={d.get('payAmount')}")
@@ -112,7 +130,7 @@ def main():
 
     # 2. 单日额度已用 30 → 再次下单应抵扣 0（min(余额70, 50, 0, 100)=0）
     r = req("POST", "/api/customer/offline/order",
-            {"userPhone": "13800000020", "merchantNo": "M001", "orderAmount": "100.00"})
+            {"userPhone": PHONE, "merchantNo": "M001", "orderAmount": "100.00"})
     d = r.get("data") or {}
     check("下单2 单日额度用尽抵扣0", r.get("code") == 0 and float(d.get("deductBalance", 99)) == 0.0,
           f"deduct={d.get('deductBalance')} pay={d.get('payAmount')}")
@@ -123,7 +141,7 @@ def main():
 
     # 4. 退款后再下单：额度已返还 → 应再次抵扣 30
     r = req("POST", "/api/customer/offline/order",
-            {"userPhone": "13800000020", "merchantNo": "M001", "orderAmount": "100.00"})
+            {"userPhone": PHONE, "merchantNo": "M001", "orderAmount": "100.00"})
     d = r.get("data") or {}
     check("退款后额度返还再抵扣30", r.get("code") == 0 and float(d.get("deductBalance", 0)) == 30.0,
           f"deduct={d.get('deductBalance')}")
@@ -132,7 +150,7 @@ def main():
     MT = req("POST", "/api/merchant/auth/login", {"account": "m001", "password": "smoke123"}).get("data")
     h = {"X-Merchant-Token": MT}
     r = req("POST", "/api/merchant/balance/manual-deduct",
-            {"userPhone": "13800000020", "orderAmount": "100.00"}, h)
+            {"userPhone": PHONE, "orderAmount": "100.00"}, h)
     check("商家兜底自动计算抵扣", r.get("code") == 0, f"msg={r.get('msg')}")
 
     print("\n===== V1.5 门店抵扣验证全部通过 =====")

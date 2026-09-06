@@ -39,7 +39,7 @@ public class IbigouService {
 
     public List<IbigouGoods> listGoods() {
         checkChannelOpen();
-        return goodsRepository.findByEnabledOrderByGoodsIdAsc(1);
+        return goodsRepository.findByEnabledOrderBySortOrderDescSalesCountDesc(1);
     }
 
     /** 可用资产：过滤后的券 + 可用余额 + 抵扣比例 */

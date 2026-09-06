@@ -9,4 +9,5 @@ import org.springframework.data.jpa.repository.JpaRepository;
 public interface MerchantRepository extends JpaRepository<Merchant, String> {
 
     java.util.Optional<Merchant> findByLoginAccount(String loginAccount);
+    java.util.Optional<Merchant> findByMerchantNo(String merchantNo);
 }

@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#ff5b3e">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>选择参与方式 · 宜必购</title>
+<link rel="icon" href="data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='80' font-size='90'%3E%F0%9F%8E81%3C/text%3E%3C/svg%3E">
+<style>
+
+:root{
+  --c-primary:#ff5b3e; --c-primary-600:#e84a2f; --c-primary-50:#fff1ee;
+  --c-text:#1a1d29; --c-text-2:#5f6478; --c-text-3:#9095a8;
+  --c-bg:#f7f8fb; --c-surface:#fff; --c-border:#eceef3; --c-divider:#f1f2f6;
+  --c-success:#16a34a; --c-warning:#f59e0b; --c-info:#2563eb;
+  --r-sm:8px; --r-md:12px; --r-lg:16px; --r-pill:999px;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+html,body{font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei","Helvetica Neue",Arial,sans-serif;color:var(--c-text);background:var(--c-bg);-webkit-font-smoothing:antialiased;font-size:15px;}
+body{min-height:100vh;padding-bottom:calc(64px + env(safe-area-inset-bottom));}
+a{color:inherit;text-decoration:none;}
+input,select,button{font-size:15px;}
+button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit;}
+
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;background:#fff;border-bottom:1px solid var(--c-divider);}
+.brand{display:flex;align-items:center;gap:8px;font-weight:600;font-size:16px;}
+.brand-dot{width:22px;height:22px;border-radius:7px;background:var(--c-primary);color:#fff;display:inline-flex;align-items:center;justify-content:center;font-size:13px;}
+
+.input{width:100%;height:48px;padding:0 14px;border:1px solid var(--c-border);border-radius:10px;background:#fff;font-size:15px;color:var(--c-text);transition:border-color .15s;}
+.input:focus{outline:none;border-color:var(--c-primary);background:#fff;}
+.input::placeholder{color:var(--c-text-3);}
+
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;height:48px;padding:0 16px;border-radius:10px;font-size:15px;font-weight:600;transition:opacity .12s,transform .12s;}
+.btn:active{transform:scale(.98);}
+.btn--primary{background:var(--c-primary);color:#fff;}
+.btn--primary[disabled]{opacity:.5;}
+.btn--block{width:100%;}
+
+.toast-host{position:fixed;top:20px;left:50%;transform:translateX(-50%);z-index:80;display:flex;flex-direction:column;gap:6px;pointer-events:none;}
+.toast{padding:9px 14px;border-radius:8px;background:rgba(0,0,0,.84);color:#fff;font-size:13px;opacity:0;transform:translateY(-6px);transition:all .2s;}
+.toast.show{opacity:1;transform:none;}
+.toast.success{background:var(--c-success);}
+.toast.warning{background:var(--c-warning);}
+.toast.danger{background:#dc2626;}
+.toast.info{background:var(--c-info);}
+
+</style>
+</head>
+<body>
+<div class="toast-host" id="toastHost"></div>
+
+<div class="topbar">
+  <div class="brand"><span class="brand-dot">盲</span>宜必购</div>
+  <div style="display:flex;align-items:center;gap:10px;font-size:13px;color:var(--c-text-2);">
+    <span id="userPhone">--</span>
+    <a id="btnLogout" href="login.html" style="color:var(--c-text-3);font-size:12px;">切换</a>
+  </div>
+</div>
+
+<main style="padding:18px 16px 0;max-width:480px;margin:0 auto;">
+  <div style="padding:6px 4px 14px;">
+    <h1 style="font-size:20px;font-weight:700;margin-bottom:6px;">选择参与方式</h1>
+    <p style="font-size:13px;color:var(--c-text-3);">到店消费后选择渠道，即可开启盲盒</p>
+  </div>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;" id="channelGrid">
+    <button class="ch-card" data-ch="1">
+      <span class="ic" style="background:#fff1ee;color:#ff5b3e;">🛍</span>
+      <span class="name">本店消费</span>
+      <span class="desc">门店直接消费</span>
+    </button>
+    <button class="ch-card" data-ch="2">
+      <span class="ic" style="background:#fff6e0;color:#f59e0b;">🟡</span>
+      <span class="name">美团</span>
+      <span class="desc">美团到店团购</span>
+    </button>
+    <button class="ch-card" data-ch="3">
+      <span class="ic" style="background:#e6f7ee;color:#16a34a;">🟢</span>
+      <span class="name">饿了么</span>
+      <span class="desc">饿了么到店团购</span>
+    </button>
+    <button class="ch-card" data-ch="4">
+      <span class="ic" style="background:#f0f4ff;color:#2563eb;">🎵</span>
+      <span class="name">抖音</span>
+      <span class="desc">抖音到店团购</span>
+    </button>
+  </div>
+
+  <button id="btnDraw" class="btn btn--primary btn--block" style="height:56px;font-size:17px;margin-top:20px;" disabled>
+    🎁 开 盲 盒
+  </button>
+
+  <div style="margin-top:14px;background:#fff7ed;border:1px solid #fde0c3;border-radius:10px;padding:12px 14px;">
+    <div style="display:flex;align-items:flex-start;gap:8px;">
+      <span style="font-size:14px;line-height:1.4;">💡</span>
+      <div style="font-size:12px;color:#92400e;line-height:1.7;">
+        <b style="color:#7c2d12;">余额说明：</b>中奖获得的余额 <b>仅可用于本店消费抵扣消费金额，不可提现、不可转赠、不过期作废</b>。优惠券、免单券请到「我的钱包」查看。
+      </div>
+    </div>
+  </div>
+
+  <div style="margin-top:14px;text-align:center;">
+    <a href="customer/wallet.html" style="font-size:13px;color:var(--c-primary);">💰 查看我的钱包 →</a>
+  </div>
+</main>
+
+<style>
+  .ch-card{
+    background:#fff;border:1.5px solid var(--c-border);border-radius:14px;
+    padding:18px 14px;display:flex;flex-direction:column;align-items:flex-start;gap:6px;
+    text-align:left;cursor:pointer;transition:all .15s;
+  }
+  .ch-card:active{transform:scale(.98);}
+  .ch-card.selected{border-color:var(--c-primary);background:#fff1ee;box-shadow:0 4px 12px rgba(255,91,62,.12);}
+  .ch-card .ic{width:36px;height:36px;border-radius:10px;display:inline-flex;align-items:center;justify-content:center;font-size:18px;}
+  .ch-card .name{font-size:15px;font-weight:600;color:var(--c-text);}
+  .ch-card .desc{font-size:12px;color:var(--c-text-3);}
+  .ch-card.selected .name{color:var(--c-primary);}
+</style>
+
+<nav style="position:fixed;bottom:0;left:0;right:0;height:calc(56px + env(safe-area-inset-bottom));background:#fff;border-top:1px solid var(--c-divider);display:flex;padding-bottom:env(safe-area-inset-bottom);z-index:50;">
+  <a href="choose.html" style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;color:var(--c-primary);font-size:11px;font-weight:600;text-decoration:none;">
+    <span style="font-size:20px;">🎯</span><span>抽盒</span>
+  </a>
+  <a href="customer/wallet.html" style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;color:var(--c-text-3);font-size:11px;text-decoration:none;">
+    <span style="font-size:20px;">💰</span><span>钱包</span>
+  </a>
+  <a href="customer/ibigou.html" style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;color:var(--c-text-3);font-size:11px;text-decoration:none;">
+    <span style="font-size:20px;">🛍</span><span>商城</span>
+  </a>
+</nav>
+
+
+<script>
+const $ = id => document.getElementById(id);
+function toast(msg, type){
+  const host = $("toastHost"); if (!host) return;
+  const t = document.createElement("div");
+  t.className = "toast " + (type || "");
+  t.textContent = msg;
+  host.appendChild(t);
+  requestAnimationFrame(() => t.classList.add("show"));
+  setTimeout(() => { t.classList.remove("show"); setTimeout(() => t.remove(), 220); }, 2600);
+}
+</script>
+
+<script>
+// 选择参与方式
+let picked = null;
+document.querySelectorAll(".ch-card").forEach(function(el){
+  el.addEventListener("click", function(){
+    document.querySelectorAll(".ch-card").forEach(function(x){ x.classList.remove("selected"); });
+    el.classList.add("selected");
+    picked = Number(el.dataset.ch);
+    $("btnDraw").disabled = false;
+  });
+});
+
+$("btnDraw").addEventListener("click", function(){
+  if (!picked) { toast("请先选择参与方式","warning"); return; }
+  // 跳转到盲盒页，携带渠道
+  location.href = "draw.html?channel=" + picked;
+});
+
+// 显示登录手机号
+var ph = localStorage.getItem("ibigou_phone");
+if (ph) $("userPhone").textContent = ph;
+
+// 未登录则回登录页
+var tk = localStorage.getItem("ibigou_user_token");
+if (!tk) location.replace("login.html");
+</script>
+</body>
+</html>

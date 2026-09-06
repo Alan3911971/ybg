@@ -62,6 +62,9 @@ public class BoxPrizePool {
     @Column(nullable = false)
     private LocalDateTime updateTime;
 
+    /** 公共池奖品截止时间（null=不限），过期后自动下架 */
+    private LocalDateTime expireTime;
+
     /** 业务辅助：是否折扣券（用于大类权重归组） */
     @Transient
     public boolean isDiscountType() {

@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover">
+<meta name="theme-color" content="#ff5b3e">
+<title>联系客服 · 宜必购</title>
+<link rel="icon" href="data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='80' font-size='90'%3E💬%3C/text%3E%3C/svg%3E">
+<style>
+:root{--c-primary:#ff5b3e;--c-primary-600:#e84a2f;--c-primary-100:#ffe9e3;--c-text:#1a1d29;--c-text-2:#5f6478;--c-text-3:#9095a8;--c-bg:#f0f2f5;--c-surface:#fff;--c-border:#eceef3;--c-divider:#f1f2f6;}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+html,body{height:100%;}
+body{font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif;color:var(--c-text);background:var(--c-bg);-webkit-font-smoothing:antialiased;font-size:15px;display:flex;flex-direction:column;height:100vh;height:100dvh;overflow:hidden;}
+a{color:inherit;text-decoration:none;}
+button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit;}
+.header{background:linear-gradient(135deg,#ff5b3e 0%,#ff7150 100%);color:#fff;padding:calc(12px + env(safe-area-inset-top)) 14px 12px;display:flex;align-items:center;gap:10px;position:relative;z-index:10;}
+.header .back{font-size:22px;line-height:1;width:28px;text-align:center;}
+.header .title{flex:1;font-size:17px;font-weight:700;}
+.header .status{font-size:11px;opacity:.9;display:flex;align-items:center;gap:4px;}
+.header .dot{width:7px;height:7px;border-radius:50%;background:#4ade80;box-shadow:0 0 4px rgba(255,255,255,.5);}
+.body{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:14px 12px 8px;display:flex;flex-direction:column;gap:12px;}
+.day{text-align:center;font-size:11px;color:var(--c-text-3);margin:4px 0;}
+.row{display:flex;align-items:flex-end;gap:8px;max-width:100%;}
+.row.me{flex-direction:row-reverse;}
+.avatar{width:34px;height:34px;border-radius:10px;flex:0 0 34px;display:flex;align-items:center;justify-content:center;font-size:18px;}
+.row.me .avatar{background:linear-gradient(135deg,#ff5b3e,#ff9567);}
+.row.them .avatar{background:#e8f0ff;color:#3b82f6;}
+.bubble{max-width:74%;padding:9px 12px;border-radius:14px;font-size:14px;line-height:1.5;word-break:break-word;white-space:pre-wrap;position:relative;}
+.row.me .bubble{background:linear-gradient(135deg,#ff5b3e,#ff7150);color:#fff;border-bottom-right-radius:4px;}
+.row.them .bubble{background:var(--c-surface);color:var(--c-text);border:1px solid var(--c-border);border-bottom-left-radius:4px;box-shadow:0 1px 2px rgba(0,0,0,.03);}
+.bubble .time{display:block;font-size:10px;margin-top:3px;opacity:.65;}
+.sys{text-align:center;font-size:12px;color:var(--c-text-3);background:rgba(0,0,0,.04);border-radius:8px;padding:6px 12px;align-self:center;max-width:90%;}
+.typing{display:flex;gap:3px;padding:10px 14px;}
+.typing i{width:6px;height:6px;border-radius:50%;background:var(--c-text-3);animation:bounce 1.2s infinite;}
+.typing i:nth-child(2){animation-delay:.2s}
+.typing i:nth-child(3){animation-delay:.4s}
+@keyframes bounce{0%,60%,100%{transform:translateY(0);opacity:.4}30%{transform:translateY(-5px);opacity:1}}
+.composer{display:flex;align-items:flex-end;gap:8px;padding:8px 10px calc(8px + env(safe-area-inset-bottom));background:var(--c-surface);border-top:1px solid var(--c-border);position:relative;z-index:10;}
+.composer textarea{flex:1;resize:none;border:1px solid var(--c-border);border-radius:18px;padding:9px 14px;font-size:14px;font-family:inherit;max-height:96px;line-height:1.4;background:var(--c-bg);color:var(--c-text);}
+.composer textarea:focus{outline:none;border-color:var(--c-primary);background:#fff;}
+.send{flex:0 0 40px;width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,#ff5b3e,#ff7150);color:#fff;font-size:18px;display:flex;align-items:center;justify-content:center;}
+.send:disabled{opacity:.4;}
+.toast-host{position:fixed;top:12px;left:0;right:0;z-index:200;display:flex;flex-direction:column;align-items:center;gap:6px;pointer-events:none;}
+.toast{background:rgba(26,29,41,.92);color:#fff;padding:8px 16px;border-radius:10px;font-size:13px;max-width:90%;text-align:center;opacity:0;transform:translateY(-8px);transition:all .22s;}
+.toast.show{opacity:1;transform:translateY(0);}
+.toast.success{background:#16a34a;}
+.toast.warning{background:#f59e0b;}
+</style>
+</head>
+<body>
+<div class="header">
+  <span class="back" id="btnBack">‹</span>
+  <span class="title">联系客服</span>
+  <span class="status"><span class="dot"></span><span id="onlineTxt">在线</span></span>
+</div>
+<div class="body" id="msgList"></div>
+<div class="composer">
+  <textarea id="input" rows="1" placeholder="输入消息…"></textarea>
+  <button class="send" id="btnSend">🚀</button>
+</div>
+<div class="toast-host" id="toastHost"></div>
+<script>
+const $=id=>document.getElementById(id);
+const A="/api/customer";
+const PHONE=localStorage.getItem("ibigou_phone")||"";
+const MNO=localStorage.getItem("ibigou_merchant_no")||"M1001";
+const STORE_KEY="ibigou_chat_"+PHONE;
+function toast(m,t){const h=$("toastHost");if(!h)return;const e=document.createElement("div");e.className="toast "+(t||"");e.textContent=m;h.appendChild(e);requestAnimationFrame(()=>e.classList.add("show"));setTimeout(()=>{e.classList.remove("show");setTimeout(()=>e.remove(),220)},2200)}
+async function req(path,method,body){
+  const p=new URLSearchParams();
+  if(body)Object.keys(body).forEach(k=>{const v=body[k];if(v!=null&&v!=="")p.append(k,v)});
+  const h={};const tk=localStorage.getItem("ibigou_user_token");
+  if(tk)h["X-User-Token"]=tk;
+  const o={method:method||"GET",headers:h};
+  if(method==="POST"||method==="PUT"||method==="DELETE"){h["Content-Type"]="application/x-www-form-urlencoded";o.body=p.toString()}
+  const r=await fetch(A+path,o).then(r=>r.json());
+  if(r.code===401){localStorage.removeItem("ibigou_user_token");toast("?????","warning")}
+  return r;
+}
+const get=p=>req(p,"GET");
+const post=(p,b)=>req(p,"POST",b);
+function fmtTime(s){return s?s.replace("T"," ").slice(11,16):""}
+function today(){return new Date().toISOString().slice(0,10)}
+function esc(s){return String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")}
+function scrollBottom(){const el=$("msgList");el.scrollTop=el.scrollHeight}
+function renderMsgs(list){
+  const el=$("msgList");el.innerHTML="";
+  let lastDay="";
+  list.forEach(function(m){
+    const day=(m.createTime||today()).slice(0,10);
+    if(day!==lastDay){lastDay=day;const d=document.createElement("div");d.className="day";d.textContent=day;el.appendChild(d)}
+    const row=document.createElement("div");
+    const mine=m.fromRole==="customer"||m.mine===true;
+    row.className="row "+(mine?"me":"them");
+    const av=mine?"\u{1F464}":"\u{1F3A7}";
+    const time=fmtTime(m.createTime);
+    row.innerHTML='<span class="avatar">'+av+'</span><div class="bubble">'+esc(m.content)+(time?'<span class="time">'+time+'</span>':'')+'</div>';
+    el.appendChild(row);
+  });
+  scrollBottom();
+}
+function loadLocal(){
+  try{return JSON.parse(localStorage.getItem(STORE_KEY)||"[]")}catch(e){return []}
+}
+function saveLocal(list){localStorage.setItem(STORE_KEY,JSON.stringify(list))}
+let polling=null,apiReady=false;
+async function fetchMsgs(){
+  if(!PHONE){$("onlineTxt").textContent="\u672a\u767b\u5f55";return}
+  const r=await get("/chat/messages?merchantNo="+MNO+"&afterId="+(lastId()||0));
+  if(r.code===0&&Array.isArray(r.data)){
+    apiReady=true;$("onlineTxt").textContent="\u5728\u7ebf";
+    if(r.data.length){
+      const merged=mergeLocal(r.data);saveLocal(merged);renderMsgs(merged);
+    }
+    return;
+  }
+  apiReady=false;$("onlineTxt").textContent="\u79bb\u7ebf";
+}
+function lastId(){const l=loadLocal();return l.length?Math.max.apply(null,l.map(function(m){return m.id||0})):0}
+function mergeLocal(server){
+  const local=loadLocal();
+  const maxId=server.length?Math.max.apply(null,server.map(function(m){return m.id||0})):0;
+  const keep=local.filter(function(m){return !m.id||m.id>maxId});
+  return server.concat(keep);
+}
+async function sendMsg(){
+  const el=$("input");const text=el.value.trim();
+  if(!text)return;
+  if(!PHONE){toast("????","warning");return}
+  el.value="";autoGrow();
+  const now=new Date().toISOString();
+  const list=loadLocal();list.push({content:text,fromRole:"customer",createTime:now,mine:true,local:true});saveLocal(list);renderMsgs(list);
+  if(!apiReady){toast("????????????????","warning");return}
+  const r=await post("/chat/send",{merchantNo:MNO,content:text});
+  if(r.code!==0){toast(r.msg||"????","warning");return}
+  const cleaned=loadLocal().filter(function(m){return m.id});
+  if(r.data)cleaned.push(r.data);
+  saveLocal(cleaned);renderMsgs(cleaned);
+}
+function autoGrow(){const el=$("input");el.style.height="auto";el.style.height=Math.min(el.scrollHeight,96)+"px"}
+$("input").addEventListener("input",autoGrow);
+$("input").addEventListener("keydown",function(e){if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();sendMsg()}});
+$("btnSend").addEventListener("click",sendMsg);
+$("btnBack").addEventListener("click",function(){if(document.referrer){history.back()}else{location.href="/h5/customer/wallet.html"}});
+$("input").focus();
+$("msgList").innerHTML='<div class="sys">\u6b63\u5728\u8fde\u63a5\u5ba2\u670d\u2026</div>';
+fetchMsgs().then(function(){renderMsgs(loadLocal());polling=setInterval(fetchMsgs,4000)});
+window.addEventListener("pagehide",function(){if(polling)clearInterval(polling)});
+</script>
+</body>
+</html>

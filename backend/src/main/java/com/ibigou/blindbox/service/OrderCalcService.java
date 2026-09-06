@@ -70,6 +70,7 @@ public class OrderCalcService {
             return new OrderCalc(coupon, BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO,
                     BigDecimal.ZERO, BigDecimal.ZERO,
                     merchant.getReceiveQrImgWechat(), merchant.getReceiveQrImgAlipay(),
+                    merchant.getReceiveQrImgUnionpay(), merchant.getReceiveQrImgOther(),
                     merchant.getReceiveMode(), merchant.getReceiveQrStatus());
         }
 
@@ -90,6 +91,7 @@ public class OrderCalcService {
         BigDecimal pay = afterCoupon.subtract(actual).max(BigDecimal.ZERO);
         return new OrderCalc(coupon, afterCoupon, theoretical, actual, pay, actual,
                 merchant.getReceiveQrImgWechat(), merchant.getReceiveQrImgAlipay(),
+                merchant.getReceiveQrImgUnionpay(), merchant.getReceiveQrImgOther(),
                 merchant.getReceiveMode(), merchant.getReceiveQrStatus());
     }
 
@@ -151,7 +153,8 @@ public class OrderCalcService {
     /** 计算明细（含模式A收款码，供 H5 展示） */
     public record OrderCalc(UserCoupon coupon, BigDecimal afterCoupon, BigDecimal theoreticalDeduct,
                             BigDecimal actualDeduct, BigDecimal payAmount, BigDecimal dailyQuotaUsed,
-                            String receiveQrImgWechat, String receiveQrImgAlipay, Integer receiveMode,
-                            Integer receiveQrStatus) {
+                            String receiveQrImgWechat, String receiveQrImgAlipay,
+                            String receiveQrImgUnionpay, String receiveQrImgOther,
+                            Integer receiveMode, Integer receiveQrStatus) {
     }
 }

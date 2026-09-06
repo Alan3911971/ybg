@@ -54,7 +54,8 @@ public class MerchantConfigService {
     @Transactional
     public BoxPrizePool savePrizePool(String merchantNo, Long prizeId, Integer prizeType, BigDecimal prizeValue,
                                       Integer weight, Integer isPutPublic, Integer isSupportIbigou,
-                                      Integer limitScope, Integer limitCycle, Integer limitMax, String remark) {
+                                      Integer limitScope, Integer limitCycle, Integer limitMax, String remark,
+                                      LocalDateTime expireTime) {
         validatePrize(prizeType, prizeValue, weight);
         BoxPrizePool p;
         if (prizeId == null) {
@@ -76,6 +77,7 @@ public class MerchantConfigService {
         p.setLimitCycle(limitCycle == null ? 1 : limitCycle);
         p.setLimitMax(limitMax == null ? 0 : limitMax);
         p.setRemark(remark);
+        p.setExpireTime(expireTime);
         p.setUpdateTime(LocalDateTime.now());
         return prizePoolRepository.save(p);
     }

@@ -7,6 +7,7 @@ import com.ibigou.blindbox.entity.MerchantMessage;
 import com.ibigou.blindbox.entity.OfflineOrder;
 import com.ibigou.blindbox.entity.UserCoupon;
 import com.ibigou.blindbox.service.*;
+import com.ibigou.blindbox.entity.Merchant;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
@@ -36,6 +37,8 @@ public class MerchantController {
     private final AnnounceService announceService;
     private final IdentityQrService identityQrService;
     private final ReportService reportService;
+    private final com.ibigou.blindbox.repository.MerchantRepository merchantRepository;
+    private final ChatService chatService;
 
     @PostMapping("/auth/login")
     public Result<String> login(@RequestParam String account, @RequestParam String password) {
@@ -66,6 +69,32 @@ public class MerchantController {
         authService.merchantNoByToken(token);
         return Result.ok(new MerchantConfig(configService.balanceDeductRate(), configService.ibigouChannelOpen(),
                 Integer.parseInt(configService.get("cross_store_return_percent", "5"))));
+    }
+
+    /** 设置当前设备为播报设备 */
+    @PostMapping("/config/set-broadcast-device")
+    public Result<Void> setBroadcastDevice(@RequestHeader("X-Merchant-Token") String token) {
+        String mno = authService.merchantNoByToken(token);
+        Merchant m = merchantRepository.findById(mno).orElse(null);
+        if (m != null) {
+            m.setBroadcastToken(token);
+            m.setUpdateTime(java.time.LocalDateTime.now());
+            merchantRepository.save(m);
+        }
+        return Result.ok();
+    }
+
+    /** 取消播报设备（所有设备都播报） */
+    @PostMapping("/config/clear-broadcast-device")
+    public Result<Void> clearBroadcastDevice(@RequestHeader("X-Merchant-Token") String token) {
+        String mno = authService.merchantNoByToken(token);
+        Merchant m = merchantRepository.findById(mno).orElse(null);
+        if (m != null) {
+            m.setBroadcastToken(null);
+            m.setUpdateTime(java.time.LocalDateTime.now());
+            merchantRepository.save(m);
+        }
+        return Result.ok();
     }
 
     /** 用户可用券（线下本店 + 宜必购）与余额查询 */
@@ -143,9 +172,15 @@ public class MerchantController {
 
     /** 增量轮询新播报事件（商家 H5 定时拉取朗读） */
     @GetMapping("/announce/poll")
-    public Result<java.util.List<AnnounceLog>> announcePoll(@RequestHeader("X-Merchant-Token") String token,
+    public Result<java.util.Map<String, Object>> announcePoll(@RequestHeader("X-Merchant-Token") String token,
                                                             @RequestParam(required = false) Long afterId) {
-        return Result.ok(announceService.poll(authService.merchantNoByToken(token), afterId));
+        String mno = authService.merchantNoByToken(token);
+        Merchant m = merchantRepository.findById(mno).orElse(null);
+        boolean isBroadcast = m == null || m.getBroadcastToken() == null || m.getBroadcastToken().equals(token);
+        java.util.Map<String, Object> result = new java.util.HashMap<>();
+        result.put("events", announceService.poll(mno, afterId));
+        result.put("isBroadcastDevice", isBroadcast);
+        return Result.ok(result);
     }
 
     /** 全部播报记录（新→旧） */
@@ -268,5 +303,40 @@ public class MerchantController {
     }
 
     public record UserAssets(List<UserCoupon> offlineCoupons, List<UserCoupon> ibigouCoupons, BigDecimal balance) {
+    }
+
+    // ---------------- ???????P1? ----------------
+
+    /** ????????????? */
+    @GetMapping("/chat/messages")
+    public Result<java.util.List<com.ibigou.blindbox.entity.ChatMessage>> chatMessages(
+            @RequestHeader("X-Merchant-Token") String token,
+            @RequestParam String userPhone) {
+        String mno = authService.merchantNoByToken(token);
+        return Result.ok(chatService.listForMerchant(userPhone, mno));
+    }
+
+    /** ?????? */
+    @PostMapping("/chat/send")
+    public Result<com.ibigou.blindbox.entity.ChatMessage> chatSend(
+            @RequestHeader("X-Merchant-Token") String token,
+            @RequestParam String userPhone,
+            @RequestParam String content) {
+        String mno = authService.merchantNoByToken(token);
+        return Result.ok(chatService.sendFromMerchant(userPhone, mno, content));
+    }
+
+    /** ???????????? */
+    @GetMapping("/chat/sessions")
+    public Result<java.util.List<com.ibigou.blindbox.entity.ChatMessage>> chatSessions(
+            @RequestHeader("X-Merchant-Token") String token) {
+        String mno = authService.merchantNoByToken(token);
+        return Result.ok(chatService.listSessions(mno));
+    }
+
+    @GetMapping("/chat/unread-count")
+    public Result<Long> chatUnread(@RequestHeader("X-Merchant-Token") String token) {
+        String mno = authService.merchantNoByToken(token);
+        return Result.ok(chatService.unreadForMerchant(mno));
     }
 }

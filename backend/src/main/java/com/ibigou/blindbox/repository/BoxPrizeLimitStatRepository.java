@@ -12,6 +12,8 @@ import java.time.LocalDateTime;
  */
 public interface BoxPrizeLimitStatRepository extends JpaRepository<BoxPrizeLimitStat, Long> {
 
+    java.util.List<BoxPrizeLimitStat> findByMerchantNoOrderByCreateTimeDesc(String merchantNo);
+
     /** 一天一次规则：统计指定用户在指定商家当天的参与次数 */
     long countByMerchantNoAndUserPhoneAndCreateTimeAfter(String merchantNo, String userPhone,
                                                          java.time.LocalDateTime since);

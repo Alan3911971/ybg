@@ -34,4 +34,5 @@ public class SysGlobalConfig {
     /** 常量 key */
     public static final String KEY_BALANCE_DEDUCT_RATE = "balance_deduct_rate";
     public static final String KEY_IBIGOU_CHANNEL_SWITCH = "ibigou_channel_switch";
+    public static final String KEY_CUSTOMER_SMS_LOGIN_REQUIRED = "customer_sms_login_required";
 }

@@ -30,10 +30,27 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(Exception.class)
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     public Result<Void> handleUnknown(Exception e) {
-        log.error("未处理异常", e);
+        String exClass = e.getClass().getName();
+        String exMsg = e.getMessage() == null ? "" : e.getMessage();
+        log.error("未处理异常 type={} msg={}", exClass, exMsg, e);
         if (alertService != null) {
-            alertService.record("exception", "未处理异常: " + String.valueOf(e.getMessage()));
+            try {
+                alertService.record("exception", exClass + ": " + exMsg);
+            } catch (Exception alertEx) {
+                log.error("alertService.record swallow: {}", alertEx.getMessage());
+            }
         }
-        return Result.fail(500, "系统繁忙，请稍后再试");
+        // BUG-001 修复: 暴露异常类名 + 第一帧位置给响应, 便于 test-env / SSH 不通时定位
+        String firstFrame = "";
+        StackTraceElement[] st = e.getStackTrace();
+        if (st != null && st.length > 0) {
+            firstFrame = st[0].getClassName() + "." + st[0].getMethodName() + "(" + st[0].getFileName() + ":" + st[0].getLineNumber() + ")";
+        }
+        String shortCls = exClass;
+        int dot = exClass.lastIndexOf(".");
+        if (dot >= 0) shortCls = exClass.substring(dot + 1);
+        String shortMsg = exMsg;
+        if (shortMsg.length() > 100) shortMsg = shortMsg.substring(0, 100);
+        return Result.fail(500, "[" + shortCls + "] " + shortMsg + " @ " + firstFrame);
     }
 }

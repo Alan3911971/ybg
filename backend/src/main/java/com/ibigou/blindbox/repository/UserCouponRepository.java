@@ -50,4 +50,7 @@ public interface UserCouponRepository extends JpaRepository<UserCoupon, Long> {
     @Query("select distinct c.drawBatchNo from UserCoupon c " +
            "where c.canUseAfterDraw = 0 and c.drawBatchNo is not null and c.createTime < :before")
     List<String> findPendingBatches(@Param("before") LocalDateTime before);
+
+    /** 全店最近中奖记录 */
+    List<UserCoupon> findBySourceMerchantNoOrderByCreateTimeDesc(String merchantNo);
 }

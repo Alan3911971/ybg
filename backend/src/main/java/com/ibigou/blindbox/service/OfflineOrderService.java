@@ -279,6 +279,32 @@ public class OfflineOrderService {
         return amount;
     }
 
+    /** 支付回调确认订单（API支付模式）：支付成功后结算资产 */
+    @Transactional
+    public OfflineOrder confirmPaid(String orderNo, String payChannel) {
+        OfflineOrder order = orderRepository.findByIdForUpdate(orderNo)
+                .orElseThrow(() -> new BizException("订单不存在"));
+        if (order.getOrderStatus() != 0) {
+            return order;
+        }
+        OrderCalcService.OrderCalc calc = orderCalcService.calc(order.getUserPhone(),
+                order.getMerchantNo(), order.getCouponId(), order.getOrderAmount());
+        String bizNo = order.getOfflineOrderNo();
+        BigDecimal deducted = calc.actualDeduct();
+        settleAssets(order, calc, deducted, order.getCouponId(), order.getUserPhone(),
+                order.getMerchantNo(), bizNo);
+        order.setOrderStatus(1);
+        order.setVoucherToken(null);
+        order.setVoucherExpire(null);
+        order.setPayAmount(calc.payAmount());
+        order.setPayChannel(payChannel);
+        order.setPayTime(LocalDateTime.now());
+        order.setUpdateTime(LocalDateTime.now());
+        OfflineOrder saved = orderRepository.save(order);
+        announceOrder(order.getMerchantNo(), saved, "order_auto", false);
+        return saved;
+    }
+
     private String orderNo() {
         return UUID.randomUUID().toString().replace("-", "").substring(0, 24);
     }

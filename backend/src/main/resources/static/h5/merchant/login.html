@@ -45,17 +45,25 @@
   <div class="field"><input id="account" placeholder="登录账号" autocomplete="username"></div>
   <div class="field"><input id="pwd" type="password" placeholder="登录密码" autocomplete="current-password"></div>
   <button class="btn" id="btnLogin">登 录</button>
-  <div class="hint">测试账号：<code>m001</code> / 密码 <code>smoke123</code><br>登录后请在「会员续费」页确认会员状态。</div>
+  <div class="hint">测试账号：<code>m001</code> / 密码 <code>M001@2026</code><br>登录后请在「会员续费」页确认会员状态。</div>
 </div>
 <script>
 const $ = id => document.getElementById(id);
 $("btnLogin").onclick = async function(){
   $("err").style.display = "none";
-  const body = new URLSearchParams({ account: $("account").value.trim(), password: $("pwd").value });
+  var acct = $("account").value.trim();
+  var pwdVal = $("pwd").value;
+  if (!acct || !pwdVal) { $("err").textContent = "请输入账号和密码"; $("err").style.display = "block"; return; }
   $("btnLogin").disabled = true;
+  $("btnLogin").textContent = "登录中...";
   try {
-    const r = await fetch("/api/merchant/auth/login", { method: "POST", body: body.toString() }).then(function(r){ return r.json(); });
-    if (r.code === 0) {
+    var resp = await fetch("/api/merchant/auth/login", {
+      method: "POST",
+      body: "account=" + encodeURIComponent(acct) + "&password=" + encodeURIComponent(pwdVal),
+      headers: { "Content-Type": "application/x-www-form-urlencoded" }
+    });
+    var r = await resp.json();
+    if (r.code === 0 && r.data) {
       localStorage.setItem("ibigou_merchant_token", r.data);
       location.href = "index.html";
     } else {
@@ -63,10 +71,10 @@ $("btnLogin").onclick = async function(){
       $("err").style.display = "block";
     }
   } catch (e) {
-    $("err").textContent = "网络异常，请稍后再试";
+    $("err").textContent = "网络异常：" + (e.message || "请稍后再试");
     $("err").style.display = "block";
   }
-  finally { $("btnLogin").disabled = false; }
+  finally { $("btnLogin").disabled = false; $("btnLogin").textContent = "登 录"; }
 };
 $("pwd").addEventListener("keydown", function(e){ if (e.key === "Enter") $("btnLogin").onclick(); });
 </script>

@@ -10,5 +10,9 @@ import java.util.List;
  */
 public interface IbigouGoodsRepository extends JpaRepository<IbigouGoods, Long> {
 
-    List<IbigouGoods> findByEnabledOrderByGoodsIdAsc(Integer enabled);
+    List<IbigouGoods> findByEnabledOrderBySortOrderDescSalesCountDesc(Integer enabled);
+
+    List<IbigouGoods> findByMerchantNoOrderBySortOrderDesc(String merchantNo);
+
+    List<IbigouGoods> findByMerchantNoAndEnabledOrderBySortOrderDesc(String merchantNo, Integer enabled);
 }

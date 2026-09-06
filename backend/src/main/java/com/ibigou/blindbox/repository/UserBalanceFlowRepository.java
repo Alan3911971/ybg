@@ -32,6 +32,8 @@ public interface UserBalanceFlowRepository extends JpaRepository<UserBalanceFlow
 
     List<UserBalanceFlow> findByUserPhoneOrderByFlowIdDesc(String userPhone);
 
+    List<UserBalanceFlow> findByUserPhoneAndMerchantNoOrderByFlowIdDesc(String userPhone, String merchantNo);
+
     List<UserBalanceFlow> findByMerchantNoAndFlowTypeAndCreateTimeBetween(
             String merchantNo, Integer flowType, java.time.LocalDateTime from, java.time.LocalDateTime to);
 

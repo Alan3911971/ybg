@@ -124,6 +124,11 @@ public class DrawService {
     private DrawResult drawFromPrivate(Merchant merchant, String userPhone, String batchNo) {
         List<BoxPrizePool> pools = prizePoolRepository
                 .findByMerchantNoAndEnabled(merchant.getMerchantNo(), 1);
+        // Filter out expired public pool prizes
+        pools = pools.stream()
+                .filter(p -> !(p.getIsPutPublic() != null && p.getIsPutPublic() == 1
+                        && p.getExpireTime() != null && p.getExpireTime().isBefore(LocalDateTime.now())))
+                .toList();
         if (pools.isEmpty()) {
             throw new BizException("本店盲盒活动尚未配置完成，请稍后再来");
         }

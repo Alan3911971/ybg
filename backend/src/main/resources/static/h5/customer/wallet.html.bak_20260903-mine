@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover">
+<meta name="theme-color" content="#ff5b3e">
+<title>&#x6211;&#x7684;&#x94b1;&#x5305; &#xb7; &#x5b9c;&#x5fc5;&#x8d2d;</title>
+<link rel="icon" href="data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='80' font-size='90'%3E%F0%9F%92%B0%3C/text%3E%3C/svg%3E">
+<style>
+:root{--c-primary:#ff5b3e;--c-primary-600:#e84a2f;--c-primary-100:#ffe9e3;--c-success:#16a34a;--c-success-bg:#e8f7ee;--c-warning:#f59e0b;--c-warning-bg:#fff6e0;--c-danger:#dc2626;--c-danger-bg:#fde8e8;--c-text:#1a1d29;--c-text-2:#5f6478;--c-text-3:#9095a8;--c-bg:#f7f8fb;--c-surface:#fff;--c-border:#eceef3;--c-divider:#f1f2f6;--c-grad-1:linear-gradient(135deg,#ff7150 0%,#ff9567 100%);}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+html,body{font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif;color:var(--c-text);background:var(--c-bg);-webkit-font-smoothing:antialiased;font-size:15px;}
+body{min-height:100vh;padding-bottom:calc(60px + env(safe-area-inset-bottom));}
+a{color:inherit;text-decoration:none;}
+button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit;}
+.hero{background:linear-gradient(160deg,#ff5b3e 0%,#ff7150 40%,#ff9567 100%);color:#fff;padding:32px 20px 40px;position:relative;overflow:hidden;border-radius:0 0 24px 24px;}
+.hero::before{content:"";position:absolute;top:-50px;right:-30px;width:160px;height:160px;background:rgba(255,255,255,.1);border-radius:50%;}
+.hero h1{font-size:18px;font-weight:700;position:relative;z-index:1;}
+.hero .sub{margin-top:2px;font-size:12px;opacity:.85;position:relative;z-index:1;}
+.bal{margin-top:16px;position:relative;z-index:1;}
+.bal .label{font-size:12px;opacity:.8;}
+.bal .amount{display:flex;align-items:flex-end;gap:4px;margin-top:2px;}
+.bal .sym{font-size:18px;opacity:.9;padding-bottom:4px;}
+.bal .num{font-size:36px;font-weight:800;letter-spacing:.5px;line-height:1;}
+.bal .pill{display:inline-flex;align-items:center;gap:4px;margin-top:10px;padding:3px 10px;border-radius:999px;font-size:11px;background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.24);}
+.wrap{max-width:480px;margin:0 auto;padding:0 14px;}
+.sec-title{font-size:14px;font-weight:700;margin:18px 0 10px;display:flex;align-items:center;gap:6px;}
+.sec-title .count{font-size:12px;color:var(--c-text-3);font-weight:400;}
+.seg{display:flex;background:#eef0f4;border-radius:999px;padding:3px;margin-bottom:12px;}
+.seg button{flex:1;padding:7px 4px;font-size:13px;color:var(--c-text-2);border-radius:999px;cursor:pointer;}
+.seg button.active{background:#fff;color:var(--c-primary);font-weight:600;box-shadow:0 1px 4px rgba(0,0,0,.06);}
+.coupon{display:flex;align-items:stretch;background:linear-gradient(180deg,#fff8f3 0%,#fff 70%);border:1px solid #ffd6c4;border-radius:12px;margin-bottom:10px;overflow:hidden;}
+.coupon.dim{opacity:.5;}
+.coupon .left{flex:0 0 76px;background:var(--c-grad-1);color:#fff;padding:12px 6px;text-align:center;display:flex;flex-direction:column;justify-content:center;position:relative;}
+.coupon .left::after{content:"";position:absolute;right:-5px;top:50%;transform:translateY(-50%);width:10px;height:10px;background:var(--c-bg);border-radius:50%;}
+.coupon .left .v{font-size:20px;font-weight:800;line-height:1;}
+.coupon .left .u{font-size:9px;margin-top:2px;opacity:.85;}
+.coupon .right{flex:1;padding:10px 12px;}
+.coupon .name{font-size:13px;font-weight:600;}
+.coupon .desc{font-size:11px;color:var(--c-text-3);margin-top:3px;line-height:1.4;}
+.coupon .badge{display:inline-block;padding:2px 7px;border-radius:999px;font-size:10px;margin-top:5px;}
+.coupon .badge.ok{background:var(--c-success-bg);color:var(--c-success);}
+.coupon .badge.used{background:#f0f1f6;color:var(--c-text-3);}
+.coupon .badge.expire{background:var(--c-warning-bg);color:#b45309;}
+.coupon .badge.pending{background:var(--c-warning-bg);color:#b45309;}
+.flow-item{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--c-divider);}
+.flow-item:last-child{border-bottom:none;}
+.flow-item .ic{width:30px;height:30px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;flex:0 0 30px;}
+.flow-item.in .ic{background:var(--c-success-bg);color:var(--c-success);}
+.flow-item.out .ic{background:var(--c-danger-bg);color:var(--c-danger);}
+.flow-item .main{flex:1;min-width:0;}
+.flow-item .t{font-size:13px;font-weight:600;}
+.flow-item .s{font-size:11px;color:var(--c-text-3);margin-top:1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.flow-item .amt{font-size:14px;font-weight:700;}
+.flow-item.in .amt{color:var(--c-success);}
+.flow-item.out .amt{color:var(--c-danger);}
+.empty{text-align:center;padding:32px 16px;color:var(--c-text-3);font-size:13px;}
+.empty .emoji{font-size:32px;margin-bottom:6px;}
+.card{background:#fff;border-radius:12px;padding:14px;box-shadow:0 1px 3px rgba(20,23,40,.05);border:1px solid var(--c-border);}
+.toast-host{position:fixed;top:18px;left:50%;transform:translateX(-50%);z-index:200;display:flex;flex-direction:column;gap:6px;pointer-events:none;}
+.toast{padding:8px 14px;border-radius:8px;background:rgba(0,0,0,.84);color:#fff;font-size:13px;opacity:0;transform:translateY(-6px);transition:all .2s;}
+.toast.show{opacity:1;transform:none;}
+.toast.success{background:#16a34a;}
+.toast.warning{background:#f59e0b;}
+.nav{position:fixed;bottom:0;left:0;right:0;height:calc(56px + env(safe-area-inset-bottom));background:rgba(255,255,255,.97);backdrop-filter:blur(10px);display:flex;border-top:1px solid var(--c-border);z-index:50;padding-bottom:env(safe-area-inset-bottom);}
+.nav .tab{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;color:var(--c-text-3);font-size:10px;}
+.nav .tab .ic{font-size:20px;}
+.nav .tab.active{color:var(--c-primary);font-weight:600;}
+</style>
+</head>
+<body>
+<div class="hero">
+  <h1>&#x6211;&#x7684;&#x94b1;&#x5305;</h1>
+  <div class="sub">&#x4e2d;&#x5956;&#x4f18;&#x60e0;&#x5238; / &#x4f59;&#x989d;&#x6d41;&#x6c34;</div>
+  <div class="bal">
+    <div class="label">&#x53ef;&#x7528;&#x4f59;&#x989d;&#xff08;&#x5143;&#xff09;</div>
+    <div class="amount"><span class="sym">&#165;</span><span class="num" id="balNum">0.00</span></div>
+    <span class="pill">&#x1f39f; &#x4f18;&#x60e0;&#x5238; <b id="couponCnt">0</b> &#x5f20;</span>
+  </div>
+</div>
+<div class="wrap">
+  <div class="sec-title">&#x1f39f; &#x6211;&#x7684;&#x4f18;&#x60e0;&#x5238; <span class="count" id="couponHint"></span></div>
+  <div class="seg" id="segTabs">
+    <button class="active" data-st="0">&#x672a;&#x4f7f;&#x7528;</button>
+    <button data-st="1">&#x5df2;&#x4f7f;&#x7528;</button>
+    <button data-st="2">&#x5df2;&#x8fc7;&#x671f;</button>
+  </div>
+  <div id="couponList"></div>
+  <div class="sec-title">&#x1f4ca; &#x4f59;&#x989d;&#x6d41;&#x6c34;</div>
+  <div class="card">
+    <div id="flowList"></div>
+  </div>
+</div>
+<div class="toast-host" id="toastHost"></div>
+<nav class="nav">
+  <div class="tab" data-go="/h5/customer/index.html"><span class="ic">&#x1f3af;</span><span>&#x62bd;&#x76d2;</span></div>
+  <div class="tab" data-go="/h5/customer/ibigou.html"><span class="ic">&#x1f6d2;</span><span>&#x5546;&#x57ce;</span></div>
+  <div class="tab active" data-go="/h5/customer/wallet.html"><span class="ic">&#x1f4b0;</span><span>&#x94b1;&#x5305;</span></div>
+</nav>
+<script>const $=id=>document.getElementById(id);
+const A="/api/customer";
+function toast(m,t){const h=$("toastHost");if(!h)return;const e=document.createElement("div");e.className="toast "+(t||"");e.textContent=m;h.appendChild(e);requestAnimationFrame(()=>e.classList.add("show"));setTimeout(()=>{e.classList.remove("show");setTimeout(()=>e.remove(),220)},2400)}
+async function req(path,method,body){
+  const p=new URLSearchParams();
+  if(body)Object.keys(body).forEach(k=>{const v=body[k];if(v!=null&&v!=="")p.append(k,v)});
+  const h={};const tk=localStorage.getItem("ibigou_user_token");
+  if(tk)h["X-User-Token"]=tk;
+  const o={method:method||"GET",headers:h};
+  if(method==="POST"||method==="PUT"||method==="DELETE"){h["Content-Type"]="application/x-www-form-urlencoded";o.body=p.toString()}
+  const r=await fetch(A+path,o).then(r=>r.json());
+  if(r.code===401||r.code===-1){localStorage.removeItem("ibigou_user_token");toast("\u767b\u5f55\u5df2\u8fc7\u671f\uff0c\u8bf7\u91cd\u65b0\u767b\u5f55","warning");
+    const mno=localStorage.getItem("ibigou_merchant_no")||"";
+    setTimeout(()=>{location.href="/h5/customer/login.html?merchantNo="+mno},1500)}
+  return r;
+}
+const get=p=>req(p,"GET");
+const typeName={1:"\u6298\u6263\u5238",2:"\u7acb\u51cf\u5238",3:"\u4f59\u989d\u8d60\u9001",4:"\u56e2\u8d2d\u514d\u5355"};
+const ftName={1:"\u53d1\u653e",2:"\u62b5\u6263",3:"\u9000\u6b3e",4:"\u8de8\u5e97\u8fd4\u8fd8",5:"\u5b9c\u5fc5\u8d2d\u62b5\u6263"};
+document.querySelectorAll(".nav .tab").forEach(el=>el.addEventListener("click",()=>{const h=el.dataset.go;if(h&&location.pathname.indexOf(h)===-1)location.href=h}));
+let curTab=0;
+document.querySelectorAll("#segTabs button").forEach(b=>b.addEventListener("click",()=>{
+  document.querySelectorAll("#segTabs button").forEach(x=>x.classList.remove("active"));
+  b.classList.add("active");curTab=Number(b.dataset.st);loadCoupons();
+}));
+function fmtTime(s){return s?s.replace("T"," ").slice(0,16):""}
+async function loadAll(){
+  const ph=localStorage.getItem("ibigou_phone");
+  if(!ph){const mno=localStorage.getItem("ibigou_merchant_no")||"";location.href="/h5/customer/login.html?merchantNo="+mno;return}
+  const r=await get("/wallet/"+ph);
+  if(r.code!==0||!r.data){
+    $("balNum").textContent="0.00";
+    $("couponList").innerHTML='<div class="empty"><div class="emoji">\u{1f39f}</div>\u6682\u65e0\u6570\u636e</div>';
+    $("flowList").innerHTML='<div class="empty"><div class="emoji">\u{1f4ca}</div>\u6682\u65e0\u6d41\u6c34</div>';
+    return;
+  }
+  const d=r.data;
+  $("balNum").textContent=(d.balance!=null?Number(d.balance):0).toFixed(2);
+  window._wallet=d;
+  loadCoupons();loadFlow();
+}
+function loadCoupons(){
+  const d=window._wallet;if(!d)return;
+  let list=[];
+  if(curTab===0)list=d.available||[];
+  else if(curTab===1)list=d.used||[];
+  else list=(d.expiredOrVoid||[]).concat(d.pending||[]);
+  $("couponHint").textContent="\u5171 "+list.length+" \u5f20";
+  if(!list.length){
+    $("couponList").innerHTML='<div class="empty"><div class="emoji">\u{1f39f}</div>\u6682\u65e0\u4f18\u60e0\u5238</div>';
+    return;
+  }
+  $("couponCnt").textContent=(d.available||[]).length;
+  $("couponList").innerHTML=list.map(c=>{
+    const dim=c.status!==0&&curTab!==0;
+    const v=c.prizeType===1?(c.prizeValue+"\u6298"):("\u00a5"+Number(c.prizeValue||0).toFixed(2));
+    const exp=fmtTime(c.validEnd||c.expireTime);
+    const desc=(exp?"\u5230\u671f "+exp:"")+(c.sourceMerchantNo?" \u00b7 "+c.sourceMerchantNo:"");
+    let badge="";
+    if(c.status===0){if(c.canUseAfterDraw===0)badge='<span class="badge pending">\u5f85\u6fc0\u6d3b</span>';else badge='<span class="badge ok">\u672a\u4f7f\u7528</span>'}
+    else if(c.status===1)badge='<span class="badge used">\u5df2\u4f7f\u7528</span>';
+    else badge='<span class="badge expire">\u5df2\u8fc7\u671f</span>';
+    return '<div class="coupon'+(dim?" dim":"")+'"><div class="left"><div class="v">'+v+'</div><div class="u">'+(typeName[c.prizeType]||"\u5238")+'</div></div><div class="right"><div class="name">'+(typeName[c.prizeType]||"\u4f18\u60e0\u5238")+'</div><div class="desc">'+desc+'</div>'+badge+'</div></div>';
+  }).join("");
+}
+function loadFlow(){
+  const d=window._wallet;if(!d)return;
+  const flows=d.flows||[];
+  if(!flows.length){
+    $("flowList").innerHTML='<div class="empty"><div class="emoji">\u{1f4ca}</div>\u6682\u65e0\u6d41\u6c34</div>';
+    return;
+  }
+  $("flowList").innerHTML=flows.slice(0,20).map(f=>{
+    const isIn=f.flowType===1||f.flowType===3||f.flowType===4;
+    return '<div class="flow-item '+(isIn?"in":"out")+'"><div class="ic">'+(isIn?"+":"\u2212")+'</div><div class="main"><div class="t">'+(ftName[f.flowType]||"\u6d41\u6c34")+'</div><div class="s">'+fmtTime(f.createTime)+(f.remark?" \u00b7 "+f.remark:"")+'</div></div><div class="amt">'+(isIn?"+":"\u2212")+"\u00a5"+Number(f.amount||0).toFixed(2)+'</div></div>';
+  }).join("");
+}
+loadAll();
+</script>
+</body>
+</html>

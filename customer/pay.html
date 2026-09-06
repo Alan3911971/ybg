@@ -1,0 +1,228 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#ff5b3e">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>付款结算 · 宜必购</title>
+<link rel="icon" href="data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='80' font-size='90'%3E%F0%9F%92%B3%3C/text%3E%3C/svg%3E">
+<style>
+:root{--c-primary:#ff5b3e;--c-primary-600:#e84a2f;--c-primary-50:#fff1ee;--c-text:#1a1d29;--c-text-2:#5f6478;--c-text-3:#9095a8;--c-bg:#f7f8fb;--c-border:#eceef3;--c-divider:#f1f2f6;--c-success:#16a34a;--c-warning:#f59e0b;--c-danger:#dc2626;}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+html,body{font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif;color:var(--c-text);background:var(--c-bg);-webkit-font-smoothing:antialiased;font-size:15px;}
+body{min-height:100vh;}
+a{color:inherit;text-decoration:none;}
+input,button{font-family:inherit;}
+.topbar{position:sticky;top:0;z-index:20;display:flex;align-items:center;justify-content:center;padding:14px 16px;background:#fff;border-bottom:1px solid var(--c-border);font-size:17px;font-weight:700;}
+.m{padding:14px 16px 40px;max-width:560px;margin:0 auto;}
+.bk{background:#fff;border:1px solid var(--c-border);border-radius:14px;padding:16px 14px;margin-bottom:12px;}
+.bt{font-size:13px;font-weight:600;color:var(--c-text-2);display:flex;align-items:center;gap:6px;margin-bottom:12px;}
+/* 奖品横幅 */
+.pc{background:linear-gradient(135deg,#fff1ee 0%,#fff5f2 100%);border:1px solid #ffd0c4;border-radius:14px;padding:16px;display:flex;align-items:center;gap:14px;margin-bottom:12px;}
+.pc .em{font-size:44px;line-height:1;}
+.pc .t1{font-size:11px;color:var(--c-primary);font-weight:600;letter-spacing:1px;}
+.pc .t2{font-size:18px;font-weight:800;margin-top:2px;}
+.pc .ts{font-size:12px;color:var(--c-text-3);margin-top:3px;}
+/* 奖品结果卡 */
+.pr{display:flex;align-items:center;gap:12px;background:linear-gradient(135deg,#fff7ed 0%,#fff 100%);border:1.5px solid #ffd0c4;border-radius:12px;padding:12px 14px;}
+.pr.muted{background:linear-gradient(135deg,#f3f4f6 0%,#fff 100%);border-color:#e5e7eb;}
+.pe{width:44px;height:44px;border-radius:12px;background:#fff;display:inline-flex;align-items:center;justify-content:center;font-size:28px;flex-shrink:0;}
+.pn{font-size:15px;font-weight:700;}
+.pd{font-size:12px;color:var(--c-text-3);margin-top:3px;}
+.pt{font-size:10px;color:#fff;background:var(--c-primary);padding:3px 8px;border-radius:999px;font-weight:600;white-space:nowrap;}
+.pt.muted{background:#bbb;}
+.tp{font-size:12px;color:var(--c-text-3);line-height:1.6;margin-top:8px;}
+/* 金额输入 */
+.ai{width:100%;display:flex;align-items:center;gap:6px;background:linear-gradient(135deg,#fff7ed 0%,#fff 100%);border:2px solid #ffd0c4;border-radius:12px;padding:12px 16px;transition:border-color .15s;}
+.ai.focused{border-color:var(--c-primary);}
+.ai .ipt{flex:1;border:none;outline:none;background:transparent;font-size:32px;font-weight:800;color:var(--c-text);min-width:0;}
+.ai .sym{font-size:22px;font-weight:700;color:var(--c-primary);}
+/* 余额抵扣 */
+.bal{display:flex;align-items:center;justify-content:space-between;margin-top:12px;padding:10px 12px;border-radius:10px;background:#f0fbf4;border:1px solid #d1f0dd;font-size:13px;}
+.bal.disabled{opacity:.5;}
+.bal label{display:flex;align-items:center;gap:8px;cursor:pointer;font-weight:600;color:var(--c-text-2);}
+.bal input[type=checkbox]{width:20px;height:20px;accent-color:var(--c-success);}
+.bal .bv{font-weight:800;color:var(--c-success);}
+.hint{font-size:11px;color:var(--c-text-3);margin-top:6px;line-height:1.5;}
+/* 试算结果 */
+.cb{margin-top:12px;padding:14px;border-radius:10px;background:linear-gradient(135deg,#fff7ed 0%,#fff 100%);border:1px solid #ffe0d0;display:none;}
+.cb.show{display:block;}
+.cb .row{display:flex;justify-content:space-between;align-items:center;padding:5px 0;font-size:13px;color:var(--c-text-2);}
+.cb .row b{font-weight:700;color:var(--c-text);}
+.cb .row.muted{color:var(--c-text-3);font-size:12px;}
+.cb .row.muted span:last-child{font-size:12px;}
+.cb .row.final{border-top:1px dashed #ffd0c4;margin-top:6px;padding-top:8px;font-size:15px;font-weight:700;}
+.cb .row.final b{font-size:20px;color:var(--c-primary);}
+.cb .row.total{margin-top:4px;font-size:12px;}
+/* 按钮 */
+.btn{width:100%;height:52px;padding:0 16px;border-radius:12px;font-size:16px;font-weight:700;border:none;cursor:pointer;background:linear-gradient(135deg,#ff7150 0%,#ff5b3e 100%);color:#fff;box-shadow:0 8px 20px rgba(255,91,62,.3);transition:opacity .12s,transform .12s;}
+.btn:active{transform:scale(.98);}
+.btn[disabled]{opacity:.5;box-shadow:none;}
+/* 支付弹层 */
+.mk{position:fixed;inset:0;background:rgba(15,17,30,.55);z-index:90;display:none;align-items:flex-end;justify-content:center;}
+.mk.show{display:flex;}
+.sh{background:#fff;width:100%;max-width:560px;border-radius:18px 18px 0 0;padding:20px 18px calc(20px + env(safe-area-inset-bottom));animation:su .22s ease;max-height:88vh;overflow-y:auto;}
+@keyframes su{from{transform:translateY(100%);}to{transform:none;}}
+.sh h3{font-size:17px;margin-bottom:6px;text-align:center;}
+.sh .sub{font-size:12px;color:var(--c-text-3);line-height:1.6;margin-bottom:14px;text-align:center;}
+.pa{text-align:center;margin:6px 0 14px;}
+.pa .v{font-size:40px;font-weight:800;line-height:1.2;color:var(--c-primary);}
+.pa .l{font-size:12px;color:var(--c-text-3);margin-top:4px;}
+.pg{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;}
+.pc2{display:flex;align-items:center;gap:10px;background:#fff;border:1.5px solid var(--c-border);border-radius:12px;padding:12px;text-align:left;cursor:pointer;transition:all .12s;}
+.pc2:active{transform:scale(.97);}
+.pc2 .pi{width:40px;height:40px;border-radius:10px;display:inline-flex;align-items:center;justify-content:center;font-size:20px;color:#fff;flex-shrink:0;}
+.pc2 .pn{font-size:14px;font-weight:700;}
+.pc2 .pd{font-size:11px;color:var(--c-text-3);margin-top:2px;}
+.qb{border:1.5px dashed #ffb347;border-radius:14px;padding:16px;text-align:center;margin-bottom:12px;}
+.qb .eh{font-size:12px;color:var(--c-text-3);margin-bottom:8px;}
+.qb img{max-width:200px;width:60%;border-radius:8px;}
+.qb .qe{display:flex;flex-direction:column;align-items:center;gap:8px;}
+.qb .ri{width:170px;height:170px;background:#fafbfd;border:1px solid var(--c-border);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:13px;color:var(--c-text-3);}
+.qb .rt{font-size:13px;font-weight:600;}
+.qb .ph{font-size:11px;color:var(--c-text-3);margin-top:6px;}
+.sh .act{display:flex;gap:10px;margin-top:6px;}
+.sh .act .btn{flex:1;height:46px;font-size:14px;}
+.sh .act .btn.ghost{background:#f3f4f6;color:var(--c-text-2);box-shadow:none;}
+@media(max-width:380px){.pg{grid-template-columns:1fr;}}
+
+.scan-toggle{display:flex;gap:8px;margin:12px 0;}
+.st-btn{flex:1;padding:10px 8px;border:1.5px solid var(--c-divider);border-radius:12px;background:#fff;font-size:14px;font-weight:700;color:var(--c-text-3);text-align:center;transition:all .2s;}
+.st-btn .st-sub{font-size:10px;font-weight:400;color:var(--c-text-3);margin-top:2px;}
+.st-btn.active{border-color:var(--c-primary,#ff5b3e);color:var(--c-primary,#ff5b3e);background:#fff5f2;}
+.st-btn:active{transform:scale(.97);}
+</style>
+</head>
+<body>
+<div class="topbar">付款结算</div>
+<div class="m">
+
+  <!-- 奖品横幅 -->
+  <div class="pc">
+    <div class="em" id="prizeEmoji">🎁</div>
+    <div>
+      <div class="t1">CONGRATULATIONS</div>
+      <div class="t2" id="prizeName">--</div>
+      <div class="ts" id="prizeSub">可使用该奖品参与本店结算</div>
+    </div>
+  </div>
+
+  <!-- 本次中奖卡 -->
+  <div class="bk">
+    <div class="bt">🧮 本次中奖</div>
+    <div class="pr" id="prizeResult">
+      <span class="pe" id="prEmoji">🎁</span>
+      <div style="flex:1;">
+        <div class="pn" id="prName">--</div>
+        <div class="pd" id="prRule">--</div>
+      </div>
+      <span class="pt" id="prTag">自动使用</span>
+    </div>
+    <div class="tp" id="prHint">本单已自动使用该奖品进行试算</div>
+  </div>
+
+  <!-- 金额输入 + 余额 + 试算 -->
+  <div class="bk">
+    <div class="bt">💰 请输入本单金额</div>
+    <div class="ai" id="amountWrap">
+      <span class="sym">¥</span>
+      <input class="ipt" id="amountInput" type="number" inputmode="decimal" min="0.01" step="0.01" placeholder="0.00" autocomplete="off" />
+      <span style="color:var(--c-text-3);">元</span>
+    </div>
+
+    <!-- 余额抵扣（默认勾选） -->
+    <div class="bal" id="balanceCard">
+      <label>
+        <input type="checkbox" id="balCheck" checked />
+        <span id="balToggleText">余额自动抵扣</span>
+      </label>
+      <span>可用 <b class="bv" id="balValue">0.00</b> 元</span>
+    </div>
+    <div class="hint" id="balHint">抽盒获得余额后可在本店抵扣</div>
+
+    <!-- 试算结果 -->
+    <div class="cb" id="calcBox"></div>
+  </div>
+
+  <!-- 确认下单 -->
+  <button class="btn" id="btnOrder" disabled>💳 请先输入金额</button>
+
+</div>
+
+<!-- 支付弹层 -->
+<div class="mk" id="payMask">
+  <div class="sh">
+    <h3>💳 选择付款方式</h3>
+    <div class="sub">微信/支付宝/银联将调起对应 APP 扫一扫；其他支付请长按显示的二维码识别</div>
+    <div class="pa">
+      <div class="v" id="payAmount">¥0.00</div>
+      <div class="l">本单应付金额</div>
+    </div>
+    <!-- 扫码方向切换 -->
+    <div class="scan-toggle" id="scanToggle">
+      <button class="st-btn active" data-mode="isweep" type="button">📱 我扫你<div class="st-sub">我扫商家收款码</div></button>
+      <button class="st-btn" data-mode="yousweep" type="button">💳 你扫我<div class="st-sub">商家扫我的付款码</div></button>
+    </div>
+    <!-- 我扫你模式：调起APP扫一扫 -->
+    <div class="pg" id="payGrid">
+      <button class="pc2" data-pay="wechat" type="button">
+        <span class="pi" style="background:#1aad19;">💚</span>
+        <span><span class="pn">微信支付</span><br><span class="pd">打开微信扫一扫</span></span>
+      </button>
+      <button class="pc2" data-pay="alipay" type="button">
+        <span class="pi" style="background:#1677ff;">💙</span>
+        <span><span class="pn">支付宝</span><br><span class="pd">打开支付宝扫一扫</span></span>
+      </button>
+      <button class="pc2" data-pay="unionpay" type="button">
+        <span class="pi" style="background:#e60012;">💜</span>
+        <span><span class="pn">银联/云闪付</span><br><span class="pd">打开云闪付扫一扫</span></span>
+      </button>
+      <button class="pc2" data-pay="other" type="button">
+        <span class="pi" style="background:#9095a8;">❓</span>
+        <span><span class="pn">其他支付</span><br><span class="pd">显示商家聚合收款码</span></span>
+      </button>
+    </div>
+    <!-- 你扫我模式：选择渠道+生成付款码 -->
+    <div class="yousweep-area" id="yousweepArea" style="display:none;">
+      <div class="ys-info" style="text-align:center;padding:8px 0 4px;">
+        <div style="font-size:13px;font-weight:700;color:var(--c-text);margin-bottom:10px;">选择付款方式生成付款码</div>
+      </div>
+      <div class="ys-grid" id="ysGrid" style="display:flex;gap:8px;margin-bottom:12px;">
+        <button class="ys-btn" data-ys="wechat" type="button" style="flex:1;padding:12px 8px;border:1.5px solid #1aad19;border-radius:12px;background:#fff;text-align:center;font-size:13px;font-weight:700;color:#1aad19;">
+          <span style="font-size:24px;display:block;margin-bottom:4px;">💚</span>微信付款码
+        </button>
+        <button class="ys-btn" data-ys="alipay" type="button" style="flex:1;padding:12px 8px;border:1.5px solid #1677ff;border-radius:12px;background:#fff;text-align:center;font-size:13px;font-weight:700;color:#1677ff;">
+          <span style="font-size:24px;display:block;margin-bottom:4px;">💙</span>支付宝付款码
+        </button>
+      </div>
+      <div id="ysQrWrap" style="display:none;text-align:center;padding:8px 0;">
+        <div id="ysQrTitle" style="font-size:13px;font-weight:700;color:var(--c-text);margin-bottom:8px;"></div>
+        <div id="ysQrBox" style="display:inline-block;padding:12px;background:#fff;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,.08);"></div>
+        <div style="font-size:11px;color:var(--c-text-3);margin-top:8px;">请将此付款码出示给商家扫码</div>
+      </div>
+    </div>
+    <!-- 商家聚合码区域（仅"其他"点击后显示） -->
+    <div id="scanVideoWrap" style="display:none;margin-bottom:12px;"><video id="scanVideo" style="width:100%;max-width:280px;border-radius:12px;background:#000;" autoplay playsinline></video><div style="font-size:11px;color:var(--c-text-3);text-align:center;margin-top:6px;">将商家收款码对准摄像头</div></div>
+    <div class="qb" id="qrEmpty" style="display:none;">
+      <div class="qe">
+        <div class="eh">商家聚合收款码</div>
+        <div class="ri" id="qrPlaceholder">[ 商家未上传收款码 ]</div>
+        <div class="rt">长按识别二维码完成付款</div>
+      </div>
+    </div>
+    <img id="payQr" style="display:none;max-width:200px;width:60%;border-radius:8px;margin:0 auto 12px;" alt="收款码" />
+    <div class="ph" id="payInfo" style="font-size:12px;color:var(--c-text-3);text-align:center;margin-bottom:10px;"></div>
+    <div class="act">
+      <button class="btn" id="btnPayDone" type="button">✅ 完成支付</button>
+    </div>
+  </div>
+</div>
+
+<div id="toastHost" style="position:fixed;top:20px;left:50%;transform:translateX(-50%);z-index:80;display:flex;flex-direction:column;gap:6px;pointer-events:none;"></div>
+
+<script src="./api.js"></script>
+<script src="../tts.js"></script>
+<script src="./pay.js"></script>
+</body>
+</html>

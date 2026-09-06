@@ -69,9 +69,25 @@ public class Merchant {
     @Column(length = 255)
     private String receiveQrImgAlipay;
 
+    /** 银联/云闪付收款码图片URL（商家后台上传） */
+    @Column(length = 255)
+    private String receiveQrImgUnionpay;
+
+    /** 其它支付收款码图片URL（商家后台上传） */
+    @Column(length = 255)
+    private String receiveQrImgOther;
+
+    /** 指定播报设备的登录token（null=所有设备播报） */
+    @Column(length = 128)
+    private String broadcastToken;
+
     /** P0：收款码审核 0未上传 1待审核 2通过 3驳回 */
     @Column(nullable = false)
     private Integer receiveQrStatus;
+
+    /** 客户支付模式 0=静态收款码(默认) 1=API支付(微信/支付宝) */
+    @Column(nullable = false)
+    private Integer payMode;
 
     @Column(nullable = false, updatable = false)
     private LocalDateTime createTime;

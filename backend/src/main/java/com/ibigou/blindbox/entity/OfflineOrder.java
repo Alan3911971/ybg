@@ -80,6 +80,10 @@ public class OfflineOrder {
 
     private LocalDateTime payTime;
 
+    /** 支付渠道 wechat/alipay */
+    @Column(length = 32)
+    private String payChannel;
+
     private LocalDateTime refundTime;
 
     @Column(nullable = false)

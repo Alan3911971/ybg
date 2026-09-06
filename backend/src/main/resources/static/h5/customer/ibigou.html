@@ -3,299 +3,385 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<meta name="theme-color" content="#ff5b3e">
-<title>宜必购商城 · 盲盒专属</title>
-<link rel="icon" href="data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='80' font-size='90'%3E%F0%9F%9A%95%3C/text%3E%3C/svg%3E">
+<meta name="theme-color" content="#1a1a2e">
+<title>宜必购商城</title>
 <style>
-  :root{
-    --c-primary:#ff5b3e; --c-primary-600:#e84a2f; --c-primary-100:#ffe9e3;
-    --c-accent:#ffb547; --c-success:#16a34a; --c-success-bg:#e8f7ee; --c-warning:#f59e0b; --c-warning-bg:#fff6e0;
-    --c-danger:#dc2626; --c-danger-bg:#fde8e8; --c-info:#2563eb; --c-info-bg:#e6efff;
-    --c-text:#1f2330; --c-text-2:#5a6072; --c-text-3:#8a90a2;
-    --c-bg:#f6f7fb; --c-surface:#fff; --c-border:#ececf3; --c-divider:#f0f1f6;
-    --c-grad-1:linear-gradient(135deg,#ff7150 0%,#ff9567 100%);
-    --sh-1:0 1px 2px rgba(20,23,40,.04),0 1px 4px rgba(20,23,40,.06);
-    --sh-press:0 0 0 4px rgba(255,91,62,.12);
-    --r-md:10px; --r-lg:14px; --r-pill:999px;
-  }
-  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
-  html,body{font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei","Helvetica Neue",Arial,sans-serif;color:var(--c-text);background:var(--c-bg);-webkit-font-smoothing:antialiased;}
-  body{min-height:100vh;padding-bottom:calc(76px + env(safe-area-inset-bottom));}
-  a{color:inherit;text-decoration:none;}
-  input,select,button{font-size:16px;}
-  button{font-family:inherit;}
-  .hero{background:var(--c-grad-1);color:#fff;padding:36px 20px 52px;border-bottom-left-radius:24px;border-bottom-right-radius:24px;position:relative;overflow:hidden;}
-  .hero::after{content:"\01F6CD";position:absolute;font-size:130px;opacity:.16;right:-10px;top:-12px;transform:rotate(-6deg);pointer-events:none;}
-  .hero h1{font-size:24px;font-weight:700;}
-  .hero .sub{margin-top:6px;font-size:14px;opacity:.92;}
-  .container{max-width:640px;margin:-28px 16px 0;padding:0 0 24px;}
-  @media (min-width:768px){ .container{margin-left:auto;margin-right:auto;} body{background:#eceef4;} }
-  .card{background:#fff;border-radius:var(--r-lg);padding:18px;box-shadow:var(--sh-1);margin-bottom:14px;border:1px solid var(--c-border);}
-  .sec{font-size:15px;font-weight:600;margin-bottom:10px;display:flex;align-items:center;gap:8px;}
-  .sec .ic{width:24px;height:24px;border-radius:8px;background:var(--c-primary-100);color:var(--c-primary);display:inline-flex;align-items:center;justify-content:center;font-size:13px;flex:0 0 24px;}
-  .pill{display:inline-block;padding:2px 10px;border-radius:var(--r-pill);font-size:11px;background:#fff5ef;color:#ff5b3e;}
-  .pill.gray{background:#eef0f4;color:#5a6072;}
-  .login{display:flex;gap:8px;align-items:center;}
-  .login input{flex:1;height:44px;padding:0 12px;border:1px solid var(--c-border);border-radius:10px;font-size:15px;background:#fff;}
-  .login input:focus{outline:none;border-color:var(--c-primary);box-shadow:var(--sh-press);}
-  .login button{height:44px;padding:0 16px;border:none;background:var(--c-grad-1);color:#fff;border-radius:10px;font-weight:600;cursor:pointer;}
-  .goods{display:flex;gap:12px;align-items:center;padding:12px;background:#fff;border:1px solid var(--c-border);border-radius:12px;margin-bottom:10px;}
-  .goods .thumb{width:64px;height:64px;border-radius:12px;background:#fff5ef;color:#ff5b3e;display:flex;align-items:center;justify-content:center;font-size:26px;flex:0 0 64px;}
-  .goods .main{flex:1;}
-  .goods .main .name{font-size:14px;font-weight:600;}
-  .goods .main .price{font-size:12px;color:#8a90a2;margin-top:4px;}
-  .goods .price-pill{padding:4px 12px;border-radius:999px;background:#ff5b3e;color:#fff;font-weight:700;font-size:13px;}
-  .order{border:1px solid var(--c-border);border-radius:12px;padding:12px;margin-bottom:10px;background:#fff;}
-  .order .top{display:flex;justify-content:space-between;align-items:center;font-size:13px;}
-  .order .no{font-weight:600;color:#1f2330;}
-  .order .meta{font-size:12px;color:#8a90a2;margin-top:4px;}
-  .order .line{font-size:12px;color:#5a6072;margin-top:4px;line-height:1.6;}
-  .order .actions{display:flex;gap:8px;margin-top:10px;}
-  .refund-btn{flex:1;height:38px;border:1px solid #ff5b3e;color:#ff5b3e;background:#fff;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;}
-  .order--expandable{cursor:pointer;transition:border-color .15s;}
-  .order--expandable:hover{border-color:#ff5b3e;}
-  .order-head{position:relative;}
-  .order-expand{position:absolute;right:0;top:14px;color:var(--c-text-3);font-size:14px;transition:transform .2s;}
-  .order-detail{margin-top:10px;padding:12px 14px;background:#fbfafd;border-radius:10px;border:1px solid var(--c-border);}
-  .detail-line{display:flex;justify-content:space-between;padding:6px 0;font-size:13px;line-height:1.5;}
-  .detail-line:not(:last-child){border-bottom:1px dashed #ececf3;}
-  .detail-label{color:var(--c-text-3);flex:0 0 auto;}
-  .detail-val{color:var(--c-text);font-weight:500;text-align:right;word-break:break-all;margin-left:12px;}
-  .input,.select{width:100%;height:46px;padding:0 12px;border:1px solid var(--c-border);border-radius:10px;background:#fff;font-size:15px;margin-top:8px;-webkit-appearance:none;appearance:none;}
-  .input:focus,.select:focus{outline:none;border-color:#ff5b3e;box-shadow:var(--sh-press);}
-  .btn{display:inline-flex;align-items:center;justify-content:center;height:48px;padding:0 18px;border:none;border-radius:10px;background:var(--c-grad-1);color:#fff;font-size:15px;font-weight:600;cursor:pointer;}
-  .btn--block{width:100%;}
-  .btn--ghost{background:transparent;color:#ff5b3e;border:1px solid #ff5b3e;}
-  .btn[disabled]{opacity:.5;}
-  .btn--sm{height:36px;padding:0 12px;font-size:13px;border-radius:8px;}
-  .tag{display:inline-block;padding:4px 10px;border-radius:999px;background:#fff5ef;color:#ff5b3e;font-size:12px;font-weight:600;margin:0 6px 6px 0;}
-  .tag.green{background:var(--c-success-bg);color:var(--c-success);}
-  .empty{padding:32px 16px;text-align:center;color:#8a90a2;font-size:13px;}
-  .empty .emoji{font-size:38px;margin-bottom:8px;}
-  .warn-box{background:var(--c-warning-bg);border:1px solid #fde6a7;color:#7a4a00;padding:10px 12px;border-radius:10px;font-size:12px;margin:10px 0;line-height:1.7;}
-  .tabs{position:fixed;bottom:0;left:0;right:0;height:calc(56px + env(safe-area-inset-bottom));background:rgba(255,255,255,.96);backdrop-filter:blur(8px);display:flex;border-top:1px solid var(--c-border);z-index:50;padding-bottom:env(safe-area-inset-bottom);}
-  .tab{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;color:var(--c-text-3);font-size:11px;cursor:pointer;}
-  .tab .ic{font-size:20px;} .tab.active{color:var(--c-primary);font-weight:600;}
-  .toast-host{position:fixed;top:18px;left:50%;transform:translateX(-50%);z-index:80;display:flex;flex-direction:column;gap:8px;pointer-events:none;}
-  .toast{padding:10px 16px;border-radius:10px;background:rgba(0,0,0,.84);color:#fff;font-size:14px;opacity:0;transform:translateY(-6px);transition:opacity .2s,transform .2s;}
-  .toast.show{opacity:1;transform:none;}
-  .toast.success{background:#16a34a;} .toast.warning{background:#f59e0b;} .toast.danger{background:#dc2626;} .toast.info{background:#2563eb;}
+:root{
+  --c-primary:#e85d3a;--c-primary-light:#fff0ea;
+  --c-accent:#f7a072;--c-gold:#e8a838;
+  --c-text:#1a1a2e;--c-text-2:#4a4a68;--c-text-3:#9b9bb0;
+  --c-bg:#f0f0f5;--c-surface:#fff;
+  --c-border:#e4e4ec;--c-divider:#ededf2;
+  --sh-card:0 4px 16px rgba(30,30,60,.06);
+  --sh-hover:0 8px 24px rgba(30,30,60,.1);
+  --radius:14px;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+html,body{
+  font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif;
+  color:var(--c-text);background:var(--c-bg);
+  -webkit-font-smoothing:antialiased;font-size:15px;
+}
+body{min-height:100vh;padding-bottom:calc(60px + env(safe-area-inset-bottom));}
+input,select,button{font-size:16px;}
+button{font-family:inherit;}
+
+.hero{
+  background:linear-gradient(145deg,#1a1a2e 0%,#16213e 40%,#0f3460 100%);
+  color:#fff;padding:36px 22px 52px;position:relative;overflow:hidden;
+}
+.hero::before{
+  content:"";position:absolute;top:-80px;right:-60px;
+  width:220px;height:220px;
+  background:radial-gradient(circle,rgba(232,93,58,.3) 0%,transparent 70%);
+  border-radius:50%;
+}
+.hero h1{font-size:22px;font-weight:800;position:relative;z-index:1;letter-spacing:.5px;}
+.hero .sub{margin-top:6px;font-size:12px;color:rgba(255,255,255,.6);position:relative;z-index:1;letter-spacing:.5px;}
+.hero .sub .dot{display:inline-block;width:4px;height:4px;background:var(--c-gold);border-radius:50%;vertical-align:middle;margin:0 6px;}
+
+.container{max-width:560px;margin:0 auto;padding:0 10px;position:relative;z-index:2;}
+
+.goods-grid{
+  display:grid;grid-template-columns:1fr 1fr;gap:10px;
+  margin-top:-32px;
+}
+.pcard{
+  background:var(--c-surface);border-radius:var(--radius);
+  overflow:hidden;box-shadow:var(--sh-card);
+  display:flex;flex-direction:column;
+  transition:box-shadow .2s,transform .15s;
+}
+.pcard:active{transform:scale(.985);box-shadow:var(--sh-hover);}
+
+.pcard .img-wrap{
+  width:100%;aspect-ratio:1;
+  background:linear-gradient(135deg,#f8f8fc,#ececf2);
+  display:flex;align-items:center;justify-content:center;
+  overflow:hidden;position:relative;
+}
+.pcard .img-wrap img{width:100%;height:100%;object-fit:cover;}
+.pcard .img-wrap .placeholder{
+  font-size:40px;opacity:.35;
+  filter:grayscale(.3);
+}
+.pcard .shop-badge{
+  position:absolute;bottom:6px;left:6px;
+  background:rgba(26,26,46,.75);color:#fff;
+  font-size:10px;padding:3px 10px;border-radius:999px;
+  max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  backdrop-filter:blur(8px);font-weight:500;
+}
+
+.pcard .body{padding:10px 12px 12px;flex:1;display:flex;flex-direction:column;}
+.pcard .name{
+  font-size:13px;font-weight:600;line-height:1.35;
+  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;
+  overflow:hidden;margin-bottom:2px;min-height:36px;color:var(--c-text);
+}
+.pcard .desc{
+  font-size:11px;color:var(--c-text-3);line-height:1.4;
+  display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical;
+  overflow:hidden;margin-bottom:6px;
+}
+.pcard .price-row{
+  display:flex;align-items:baseline;gap:4px;margin-bottom:8px;
+}
+.pcard .price{
+  font-size:18px;font-weight:800;color:var(--c-primary);letter-spacing:-.5px;
+}
+.pcard .price .sym{font-size:12px;font-weight:600;}
+.pcard .sales{
+  font-size:10px;color:var(--c-text-3);
+  margin-left:auto;align-self:center;
+}
+
+.pcard .buy-btn{
+  margin-top:auto;width:100%;height:32px;
+  border:none;border-radius:9px;
+  background:var(--c-primary);color:#fff;
+  font-size:13px;font-weight:600;cursor:pointer;
+  transition:opacity .15s;letter-spacing:.5px;
+}
+.pcard .buy-btn:active{opacity:.8;}
+
+.sec-title{
+  font-size:15px;font-weight:700;
+  margin:18px 0 10px;
+  display:flex;align-items:center;gap:8px;
+  color:var(--c-text);
+}
+.sec-title .bar{width:3px;height:14px;background:var(--c-primary);border-radius:2px;}
+
+.empty{text-align:center;padding:48px 16px;color:var(--c-text-3);font-size:14px;}
+
+.modal-bg{
+  position:fixed;inset:0;background:rgba(15,15,30,.45);
+  z-index:200;display:none;align-items:flex-end;justify-content:center;
+  backdrop-filter:blur(3px);
+}
+.modal-bg.show{display:flex;}
+.modal{
+  background:#fff;width:100%;max-width:560px;
+  border-radius:20px 20px 0 0;padding:24px 20px calc(20px + env(safe-area-inset-bottom));
+  max-height:90vh;overflow-y:auto;
+  animation:slideUp .3s cubic-bezier(.16,1,.3,1);
+}
+@keyframes slideUp{from{transform:translateY(100%);}to{transform:translateY(0);}}
+.modal h3{font-size:18px;font-weight:800;margin-bottom:16px;letter-spacing:.3px;}
+.modal .field{margin-bottom:12px;}
+.modal .field label{font-size:13px;color:var(--c-text-2);display:block;margin-bottom:4px;}
+.modal .field input{
+  width:100%;height:44px;padding:0 14px;
+  border:1px solid var(--c-border);border-radius:10px;
+  font-size:15px;background:#fff;transition:border-color .15s;
+}
+.modal .field input:focus{outline:none;border-color:var(--c-primary);box-shadow:0 0 0 3px rgba(232,93,58,.1);}
+
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:6px;
+  height:46px;padding:0 18px;border:none;border-radius:12px;
+  font-size:15px;font-weight:700;cursor:pointer;
+  transition:transform .12s;letter-spacing:.5px;
+}
+.btn:active{transform:scale(.97);}
+.btn--primary{background:var(--c-primary);color:#fff;}
+.btn--block{width:100%;}
+
+.order{
+  border:1px solid var(--c-border);border-radius:var(--radius);
+  padding:14px;margin-bottom:8px;background:#fff;
+}
+.order .top{display:flex;align-items:center;gap:8px;font-size:13px;}
+.order .no{font-weight:600;}
+.order .line{font-size:12px;color:var(--c-text-2);margin-top:4px;line-height:1.5;}
+.order--expandable{cursor:pointer;}
+.order .order-expand{margin-left:6px;font-size:10px;color:var(--c-text-3);transition:transform .15s;}
+.order-detail{margin-top:10px;padding-top:10px;border-top:1px dashed var(--c-divider);display:none;}
+.detail-line{display:flex;justify-content:space-between;font-size:12px;padding:4px 0;color:var(--c-text-2);}
+.detail-label{color:var(--c-text-3);}
+.detail-val{font-weight:500;text-align:right;max-width:60%;}
+.order .actions{margin-top:10px;display:flex;gap:8px;}
+.refund-btn{flex:1;padding:8px;border:1px solid var(--c-danger);color:var(--c-danger);background:#fff;border-radius:8px;font-size:12px;cursor:pointer;}
+
+
+.toast-host{
+  position:fixed;top:18px;left:50%;transform:translateX(-50%);
+  z-index:100;display:flex;flex-direction:column;gap:8px;pointer-events:none;
+}
+.toast{
+  padding:10px 18px;border-radius:999px;
+  background:rgba(26,26,46,.9);color:#fff;font-size:13px;
+  opacity:0;transform:translateY(-6px);transition:opacity .2s,transform .2s;
+  font-weight:500;
+}
+.toast.show{opacity:1;transform:none;}
+.toast.success{background:#2d8a4e;}
+.toast.warning{background:#d4942a;}
+.toast.danger{background:#c4483a;}
+
+.nav{
+  position:fixed;bottom:0;left:0;right:0;
+  height:calc(56px + env(safe-area-inset-bottom));
+  background:rgba(255,255,255,.98);backdrop-filter:blur(12px);
+  display:flex;border-top:1px solid var(--c-divider);
+  z-index:100;padding-bottom:env(safe-area-inset-bottom);
+}
+.nav .tab{
+  flex:1;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:2px;
+  color:var(--c-text-3);font-size:10px;cursor:pointer;
+  transition:color .15s;
+}
+.nav .tab .ic{font-size:20px;transition:transform .15s;}
+.nav .tab.active{color:var(--c-primary);font-weight:600;}
+.nav .tab.active .ic{transform:translateY(-1px);}
 </style>
 </head>
 <body>
 <div class="hero">
-  <h1>宜必购商城 🛍</h1>
-  <div class="sub">盲盒专属优惠券 / 余额，跨店直购更划算。</div>
+<h1>宜必购商城</h1>
+<div class="sub">跨店好物<span class="dot"></span>余额直购<span class="dot"></span>盲盒专属</div>
 </div>
-
 <div class="container">
-
-  <div class="card">
-    <div class="sec"><span class="ic">📱</span>登录账号</div>
-    <div class="login">
-      <input id="phone" placeholder="请输入手机号" inputmode="numeric" maxlength="11">
-      <button id="btnLogin">登录</button>
-    </div>
-    <div style="font-size:12px;color:#8a90a2;margin-top:8px;">测试环境验证码固定为 <b>123456</b>。</div>
-  </div>
-
-  <div id="channelWarn" class="warn-box" style="display:none;">当前宜必购渠道未开启（平台开关已关闭），下单将被拒绝。</div>
-
-  <div class="card">
-    <button class="btn btn--block" id="btnLoad" style="margin-bottom:12px;">🔄 加载商品与我的资产</button>
-    <div id="goodsCard"></div>
-    <div id="assetsCard" style="margin-top:4px;"></div>
-  </div>
-
-  <div class="card">
-    <div id="ordersCard"></div>
-  </div>
-
+<div class="goods-grid" id="goodsGrid"></div>
+<div class="sec-title"><span class="bar"></span>我的订单</div>
+<div id="ordersList"></div>
 </div>
-
-<nav class="tabs" aria-label="主导航">
-  <div class="tab" data-go="index.html"><span class="ic">🎯</span><span>抽盒</span></div>
-  <div class="tab" data-go="wallet.html"><span class="ic">💰</span><span>钱包</span></div>
-  <div class="tab active" data-go="ibigou.html"><span class="ic">🛍</span><span>商城</span></div>
+<div class="modal-bg" id="orderModal">
+<div class="modal" id="orderModalContent"></div>
+</div>
+<nav class="nav">
+<div class="tab" data-go="/h5/customer/index.html"><span class="ic">🎯</span><span>抽盒</span></div>
+<div class="tab active" data-go="/h5/customer/ibigou.html"><span class="ic">🛒</span><span>商城</span></div>
+<div class="tab" data-go="/h5/customer/wallet.html"><span class="ic">👤</span><span>我的</span></div>
 </nav>
-
 <div class="toast-host" id="toastHost"></div>
 <script>
-const $ = id => document.getElementById(id);
-const A = "/api/customer";
-let assets = {};
-let goods = [];
+var $=function(id){return document.getElementById(id);};
+function toast(m,t){var h=$("toastHost");if(!h)return;var e=document.createElement("div");e.className="toast "+(t||"");e.textContent=m;h.appendChild(e);requestAnimationFrame(function(){e.classList.add("show")});setTimeout(function(){e.classList.remove("show");setTimeout(function(){e.remove()},220)},2600)}
+document.querySelectorAll(".nav .tab").forEach(function(el){el.addEventListener("click",function(){var h=el.getAttribute("data-go");if(h&&location.pathname.indexOf(h)===-1)location.href=h})});
 
-function toast(msg, type){
-  const host = $("toastHost"); if (!host) return;
-  const t = document.createElement("div"); t.className = "toast " + (type || ""); t.textContent = msg;
-  host.appendChild(t);
-  requestAnimationFrame(function(){ t.classList.add("show"); });
-  setTimeout(function(){ t.classList.remove("show"); setTimeout(function(){ t.remove(); }, 220); }, 2400);
+var tk=localStorage.getItem("ibigou_user_token");
+var ph=localStorage.getItem("ibigou_phone");
+var mno=localStorage.getItem("ibigou_merchant_no")||"";
+if(!tk||!ph){location.href="/h5/customer/login.html?merchantNo="+mno;}
+
+var _selectedGoods=null;
+
+async function loadGoods(){
+  try{
+    var resp=await fetch("/api/customer/ibigou/goods");
+    var r=await resp.json();
+    if(r.code===0&&r.data){renderGoods(r.data)}
+    else{$("goodsGrid").innerHTML='<div class="empty" style="grid-column:1/3;">暂无商品</div>'}
+  }catch(e){$("goodsGrid").innerHTML='<div class="empty" style="grid-column:1/3;">加载失败，请刷新</div>'}
 }
 
-async function req(path, method, body){
-  const params = new URLSearchParams();
-  if (body) Object.keys(body).forEach(function(k){ const v = body[k]; if (v !== undefined && v !== null && v !== "") params.append(k, v); });
-  const headers = {};
-  const tk = localStorage.getItem("ibigou_user_token");
-  if (tk) headers["X-User-Token"] = tk;
-  const opt = { method: method || "GET", headers: headers };
-  if (method === "POST") { headers["Content-Type"] = "application/x-www-form-urlencoded"; opt.body = params.toString(); }
-  const r = await fetch(A + path, opt).then(function(r){ return r.json(); });
-  if (r.code === 401) { localStorage.removeItem("ibigou_user_token"); toast("登录已过期，请重新登录", "warning"); }
-  return r;
-}
-const post = (path, body) => req(path, "POST", body);
-const get = (path) => req(path, "GET");
-
-document.querySelectorAll(".tab").forEach(function(el){
-  el.addEventListener("click", function(){
-    const href = el.dataset.go; if (href && location.pathname.indexOf(href) === -1) location.href = href;
+function renderGoods(goods){
+  if(!goods.length){$("goodsGrid").innerHTML='<div class="empty" style="grid-column:1/3;">暂无商品，敬请期待</div>';return}
+  var html="";
+  goods.forEach(function(g){
+    var img=g.images?'<img src="'+g.images+'" alt="'+(g.goodsName||"")+'">':'<span class="placeholder">📦</span>';
+    var shopName=g.merchantName||g.merchantNo||"";
+    var salesText=g.salesCount>0?"已售"+g.salesCount:"新品";
+    var desc=g.description||"";
+    html+='<div class="pcard">'
+      +'<div class="img-wrap">'+img
+      +'<div class="shop-badge">'+shopName+'</div>'
+      +'</div>'
+      +'<div class="body">'
+      +'<div class="name">'+(g.goodsName||"")+'</div>'
+      +(desc?'<div class="desc">'+desc+'</div>':'')
+      +'<div class="price-row"><div class="price"><span class="sym">¥</span>'+(g.price||0)+'</div><div class="sales">'+salesText+'</div></div>'
+      +'<button class="buy-btn" data-goods-id="'+g.goodsId+'">立即购买</button>'
+      +'</div></div>';
   });
+  $("goodsGrid").innerHTML=html;
+}
+
+$("goodsGrid").addEventListener("click",function(e){
+  if(e.target.classList.contains("buy-btn")){openOrderModal(e.target.dataset.goodsId)}
 });
 
-const typeName = { 1:"折扣券", 2:"立减券", 3:"余额赠送", 4:"团购免单" };
-
-const lastPhone = localStorage.getItem("ibigou_phone");
-if (lastPhone) $("phone").value = lastPhone;
-
-$("btnLogin").onclick = async function(){
-  const ph = $("phone").value.trim();
-  if (!/^1[3-9]\d{9}$/.test(ph)) { toast("手机号格式不正确", "warning"); return; }
-  $("btnLogin").disabled = true;
-  try {
-    await post("/auth/send-code", { userPhone: ph });
-    const r = await post("/auth/login", { userPhone: ph, code: "123456" });
-    if (r.code === 0) {
-      localStorage.setItem("ibigou_user_token", r.data);
-      localStorage.setItem("ibigou_phone", ph);
-      toast("登录成功", "success");
-      $("btnLoad").onclick();
-    } else { toast(r.msg || "登录失败", "danger"); }
-  } catch (err) { toast("网络异常", "danger"); }
-  finally { $("btnLogin").disabled = false; }
-};
-
-$("btnLoad").onclick = loadAll;
-
-async function loadAll(){
-  const p = localStorage.getItem("ibigou_phone") || $("phone").value.trim();
-  if (!/^1[3-9]\d{9}$/.test(p)) { toast("请先登录正确手机号", "warning"); return; }
-  localStorage.setItem("ibigou_phone", p);
-  const g = await get("/ibigou/goods");
-  const a = await get("/ibigou/assets/" + p);
-  if (g.code !== 0) { $("channelWarn").style.display = "block"; return; }
-  $("channelWarn").style.display = "none";
-  goods = g.data || [];
-
-  $("goodsCard").innerHTML = '<div class="sec"><span class="ic">🛒</span>商品列表</div>'
-    + (goods.map(function(x){
-        return '<div class="goods"><div class="thumb">🛒</div><div class="main"><div class="name">' + (x.goodsName || "宜必购商品") + '</div><div class="price">商品编号 ' + (x.goodsNo || x.goodsId || "--") + '</div></div><div class="price-pill">¥' + x.price + '</div></div>';
-      }).join("") || '<div class="empty"><div class="emoji">🛒</div>暂无商品</div>');
-
-  assets = a.data || {};
-  const rate = assets.balanceDeductRate != null ? assets.balanceDeductRate : 0;
-  $("assetsCard").innerHTML =
-    '<div class="sec"><span class="ic">💳</span>可用资产（余额抵扣上限 = 实付 × ' + (rate || "--") + '%）</div>'
-    + '<div style="font-size:13px;color:#5a6072;margin-bottom:8px;">余额：<b style="color:#ff5b3e;font-size:16px;">¥' + (assets.balance != null ? assets.balance : 0) + '</b></div>'
-    + '<div style="font-size:13px;color:#5a6072;margin-bottom:8px;">可用券：'
-    + ((assets.coupons || []).map(function(c){ return '<span class="tag">' + (typeName[c.prizeType] || "") + ' ' + (c.prizeType === 1 ? c.prizeValue + "折" : "¥" + c.prizeValue) + ' · ' + (c.couponId || "") + '</span>'; }).join("") || '<span class="pill gray">无</span>')
-    + '</div>'
-    + '<div class="warn-box">下单规则：宜必购券 + 余额（≤ 实付 × ' + (rate || "--") + '%）抵扣，剩余金额实付。</div>'
-    + '<input id="orderAmount" class="input" type="number" inputmode="decimal" min="0.01" step="0.01" placeholder="订单金额（元）">'
-    + '<select id="orderCoupon" class="select"><option value="">不使用优惠券</option>'
-    + ((assets.coupons || []).map(function(c){ return '<option value="' + c.couponId + '">' + (typeName[c.prizeType] || "") + ' ' + (c.prizeType === 1 ? c.prizeValue + "折" : "¥" + c.prizeValue) + '</option>'; }).join(""))
-    + '</select>'
-    + '<input id="orderDeduct" class="input" type="number" inputmode="decimal" min="0" step="0.01" placeholder="余额抵扣金额（0=不使用）">'
-    + '<button class="btn btn--block" id="btnOrder" style="margin-top:12px;">💳 确认下单</button>';
-  $("btnOrder").onclick = doOrder;
-
-  await loadOrders(p);
+async function openOrderModal(goodsId){
+  try{
+    var resp=await fetch("/api/customer/ibigou/goods");
+    var r=await resp.json();
+    var goods=(r.data||[]).find(function(g){return String(g.goodsId)===String(goodsId)});
+    if(!goods){toast("商品不存在","danger");return}
+    _selectedGoods=goods;
+    showOrderModal();
+  }catch(e){toast("加载失败","danger")}
 }
 
-async function doOrder(){
-  const p = localStorage.getItem("ibigou_phone");
-  const amount = $("orderAmount").value;
-  const couponId = $("orderCoupon").value;
-  const deduct = $("orderDeduct").value || "0";
-  if (!(parseFloat(amount) > 0)) { toast("请填写订单金额", "warning"); return; }
-  $("btnOrder").disabled = true;
-  try {
-    const body = { userPhone: p, orderAmount: String(parseFloat(amount)), deductBalance: String(parseFloat(deduct)) };
-    if (couponId) body.couponId = couponId;
-    // 闭环③：携带最近一次抽奖批次号（下单成功后批次奖品激活可用）
-    const lastDraw = localStorage.getItem("ibigou_last_draw");
-    if (lastDraw) body.drawBatchNo = lastDraw;
-    const r = await post("/ibigou/order", body);
-    if (r.code === 0) {
-      if (lastDraw) localStorage.removeItem("ibigou_last_draw");
-      toast("下单成功 实付 ¥" + (r.data && r.data.payAmount != null ? r.data.payAmount : ""), "success");
-      $("btnLoad").onclick();
-    } else { toast(r.msg || "下单失败", "danger"); }
-  } catch (err) { toast("网络异常，请稍后再试", "danger"); }
-  finally { $("btnOrder").disabled = false; }
+async function showOrderModal(){
+  var g=_selectedGoods;
+  var shopName=g.merchantName||g.merchantNo||"";
+  var m=$("orderModalContent");
+  m.innerHTML='<h3>确认订单</h3>'
+    +'<div style="display:flex;gap:12px;align-items:center;margin-bottom:20px;">'
+    +'<div style="width:64px;height:64px;border-radius:12px;overflow:hidden;background:#f0f0f4;flex-shrink:0;">'+(g.images?'<img src="'+g.images+'" style="width:100%;height:100%;object-fit:cover;">':'<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:26px;">📦</div>')+'</div>'
+    +'<div style="flex:1;"><div style="font-weight:600;font-size:15px;">'+(g.goodsName||"")+'</div><div style="font-size:12px;color:var(--c-text-3);margin-top:2px;">'+shopName+'</div><div style="color:var(--c-primary);font-weight:800;font-size:20px;margin-top:4px;">¥'+(g.price||0)+'</div></div>'
+    +'</div>'
+    +'<div id="orderForm"><div style="text-align:center;padding:20px;color:var(--c-text-3);">加载中...</div></div>';
+  $("orderModal").classList.add("show");
+  await loadAssetsAndRender(g);
 }
 
-async function loadOrders(p){
-  const r = await get("/ibigou/orders/" + p);
-  const list = r.data || [];
-  const ftName = { 0:"未退款", 1:"全额退款", 2:"部分退款" };
-  const ftClass = { 0:"pill", 1:"pill gray", 2:"pill orange" };
-  if (!list.length) {
-    $("ordersCard").innerHTML = '<div class="sec"><span class="ic">📋</span>我的订单</div><div class="empty"><div class="emoji">📦</div>暂无订单</div>';
-    return;
-  }
-  $("ordersCard").innerHTML = '<div class="sec"><span class="ic">📋</span>我的订单 <span style="font-weight:400;font-size:12px;color:var(--c-text-3);margin-left:auto;">点击订单展开详情</span></div>' + list.map(function(o, idx){
-    const refundable = o.refundStatus === 0;
-    const statusPill = '<span class="' + (ftClass[o.refundStatus] || "pill gray") + '">' + (ftName[o.refundStatus] || "未知") + '</span>';
-    const couponDetail = o.couponId
-      ? '<div class="detail-line"><span class="detail-label">使用券</span><span class="detail-val">#' + o.couponId + ' ' + (o.couponInfo || "") + '</span></div>'
-      : '<div class="detail-line"><span class="detail-label">使用券</span><span class="detail-val" style="color:var(--c-text-3);">未使用</span></div>';
-    const refundDetail = o.refundStatus === 1
-      ? '<div class="detail-line"><span class="detail-label">退款金额</span><span class="detail-val" style="color:#16a34a;">¥' + (o.refundAmount || o.payAmount) + '</span></div>'
-        + '<div class="detail-line"><span class="detail-label">退款时间</span><span class="detail-val">' + ((o.refundTime || "").replace("T", " ").slice(0, 16) || "--") + '</span></div>'
-      : '';
-    const payType = o.payType || (o.couponId || o.deductBalance ? "混合支付" : "全额支付");
-    return '<div class="order order--expandable" data-order="' + idx + '">'
-      + '<div class="order-head" onclick="toggleOrderDetail(' + idx + ')">'
-      + '<div class="top"><span class="no">订单 ' + o.ibigouOrderNo + '</span>' + statusPill + '<span class="order-expand">▾</span></div>'
-      + '<div class="line">金额 ¥' + o.orderAmount + ' · 券 ' + (o.couponId ? "已使用" : "未使用") + ' · 余额抵扣 ¥' + (o.deductBalance || 0) + ' · 实付 <b style="color:#ff5b3e;">¥' + o.payAmount + '</b></div>'
-      + '<div class="meta">下单：' + ((o.createTime || "").replace("T", " ").slice(0, 16)) + '</div>'
-      + '</div>'
-      + '<div class="order-detail" id="orderDetail' + idx + '" style="display:none;">'
-      + '<div class="detail-line"><span class="detail-label">商品名称</span><span class="detail-val">' + (o.goodsName || "宜必购商品") + '</span></div>'
-      + '<div class="detail-line"><span class="detail-label">商品编号</span><span class="detail-val">' + (o.goodsNo || o.goodsId || "--") + '</span></div>'
-      + couponDetail
-      + '<div class="detail-line"><span class="detail-label">余额抵扣</span><span class="detail-val">¥' + (o.deductBalance || 0) + '</span></div>'
-      + '<div class="detail-line"><span class="detail-label">支付方式</span><span class="detail-val">' + payType + '</span></div>'
-      + refundDetail
-      + '</div>'
-      + (refundable ? '<div class="actions"><button class="refund-btn" onclick="refund(\'' + o.ibigouOrderNo + '\')">↩️ 申请全额退款</button></div>' : '')
-      + '</div>';
-  }).join("");
+async function loadAssetsAndRender(g){
+  try{
+    var resp=await fetch("/api/customer/ibigou/assets/"+ph,{headers:{"X-User-Token":tk}});
+    var r=await resp.json();
+    if(r.code!==0){$("orderForm").innerHTML='<div style="color:var(--c-text-3);text-align:center;padding:16px;">'+(r.msg||"加载失败")+'</div>';return}
+    var assets=r.data;
+    var bal=assets.balance||0;
+    var rate=assets.balanceDeductRate||0;
+    var maxDeduct=Math.min(bal,(g.price||0));
+    $("orderForm").innerHTML='<div style="background:#f8f8fc;border-radius:12px;padding:14px;margin:8px 0;">'
+      +'<div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:8px;"><span style="color:var(--c-text-3);">商品金额</span><span style="font-weight:600;">¥'+(g.price||0)+'</span></div>'
+      +'<div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:8px;"><span style="color:var(--c-text-3);">可用余额</span><span style="font-weight:600;">¥'+bal+'</span></div>'
+      +'<div style="display:flex;justify-content:space-between;font-size:13px;"><span style="color:var(--c-text-3);">余额抵扣率</span><span style="font-weight:600;">'+rate+'%</span></div>'
+      +'</div>'
+      +'<div class="field"><label>使用余额抵扣（最多 ¥'+maxDeduct.toFixed(2)+'）</label><input id="inpDeduct" type="number" step="0.01" min="0" max="'+maxDeduct+'" value="'+maxDeduct+'" placeholder="0.00"></div>'
+      +'<div style="background:#f8f8fc;border-radius:12px;padding:14px;margin:8px 0;">'
+      +'<div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:8px;"><span style="color:var(--c-text-3);">余额抵扣</span><span>-¥<span id="deductShow">'+maxDeduct.toFixed(2)+'</span></span></div>'
+      +'<div style="display:flex;justify-content:space-between;font-size:16px;font-weight:800;"><span>实付金额</span><span style="color:var(--c-primary);">¥<span id="payShow">'+Math.max(0,(g.price||0)-maxDeduct).toFixed(2)+'</span></span></div>'
+      +'</div>'
+      +'<button class="btn btn--primary btn--block" id="btnConfirmOrder">确认下单</button>';
+    function calcPay(){var d=parseFloat($("inpDeduct").value||0);var pay=Math.max(0,(g.price||0)-d);$("deductShow").textContent=d.toFixed(2);$("payShow").textContent=pay.toFixed(2)}
+    $("inpDeduct").addEventListener("input",calcPay);
+    $("btnConfirmOrder").onclick=async function(){
+      var deduct=$("inpDeduct").value||"0";
+      try{
+        var params=new URLSearchParams();params.append("userPhone",ph);params.append("deductBalance",deduct);params.append("orderAmount",g.price);
+        var resp=await fetch("/api/customer/ibigou/order?"+params.toString(),{method:"POST",headers:{"X-User-Token":tk}});
+        var r=await resp.json();
+        if(r.code===0){toast("下单成功！","success");$("orderModal").classList.remove("show");loadOrders()}
+        else{toast(r.msg||"下单失败","danger")}
+      }catch(e){toast("下单失败","danger")}
+    };
+  }catch(e){$("orderForm").innerHTML='<div style="color:var(--c-text-3);text-align:center;padding:16px;">加载失败</div>'}
 }
-window.toggleOrderDetail = function(idx){
-  const el = $("orderDetail" + idx);
-  const head = document.querySelector('[data-order="' + idx + '"] .order-expand');
-  if (!el) return;
-  if (el.style.display === "none") {
-    el.style.display = "block";
-    if (head) head.textContent = "▴";
-  } else {
-    el.style.display = "none";
-    if (head) head.textContent = "▾";
-  }
-};
-window.refund = async function(orderNo){
-  const p = localStorage.getItem("ibigou_phone");
-  if (!confirm("确认对订单 " + orderNo + " 发起全额退款？退款将自动恢复券与余额。")) return;
-  const r = await post("/ibigou/order/" + orderNo + "/refund", { userPhone: p });
-  if (r.code === 0) { toast("退款成功", "success"); $("btnLoad").onclick(); }
-  else { toast(r.msg || "退款失败", "danger"); }
-};
 
-if (localStorage.getItem("ibigou_phone")) $("btnLoad").onclick();
+async function loadOrders(){
+  if(!tk||!ph){$("ordersList").innerHTML="";return}
+  try{
+    var resp=await fetch("/api/customer/ibigou/orders/"+ph,{headers:{"X-User-Token":tk}});
+    var r=await resp.json();
+    if(r.code===0&&r.data){renderOrders(r.data)}
+  }catch(e){}
+}
+
+function renderOrders(orders){
+  if(!orders.length){$("ordersList").innerHTML='<div class="empty" style="padding:20px;">暂无订单</div>';return}
+  var html="";
+  orders.forEach(function(o,idx){
+    var status=o.refundStatus>0?(o.refundStatus===1?"已退款":"部分退款"):"已完成";
+    var color=o.refundStatus>0?"#9b9bb0":"#2d8a4e";
+    var statusPill='<span style="margin-left:auto;color:'+color+';font-size:11px;font-weight:600;">'+status+'</span>';
+    var couponDetail=o.couponId?'<div class="detail-line"><span class="detail-label">优惠券</span><span class="detail-val">已使用 (ID:'+o.couponId+')</span></div>':'<div class="detail-line"><span class="detail-label">优惠券</span><span class="detail-val">未使用</span></div>';
+    var refundDetail=o.refundStatus===1?'<div class="detail-line"><span class="detail-label">退款金额</span><span class="detail-val" style="color:#16a34a;">¥'+(o.refundAmount||o.payAmount)+'</span></div><div class="detail-line"><span class="detail-label">退款时间</span><span class="detail-val">'+((o.refundTime||"").replace("T"," ").slice(0,16)||"--")+'</span></div>':'';
+    var refundable=o.refundStatus===0?'<div class="actions"><button class="refund-btn" onclick="refundOrder(\''+o.ibigouOrderNo+'\')">申请全额退款</button></div>':'';
+    html+='<div class="order order--expandable" data-order="'+idx+'">'
+      +'<div class="top" onclick="toggleOrderDetail('+idx+')"><span class="no">'+o.ibigouOrderNo+'</span>'+statusPill+'<span class="order-expand">▾</span></div>'
+      +'<div class="line">金额 ¥'+o.orderAmount+' · 实付 ¥'+(o.payAmount||0)+' · 余额抵扣 ¥'+(o.deductBalance||0)+'</div>'
+      +'<div class="line" style="color:var(--c-text-3);">下单：'+((o.createTime||"").replace("T"," ").slice(0,16))+'</div>'
+      +'<div class="order-detail" id="orderDetail'+idx+'">'
+      +'<div class="detail-line"><span class="detail-label">订单号</span><span class="detail-val">'+o.ibigouOrderNo+'</span></div>'
+      +'<div class="detail-line"><span class="detail-label">订单金额</span><span class="detail-val">¥'+o.orderAmount+'</span></div>'
+      +'<div class="detail-line"><span class="detail-label">实付金额</span><span class="detail-val" style="color:#ff5b3e;font-weight:600;">¥'+(o.payAmount||0)+'</span></div>'
+      +'<div class="detail-line"><span class="detail-label">余额抵扣</span><span class="detail-val">¥'+(o.deductBalance||0)+'</span></div>'
+      +couponDetail
+      +'<div class="detail-line"><span class="detail-label">下单时间</span><span class="detail-val">'+((o.createTime||"").replace("T"," ").slice(0,16))+'</span></div>'
+      +(o.payTime?'<div class="detail-line"><span class="detail-label">支付时间</span><span class="detail-val">'+((o.payTime||"").replace("T"," ").slice(0,16))+'</span></div>':'')
+      +refundDetail
+      +'</div>'+refundable+'</div>';
+  });
+  $("ordersList").innerHTML=html;
+}
+function toggleOrderDetail(idx){
+  var el=document.getElementById("orderDetail"+idx);
+  var head=document.querySelector('[data-order="'+idx+'"] .order-expand');
+  if(!el)return;
+  if(el.style.display==="none"||el.style.display===""){el.style.display="block";if(head)head.textContent="▴";}
+  else{el.style.display="none";if(head)head.textContent="▾";}
+}
+async function refundOrder(orderNo){
+  if(!confirm("确认对订单 "+orderNo+" 发起全额退款？"))return;
+  var tk=localStorage.getItem("ibigou_user_token");
+  var ph=localStorage.getItem("ibigou_phone");
+  try{
+    var resp=await fetch("/api/customer/ibigou/order/"+orderNo+"/refund?userPhone="+ph,{method:"POST",headers:{"X-User-Token":tk}});
+    var r=await resp.json();
+    if(r.code===0){toast("退款成功","success");loadOrders();}
+    else{toast(r.msg||"退款失败","danger");}
+  }catch(e){toast("退款失败","danger");}
+}
+
+$("orderModal").addEventListener("click",function(e){if(e.target===$("orderModal")){$("orderModal").classList.remove("show")}});
+loadGoods();
+loadOrders();
 </script>
 </body>
 </html>

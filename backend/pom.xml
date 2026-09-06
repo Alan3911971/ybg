@@ -72,6 +72,12 @@
       <artifactId>wechatpay-java</artifactId>
       <version>0.2.17</version>
     </dependency>
+    <!-- 支付宝官方 SDK -->
+    <dependency>
+      <groupId>com.alipay.sdk</groupId>
+      <artifactId>alipay-sdk-java</artifactId>
+      <version>4.34.0.ALL</version>
+    </dependency>
     <dependency>
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter-test</artifactId>

@@ -35,7 +35,7 @@ public final class QrSvgUtil {
                     if (!matrix.get(x, y)) { x++; continue; }
                     int x2 = x;
                     while (x2 < w && matrix.get(x2, y)) { x2++; }
-                    sb.append('M').append(x).append(' ').append(y).append('h').append(x2 - x);
+                    sb.append('M').append(x).append(' ').append(y).append('h').append(x2 - x).append("v1h-").append(x2 - x).append("z");
                     x = x2;
                 }
             }

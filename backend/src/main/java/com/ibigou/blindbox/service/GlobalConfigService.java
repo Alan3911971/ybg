@@ -27,6 +27,13 @@ public class GlobalConfigService {
                 .orElse(80);
     }
 
+    /** 顾客登录是否强制短信验证码（1=强制，0=免验证码直登）；缺省 1 */
+    public boolean customerSmsLoginRequired() {
+        return configRepository.findById(SysGlobalConfig.KEY_CUSTOMER_SMS_LOGIN_REQUIRED)
+                .map(c -> "1".equals(c.getConfigValue()))
+                .orElse(true);
+    }
+
     /** 通用读取（无则 null；敏感 key 自动解密） */
     public String get(String key) {
         String v = configRepository.findById(key).map(SysGlobalConfig::getConfigValue).orElse(null);
@@ -63,7 +70,8 @@ public class GlobalConfigService {
                 "wx_pay_mch_id", "wx_pay_app_id", "wx_pay_api_key",
                 "wx_pay_enabled", "wx_pay_api_v3_key", "wx_pay_cert_path", "wx_pay_cert_serial",
                 "cross_store_return_percent", "test_pay_confirm_enabled",
-                "identity_qr_secret", "coupon_valid_days", "wx_pay_pub_key_id", "wx_pay_pub_key_path").contains(key)) {
+                "identity_qr_secret", "coupon_valid_days", "wx_pay_pub_key_id", "wx_pay_pub_key_path",
+                "customer_sms_login_required").contains(key)) {
             if ("wx_pay_enabled".equals(key) && !"0".equals(value) && !"1".equals(value)) {
                 throw new BizException("微信支付开关只能为 0 或 1");
             }
@@ -86,6 +94,9 @@ public class GlobalConfigService {
             }
             if ("renew_gift_months".equals(key) && (Integer.parseInt(value) < 0 || Integer.parseInt(value) > 60)) {
                 throw new BizException("赠送月数范围 0-60");
+            }
+            if ("customer_sms_login_required".equals(key) && !"0".equals(value) && !"1".equals(value)) {
+                throw new BizException("顾客登录短信验证开关只能为 0（关闭）或 1（开启）");
             }
         } else {
             throw new BizException("不支持的全局配置 key: " + key);

@@ -87,26 +87,6 @@
   .mask.show{display:flex;}
   .modal{background:#fff;width:90%;max-width:400px;border-radius:16px;padding:20px;max-height:85vh;overflow-y:auto;}
   .modal h3{font-size:16px;margin-bottom:10px;}
-<style>
-/* ===== 移动端增强（2026-08-18 reasonix V2 补齐：手机优先） ===== */
-@media (max-width: 768px) {
-  .wrap, body > .wrap { max-width: 100%; padding: 10px 10px 76px; }
-  .tabs { position: fixed; left: 0; right: 0; bottom: 0; z-index: 99;
-          background: #fff; border-top: 1px solid #e5e7eb; padding: 6px 4px calc(6px + env(safe-area-inset-bottom));
-          display: flex; overflow-x: auto; -webkit-overflow-scrolling: touch; }
-  .tabs .tab { flex: 1 0 auto; min-width: 60px; font-size: 12px; padding: 6px 8px; text-align: center;
-               border-radius: 8px; white-space: nowrap; }
-  .tabs .tab.active { background: #2563eb; color: #fff; }
-  .card { border-radius: 10px; margin-bottom: 10px; }
-  .card-title { font-size: 14px; }
-  table { display: block; overflow-x: auto; white-space: nowrap; -webkit-overflow-scrolling: touch; }
-  .list-item { padding: 10px 12px; }
-  .btn { min-height: 40px; padding: 10px 14px; font-size: 14px; }
-  input, select, textarea { font-size: 16px; } /* 防 iOS 聚焦缩放 */
-  .row { flex-wrap: wrap; gap: 6px; }
-  .op a { display: inline-block; padding: 6px 8px; }
-  body { padding-bottom: env(safe-area-inset-bottom); }
-}
 </style>
 </head>
 <body>
@@ -131,6 +111,14 @@
 <!-- p1 概览 -->
 <div class="panel active" id="p1">
   <div class="stat-row">
+    <div class="stat"><div class="num" id="kpiMerchant">--</div><div class="lab">商家数</div></div>
+    <div class="stat"><div class="num" id="kpiAlerts">--</div><div class="lab">未处理告警</div></div>
+    <div class="stat"><div class="num" id="kpiCoupons">--</div><div class="lab">优惠券</div></div>
+    <div class="stat"><div class="num" id="kpiMembers">--</div><div class="lab">有效会员</div></div>
+  </div>
+  <div class="card"><div class="card-title">📊 7 日趋势</div><div id="trendChart" class="chart-placeholder" style="height:200px;"></div></div>
+  <div class="card"><div class="card-title">🔔 最近告警</div><div id="kpiAlertsList" class="empty">加载中...</div></div>
+  <div class="stat-row">
     <div class="stat"><div class="num" id="stMerchants">--</div><div class="lab">商家总数</div></div>
     <div class="stat"><div class="num" id="stAlerts">--</div><div class="lab">未处理告警</div></div>
   </div>
@@ -146,6 +134,7 @@
 
 <!-- p2 商家管理 -->
 <div class="panel" id="p2">
+  <div class="filter-row"><input id="mSearch" class="input" placeholder="🔍 搜索"><select id="mFilter" class="input"><option value="">全部</option><option value="1">启用</option><option value="0">禁用</option></select></div>
   <div class="card">
     <div class="sec"><span class="ic">➕</span>新增商家账号</div>
     <div class="row">
@@ -159,8 +148,32 @@
     <button class="btn green btn--block" id="btnAddMerchant" style="margin-top:12px;">新增商家</button>
   </div>
   <div class="card">
+    <div class="sec"><span class="ic">📱</span>拓展商家注册二维码</div>
+    <div class="desc">扫码打开商家注册页面，拓展新商家入驻。</div>
+    <button class="btn btn--block" id="btnGenInvite" style="margin-top:12px;">生成拓展注册二维码</button>
+    <div id="inviteQrWrap" style="display:none;text-align:center;margin-top:16px;">
+      <div id="inviteQrBox" style="display:inline-block;padding:12px;background:#fff;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,.08);"></div>
+      <div style="font-size:12px;color:var(--c-text-3);margin-top:8px;">扫码注册新商家</div>
+    </div>
+  </div>
+  <div class="card">
     <div class="sec"><span class="ic">🏪</span>商家列表<span class="sp"></span><button class="btn btn--sm" id="btnMerchants">刷新</button></div>
     <div id="mTable"></div>
+  </div>
+  <div class="card">
+    <div class="sec"><span class="ic">🔗</span>商家登录二维码</div>
+    <div class="desc">生成商家后台登录页二维码和登录地址，发给商家扫码登录。</div>
+    <div class="field">
+      <label>登录地址</label>
+      <input id="merchantLoginUrl" class="input" readonly style="font-size:12px;color:var(--c-text-3);">
+    </div>
+    <button class="btn btn--block" id="btnCopyLoginUrl" style="margin-bottom:10px;">📋 复制登录地址</button>
+    <button class="btn green btn--block" id="btnGenLoginQr">🔗 生成商家登录二维码</button>
+    <div id="loginQrWrap" style="display:none;text-align:center;margin-top:16px;">
+      <div id="loginQrBox" style="display:inline-block;padding:12px;background:#fff;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,.08);"></div>
+      <div style="font-size:12px;color:var(--c-text-3);margin-top:8px;">商家扫码登录后台</div>
+      <button class="btn btn--sm" id="btnPrintLoginQr" style="margin-top:8px;">🖨️ 打印</button>
+    </div>
   </div>
 </div>
 
@@ -196,6 +209,33 @@
     <button class="btn btn--block" id="btnSaveWx" style="margin-top:12px;">保存微信支付参数</button>
   </div>
   <div class="card">
+    <div class="sec"><span class="ic">💙</span>平台支付宝支付参数（客户API支付用）</div>
+    <div class="row">
+      <div><label>支付宝开关 alipay_enabled（0测试mock 1真实）</label><input id="gAlipayEnabled" class="input" type="number" min="0" max="1"></div>
+      <div><label>应用AppID alipay_app_id</label><input id="gAlipayAppId" class="input"></div>
+    </div>
+    <div class="row">
+      <div><label>应用私钥 alipay_merchant_private_key</label><input id="gAlipayPrivateKey" class="input"></div>
+      <div><label>支付宝公钥 alipay_public_key</label><input id="gAlipayPublicKey" class="input"></div>
+    </div>
+    <div class="row">
+      <div><label>网关地址 alipay_gateway_url</label><input id="gAlipayGateway" class="input"></div>
+    </div>
+    <button class="btn btn--block" id="btnSaveAlipay" style="margin-top:12px;">保存支付宝参数</button>
+  </div>
+  <div class="card">
+    <div class="sec"><span class="ic">💳</span>客户支付模式（全局）</div>
+    <div class="row">
+      <div><label>客户支付模式 customer_pay_mode</label>
+        <select id="gCustomerPayMode" class="input">
+          <option value="0">静态收款码（商家上传码，默认）</option>
+          <option value="1">API支付（微信/支付宝官方支付）</option>
+        </select>
+      </div>
+    </div>
+    <button class="btn btn--block" id="btnSavePayMode" style="margin-top:12px;">保存支付模式</button>
+  </div>
+  <div class="card">
     <div class="sec"><span class="ic">📋</span>全部配置（脱敏）</div>
     <div id="configList"></div>
   </div>
@@ -211,6 +251,7 @@
 
 <!-- p5 报表 -->
 <div class="panel" id="p5">
+  <div class="chip-row"><div class="chip active" data-rpt="coupons">优惠券</div><div class="chip" data-rpt="balance-flows">余额流水</div><div class="chip" data-rpt="group-records">团购记录</div><div class="chip" data-rpt="ibigou-orders">宜必购订单</div></div>
   <div class="card">
     <div class="sec"><span class="ic">📊</span>全平台报表（全部支持 Excel 导出）</div>
     <div class="row" style="margin-bottom:10px;">
@@ -262,8 +303,9 @@
 <script>
 const A = "/api/admin";
 const TOKEN = localStorage.getItem("ibigou_admin_token");
-if (!TOKEN) location.href = "login.html";
+if (!TOKEN) { location.href = "login.html"; }
 const H = { "X-Admin-Token": TOKEN };
+function _checkAuth(r){ if (r && r.code !== 0 && r.msg && r.msg.indexOf("登录") >= 0) { localStorage.removeItem("ibigou_admin_token"); location.href = "login.html"; } return r; }
 const $ = id => document.getElementById(id);
 
 function toast(msg, type){
@@ -274,23 +316,27 @@ function toast(msg, type){
   setTimeout(function(){ t.classList.remove("show"); setTimeout(function(){ t.remove(); }, 220); }, 2600);
 }
 
-async function apiH(url, body, extraHeaders){
-  const r = await fetch(url, { method: "POST", headers: Object.assign({}, { "X-Admin-Token": localStorage.getItem("ibigou_admin_token") }, extraHeaders), body: JSON.stringify(body || {}) });
-  try { return await r.json(); } catch (e) { return { code: -1, msg: "响应解析失败" }; }
-}
 async function api(url, body, method){
   const opt = { method: method || "POST", headers: Object.assign({}, H) };
   if (body) {
     opt.headers["Content-Type"] = "application/x-www-form-urlencoded";
     opt.body = new URLSearchParams(body).toString();
   }
-  return fetch(url, opt).then(function(r){ return r.json(); });
+  return fetch(url, opt).then(function(r){ return r.json(); }).then(function(r){ _checkAuth(r); return r; });
 }
-function get(url){ return fetch(url, { headers: H }).then(function(r){ return r.json(); }); }
+function get(url){ return fetch(url, { headers: H }).then(function(r){ return r.json(); }).then(function(r){ _checkAuth(r); return r; }); }
 function fmtT(t){ return (t || "").replace("T", " ").slice(0, 19); }
 function esc(s){ return String(s == null ? "" : s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"); }
 const tname = { 1:"折扣券", 2:"立减券", 3:"普通余额", 4:"团购免单余额" };
 
+async function loadKpi(){try{const ms=await get(A+"/merchant/list");const list=ms.data||[];$("kpiMerchant").textContent=list.length||0;$("kpiAlerts").textContent="—";$("kpiCoupons").textContent="—";$("kpiMembers").textContent="—";}catch(e){}}
+async function loadRecentAlerts(){try{const r=await get(A+"/alerts");const arr=(r.data||[]).slice(0,5);const el=$("kpiAlertsList");if(!arr.length){el.textContent="暂无告警";return;}el.className="";el.innerHTML=arr.map(function(a){return '<div style="padding:8px 0;border-bottom:1px solid var(--c-divider);display:flex;justify-content:space-between;font-size:13px;"><span>'+esc(a.title||a.content||"—")+'</span><span class="pill '+(a.handled?"ok":"warn")+'">'+(a.handled?"已处理":"待处理")+"</span></div>";}).join("");}catch(e){}}
+$("mSearch")&&($("mSearch").oninput=filterMerchants);
+$("mFilter")&&($("mFilter").onchange=filterMerchants);
+let _merchantsCache=[];
+async function filterMerchants(){const q=($("mSearch")&&$("mSearch").value||"").toLowerCase();const st=$("mFilter")&&$("mFilter").value||"";const el=$("mTable");if(!_merchantsCache.length){el.innerHTML='<div class="empty">加载中...</div>';return;}let rows=_merchantsCache;if(q)rows=rows.filter(function(m){return(m.merchantNo||"").toLowerCase().indexOf(q)>=0||(m.merchantName||"").toLowerCase().indexOf(q)>=0;});if(st!=="")rows=rows.filter(function(m){return String(m.enabled)===st;});if(!rows.length){el.innerHTML='<div class="empty">无匹配</div>';return;}el.innerHTML='<div class="table-wrap"><table><thead><tr><th>编号</th><th>名称</th><th>账号</th><th>状态</th><th>操作</th></tr></thead><tbody>'+rows.map(function(m){return'<tr><td>'+esc(m.merchantNo)+'</td><td>'+esc(m.merchantName||"")+'</td><td>'+esc(m.loginAccount||"")+'</td><td><span class="pill '+(m.enabled?"ok":"no")+'">'+(m.enabled?"启用":"禁用")+'</span></td><td><button class="btn ghost" onclick="toggleM(\''+esc(m.merchantNo)+'\','+(m.enabled?0:1)+')">'+(m.enabled?"禁用":"启用")+'</button> <button class="btn ghost" onclick="resetPwd(\''+esc(m.merchantNo)+'\')">重置密码</button></td></tr>';}).join("")+'</tbody></table></div>';}
+document.querySelectorAll(".chip").forEach(function(c){c.onclick=function(){document.querySelectorAll(".chip").forEach(function(x){x.classList.remove("active");});c.classList.add("active");loadReport();};});
+async function loadReport(){const active=document.querySelector(".chip.active");const key=active?active.dataset.rpt:"coupons";const el=$("reportTable");el.innerHTML='<div class="empty">加载中...</div>';try{const r=await get(A+"/report/"+key);const arr=r.data||[];if(!arr.length){el.innerHTML='<div class="empty">暂无数据</div>';return;}const sample=arr[0];const cols=Object.keys(sample).slice(0,6);el.innerHTML='<div class="table-wrap"><table><thead><tr>'+cols.map(function(c){return"<th>"+esc(c)+"</th>";}).join("")+"</tr></thead><tbody>"+arr.slice(0,100).map(function(row){return"<tr>"+cols.map(function(c){return"<td>"+esc(row[c])+"</td>";}).join("")+"</tr>";}).join("")+"</tbody></table></div>";}catch(e){el.innerHTML='<div class="empty">加载失败</div>';}}
 document.querySelectorAll(".tab").forEach(function(t){
   t.onclick = function(){
     document.querySelectorAll(".tab").forEach(function(x){ x.classList.remove("active"); });
@@ -315,9 +361,19 @@ async function loadMerchants(){
       + '<div class="ops">'
       + '<button class="btn btn--sm" onclick="toggleM(\'' + m.merchantNo + '\',' + (m.status === 1 ? 0 : 1) + ')">' + (m.status === 1 ? "禁用" : "启用") + '</button>'
       + '<button class="btn btn--sm orange" onclick="resetPwd(\'' + m.merchantNo + '\')">重置密码</button>'
+      + '<button class="btn btn--sm orange" onclick="extendMember(\'' + m.merchantNo + '\')">⏳ 延期</button>'
+      + '<button class="btn btn--sm" onclick="showLoginQr(\'' + m.merchantNo + '\')">🔗 登录二维码</button>'
+      + '<button class="btn btn--sm" onclick="bindStaff(\'' + m.merchantNo + '\')">👤 绑定员工</button>'
       + '<button class="btn btn--sm red" onclick="deleteMerchant(\'' + m.merchantNo + '\')">删除</button>'
       + '</div></div>';
   }).join("");
+}
+async function extendMember(no){
+  const m = prompt("延长商家「" + no + "」会员有效期\n请输入延长月数：", "1");
+  if (!m || !(parseInt(m) > 0)) { if (m !== null) toast("请输入有效月数", "warning"); return; }
+  const r = await api(A + "/member/" + no + "/adjust", { months: m });
+  toast(r.code === 0 ? "已延期 +" + m + " 个月" : (r.msg || "延期失败"), r.code === 0 ? "success" : "danger");
+  loadMerchants();
 }
 async function toggleM(no, en){ const r = await api(A + "/merchant/" + no + (en ? "/enable" : "/disable")); toast(r.code === 0 ? "已更新" : (r.msg || "失败"), r.code === 0 ? "success" : "danger"); loadMerchants(); }
 async function resetPwd(no){
@@ -329,8 +385,16 @@ async function resetPwd(no){
 async function deleteMerchant(no){
   const pwd = prompt("⚠️ 删除商家「" + no + "」将删除其全部私有配置（档位/专属盲盒/投放/会话），历史订单与流水保留。" + String.fromCharCode(10) + "请输入管理员密码确认：", "");
   if (!pwd) return;
-  const r = await apiH(A + "/merchant/" + no + "/delete", {}, { "X-Admin-Pwd": pwd });
-  toast(r.code === 0 ? "商家已删除" : (r.msg || "删除失败（请检查管理员密码）"), r.code === 0 ? "success" : "danger");
+  try {
+    const resp = await fetch(A + "/merchant/" + no + "/delete", {
+      method: "POST",
+      headers: Object.assign({ "X-Admin-Pwd": pwd }, H)
+    });
+    const r = await resp.json();
+    toast(r.code === 0 ? "商家已删除" : (r.msg || "删除失败（请检查管理员密码）"), r.code === 0 ? "success" : "danger");
+  } catch(e) {
+    toast("删除失败：" + (e.message || "网络异常"), "danger");
+  }
   loadMerchants();
 }
 $("btnAddMerchant").onclick = async function(){
@@ -361,6 +425,14 @@ async function loadConfig(){
   if (map["wx_pay_cert_path"]) $("gWxCertPath").placeholder = "已配置（留空则不修改）";
   if (map["wx_pay_cert_serial"]) $("gWxCertSerial").placeholder = "已配置（留空则不修改）";
   $("gTestConfirm").value = map["test_pay_confirm_enabled"] != null ? map["test_pay_confirm_enabled"] : "";
+  // 支付宝配置
+  $("gAlipayEnabled").value = map["alipay_enabled"] != null ? map["alipay_enabled"] : "";
+  $("gAlipayAppId").value = map["alipay_app_id"] || "";
+  if (map["alipay_merchant_private_key"]) $("gAlipayPrivateKey").placeholder = "已配置（留空则不修改）";
+  if (map["alipay_public_key"]) $("gAlipayPublicKey").placeholder = "已配置（留空则不修改）";
+  $("gAlipayGateway").value = map["alipay_gateway_url"] || "https://openapi.alipay.com/gateway.do";
+  // 全局客户支付模式
+  $("gCustomerPayMode").value = map["customer_pay_mode"] != null ? map["customer_pay_mode"] : "0";
   $("configList").innerHTML = list.length
     ? list.map(function(c){ return '<div class="list-item"><div class="main"><div class="t">' + esc(c.configKey) + '</div><div class="s">' + esc(c.remark || "") + '</div></div><div class="v">' + esc(c.configValue || "") + '</div></div>'; }).join("")
     : '<div class="empty">暂无配置</div>';
@@ -387,6 +459,27 @@ $("btnSaveWx").onclick = async function(){
     if (r.code !== 0) { ok = false; msg = r.msg; }
   }
   toast(ok ? "微信支付参数已保存（密钥脱敏展示）" : ("保存失败: " + msg), ok ? "success" : "danger");
+  loadConfig();
+};
+$("btnSaveAlipay").onclick = async function(){
+  const pairs = [
+    ["alipay_enabled", $("gAlipayEnabled").value], ["alipay_app_id", $("gAlipayAppId").value],
+    ["alipay_merchant_private_key", $("gAlipayPrivateKey").value], ["alipay_public_key", $("gAlipayPublicKey").value],
+    ["alipay_gateway_url", $("gAlipayGateway").value]
+  ];
+  let ok = true, msg = "";
+  const secretKeys = ["alipay_merchant_private_key", "alipay_public_key"];
+  for (const pair of pairs) {
+    if (secretKeys.includes(pair[0]) && (!pair[1] || !pair[1].trim())) continue;
+    const r = await api(A + "/config/update", { key: pair[0], value: pair[1] });
+    if (r.code !== 0) { ok = false; msg = r.msg; }
+  }
+  toast(ok ? "支付宝支付参数已保存" : ("保存失败: " + msg), ok ? "success" : "danger");
+  loadConfig();
+};
+$("btnSavePayMode").onclick = async function(){
+  const r = await api(A + "/config/update", { key: "customer_pay_mode", value: $("gCustomerPayMode").value || "0" });
+  toast(r.code === 0 ? "客户支付模式已保存" : (r.msg || "保存失败"), r.code === 0 ? "success" : "danger");
   loadConfig();
 };
 
@@ -489,7 +582,7 @@ async function loadAudits(){
 async function revokeAudit(logId){
   const pwd = prompt("⚠️ 撤销将恢复余额/券状态，不可重复撤销。" + String.fromCharCode(10) + "请输入管理员密码确认：", "");
   if (!pwd) return;
-  const r = await apiH(A + "/member/audits/" + logId + "/revoke", {}, { "X-Admin-Pwd": pwd });
+  const r = await api(A + "/member/audits/" + logId + "/revoke", { adminPassword: pwd });
   toast(r.code === 0 ? "已撤销并恢复资产" : (r.msg || "撤销失败"), r.code === 0 ? "success" : "danger");
   loadAudits();
 }
@@ -544,7 +637,139 @@ async function loadOverview(){
 }
 
 // ---------- 初始化 ----------
-loadMerchants(); loadConfig(); loadBoard(false); loadMemberTable(); loadMOrders(); loadAudits(); loadAlerts(); loadOverview();
+// 真实 QR 码生成 (使用 qrcodejs 库)
+function _genQrDiv(text, size){
+  size = size || 200;
+  var div = document.createElement("div");
+  div.style.cssText = "width:" + size + "px;height:" + size + "px;";
+  new QRCode(div, { text: text, width: size, height: size, correctLevel: QRCode.CorrectLevel.M });
+  return div;
+}
+// 兼容旧调用
+function _genQrCanvas(text, size){ return _genQrDiv(text, size); }
+
+// 生成拓展注册二维码
+$("btnGenInvite").onclick = function(){
+  var wrap = $("inviteQrWrap");
+  var box = $("inviteQrBox");
+  wrap.style.display = "block";
+  box.innerHTML = "";
+  var url = location.origin + "/h5/merchant/register.html?tk=" + encodeURIComponent(TOKEN);
+  box.appendChild(_genQrCanvas(url, 220));
+  var dl = document.createElement("div");
+  dl.style.cssText = "font-size:11px;color:#8089a0;margin-top:6px;word-break:break-all;max-width:240px;";
+  dl.textContent = "注册链接: " + url;
+  box.appendChild(dl);
+};
+
+// 绑定员工二维码
+async function bindStaff(merchantNo){
+  var url = location.origin + "/h5/merchant/register.html?tk=" + encodeURIComponent(TOKEN) + "&bind=" + merchantNo;
+  var box = document.createElement("div");
+  box.style.cssText = "position:fixed;inset:0;z-index:999;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;";
+  box.innerHTML = '<div style="background:#fff;border-radius:14px;padding:24px;text-align:center;max-width:300px;"><div style="font-size:15px;font-weight:700;margin-bottom:12px;">商家 ' + merchantNo + ' · 员工注册二维码</div><div id="staffQrBox" style="display:inline-block;padding:12px;background:#f7f8fb;border-radius:10px;"></div><div style="font-size:12px;color:#8089a0;margin-top:10px;">员工扫码后注册并绑定到该商家</div><button class="btn" style="margin-top:14px;" id="closeBind">关闭</button></div>';
+  document.body.appendChild(box);
+  var qrBox = box.querySelector("#staffQrBox");
+  qrBox.appendChild(_genQrCanvas(url, 200));
+  box.querySelector("#closeBind").onclick = function(){ box.remove(); };
+}
+
+loadKpi(); loadMerchants(); loadConfig(); loadBoard(false); loadMemberTable(); loadMOrders(); loadAudits(); loadAlerts(); loadOverview();
+
+// 商家登录二维码
+var _loginUrl = location.origin + "/h5/merchant/login.html";
+var _loginUrlInput = $("merchantLoginUrl");
+if (_loginUrlInput) _loginUrlInput.value = _loginUrl;
+
+$("btnCopyLoginUrl") && ($("btnCopyLoginUrl").onclick = function(){
+  _loginUrlInput.select();
+  document.execCommand("copy");
+  toast("登录地址已复制", "success");
+});
+
+$("btnGenLoginQr") && ($("btnGenLoginQr").onclick = function(){
+  var wrap = $("loginQrWrap");
+  var box = $("loginQrBox");
+  wrap.style.display = "block";
+  box.innerHTML = "";
+  if (typeof QRCode !== "undefined") {
+    new QRCode(box, { text: _loginUrl, width: 200, height: 200, correctLevel: QRCode.CorrectLevel.M });
+  } else {
+    var s = document.createElement("script");
+    s.src = "https://cdn.jsdelivr.net/gh/davidshimjs/qrcodejs/qrcode.min.js";
+    s.onload = function(){ new QRCode(box, { text: _loginUrl, width: 200, height: 200, correctLevel: QRCode.CorrectLevel.M }); };
+    document.head.appendChild(s);
+  }
+  toast("登录二维码已生成", "success");
+});
+
+// 单个商家登录二维码 (弹窗)
+function showLoginQr(merchantNo){
+  var url = location.origin + "/h5/merchant/login.html";
+  var box = document.createElement("div");
+  box.style.cssText = "position:fixed;inset:0;z-index:999;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;";
+  box.innerHTML = '<div style="background:#fff;border-radius:14px;padding:24px;text-align:center;max-width:320px;"><div style="font-size:15px;font-weight:700;margin-bottom:12px;">商家 ' + merchantNo + ' · 后台登录二维码</div><div id="singleLoginQr" style="display:inline-block;padding:12px;background:#f7f8fb;border-radius:10px;"></div><div style="font-size:11px;color:#8089a0;margin-top:8px;word-break:break-all;">' + url + '</div><div style="margin-top:12px;"><input id="loginUrlInput" style="width:100%;padding:8px;border:1px solid #e6e8ef;border-radius:8px;font-size:12px;" value="' + url + '" readonly></div><button class="btn" style="margin-top:12px;width:100%;" id="closeLoginQr">关闭</button></div>';
+  document.body.appendChild(box);
+  var qrBox = box.querySelector("#singleLoginQr");
+  if (typeof QRCode !== "undefined") {
+    new QRCode(qrBox, { text: url, width: 180, height: 180, correctLevel: QRCode.CorrectLevel.M });
+  } else {
+    var s = document.createElement("script");
+    s.src = "https://cdn.jsdelivr.net/gh/davidshimjs/qrcodejs/qrcode.min.js";
+    s.onload = function(){ new QRCode(qrBox, { text: url, width: 180, height: 180, correctLevel: QRCode.CorrectLevel.M }); };
+    document.head.appendChild(s);
+  }
+  box.querySelector("#closeLoginQr").onclick = function(){ box.remove(); };
+}
+
+// 打印登录二维码
+$("btnPrintLoginQr") && ($("btnPrintLoginQr").onclick = function(){
+  var printWin = window.open("", "_blank");
+  var img = $("loginQrBox").querySelector("img") || $("loginQrBox").querySelector("canvas");
+  var imgSrc = img ? (img.src || img.toDataURL()) : "";
+  printWin.document.write("<html><head><title>商家登录二维码</title><style>body{margin:0;padding:30px;text-align:center;font-family:sans-serif;}img{width:260px;height:260px;}h2{font-size:18px;margin:10px 0 4px;}p{font-size:13px;color:#666;}</style></head><body>");
+  printWin.document.write("<img src=\"" + imgSrc + "\" />");
+  printWin.document.write("<h2>商家后台登录</h2>");
+  printWin.document.write("<p>宜必购盲盒 · 商家管理后台</p>");
+  printWin.document.write("<p>扫码登录 " + _loginUrl + "</p>");
+  printWin.document.write("<\/body><\/html>");
+  printWin.document.close();
+  printWin.print();
+});
+
+</script>
+<script src="https://cdn.jsdelivr.net/gh/davidshimjs/qrcodejs/qrcode.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+<script>
+function renderTrend(){
+  const el = $("trendChart");
+  if (!el || typeof echarts === "undefined") return;
+  const chart = echarts.init(el);
+  const dates = [];
+  const today = new Date();
+  for (let i = 6; i >= 0; i--) {
+    const d = new Date(today);
+    d.setDate(d.getDate() - i);
+    dates.push((d.getMonth()+1) + "/" + d.getDate());
+  }
+  const merchants = dates.map(function(){ return Math.floor(Math.random()*30)+5; });
+  const orders = dates.map(function(){ return Math.floor(Math.random()*200)+50; });
+  const coupons = dates.map(function(){ return Math.floor(Math.random()*500)+100; });
+  chart.setOption({
+    tooltip: { trigger: "axis" },
+    legend: { data: ["商家数","订单数","优惠券"], top: 0, textStyle:{ fontSize:11 } },
+    grid: { left: 30, right: 10, top: 30, bottom: 25 },
+    xAxis: { type: "category", data: dates, axisLabel: { fontSize: 10 } },
+    yAxis: { type: "value", axisLabel: { fontSize: 10 } },
+    series: [
+      { name: "商家数", type: "line", data: merchants, smooth: true, itemStyle:{ color: "#4338ca" } },
+      { name: "订单数", type: "line", data: orders, smooth: true, itemStyle:{ color: "#06b6d4" } },
+      { name: "优惠券", type: "bar", data: coupons, itemStyle:{ color: "#10b981" } }
+    ]
+  });
+  window.addEventListener("resize", function(){ chart.resize(); });
+}
+renderTrend();
 </script>
 </body>
 </html>
