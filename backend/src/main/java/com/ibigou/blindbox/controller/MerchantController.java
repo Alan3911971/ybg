@@ -236,6 +236,7 @@ public class MerchantController {
                 var prof = memberProfileRepository.findByMerchantNoAndUserPhone(merchantNo, k).orElse(null);
                 mm.put("name", prof == null ? null : prof.getName());
                 mm.put("gender", prof == null ? null : prof.getGender());
+                mm.put("memberType", prof == null || prof.getMemberType() == null ? "普通会员" : prof.getMemberType());
                 return mm;
             });
             m.put("orderCount", (Integer) m.get("orderCount") + 1);
@@ -276,6 +277,30 @@ public class MerchantController {
         return Result.ok(result);
     }
 
+    /** 商家端：本店已录入喜好标签（客户喜好+家人喜好，去重） */
+    @GetMapping("/members/prefs")
+    public Result<java.util.Map<String, java.util.List<String>>> memberPrefs(@RequestHeader("X-Merchant-Token") String token) {
+        String merchantNo = authService.merchantNoByToken(token);
+        java.util.LinkedHashSet<String> cp = new java.util.LinkedHashSet<>();
+        java.util.LinkedHashSet<String> fp = new java.util.LinkedHashSet<>();
+        for (var p : memberProfileRepository.findByMerchantNo(merchantNo)) {
+            addPrefs(cp, p.getCustomerPref());
+            addPrefs(fp, p.getFamilyPref());
+        }
+        java.util.Map<String, java.util.List<String>> r = new java.util.HashMap<>();
+        r.put("customerPrefs", new java.util.ArrayList<>(cp));
+        r.put("familyPrefs", new java.util.ArrayList<>(fp));
+        return Result.ok(r);
+    }
+
+    private void addPrefs(java.util.Set<String> set, String text) {
+        if (text == null || text.isEmpty()) return;
+        for (String s : text.split("[，,、;；/\\s]+")) {
+            String t = s.trim();
+            if (!t.isEmpty()) set.add(t);
+        }
+    }
+
     /** 商家端：会员详情（资料+回访+预约+本店订单） */
     @GetMapping("/members/{phone}/detail")
     public Result<java.util.Map<String, Object>> memberDetail(@RequestHeader("X-Merchant-Token") String token,
@@ -288,6 +313,7 @@ public class MerchantController {
             var m = new java.util.HashMap<String, Object>();
             m.put("name", p.getName());
             m.put("gender", p.getGender());
+            m.put("memberType", p.getMemberType());
             m.put("customerPref", p.getCustomerPref());
             m.put("familyPref", p.getFamilyPref());
             m.put("birthday", p.getBirthday());
@@ -374,6 +400,7 @@ public class MerchantController {
                 });
         prof.setName(body.get("name"));
         prof.setGender(body.get("gender"));
+        prof.setMemberType(body.get("memberType"));
         prof.setCustomerPref(body.get("customerPref"));
         prof.setFamilyPref(body.get("familyPref"));
         prof.setBirthday(body.get("birthday"));

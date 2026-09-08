@@ -169,6 +169,9 @@ textarea.input{height:80px;padding:10px 12px;resize:vertical;}
 .drawer-mask.show{display:block;}
 .drawer{position:fixed;top:0;right:-100%;width:92%;max-width:460px;height:100%;background:#f5f6f8;z-index:100;transition:right .28s ease;overflow-y:auto;border-radius:18px 0 0 18px;box-shadow:-4px 0 24px rgba(0,0,0,.18);}
 .drawer.show{right:0;}
+.pref-tag{display:inline-block;padding:3px 10px;margin:3px 4px 3px 0;border-radius:12px;background:#f3f4f6;color:#374151;font-size:12px;cursor:pointer;border:1px solid #e5e7eb;}
+.pref-tag.on{background:#ff6a3d;color:#fff;border-color:#ff6a3d;}
+.tagpick{margin:4px 0 8px;}
 .drawer-head{position:sticky;top:0;background:#fff;padding:14px 16px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #f0f0f0;z-index:2;}
 .drawer-body{padding:14px;}
 .mcard{background:#fff;border-radius:14px;padding:14px;margin-bottom:12px;box-shadow:0 1px 4px rgba(0,0,0,.04);}
@@ -818,10 +821,12 @@ async function filterOrders(){ /* 占位：调 IBIGOU_API.merchant.orderList 过
         if (m.lastTs) { var t = new Date(m.lastTs); ts = (t.getMonth()+1) + "-" + t.getDate() + " " + t.getHours() + ":" + String(t.getMinutes()).padStart(2,"0"); }
         var cnt = m.orderCount || 0;
         var gtxt = m.gender === "男" ? " 👨" : (m.gender === "女" ? " 👩" : "");
+        var typeCls = m.memberType === "VIP会员" ? "background:#f59e0b;" : (m.memberType === "黑金会员" ? "background:#111;" : "");
+        var typeTag = (m.memberType && m.memberType !== "普通会员") ? ' <span class="tag" style="' + typeCls + '">' + m.memberType + '</span>' : "";
         html += '<div class="list-item member-item" style="cursor:pointer;" onclick="openMemberDetail(\'' + m.userPhone + '\')">'
           + '<div class="avatar">' + (m.lastPrizeEmoji || "👤") + '</div>'
-          + '<div class="l"><div class="name">' + (m.name || ph) + gtxt + '</div>'
-          + '<div class="info">最近奖品：' + (m.lastPrize || "普通消费") + '</div></div>'
+          + '<div class="l"><div class="name">' + (m.name || ph) + gtxt + typeTag + '</div>'
+          + '<div class="info">' + ph + ' · 最近奖品：' + (m.lastPrize || "普通消费") + '</div></div>'
           + '<div class="r"><div class="amt">¥' + (m.totalAmount||0).toFixed(2) + '</div>'
           + '<div class="sub">' + cnt + '笔 · ' + (m.totalSave||0).toFixed(2) + '优惠 · ' + ts + '</div></div>'
           + '</div>';
@@ -857,8 +862,11 @@ async function filterOrders(){ /* 占位：调 IBIGOU_API.merchant.orderList 过
       h += '<div class="mcard"><div class="mt">📋 会员资料</div>'
         + '<label>姓名</label><input id="pfName" placeholder="会员姓名" value="' + escHtml(prof.name || '') + '">'
         + '<label>性别</label><select id="pfGender"><option value="">未设置</option><option value="男"' + (prof.gender === "男" ? " selected" : "") + '>男</option><option value="女"' + (prof.gender === "女" ? " selected" : "") + '>女</option></select>'
+        + '<label>会员类型</label><select id="pfType"><option value="普通会员"' + (prof.memberType === "普通会员" ? " selected" : "") + '>普通会员</option><option value="VIP会员"' + (prof.memberType === "VIP会员" ? " selected" : "") + '>VIP会员</option><option value="黑金会员"' + (prof.memberType === "黑金会员" ? " selected" : "") + '>黑金会员</option></select>'
         + '<label>客户喜好</label><textarea id="pfCustomer" rows="2" placeholder="喜欢什么、口味、习惯…">' + escHtml(prof.customerPref) + '</textarea>'
+        + '<div class="tagpick" id="cpTags"></div>'
         + '<label>家人喜好</label><textarea id="pfFamily" rows="2" placeholder="家人爱好、忌口、生日…">' + escHtml(prof.familyPref) + '</textarea>'
+        + '<div class="tagpick" id="fpTags"></div>'
         + '<label>生日</label><input id="pfBirthday" placeholder="MM-dd，如 09-20" value="' + escHtml(prof.birthday || '') + '">'
         + '<label>备注</label><input id="pfRemark" value="' + escHtml(prof.remark) + '">'
         + (prof.editor ? '<div style="color:#9ca3af;font-size:11px;margin-top:8px;">👤 录入：' + escHtml(prof.editor) + '</div>' : '')
@@ -921,14 +929,43 @@ async function filterOrders(){ /* 占位：调 IBIGOU_API.merchant.orderList 过
       h += '</div>';
       document.getElementById("mdBody").innerHTML = h;
     loadGiftGoodsSelect();
+    loadPrefTags();
     });
   }
   function saveMemberProfile(){
     window.IBIGOU_API.merchant.saveProfile(curMemberPhone, {
       name: document.getElementById("pfName").value, gender: document.getElementById("pfGender").value,
+      memberType: document.getElementById("pfType").value,
       customerPref: document.getElementById("pfCustomer").value, familyPref: document.getElementById("pfFamily").value,
       birthday: document.getElementById("pfBirthday").value, remark: document.getElementById("pfRemark").value
     }).then(function(r){ if (r && r.code === 0) { toast("资料已保存"); openMemberDetail(curMemberPhone); } else toast("保存失败", "err"); });
+  }
+  function loadPrefTags(){
+    var tk = lsGet("ibigou_merchant_token", null); if (!tk) return;
+    fetch("/api/merchant/members/prefs", { headers: { "X-Merchant-Token": tk } }).then(function(r){ return r.json(); }).then(function(r){
+      if (r && r.code === 0 && r.data) {
+        renderPrefTags("cpTags", r.data.customerPrefs || [], "pfCustomer");
+        renderPrefTags("fpTags", r.data.familyPrefs || [], "pfFamily");
+      }
+    }).catch(function(){});
+  }
+  function renderPrefTags(containerId, tags, inputId){
+    var el = document.getElementById(containerId); if (!el) return;
+    var inp = document.getElementById(inputId);
+    var cur = inp && inp.value ? inp.value.split(/[，,、;；]+/).map(function(s){ return s.trim(); }).filter(Boolean) : [];
+    var html = tags.map(function(t){
+      var on = cur.indexOf(t) >= 0 ? " on" : "";
+      return '<span class="pref-tag' + on + '" onclick="togglePrefTag(this,\'' + inputId + '\')">' + escHtml(t) + '</span>';
+    }).join("");
+    el.innerHTML = html || '<span style="color:#9ca3af;font-size:11px;">暂无标签，输入后保存即生成</span>';
+  }
+  function togglePrefTag(span, inputId){
+    var inp = document.getElementById(inputId);
+    var tag = span.textContent.trim();
+    var cur = inp.value.split(/[，,、;；]+/).map(function(s){ return s.trim(); }).filter(Boolean);
+    if (cur.indexOf(tag) >= 0) { span.classList.remove("on"); cur = cur.filter(function(x){ return x !== tag; }); }
+    else { span.classList.add("on"); cur.push(tag); }
+    inp.value = cur.join("，");
   }
   function loadGiftGoodsSelect(){
     var sel = document.getElementById("giftGoods"); if (!sel) return;
@@ -1006,6 +1043,7 @@ async function filterOrders(){ /* 占位：调 IBIGOU_API.merchant.orderList 过
   window.addMemberAppointment = addMemberAppointment;
   window.apptStatus = apptStatus;
   window.addMemberGift = addMemberGift;
+  window.togglePrefTag = togglePrefTag;
 
   // ===== p2 收款码（4种支付方式）=====
   var QR_TYPES = [

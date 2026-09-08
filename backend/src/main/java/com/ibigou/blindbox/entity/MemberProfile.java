@@ -31,6 +31,9 @@ public class MemberProfile {
     @Column(length = 8)
     private String gender;
 
+    @Column(length = 16)
+    private String memberType;
+
     /** 客户喜好 */
     @Column(length = 1000)
     private String customerPref;
