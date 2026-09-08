@@ -38,6 +38,7 @@ public class JobService {
     private final com.ibigou.blindbox.repository.MerchantMessageRepository merchantMessageRepository;
     private final com.ibigou.blindbox.repository.UserMessageRepository userMessageRepository;
     private final com.ibigou.blindbox.repository.AuditLogRepository auditLogRepository;
+    private final com.ibigou.blindbox.repository.MemberAppointmentRepository memberAppointmentRepository;
 
     /** 过期券标记：每小时执行 */
     @Scheduled(cron = "0 5 * * * ?")
@@ -113,5 +114,35 @@ public class JobService {
         userMessageRepository.deleteByCreateTimeBefore(now.minusDays(90));    // 用户消息保留 90 天
         auditLogRepository.deleteByCreateTimeBefore(now.minusDays(180));      // 审计保留 180 天
         log.info("归档清理完成");
+    }
+
+    /** 预约提醒：每 5 分钟扫描即将到点的预约，写商家消息（幂等 remind_sent） */
+    @Scheduled(cron = "0 */5 * * * ?")
+    @Transactional
+    public void appointmentRemind() {
+        java.time.LocalDateTime now = java.time.LocalDateTime.now();
+        java.util.List<com.ibigou.blindbox.entity.MemberAppointment> list =
+                memberAppointmentRepository.findPendingRemind(now, now.plusMinutes(60));
+        for (com.ibigou.blindbox.entity.MemberAppointment a : list) {
+            try {
+                long mins = java.time.Duration.between(now, a.getApptTime()).toMinutes();
+                String phone = a.getUserPhone() == null ? "" : a.getUserPhone();
+                String masked = phone.length() >= 7 ? phone.substring(0, 3) + "****" + phone.substring(phone.length() - 4) : phone;
+                com.ibigou.blindbox.entity.MerchantMessage msg = new com.ibigou.blindbox.entity.MerchantMessage();
+                msg.setMerchantNo(a.getMerchantNo());
+                msg.setMsgType("appointment_remind");
+                msg.setTitle("⏰ 预约提醒");
+                msg.setContent(masked + " 预约了" + (a.getServiceItem() == null ? "服务" : a.getServiceItem())
+                        + "，将于 " + a.getApptTime().format(java.time.format.DateTimeFormatter.ofPattern("MM-dd HH:mm"))
+                        + " 开始" + (mins <= 0 ? "（已到时间）" : "（还有" + mins + "分钟）"));
+                msg.setIsRead(0);
+                msg.setCreateTime(now);
+                merchantMessageRepository.save(msg);
+                memberAppointmentRepository.markRemindSent(a.getId());
+                log.info("预约提醒已发送 merchant={} appt={}", a.getMerchantNo(), a.getId());
+            } catch (Exception e) {
+                log.warn("预约提醒失败 id={} err={}", a.getId(), e.getMessage());
+            }
+        }
     }
 }

@@ -165,6 +165,21 @@ textarea.input{height:80px;padding:10px 12px;resize:vertical;}
 .member-item .sub{font-size:11px;color:#9ca3af;margin-top:2px;}
 .member-item .name{font-size:15px;font-weight:600;color:#111;}
 .member-item .info{font-size:11px;color:#6b7280;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.drawer-mask{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:99;display:none;}
+.drawer-mask.show{display:block;}
+.drawer{position:fixed;top:0;right:-100%;width:92%;max-width:460px;height:100%;background:#f5f6f8;z-index:100;transition:right .28s ease;overflow-y:auto;border-radius:18px 0 0 18px;box-shadow:-4px 0 24px rgba(0,0,0,.18);}
+.drawer.show{right:0;}
+.drawer-head{position:sticky;top:0;background:#fff;padding:14px 16px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #f0f0f0;z-index:2;}
+.drawer-body{padding:14px;}
+.mcard{background:#fff;border-radius:14px;padding:14px;margin-bottom:12px;box-shadow:0 1px 4px rgba(0,0,0,.04);}
+.mcard .mt{font-size:14px;font-weight:600;margin-bottom:10px;}
+.mcard label{font-size:12px;color:#6b7280;display:block;margin:8px 0 4px;}
+.mcard input,.mcard textarea,.mcard select{width:100%;box-sizing:border-box;border:1px solid #e5e7eb;border-radius:10px;padding:9px 10px;font-size:14px;font-family:inherit;background:#fff;}
+.vitem{display:flex;gap:8px;padding:8px 0;border-bottom:1px dashed #f0f0f0;font-size:13px;}
+.vitem:last-child{border-bottom:none;}
+.tag{display:inline-block;padding:2px 8px;border-radius:10px;font-size:11px;background:#eef2ff;color:#4f46e5;}
+.tag.done{background:#ecfdf5;color:#059669;}
+.tag.cancel{background:#fef2f2;color:#dc2626;}
 </style>
 </head>
 <body>
@@ -574,6 +589,14 @@ textarea.input{height:80px;padding:10px 12px;resize:vertical;}
 </div>
 
 <div class="toast-host" id="toastHost"></div>
+<div class="drawer-mask" id="memberMask" onclick="closeMemberDetail()"></div>
+<div class="drawer" id="memberDrawer">
+  <div class="drawer-head">
+    <div style="font-size:16px;font-weight:700;" id="mdPhone">会员详情</div>
+    <button class="btn btn--sm" onclick="closeMemberDetail()">✕ 关闭</button>
+  </div>
+  <div class="drawer-body" id="mdBody"></div>
+</div>
 
 <script src="./api.js"></script>
 <script src="../tts.js"></script>
@@ -794,7 +817,7 @@ async function filterOrders(){ /* 占位：调 IBIGOU_API.merchant.orderList 过
         var ts = "";
         if (m.lastTs) { var t = new Date(m.lastTs); ts = (t.getMonth()+1) + "-" + t.getDate() + " " + t.getHours() + ":" + String(t.getMinutes()).padStart(2,"0"); }
         var cnt = m.orderCount || 0;
-        html += '<div class="list-item member-item">'
+        html += '<div class="list-item member-item" style="cursor:pointer;" onclick="openMemberDetail(\'' + m.userPhone + '\')">'
           + '<div class="avatar">' + (m.lastPrizeEmoji || "👤") + '</div>'
           + '<div class="l"><div class="name">' + ph + '</div>'
           + '<div class="info">最近奖品：' + (m.lastPrize || "普通消费") + '</div></div>'
@@ -809,6 +832,119 @@ async function filterOrders(){ /* 占位：调 IBIGOU_API.merchant.orderList 过
   loadMembers();
   var btnRm = $("btnRefreshMembers");
   if (btnRm) btnRm.onclick = function(){ loadMembers(); toast("会员数据已刷新"); };
+
+  // ===== 会员详情抽屉（喜好/家人喜好/回访/预约）=====
+  var curMemberPhone = "";
+  function maskPhone(phone){ return phone && phone.length >= 7 ? phone.slice(0,3) + "****" + phone.slice(-4) : (phone || "--"); }
+  function escHtml(s){ return String(s == null ? "" : s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
+  function fmtShortTs(ts){ if (!ts) return ""; var t = new Date(ts); return (t.getMonth()+1) + "-" + t.getDate() + " " + t.getHours() + ":" + String(t.getMinutes()).padStart(2,"0"); }
+  function fmtFullTs(ts){ if (!ts) return ""; var t = new Date(ts); return t.getFullYear() + "-" + (t.getMonth()+1) + "-" + t.getDate() + " " + t.getHours() + ":" + String(t.getMinutes()).padStart(2,"0"); }
+  function closeMemberDetail(){ document.getElementById("memberDrawer").classList.remove("show"); document.getElementById("memberMask").classList.remove("show"); }
+  function openMemberDetail(phone){
+    curMemberPhone = phone;
+    document.getElementById("memberDrawer").classList.add("show");
+    document.getElementById("memberMask").classList.add("show");
+    document.getElementById("mdPhone").textContent = maskPhone(phone);
+    document.getElementById("mdBody").innerHTML = '<div style="text-align:center;padding:40px;color:#9ca3af;">加载中…</div>';
+    window.IBIGOU_API.merchant.memberDetail(phone).then(function(r){
+      if (!r || r.code !== 0) { document.getElementById("mdBody").innerHTML = '<div style="padding:20px;color:#dc2626;">加载失败</div>'; return; }
+      var dta = r.data || {};
+      var prof = dta.profile || {};
+      var h = '';
+      // 资料
+      h += '<div class="mcard"><div class="mt">📋 会员资料</div>'
+        + '<label>客户喜好</label><textarea id="pfCustomer" rows="2" placeholder="喜欢什么、口味、习惯…">' + escHtml(prof.customerPref) + '</textarea>'
+        + '<label>家人喜好</label><textarea id="pfFamily" rows="2" placeholder="家人爱好、忌口、生日…">' + escHtml(prof.familyPref) + '</textarea>'
+        + '<label>备注</label><input id="pfRemark" value="' + escHtml(prof.remark) + '">'
+        + '<button class="btn btn--primary btn--block" style="margin-top:10px;" onclick="saveMemberProfile()">💾 保存资料</button></div>';
+      // 回访
+      h += '<div class="mcard"><div class="mt">📞 回访记录</div>'
+        + '<div style="display:flex;gap:8px;flex-wrap:wrap;">'
+        + '<input id="vContent" placeholder="回访内容" style="flex:1;min-width:120px;">'
+        + '<input id="vResult" placeholder="结果" style="flex:0 0 90px;">'
+        + '<button class="btn btn--sm" onclick="addMemberVisit()">➕ 添加</button></div>'
+        + '<div style="margin-top:8px;">';
+      var vList = dta.visits || [];
+      if (vList.length === 0) h += '<div style="color:#9ca3af;font-size:12px;padding:6px 0;">暂无回访记录</div>';
+      vList.forEach(function(v){
+        h += '<div class="vitem"><span>📞</span><div style="flex:1;">' + escHtml(v.content) + (v.result ? '<br><span style="color:#6b7280;">结果：' + escHtml(v.result) + '</span>' : "") + '<div style="color:#9ca3af;font-size:11px;margin-top:2px;">' + fmtShortTs(v.visitTime) + '</div></div></div>';
+      });
+      h += '</div></div>';
+      // 预约
+      h += '<div class="mcard"><div class="mt">📅 预约</div>'
+        + '<div style="display:flex;gap:8px;flex-wrap:wrap;">'
+        + '<input id="aTime" type="datetime-local" style="flex:1;min-width:150px;">'
+        + '<input id="aItem" placeholder="服务项目" style="flex:0 0 100px;">'
+        + '<input id="aRemark" placeholder="备注" style="flex:1;min-width:100px;">'
+        + '<select id="aRemind" style="flex:0 0 110px;"><option value="30">提前30分</option><option value="15">提前15分</option><option value="60">提前1小时</option><option value="1440">提前1天</option></select>'
+        + '<button class="btn btn--sm" onclick="addMemberAppointment()">➕ 预约</button></div>'
+        + '<div style="margin-top:8px;">';
+      var aList = dta.appointments || [];
+      if (aList.length === 0) h += '<div style="color:#9ca3af;font-size:12px;padding:6px 0;">暂无预约</div>';
+      aList.forEach(function(a){
+        var st = a.status === 0 ? '<span class="tag">待服务</span>' : (a.status === 1 ? '<span class="tag done">已完成</span>' : '<span class="tag cancel">已取消</span>');
+        var btns = a.status === 0 ? ' <button class="btn btn--sm" onclick="apptStatus(' + a.id + ',1)">完成</button> <button class="btn btn--sm" onclick="apptStatus(' + a.id + ',2)">取消</button>' : '';
+        h += '<div class="vitem"><span>📅</span><div style="flex:1;">' + fmtFullTs(a.apptTime) + (a.serviceItem ? ' · ' + escHtml(a.serviceItem) : "") + (a.remark ? '<br><span style="color:#6b7280;">' + escHtml(a.remark) + '</span>' : "") + '<br>' + st + btns + '</div></div>';
+      });
+      h += '</div></div>';
+      // 最近订单
+      h += '<div class="mcard"><div class="mt">🧾 最近订单</div>';
+      var oList = dta.orders || [];
+      if (oList.length === 0) h += '<div style="color:#9ca3af;font-size:12px;padding:6px 0;">暂无订单</div>';
+      oList.forEach(function(o){
+        h += '<div class="vitem"><span>🧾</span><div style="flex:1;">' + escHtml(String(o.orderNo||"").slice(0,22)) + '</div><div>¥' + (o.amount||0).toFixed(2) + '</div></div>';
+      });
+      h += '</div>';
+      document.getElementById("mdBody").innerHTML = h;
+    });
+  }
+  function saveMemberProfile(){
+    window.IBIGOU_API.merchant.saveProfile(curMemberPhone, {
+      customerPref: document.getElementById("pfCustomer").value, familyPref: document.getElementById("pfFamily").value, remark: document.getElementById("pfRemark").value
+    }).then(function(r){ if (r && r.code === 0) { toast("资料已保存"); openMemberDetail(curMemberPhone); } else toast("保存失败", "err"); });
+  }
+  function addMemberVisit(){
+    var vc = document.getElementById("vContent").value;
+    if (!vc) { toast("请填写回访内容", "err"); return; }
+    window.IBIGOU_API.merchant.addVisit(curMemberPhone, { content: vc, result: document.getElementById("vResult").value }).then(function(r){
+      if (r && r.code === 0) { toast("回访已记录"); openMemberDetail(curMemberPhone); } else toast("添加失败", "err");
+    });
+  }
+  function addMemberAppointment(){
+    var at = document.getElementById("aTime").value;
+    if (!at) { toast("请选择预约时间", "err"); return; }
+    window.IBIGOU_API.merchant.addAppointment(curMemberPhone, {
+      apptTime: at, serviceItem: document.getElementById("aItem").value, remark: document.getElementById("aRemark").value, remindMinutes: parseInt(document.getElementById("aRemind").value, 10)
+    }).then(function(r){ if (r && r.code === 0) { toast("预约已创建"); openMemberDetail(curMemberPhone); } else toast("预约失败", "err"); });
+  }
+  function apptStatus(id, status){
+    window.IBIGOU_API.merchant.updateAppointmentStatus(id, status).then(function(r){
+      if (r && r.code === 0) { toast("已更新"); openMemberDetail(curMemberPhone); } else toast("操作失败", "err");
+    });
+  }
+
+  // ===== 预约提醒（2小时内即将到点 toast）=====
+  function loadApptRemind(){
+    if (!window.IBIGOU_API || !window.IBIGOU_API.merchant.upcomingAppointments) return;
+    window.IBIGOU_API.merchant.upcomingAppointments().then(function(r){
+      if (!r || r.code !== 0 || !Array.isArray(r.data)) return;
+      var now = Date.now();
+      r.data.forEach(function(a){
+        var t = new Date(a.apptTime).getTime();
+        if (t > now && t - now < 2 * 3600 * 1000) {
+          toast("⏰ 预约提醒：" + maskPhone(a.userPhone) + " " + (a.serviceItem || "服务") + " " + fmtShortTs(a.apptTime));
+        }
+      });
+    });
+  }
+  loadApptRemind();
+  // 暴露给 HTML onclick（IIFE内部函数非全局）
+  window.openMemberDetail = openMemberDetail;
+  window.closeMemberDetail = closeMemberDetail;
+  window.saveMemberProfile = saveMemberProfile;
+  window.addMemberVisit = addMemberVisit;
+  window.addMemberAppointment = addMemberAppointment;
+  window.apptStatus = apptStatus;
 
   // ===== p2 收款码（4种支付方式）=====
   var QR_TYPES = [

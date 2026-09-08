@@ -42,6 +42,10 @@ public class MerchantController {
     private final com.ibigou.blindbox.repository.UserCouponRepository userCouponRepository;
     private final com.ibigou.blindbox.repository.BoxPrizePoolRepository boxPrizePoolRepository;
     private final com.ibigou.blindbox.repository.OfflineOrderRepository offlineOrderRepository;
+    private final com.ibigou.blindbox.repository.MemberProfileRepository memberProfileRepository;
+    private final com.ibigou.blindbox.repository.MemberVisitRepository memberVisitRepository;
+    private final com.ibigou.blindbox.repository.MemberAppointmentRepository memberAppointmentRepository;
+    private final com.ibigou.blindbox.repository.MerchantMessageRepository merchantMessageRepository;
     private final ChatService chatService;
 
     @PostMapping("/auth/login")
@@ -266,6 +270,163 @@ public class MerchantController {
             return ((java.time.LocalDateTime) tb).compareTo((java.time.LocalDateTime) ta);
         });
         return Result.ok(result);
+    }
+
+    /** 商家端：会员详情（资料+回访+预约+本店订单） */
+    @GetMapping("/members/{phone}/detail")
+    public Result<java.util.Map<String, Object>> memberDetail(@RequestHeader("X-Merchant-Token") String token,
+                                                             @PathVariable String phone) {
+        String merchantNo = authService.merchantNoByToken(token);
+        java.util.Map<String, Object> r = new java.util.HashMap<>();
+        // 资料
+        var prof = memberProfileRepository.findByMerchantNoAndUserPhone(merchantNo, phone);
+        r.put("profile", prof.map(p -> {
+            var m = new java.util.HashMap<String, Object>();
+            m.put("customerPref", p.getCustomerPref());
+            m.put("familyPref", p.getFamilyPref());
+            m.put("remark", p.getRemark());
+            m.put("updateTime", p.getUpdateTime());
+            return m;
+        }).orElse(null));
+        // 回访
+        java.util.List<java.util.Map<String, Object>> visits = new java.util.ArrayList<>();
+        for (var v : memberVisitRepository.findByMerchantNoAndUserPhoneOrderByCreateTimeDesc(merchantNo, phone)) {
+            var m = new java.util.HashMap<String, Object>();
+            m.put("id", v.getId());
+            m.put("content", v.getContent());
+            m.put("result", v.getResult());
+            m.put("visitTime", v.getVisitTime());
+            m.put("createTime", v.getCreateTime());
+            visits.add(m);
+        }
+        r.put("visits", visits);
+        // 预约
+        java.util.List<java.util.Map<String, Object>> appts = new java.util.ArrayList<>();
+        for (var a : memberAppointmentRepository.findByMerchantNoAndUserPhoneOrderByApptTimeDesc(merchantNo, phone)) {
+            var m = new java.util.HashMap<String, Object>();
+            m.put("id", a.getId());
+            m.put("apptTime", a.getApptTime());
+            m.put("serviceItem", a.getServiceItem());
+            m.put("remark", a.getRemark());
+            m.put("status", a.getStatus());
+            m.put("remindMinutes", a.getRemindMinutes());
+            appts.add(m);
+        }
+        r.put("appointments", appts);
+        // 本店订单（最近10笔）
+        java.util.List<java.util.Map<String, Object>> orders = new java.util.ArrayList<>();
+        for (com.ibigou.blindbox.entity.IbigouOrder o : ibigouOrderRepository.findByMerchantNoOrderByCreateTimeDesc(merchantNo)) {
+            if (orders.size() >= 10) break;
+            if (!phone.equals(o.getUserPhone())) continue;
+            var m = new java.util.HashMap<String, Object>();
+            m.put("orderNo", o.getIbigouOrderNo());
+            m.put("amount", o.getPayAmount());
+            m.put("ts", o.getCreateTime());
+            orders.add(m);
+        }
+        for (com.ibigou.blindbox.entity.OfflineOrder o : offlineOrderRepository.findByMerchantNoOrderByCreateTimeDesc(merchantNo)) {
+            if (orders.size() >= 10) break;
+            if (!phone.equals(o.getUserPhone())) continue;
+            var m = new java.util.HashMap<String, Object>();
+            m.put("orderNo", o.getOfflineOrderNo());
+            m.put("amount", o.getPayAmount());
+            m.put("ts", o.getCreateTime());
+            orders.add(m);
+        }
+        r.put("orders", orders);
+        return Result.ok(r);
+    }
+
+    /** 商家端：保存会员资料（喜好/家人喜好/备注） */
+    @PostMapping("/members/{phone}/profile")
+    public Result<Void> saveMemberProfile(@RequestHeader("X-Merchant-Token") String token,
+                                          @PathVariable String phone,
+                                          @RequestBody java.util.Map<String, String> body) {
+        String merchantNo = authService.merchantNoByToken(token);
+        var prof = memberProfileRepository.findByMerchantNoAndUserPhone(merchantNo, phone)
+                .orElseGet(() -> {
+                    var p = new com.ibigou.blindbox.entity.MemberProfile();
+                    p.setMerchantNo(merchantNo);
+                    p.setUserPhone(phone);
+                    return p;
+                });
+        prof.setCustomerPref(body.get("customerPref"));
+        prof.setFamilyPref(body.get("familyPref"));
+        prof.setRemark(body.get("remark"));
+        prof.setUpdateTime(java.time.LocalDateTime.now());
+        memberProfileRepository.save(prof);
+        return Result.ok(null);
+    }
+
+    /** 商家端：新增回访记录 */
+    @PostMapping("/members/{phone}/visit")
+    public Result<Void> addMemberVisit(@RequestHeader("X-Merchant-Token") String token,
+                                       @PathVariable String phone,
+                                       @RequestBody java.util.Map<String, String> body) {
+        String merchantNo = authService.merchantNoByToken(token);
+        var v = new com.ibigou.blindbox.entity.MemberVisit();
+        v.setMerchantNo(merchantNo);
+        v.setUserPhone(phone);
+        v.setContent(body.getOrDefault("content", ""));
+        v.setResult(body.get("result"));
+        String vt = body.get("visitTime");
+        v.setVisitTime(vt == null || vt.isEmpty() ? java.time.LocalDateTime.now() : java.time.LocalDateTime.parse(vt));
+        v.setCreateTime(java.time.LocalDateTime.now());
+        memberVisitRepository.save(v);
+        return Result.ok(null);
+    }
+
+    /** 商家端：新增预约 */
+    @PostMapping("/members/{phone}/appointment")
+    public Result<Void> addMemberAppointment(@RequestHeader("X-Merchant-Token") String token,
+                                             @PathVariable String phone,
+                                             @RequestBody java.util.Map<String, Object> body) {
+        String merchantNo = authService.merchantNoByToken(token);
+        var a = new com.ibigou.blindbox.entity.MemberAppointment();
+        a.setMerchantNo(merchantNo);
+        a.setUserPhone(phone);
+        a.setApptTime(java.time.LocalDateTime.parse((String) body.get("apptTime")));
+        a.setServiceItem((String) body.get("serviceItem"));
+        a.setRemark((String) body.get("remark"));
+        a.setStatus(0);
+        a.setRemindMinutes(body.get("remindMinutes") == null ? 30 : ((Number) body.get("remindMinutes")).intValue());
+        a.setRemindSent(0);
+        a.setCreateTime(java.time.LocalDateTime.now());
+        memberAppointmentRepository.save(a);
+        return Result.ok(null);
+    }
+
+    /** 商家端：预约状态变更（1完成 2取消） */
+    @PostMapping("/appointments/{id}/status")
+    public Result<Void> updateAppointmentStatus(@RequestHeader("X-Merchant-Token") String token,
+                                                @PathVariable Long id,
+                                                @RequestBody java.util.Map<String, Object> body) {
+        String merchantNo = authService.merchantNoByToken(token);
+        var a = memberAppointmentRepository.findById(id).orElseThrow(() -> new RuntimeException("预约不存在"));
+        if (!merchantNo.equals(a.getMerchantNo())) throw new RuntimeException("无权操作该预约");
+        a.setStatus(((Number) body.get("status")).intValue());
+        memberAppointmentRepository.save(a);
+        return Result.ok(null);
+    }
+
+    /** 商家端：近期预约（待服务，近7天） */
+    @GetMapping("/appointments/upcoming")
+    public Result<java.util.List<java.util.Map<String, Object>>> upcomingAppointments(@RequestHeader("X-Merchant-Token") String token) {
+        String merchantNo = authService.merchantNoByToken(token);
+        java.util.List<java.util.Map<String, Object>> list = new java.util.ArrayList<>();
+        for (var a : memberAppointmentRepository.findByMerchantNoAndStatusOrderByApptTimeAsc(merchantNo, 0)) {
+            if (a.getApptTime().isAfter(java.time.LocalDateTime.now().plusDays(7))) continue;
+            var m = new java.util.HashMap<String, Object>();
+            m.put("id", a.getId());
+            m.put("userPhone", a.getUserPhone());
+            m.put("apptTime", a.getApptTime());
+            m.put("serviceItem", a.getServiceItem());
+            m.put("remark", a.getRemark());
+            m.put("remindMinutes", a.getRemindMinutes());
+            m.put("status", a.getStatus());
+            list.add(m);
+        }
+        return Result.ok(list);
     }
 
     /** 商家端：订单列表（宜必购商城订单 + 线下订单 合并，新→旧，含真实奖品名） */
