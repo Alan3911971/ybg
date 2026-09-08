@@ -46,6 +46,7 @@ public class MerchantController {
     private final com.ibigou.blindbox.repository.MemberVisitRepository memberVisitRepository;
     private final com.ibigou.blindbox.repository.MemberAppointmentRepository memberAppointmentRepository;
     private final com.ibigou.blindbox.repository.MemberGiftRepository memberGiftRepository;
+    private final com.ibigou.blindbox.repository.MerchantMemberTypeRepository merchantMemberTypeRepository;
     private final com.ibigou.blindbox.repository.MerchantMessageRepository merchantMessageRepository;
     private final ChatService chatService;
 
@@ -291,6 +292,39 @@ public class MerchantController {
         r.put("customerPrefs", new java.util.ArrayList<>(cp));
         r.put("familyPrefs", new java.util.ArrayList<>(fp));
         return Result.ok(r);
+    }
+
+    /** 商家端：会员类型列表/添加/删除 */
+    @GetMapping("/member-types")
+    public Result<java.util.List<com.ibigou.blindbox.entity.MerchantMemberType>> memberTypes(@RequestHeader("X-Merchant-Token") String token) {
+        String merchantNo = authService.merchantNoByToken(token);
+        return Result.ok(merchantMemberTypeRepository.findByMerchantNoOrderBySortOrderAsc(merchantNo));
+    }
+
+    @PostMapping("/member-types")
+    public Result<Void> addMemberType(@RequestHeader("X-Merchant-Token") String token,
+                                      @RequestBody java.util.Map<String, String> body) {
+        String merchantNo = authService.merchantNoByToken(token);
+        String name = body.get("typeName");
+        if (name == null || name.trim().isEmpty()) return Result.fail("类型名称不能为空");
+        name = name.trim();
+        if (merchantMemberTypeRepository.findByMerchantNoAndTypeName(merchantNo, name).isPresent()) {
+            return Result.fail("该类型已存在");
+        }
+        var t = new com.ibigou.blindbox.entity.MerchantMemberType();
+        t.setMerchantNo(merchantNo);
+        t.setTypeName(name);
+        t.setSortOrder((int) merchantMemberTypeRepository.findByMerchantNoOrderBySortOrderAsc(merchantNo).size());
+        t.setCreateTime(java.time.LocalDateTime.now());
+        merchantMemberTypeRepository.save(t);
+        return Result.ok(null);
+    }
+
+    @DeleteMapping("/member-types/{id}")
+    public Result<Void> deleteMemberType(@RequestHeader("X-Merchant-Token") String token, @PathVariable Long id) {
+        String merchantNo = authService.merchantNoByToken(token);
+        merchantMemberTypeRepository.findById(id).filter(t -> t.getMerchantNo().equals(merchantNo)).ifPresent(merchantMemberTypeRepository::delete);
+        return Result.ok(null);
     }
 
     private void addPrefs(java.util.Set<String> set, String text) {
