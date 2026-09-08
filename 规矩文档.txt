@@ -1,0 +1,84 @@
+宜必购（ybg）项目规矩文档
+========================================
+最后更新：2026-09-08（新增双向备份G11、知识图谱强制更新G12）
+
+【G00 项目与代码位置】
+| 项目 | 仓库 | 本地代码 | 类型 |
+|------|------|---------|------|
+| ibigou 后端 | https://github.com/Alan3911971/ybg | D:\workspace-java\ybg-master | Java Spring Boot |
+| ibigou Android 壳 | https://github.com/Alan3911971/ibigou-merchant-android | - | Android WebView APK |
+| LensCabin 后端 | https://github.com/Alan3911971/lenscabin | D:\workspace-java\lenscabin-platform | Java Spring Boot |
+
+备份（G11 强制）：GitHub Alan3911971/ybg（远程）+ NAS 192.168.31.228 /volume1/docker/github-backup/ybg-master（本地灾备）
+说明：D:\workspace-java\ybg-master 是 GitHub 下载副本（旧版）。生产服务器 /www/wwwroot/ybgtc.com/ibigou.jar 是唯一含最新代码的副本，恢复代码一律从服务器拉取，不要用D盘旧版直接覆盖。
+
+【G01 生产环境】
+- 服务器：121.229.160.2，SSH端口5366，用户root
+- SSH密钥：C:\Users\Administrator\.ssh\ybg_key
+- 网站根目录：/www/wwwroot/ybgtc.com/，后端jar：ibigou.jar
+- 服务端口8085，健康检查 curl -s http://127.0.0.1:8085/actuator/health
+- 宝塔面板：https://121.229.160.2:8888/696120cf（su3911971 / Su001912）
+- 数据库：库名 ybgtc.com（带点号，SQL必须反引号），用户 ybgtc.com / sy7wGesYn5y22jsZ
+- 部署脚本：/tmp/deploy_announce.sh（先 sed -i '1s/^\xEF\xBB\xBF//' 去BOM再执行）
+
+【G02 部署铁律】
+1. 停止旧进程必须用具体PID kill（pkill -f ibigou.jar 会断开SSH）
+2. SSH命令中不要用 awk '{print $2}'（PowerShell展开$2），改用脚本文件
+3. jar上传后必须验证大小一致（本地约102MB），否则 Invalid or corrupt jarfile
+4. 启动：cd /www/wwwroot/ybgtc.com && set -a && . ./.env && set +a && nohup java -Xms512m -Xmx1024m -Dspring.profiles.active=prod -Dspring.flyway.enabled=false -jar ibigou.jar > ibigou.log 2>&1 &
+5. 部署脚本有BOM头需sed去除，否则 "#!/bin/bash: No such file or directory"
+6. nginx中 /h5/customer/wallet.html 直读磁盘，修改后必须单独scp；其他H5页面重新打包部署jar即可
+
+【G03 数据库规范】
+- 库名带点号（ybgtc.com），所有SQL必须加反引号
+- 有Flyway但生产用 -Dspring.flyway.enabled=false 关闭
+- DELIMITER 和 trigger 相关操作小心（历史坑）
+- 关键表：sys_global_config（config_value已是TEXT）、merchant、offline_order、ibigou_order、announce_log、user_coupon
+
+【G04 Spring Boot规范】
+- 打包在 backend 目录执行：mvn package "-Dfile.encoding=UTF-8" -DskipTests
+- 不要重复创建已有Controller/Service（Ambiguous mapping启动失败，如MerchantAnnounceController）
+- 配置存在 sys_global_config，通过 GlobalConfigService 读写
+
+【G05 项目隔离】
+- 宜必购与LensCabin是独立项目，各自独立部署，不要混用代码
+
+【G06 任务板规范】
+- 任务状态与 task_board.json 保持一致
+
+【G07 生产环境约束】
+- 改生产文件前确认（FileZilla/scp），改后md5核对
+- 高影响操作（重启、删数据）谨慎
+
+【G08 沙盒文件同步】
+- 沙盒与服务器同步注意UNC路径问题（Z盘已废，使用D盘）
+
+【G09 代码规范】
+- H5页面设计：深色渐变头部+卡片化布局（订单详情页、我的订单页已按此风格）
+- 语音播报：云端TTS百度女声优先，Web Speech男声被用户否决
+- 顾客支付播报必须在商家端播报，顾客端不播报
+
+【G10 本次NAS故障处置（2026-09-07）】
+- Z盘NAS硬盘损坏，Z:\ybg、Z:\workspace-java 全部丢失
+- 已重建（本目录）：共享记忆(shared-memory.json)、规矩文档(本文件)、采坑日志(采坑日志.txt)、知识图谱(知识图谱.md)
+- 恢复代码：一律从生产服务器jar拉取（唯一最新副本）
+- 执行环境：新会话须选项目目录 D:\workspace-java\ybg-master（Bash cwd绑定旧Z盘路径已失效）
+
+【G11 双向备份铁律（2026-09-08 起强制执行）】
+1. 每次开发完成一个功能、测试给用户看并通过后，必须完成双向备份才算"结束"：
+   ① GitHub（远程主备份）：Alan3911971/ybg master —— 用 api.github.com Git Data API 推送（github.com 443 直连不通，git命令不可用）
+   ② NAS（本地灾备）：Synology 192.168.31.228 /volume1/docker/github-backup/ybg-master —— 本地SSH密钥 C:\Users\Administrator\.ssh\id_ed25519（Alan用户免密）
+2. NAS 传输方式（scp不可用，NAS未启用scp subsystem）：
+   - 全量：本地 tar -cf - --exclude=backend/target -C D:\workspace-java ybg-master → ssh stdin管道 cat > /tmp/ybg_sync.tar（202MB约35秒）→ NAS tar解压到仓库目录（保留.git）→ git add -A && commit
+   - 单文件：ssh管道 cat > 目标路径 → git add -A && commit
+3. NAS 首次操作需：git config --global --add safe.directory /volume1/docker/github-backup/ybg-master（Synology dubious ownership）
+4. 双向备份完成后，GitHub commit 与 NAS commit 都要在回复中向用户报告
+
+【G12 知识图谱强制更新（2026-09-08 起强制执行）】
+1. 每次新开发/修改/删除功能，在测试通过、记录采坑日志（采坑日志.txt）、更新共享记忆（shared-memory.json）的同时，**必须同步更新知识图谱（知识图谱.md）**
+2. 更新内容：新增/改动的模块、接口、表名（表名必须查库核对，不得猜测）、代码位置、线上状态、待办变更
+3. 知识图谱更新后必须同步三处：本地 D:\workspace-java\ybg-master\知识图谱.md → GitHub（API推送）→ NAS（ssh管道）
+4. 顺序固定：开发 → 测试给用户看 → 用户确认 → 采坑日志 → 共享记忆 → 知识图谱 → GitHub推送 → NAS同步 → 向用户报告
+
+【附录】
+- 测试账号：平台admin/Admin@2026，商家13851918986/123321，顾客13851918986/验证码123456（merchantNo=M90380836）
