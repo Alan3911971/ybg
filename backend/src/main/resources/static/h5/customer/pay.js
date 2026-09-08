@@ -279,7 +279,7 @@ var _payPending = false;  // 标记用户已跳转APP支付, 返回时自动完�
         // 调用后端生成二维码SVG
         fetch('/api/customer/qr-svg', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'X-User-Token': (function(){ try { return localStorage.getItem('ibigou_user_token') || ''; } catch(e){ return ''; } })() },
           body: 'content=' + encodeURIComponent(payData.qrCode)
         }).then(function(r){ return r.json(); }).then(function(r){
           if (r.code === 0 && r.data && r.data.svg) {
@@ -323,7 +323,7 @@ var _payPending = false;  // 标记用户已跳转APP支付, 返回时自动完�
   function startPayPolling(orderNo){
     if (payPollTimer) clearInterval(payPollTimer);
     payPollTimer = setInterval(function(){
-      fetch('/api/customer/pay/query?orderNo=' + encodeURIComponent(orderNo))
+      fetch('/api/customer/pay/query?orderNo=' + encodeURIComponent(orderNo), { headers: { 'X-User-Token': (function(){ try { return localStorage.getItem('ibigou_user_token') || ''; } catch(e){ return ''; } })() } })
         .then(function(r){ return r.json(); })
         .then(function(r){
           if (r.code === 0 && r.data && r.data.paid) {
@@ -364,7 +364,7 @@ var _payPending = false;  // 标记用户已跳转APP支付, 返回时自动完�
           try {
             var resp = await fetch('/api/customer/pay/create', {
               method: 'POST',
-              headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+              headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'X-User-Token': (function(){ try { return localStorage.getItem('ibigou_user_token') || ''; } catch(e){ return ''; } })() },
               body: 'orderNo=' + encodeURIComponent(currentPayOrderNo) + '&payType=' + encodeURIComponent(method)
             });
             var payData = await resp.json();
