@@ -817,9 +817,10 @@ async function filterOrders(){ /* 占位：调 IBIGOU_API.merchant.orderList 过
         var ts = "";
         if (m.lastTs) { var t = new Date(m.lastTs); ts = (t.getMonth()+1) + "-" + t.getDate() + " " + t.getHours() + ":" + String(t.getMinutes()).padStart(2,"0"); }
         var cnt = m.orderCount || 0;
+        var gtxt = m.gender === "男" ? " 👨" : (m.gender === "女" ? " 👩" : "");
         html += '<div class="list-item member-item" style="cursor:pointer;" onclick="openMemberDetail(\'' + m.userPhone + '\')">'
           + '<div class="avatar">' + (m.lastPrizeEmoji || "👤") + '</div>'
-          + '<div class="l"><div class="name">' + ph + '</div>'
+          + '<div class="l"><div class="name">' + (m.name || ph) + gtxt + '</div>'
           + '<div class="info">最近奖品：' + (m.lastPrize || "普通消费") + '</div></div>'
           + '<div class="r"><div class="amt">¥' + (m.totalAmount||0).toFixed(2) + '</div>'
           + '<div class="sub">' + cnt + '笔 · ' + (m.totalSave||0).toFixed(2) + '优惠 · ' + ts + '</div></div>'
@@ -850,9 +851,12 @@ async function filterOrders(){ /* 占位：调 IBIGOU_API.merchant.orderList 过
       if (!r || r.code !== 0) { document.getElementById("mdBody").innerHTML = '<div style="padding:20px;color:#dc2626;">加载失败</div>'; return; }
       var dta = r.data || {};
       var prof = dta.profile || {};
+      document.getElementById("mdPhone").textContent = (prof.name || maskPhone(phone)) + ' · ' + maskPhone(phone);
       var h = '';
       // 资料
       h += '<div class="mcard"><div class="mt">📋 会员资料</div>'
+        + '<label>姓名</label><input id="pfName" placeholder="会员姓名" value="' + escHtml(prof.name || '') + '">'
+        + '<label>性别</label><select id="pfGender"><option value="">未设置</option><option value="男"' + (prof.gender === "男" ? " selected" : "") + '>男</option><option value="女"' + (prof.gender === "女" ? " selected" : "") + '>女</option></select>'
         + '<label>客户喜好</label><textarea id="pfCustomer" rows="2" placeholder="喜欢什么、口味、习惯…">' + escHtml(prof.customerPref) + '</textarea>'
         + '<label>家人喜好</label><textarea id="pfFamily" rows="2" placeholder="家人爱好、忌口、生日…">' + escHtml(prof.familyPref) + '</textarea>'
         + '<label>生日</label><input id="pfBirthday" placeholder="MM-dd，如 09-20" value="' + escHtml(prof.birthday || '') + '">'
@@ -921,6 +925,7 @@ async function filterOrders(){ /* 占位：调 IBIGOU_API.merchant.orderList 过
   }
   function saveMemberProfile(){
     window.IBIGOU_API.merchant.saveProfile(curMemberPhone, {
+      name: document.getElementById("pfName").value, gender: document.getElementById("pfGender").value,
       customerPref: document.getElementById("pfCustomer").value, familyPref: document.getElementById("pfFamily").value,
       birthday: document.getElementById("pfBirthday").value, remark: document.getElementById("pfRemark").value
     }).then(function(r){ if (r && r.code === 0) { toast("资料已保存"); openMemberDetail(curMemberPhone); } else toast("保存失败", "err"); });

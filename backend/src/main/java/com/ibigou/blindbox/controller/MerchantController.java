@@ -233,6 +233,9 @@ public class MerchantController {
                 mm.put("lastTs", null);
                 mm.put("lastPrize", "");
                 mm.put("lastPrizeEmoji", "🎁");
+                var prof = memberProfileRepository.findByMerchantNoAndUserPhone(merchantNo, k).orElse(null);
+                mm.put("name", prof == null ? null : prof.getName());
+                mm.put("gender", prof == null ? null : prof.getGender());
                 return mm;
             });
             m.put("orderCount", (Integer) m.get("orderCount") + 1);
@@ -283,6 +286,8 @@ public class MerchantController {
         var prof = memberProfileRepository.findByMerchantNoAndUserPhone(merchantNo, phone);
         r.put("profile", prof.map(p -> {
             var m = new java.util.HashMap<String, Object>();
+            m.put("name", p.getName());
+            m.put("gender", p.getGender());
             m.put("customerPref", p.getCustomerPref());
             m.put("familyPref", p.getFamilyPref());
             m.put("birthday", p.getBirthday());
@@ -367,6 +372,8 @@ public class MerchantController {
                     p.setUserPhone(phone);
                     return p;
                 });
+        prof.setName(body.get("name"));
+        prof.setGender(body.get("gender"));
         prof.setCustomerPref(body.get("customerPref"));
         prof.setFamilyPref(body.get("familyPref"));
         prof.setBirthday(body.get("birthday"));

@@ -25,6 +25,12 @@ public class MemberProfile {
     @Column(nullable = false, length = 20)
     private String userPhone;
 
+    @Column(length = 32)
+    private String name;
+
+    @Column(length = 8)
+    private String gender;
+
     /** 客户喜好 */
     @Column(length = 1000)
     private String customerPref;
