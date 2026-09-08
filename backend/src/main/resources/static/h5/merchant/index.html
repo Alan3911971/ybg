@@ -863,6 +863,9 @@ async function filterOrders(){ /* 占位：调 IBIGOU_API.merchant.orderList 过
         + '<input id="vContent" placeholder="回访内容" style="flex:1;min-width:120px;">'
         + '<input id="vResult" placeholder="结果" style="flex:0 0 90px;">'
         + '<button class="btn btn--sm" onclick="addMemberVisit()">➕ 添加</button></div>'
+        + '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:6px;">'
+        + '<select id="vGiftGoods" style="flex:1;min-width:150px;"><option value="">🎁 附带赠送商品</option></select>'
+        + '<input id="vGiftQty" type="number" value="1" min="1" style="flex:0 0 56px;"></div>'
         + '<div style="margin-top:8px;">';
       var vList = dta.visits || [];
       if (vList.length === 0) h += '<div style="color:#9ca3af;font-size:12px;padding:6px 0;">暂无回访记录</div>';
@@ -887,6 +890,21 @@ async function filterOrders(){ /* 占位：调 IBIGOU_API.merchant.orderList 过
         h += '<div class="vitem"><span>📅</span><div style="flex:1;">' + fmtFullTs(a.apptTime) + (a.serviceItem ? ' · ' + escHtml(a.serviceItem) : "") + (a.remark ? '<br><span style="color:#6b7280;">' + escHtml(a.remark) + '</span>' : "") + '<br>' + st + btns + '</div></div>';
       });
       h += '</div></div>';
+      // 礼品赠送
+      h += '<div class="mcard"><div class="mt">🎁 礼品赠送</div>'
+        + '<div style="display:flex;gap:8px;flex-wrap:wrap;">'
+        + '<select id="giftGoods" style="flex:1;min-width:150px;"><option value="">请选择商品</option></select>'
+        + '<input id="giftQty" type="number" value="1" min="1" style="flex:0 0 56px;"></div>'
+        + '<input id="giftRemark" placeholder="备注（如：生日礼物）" style="width:100%;margin-top:6px;">'
+        + '<button class="btn btn--primary btn--block" style="margin-top:8px;" onclick="addMemberGift()">🎁 赠送</button>'
+        + '<div style="margin-top:8px;">';
+      var gList = dta.gifts || [];
+      if (gList.length === 0) h += '<div style="color:#9ca3af;font-size:12px;padding:6px 0;">暂无赠送记录</div>';
+      gList.forEach(function(g){
+        var srcTxt = g.source === "visit" ? "回访赠送" : "赠送";
+        h += '<div class="vitem"><span>🎁</span><div style="flex:1;">' + escHtml(g.goodsName) + ' ×' + g.quantity + (g.remark ? '<br><span style="color:#6b7280;">' + escHtml(g.remark) + '</span>' : "") + '<div style="color:#9ca3af;font-size:11px;margin-top:2px;">' + fmtShortTs(g.createTime) + ' · ' + srcTxt + '</div></div></div>';
+      });
+      h += '</div></div>';
       // 最近订单
       h += '<div class="mcard"><div class="mt">🧾 最近订单</div>';
       var oList = dta.orders || [];
@@ -896,6 +914,7 @@ async function filterOrders(){ /* 占位：调 IBIGOU_API.merchant.orderList 过
       });
       h += '</div>';
       document.getElementById("mdBody").innerHTML = h;
+    loadGiftGoodsSelect();
     });
   }
   function saveMemberProfile(){
@@ -903,10 +922,43 @@ async function filterOrders(){ /* 占位：调 IBIGOU_API.merchant.orderList 过
       customerPref: document.getElementById("pfCustomer").value, familyPref: document.getElementById("pfFamily").value, remark: document.getElementById("pfRemark").value
     }).then(function(r){ if (r && r.code === 0) { toast("资料已保存"); openMemberDetail(curMemberPhone); } else toast("保存失败", "err"); });
   }
+  function loadGiftGoodsSelect(){
+    var sel = document.getElementById("giftGoods"); if (!sel) return;
+    var tk = lsGet("ibigou_merchant_token", null); if (!tk) return;
+    fetch("/api/merchant/config/goods", { headers: { "X-Merchant-Token": tk } }).then(function(r){ return r.json(); }).then(function(r){
+      if (r && r.code === 0 && r.data) {
+        var opts = '<option value="">请选择商品</option>';
+        (r.data || []).forEach(function(g){ if (g.enabled !== 0) opts += '<option value="' + g.goodsId + '">' + escHtml(g.goodsName) + '（¥' + g.price + '）</option>'; });
+        var vsel = document.getElementById("vGiftGoods");
+        if (vsel) vsel.innerHTML = '<option value="">🎁 附带赠送商品</option>' + opts.replace('<option value="">请选择商品</option>', '');
+        sel.innerHTML = opts;
+      }
+    }).catch(function(){});
+  }
+  function addMemberGift(){
+    var sel = document.getElementById("giftGoods");
+    if (!sel || !sel.value) { toast("请选择要赠送的商品", "err"); return; }
+    var name = sel.selectedOptions.length ? sel.selectedOptions[0].text.split("（¥")[0] : "";
+    var qty = parseInt(document.getElementById("giftQty").value, 10) || 1;
+    var remark = document.getElementById("giftRemark").value;
+    window.IBIGOU_API.merchant.addGift(curMemberPhone, { goodsId: sel.value, goodsName: name, quantity: qty, remark: remark }).then(function(r){
+      if (r && r.code === 0) { toast("礼品已赠送"); openMemberDetail(curMemberPhone); } else toast("赠送失败", "err");
+    });
+  }
   function addMemberVisit(){
     var vc = document.getElementById("vContent").value;
     if (!vc) { toast("请填写回访内容", "err"); return; }
-    window.IBIGOU_API.merchant.addVisit(curMemberPhone, { content: vc, result: document.getElementById("vResult").value }).then(function(r){
+    var vsel = document.getElementById("vGiftGoods");
+    var vname = (vsel && vsel.selectedOptions.length) ? vsel.selectedOptions[0].text.split("（¥")[0] : "";
+    var vqty = parseInt((document.getElementById("vGiftQty") || {}).value || "1", 10) || 1;
+    window.IBIGOU_API.merchant.addVisit(curMemberPhone, {
+      content: vc,
+      result: document.getElementById("vResult").value,
+      giftGoodsId: vsel ? vsel.value : "",
+      giftGoodsName: vsel && vsel.value ? vname : "",
+      giftQuantity: vqty,
+      giftRemark: "回访赠送"
+    }).then(function(r){
       if (r && r.code === 0) { toast("回访已记录"); openMemberDetail(curMemberPhone); } else toast("添加失败", "err");
     });
   }
@@ -945,6 +997,7 @@ async function filterOrders(){ /* 占位：调 IBIGOU_API.merchant.orderList 过
   window.addMemberVisit = addMemberVisit;
   window.addMemberAppointment = addMemberAppointment;
   window.apptStatus = apptStatus;
+  window.addMemberGift = addMemberGift;
 
   // ===== p2 收款码（4种支付方式）=====
   var QR_TYPES = [

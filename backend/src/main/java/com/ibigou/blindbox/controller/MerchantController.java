@@ -45,6 +45,7 @@ public class MerchantController {
     private final com.ibigou.blindbox.repository.MemberProfileRepository memberProfileRepository;
     private final com.ibigou.blindbox.repository.MemberVisitRepository memberVisitRepository;
     private final com.ibigou.blindbox.repository.MemberAppointmentRepository memberAppointmentRepository;
+    private final com.ibigou.blindbox.repository.MemberGiftRepository memberGiftRepository;
     private final com.ibigou.blindbox.repository.MerchantMessageRepository merchantMessageRepository;
     private final ChatService chatService;
 
@@ -313,6 +314,20 @@ public class MerchantController {
             appts.add(m);
         }
         r.put("appointments", appts);
+        // 赠送记录
+        java.util.List<java.util.Map<String, Object>> gifts = new java.util.ArrayList<>();
+        for (var g : memberGiftRepository.findByMerchantNoAndUserPhoneOrderByCreateTimeDesc(merchantNo, phone)) {
+            var m = new java.util.HashMap<String, Object>();
+            m.put("id", g.getId());
+            m.put("goodsId", g.getGoodsId());
+            m.put("goodsName", g.getGoodsName());
+            m.put("quantity", g.getQuantity());
+            m.put("remark", g.getRemark());
+            m.put("source", g.getSource());
+            m.put("createTime", g.getCreateTime());
+            gifts.add(m);
+        }
+        r.put("gifts", gifts);
         // 本店订单（最近10笔）
         java.util.List<java.util.Map<String, Object>> orders = new java.util.ArrayList<>();
         for (com.ibigou.blindbox.entity.IbigouOrder o : ibigouOrderRepository.findByMerchantNoOrderByCreateTimeDesc(merchantNo)) {
@@ -373,6 +388,22 @@ public class MerchantController {
         v.setVisitTime(vt == null || vt.isEmpty() ? java.time.LocalDateTime.now() : java.time.LocalDateTime.parse(vt));
         v.setCreateTime(java.time.LocalDateTime.now());
         memberVisitRepository.save(v);
+        // 回访附带赠送（可选）
+        String gId = body.get("giftGoodsId");
+        String gName = body.get("giftGoodsName");
+        if (gName != null && !gName.isEmpty()) {
+            var g = new com.ibigou.blindbox.entity.MemberGift();
+            g.setMerchantNo(merchantNo);
+            g.setUserPhone(phone);
+            g.setGoodsId(gId == null || gId.isEmpty() ? null : Long.valueOf(gId));
+            g.setGoodsName(gName);
+            try { g.setQuantity(Integer.valueOf(body.getOrDefault("giftQuantity", "1"))); }
+            catch (Exception ex) { g.setQuantity(1); }
+            g.setRemark(body.get("giftRemark"));
+            g.setSource("visit");
+            g.setCreateTime(java.time.LocalDateTime.now());
+            memberGiftRepository.save(g);
+        }
         return Result.ok(null);
     }
 
@@ -393,6 +424,28 @@ public class MerchantController {
         a.setRemindSent(0);
         a.setCreateTime(java.time.LocalDateTime.now());
         memberAppointmentRepository.save(a);
+        return Result.ok(null);
+    }
+
+    /** 商家端：独立赠送礼品（生日或其他时间） */
+    @PostMapping("/members/{phone}/gift")
+    public Result<Void> addMemberGift(@RequestHeader("X-Merchant-Token") String token,
+                                      @PathVariable String phone,
+                                      @RequestBody java.util.Map<String, Object> body) {
+        String merchantNo = authService.merchantNoByToken(token);
+        var g = new com.ibigou.blindbox.entity.MemberGift();
+        g.setMerchantNo(merchantNo);
+        g.setUserPhone(phone);
+        Object gid = body.get("goodsId");
+        g.setGoodsId(gid == null ? null : Long.valueOf(String.valueOf(gid)));
+        g.setGoodsName(String.valueOf(body.get("goodsName")));
+        Object qty = body.get("quantity");
+        try { g.setQuantity(qty == null ? 1 : Integer.valueOf(String.valueOf(qty))); }
+        catch (Exception ex) { g.setQuantity(1); }
+        g.setRemark((String) body.get("remark"));
+        g.setSource("gift");
+        g.setCreateTime(java.time.LocalDateTime.now());
+        memberGiftRepository.save(g);
         return Result.ok(null);
     }
 

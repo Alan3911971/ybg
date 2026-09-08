@@ -128,6 +128,7 @@
   addAppointment: function(phone, body){ return request('POST', '/api/merchant/members/' + encodeURIComponent(phone) + '/appointment', body); },
   updateAppointmentStatus: function(id, status){ return request('POST', '/api/merchant/appointments/' + id + '/status', {status: status}); },
   upcomingAppointments: function(){ return request('GET', '/api/merchant/appointments/upcoming'); },
+      addGift: function(phone, body){ return request('POST', '/api/merchant/members/' + encodeURIComponent(phone) + '/gift', body); },
       ordersExport: function(qs){ return request('POST', '/api/merchant/orders/export' + (qs||''), {}); },
       orderConfirm: function(orderNo){ return request('POST', '/api/merchant/order/' + orderNo + '/confirm', {}); },
       orderRefund: function(orderNo){ return request('POST', '/api/merchant/order/' + orderNo + '/refund', {}); },
