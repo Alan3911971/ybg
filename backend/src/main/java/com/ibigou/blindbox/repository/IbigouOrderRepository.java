@@ -13,6 +13,8 @@ public interface IbigouOrderRepository extends JpaRepository<IbigouOrder, String
 
     java.util.List<IbigouOrder> findByUserPhoneOrderByCreateTimeDesc(String userPhone);
 
+    java.util.List<IbigouOrder> findByMerchantNoOrderByCreateTimeDesc(String merchantNo);
+
     java.util.List<IbigouOrder> findByCreateTimeBetween(
             java.time.LocalDateTime from, java.time.LocalDateTime to);
 }

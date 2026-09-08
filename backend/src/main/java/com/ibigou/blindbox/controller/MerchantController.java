@@ -38,6 +38,10 @@ public class MerchantController {
     private final IdentityQrService identityQrService;
     private final ReportService reportService;
     private final com.ibigou.blindbox.repository.MerchantRepository merchantRepository;
+    private final com.ibigou.blindbox.repository.IbigouOrderRepository ibigouOrderRepository;
+    private final com.ibigou.blindbox.repository.UserCouponRepository userCouponRepository;
+    private final com.ibigou.blindbox.repository.BoxPrizePoolRepository boxPrizePoolRepository;
+    private final com.ibigou.blindbox.repository.OfflineOrderRepository offlineOrderRepository;
     private final ChatService chatService;
 
     @PostMapping("/auth/login")
@@ -198,6 +202,76 @@ public class MerchantController {
                                                        @RequestParam(required = false) String date) {
         String merchantNo = authService.merchantNoByToken(token);
         return Result.ok(offlineOrderService.listOrders(merchantNo, userPhone, date));
+    }
+
+    /** 商家端：订单列表（宜必购商城订单 + 线下订单 合并，新→旧，含真实奖品名） */
+    @GetMapping("/ibigou/orders")
+    public Result<java.util.List<java.util.Map<String, Object>>> ibigouOrders(@RequestHeader("X-Merchant-Token") String token) {
+        String merchantNo = authService.merchantNoByToken(token);
+        java.util.List<java.util.Map<String, Object>> result = new java.util.ArrayList<>();
+        // 宜必购商城订单
+        for (com.ibigou.blindbox.entity.IbigouOrder o : ibigouOrderRepository.findByMerchantNoOrderByCreateTimeDesc(merchantNo)) {
+            java.util.Map<String, Object> m = new java.util.HashMap<>();
+            m.put("orderNo", o.getIbigouOrderNo());
+            m.put("userPhone", o.getUserPhone());
+            m.put("amount", o.getPayAmount());
+            m.put("save", o.getOrderAmount().subtract(o.getPayAmount()).max(BigDecimal.ZERO));
+            m.put("ts", o.getCreateTime());
+            m.put("status", o.getRefundStatus());
+            m.put("couponId", o.getCouponId());
+            m.put("source", "ibigou");
+            resolvePrize(merchantNo, m, o.getCouponId());
+            result.add(m);
+        }
+        // 线下订单（核销券场景也有奖品）
+        for (com.ibigou.blindbox.entity.OfflineOrder o : offlineOrderRepository.findByMerchantNoOrderByCreateTimeDesc(merchantNo)) {
+            java.util.Map<String, Object> m = new java.util.HashMap<>();
+            m.put("orderNo", o.getOfflineOrderNo());
+            m.put("userPhone", o.getUserPhone());
+            m.put("amount", o.getPayAmount());
+            m.put("save", o.getOrderAmount().subtract(o.getPayAmount()).max(BigDecimal.ZERO));
+            m.put("ts", o.getCreateTime());
+            m.put("status", o.getOrderStatus());
+            m.put("couponId", o.getCouponId());
+            m.put("source", "offline");
+            resolvePrize(merchantNo, m, o.getCouponId());
+            result.add(m);
+        }
+        // 按时间倒序
+        result.sort((a, b) -> {
+            Object ta = a.get("ts"); Object tb = b.get("ts");
+            if (ta == null) return 1;
+            if (tb == null) return -1;
+            return ((java.time.LocalDateTime) tb).compareTo((java.time.LocalDateTime) ta);
+        });
+        return Result.ok(result);
+    }
+
+    /** 奖品名/emoji：couponId -> UserCoupon -> 本店/公共奖品池 remark */
+    private void resolvePrize(String merchantNo, java.util.Map<String, Object> m, Long couponId) {
+        String prizeName = "";
+        String prizeEmoji = "🎁";
+        if (couponId != null) {
+            var uc = userCouponRepository.findById(couponId);
+            if (uc.isPresent()) {
+                var coupon = uc.get();
+                String srcMno = coupon.getSourceMerchantNo() == null ? merchantNo : coupon.getSourceMerchantNo();
+                var pools = boxPrizePoolRepository.findByMerchantNoAndPrizeTypeAndPrizeValue(
+                        srcMno, coupon.getPrizeType(), coupon.getPrizeValue());
+                for (var p : pools) {
+                    if (p.getRemark() != null && !p.getRemark().isEmpty()) { prizeName = p.getRemark(); break; }
+                }
+                int pt = coupon.getPrizeType() == null ? 1 : coupon.getPrizeType();
+                String[] emojis = {"", "🎟️", "💵", "💰", "👑"};
+                String[] typeNames = {"", "折扣券", "立减券", "余额券", "免单券"};
+                if (pt >= 1 && pt <= 4) {
+                    prizeEmoji = emojis[pt];
+                    if (prizeName.isEmpty()) prizeName = typeNames[pt];
+                }
+            }
+        }
+        m.put("prizeName", prizeName);
+        m.put("prizeEmoji", prizeEmoji);
     }
 
     /** 本店订单导出 Excel（P1：线下结算） */

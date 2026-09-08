@@ -120,6 +120,7 @@
       enablePrizePool: function(id){ return request('POST', '/api/merchant/config/prize-pools/' + encodeURIComponent(id) + '/enable', {}); },
       disablePrizePool: function(id){ return request('POST', '/api/merchant/config/prize-pools/' + encodeURIComponent(id) + '/disable', {}); },
       orders: function(qs){ return request('GET', '/api/merchant/orders' + (qs||'')); },
+  ibigouOrders: function(){ return request('GET', '/api/merchant/ibigou/orders'); },
       ordersExport: function(qs){ return request('POST', '/api/merchant/orders/export' + (qs||''), {}); },
       orderConfirm: function(orderNo){ return request('POST', '/api/merchant/order/' + orderNo + '/confirm', {}); },
       orderRefund: function(orderNo){ return request('POST', '/api/merchant/order/' + orderNo + '/refund', {}); },

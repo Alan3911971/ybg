@@ -1,5 +1,4 @@
-<!DOCTY
-  <div class="tab" data-p="p10">💬 ??</div>PE html>
+<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
@@ -619,7 +618,7 @@ try{(async function(){
 
   async function loadKpi(){
   try {
-    const orders = await window.IBIGOU_API.merchant.orders ? await window.IBIGOU_API.merchant.orders() : null;
+    const orders = await window.IBIGOU_API.merchant.ibigouOrders ? await window.IBIGOU_API.merchant.ibigouOrders() : null;
     const announce = window.IBIGOU_API && window.IBIGOU_API.merchant && window.IBIGOU_API.merchant.announce ? await window.IBIGOU_API.merchant.announce() : null;
     if (orders && orders.code === 0 && orders.data) {
       var ords = orders.data || [];
@@ -736,7 +735,7 @@ async function filterOrders(){ /* 占位：调 IBIGOU_API.merchant.orderList 过
     $("kpiSave").textContent = "¥" + totalSave.toFixed(2);
     $("kpiAvg").textContent = cnt > 0 ? "¥" + (totalAmount / cnt).toFixed(2) : "¥0";
 
-    var recent = orders.slice(-5).reverse();
+    var recent = orders.slice(0, 5);
     var html = "";
     if (recent.length === 0) {
       html = '<div class="list-item"><div class="l"><span class="em">📦</span><div><div class="name">暂无订单</div><div class="info">等待顾客下单</div></div></div><div class="r">--</div></div>';
@@ -745,7 +744,7 @@ async function filterOrders(){ /* 占位：调 IBIGOU_API.merchant.orderList 过
         var t = new Date(o.ts || Date.now());
         var time = (t.getMonth()+1) + "-" + t.getDate() + " " + t.getHours() + ":" + String(t.getMinutes()).padStart(2,"0");
         html += '<div class="list-item">'
-          + '<div class="l"><span class="em">'+(o.prizeEmoji||"🎁")+'</span><div><div class="name">'+(o.prizeName||"奖品")+'</div><div class="info">'+(o.orderNo||"--")+'</div></div></div>'
+          + '<div class="l"><span class="em">'+(o.prizeEmoji||"🎁")+'</span><div><div class="name">'+(o.prizeName||"普通订单")+'</div><div class="info">'+(o.orderNo||"--")+'</div></div></div>'
           + '<div class="r">¥'+(o.amount||0).toFixed(2)+'<br><span style="font-size:10px;">'+time+'</span></div>'
           + '</div>';
       });
@@ -1139,7 +1138,7 @@ async function filterOrders(){ /* 占位：调 IBIGOU_API.merchant.orderList 过
   async function loadBackendOrders(){
     if (!window.IBIGOU_API) return [];
     try {
-      var r = await window.IBIGOU_API.merchant.orders();
+      var r = await window.IBIGOU_API.merchant.ibigouOrders();
       if (r && r.code === 0 && r.data) { _backendOrders = r.data; }
       else { _backendOrders = []; }
     } catch(e){ _backendOrders = []; }
@@ -1503,7 +1502,7 @@ async function filterOrders(){ /* 占位：调 IBIGOU_API.merchant.orderList 过
         }
       } catch(e) { console.warn("[merchant] boot: weights error", e); }
       // 订单列表
-      var ords = await window.IBIGOU_API.merchant.orders();
+      var ords = await window.IBIGOU_API.merchant.ibigouOrders();
       if (ords && ords.code === 0 && Array.isArray(ords.data)) {
         lsSet("ibigou_orders", ords.data);
         console.log("[merchant] boot: orders loaded", ords.data.length);
@@ -1515,7 +1514,7 @@ async function filterOrders(){ /* 占位：调 IBIGOU_API.merchant.orderList 过
       var msgs = await window.IBIGOU_API.merchant.messages();
       if (msgs && msgs.code === 0 && Array.isArray(msgs.data)) lsSet("ibigou_messages", msgs.data);
       // 余额流水: 使用订单数据填充流水
-      var bal = await window.IBIGOU_API.merchant.orders();
+      var bal = await window.IBIGOU_API.merchant.ibigouOrders();
       if (bal && bal.code === 0 && Array.isArray(bal.data)) {
         var flowData = bal.data.map(function(o){
           return {

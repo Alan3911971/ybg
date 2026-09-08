@@ -19,6 +19,8 @@ public interface BoxPrizePoolRepository extends JpaRepository<BoxPrizePool, Long
 
     List<BoxPrizePool> findByMerchantNoOrderByPrizeIdDesc(String merchantNo);
 
+    List<BoxPrizePool> findByMerchantNoAndPrizeTypeAndPrizeValue(String merchantNo, Integer prizeType, java.math.BigDecimal prizeValue);
+
     /** 行锁读取档位（并发开奖串行化，防止超出限额） */
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("select p from BoxPrizePool p where p.prizeId = :prizeId")
