@@ -855,7 +855,9 @@ async function filterOrders(){ /* 占位：调 IBIGOU_API.merchant.orderList 过
       h += '<div class="mcard"><div class="mt">📋 会员资料</div>'
         + '<label>客户喜好</label><textarea id="pfCustomer" rows="2" placeholder="喜欢什么、口味、习惯…">' + escHtml(prof.customerPref) + '</textarea>'
         + '<label>家人喜好</label><textarea id="pfFamily" rows="2" placeholder="家人爱好、忌口、生日…">' + escHtml(prof.familyPref) + '</textarea>'
+        + '<label>生日</label><input id="pfBirthday" placeholder="MM-dd，如 09-20" value="' + escHtml(prof.birthday || '') + '">'
         + '<label>备注</label><input id="pfRemark" value="' + escHtml(prof.remark) + '">'
+        + (prof.editor ? '<div style="color:#9ca3af;font-size:11px;margin-top:8px;">👤 录入：' + escHtml(prof.editor) + '</div>' : '')
         + '<button class="btn btn--primary btn--block" style="margin-top:10px;" onclick="saveMemberProfile()">💾 保存资料</button></div>';
       // 回访
       h += '<div class="mcard"><div class="mt">📞 回访记录</div>'
@@ -919,7 +921,8 @@ async function filterOrders(){ /* 占位：调 IBIGOU_API.merchant.orderList 过
   }
   function saveMemberProfile(){
     window.IBIGOU_API.merchant.saveProfile(curMemberPhone, {
-      customerPref: document.getElementById("pfCustomer").value, familyPref: document.getElementById("pfFamily").value, remark: document.getElementById("pfRemark").value
+      customerPref: document.getElementById("pfCustomer").value, familyPref: document.getElementById("pfFamily").value,
+      birthday: document.getElementById("pfBirthday").value, remark: document.getElementById("pfRemark").value
     }).then(function(r){ if (r && r.code === 0) { toast("资料已保存"); openMemberDetail(curMemberPhone); } else toast("保存失败", "err"); });
   }
   function loadGiftGoodsSelect(){

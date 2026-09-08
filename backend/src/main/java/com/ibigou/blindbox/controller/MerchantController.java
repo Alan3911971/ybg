@@ -285,7 +285,9 @@ public class MerchantController {
             var m = new java.util.HashMap<String, Object>();
             m.put("customerPref", p.getCustomerPref());
             m.put("familyPref", p.getFamilyPref());
+            m.put("birthday", p.getBirthday());
             m.put("remark", p.getRemark());
+            m.put("editor", p.getEditor());
             m.put("updateTime", p.getUpdateTime());
             return m;
         }).orElse(null));
@@ -367,7 +369,10 @@ public class MerchantController {
                 });
         prof.setCustomerPref(body.get("customerPref"));
         prof.setFamilyPref(body.get("familyPref"));
+        prof.setBirthday(body.get("birthday"));
         prof.setRemark(body.get("remark"));
+        var mEnt = merchantRepository.findByMerchantNo(merchantNo).orElse(null);
+        if (mEnt != null) prof.setEditor(mEnt.getLoginAccount());
         prof.setUpdateTime(java.time.LocalDateTime.now());
         memberProfileRepository.save(prof);
         return Result.ok(null);

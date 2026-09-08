@@ -33,8 +33,14 @@ public class MemberProfile {
     @Column(length = 1000)
     private String familyPref;
 
+    @Column(length = 10)
+    private String birthday;
+
     @Column(length = 500)
     private String remark;
+
+    @Column(length = 64)
+    private String editor;
 
     @Column
     private LocalDateTime updateTime;
