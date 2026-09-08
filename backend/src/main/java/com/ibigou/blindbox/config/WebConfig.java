@@ -54,7 +54,7 @@ public class WebConfig implements WebMvcConfigurer {
                 .excludePathPatterns("/api/admin/auth/login");
         registry.addInterceptor(customerAuthInterceptor)
                 .addPathPatterns("/api/customer/**")
-                .excludePathPatterns("/api/customer/auth/send-code", "/api/customer/auth/login", "/api/customer/ibigou/goods", "/api/customer/recent-wins/**");
+                .excludePathPatterns("/api/customer/auth/send-code", "/api/customer/auth/login", "/api/customer/ibigou/goods", "/api/customer/ibigou/announce-prize", "/api/customer/recent-wins/**");
         registry.addInterceptor(merchantAuthInterceptor)
                 .addPathPatterns("/api/merchant/**")
                 .excludePathPatterns("/api/merchant/auth/login");

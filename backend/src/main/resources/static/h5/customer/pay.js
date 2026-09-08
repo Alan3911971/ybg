@@ -421,7 +421,7 @@ var _payPending = false;  // 标记用户已跳转APP支付, 返回时自动完�
     function finishPay(){
       if (_payPending) _payPending = false;
       toast('支付完成，正在返回首页', 'success');
-      if (typeof speak === 'function') { try { speak('宜必购盲盒。支付完成，正在返回首页。请商家查收是否真实付款成功，宜必购盲盒只是做优惠，不做收款，请注意。'); } catch(e){} }
+      // 顾客端不播报，改为商家端播报（announce系统）
       setTimeout(function(){ location.href = '/h5/customer/index.html'; }, 1500);
     }
     var doneBtn = $('btnPayDone');
@@ -498,7 +498,7 @@ var _payPending = false;  // 标记用户已跳转APP支付, 返回时自动完�
           var _input = parseFloat($('amountInput').value) || 0;
           var _save = (lastResult && lastResult.save) || 0;
           var _pay = parseFloat(r.data.finalAmount) || 0;
-          if (typeof speakPay === 'function') { speakPay(_pay, prizeName, _input, _save); }
+          // 顾客端不播报，改为商家端播报（announce系统）
         } catch(e){}
       } else {
         toast((r && r.msg) || '下单失败', 'danger');

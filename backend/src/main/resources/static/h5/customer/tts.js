@@ -1,12 +1,19 @@
-/* tts.js — 语音播报（Web Speech API，中文女声）
- * 提供 speak / speakPrize / speakPay 三个全局函数
- * draw.js / pay.js 通过 ../tts.js 引用
- * 所有播报前缀"宜必购盲盒"
+/* tts.js - 语音播报（HTML5 Audio + Web Speech API + 原生TTS）
+
+
+
+ *
+
+
+
+
  */
 (function () {
   var voice = null;
   var ready = false;
   var BRAND = '宜必购盲盒。';
+  var _audioEl = null;
+  var _audioFallbackTimer = null;
 
   function pickVoice() {
     if (!('speechSynthesis' in window)) return;
@@ -34,10 +41,43 @@
     }
   }
 
-  // 基础播报
-  function speak(text, opts) {
+  function speakAudio(text, opts) {
     opts = opts || {};
-    if (!('speechSynthesis' in window) || !text) return;
+    var spd = opts.spd != null ? opts.spd : 5;
+    var origin = (window.location && window.location.origin) ? window.location.origin : '';
+    var url = origin + '/api/tts?lan=zh&text=' + encodeURIComponent(text) + '&spd=' + spd + '&source=web';
+    try {
+      if (_audioEl) { _audioEl.pause(); _audioEl = null; }
+      if (_audioFallbackTimer) { clearTimeout(_audioFallbackTimer); _audioFallbackTimer = null; }
+      _audioEl = new Audio(url);
+      var done = false;
+      _audioFallbackTimer = setTimeout(function(){
+        if (!done) { done = true; console.warn('[tts] Audio timeout, fallback'); speakWeb(text, opts); }
+      }, 3000);
+      _audioEl.addEventListener('playing', function(){
+        if (_audioFallbackTimer) { clearTimeout(_audioFallbackTimer); _audioFallbackTimer = null; }
+        console.log('[tts] Audio playing');
+      });
+      _audioEl.addEventListener('error', function(){
+        if (_audioFallbackTimer) { clearTimeout(_audioFallbackTimer); _audioFallbackTimer = null; }
+        if (!done) { done = true; console.warn('[tts] Audio error, fallback'); speakWeb(text, opts); }
+      });
+      _audioEl.play().then(function(){
+        console.log('[tts] Audio play resolved');
+      }).catch(function(e){
+        if (_audioFallbackTimer) { clearTimeout(_audioFallbackTimer); _audioFallbackTimer = null; }
+        if (!done) { done = true; console.warn('[tts] Audio rejected, fallback', e); speakWeb(text, opts); }
+      });
+      return true;
+    } catch (e) {
+      console.warn('[tts] Audio init failed', e);
+      return false;
+    }
+  }
+
+  function speakWeb(text, opts) {
+    opts = opts || {};
+    if (!('speechSynthesis' in window) || !text) return false;
     try {
       speechSynthesis.cancel();
       var u = new SpeechSynthesisUtterance(text);
@@ -47,22 +87,36 @@
       u.pitch = opts.pitch != null ? opts.pitch : 1.0;
       u.volume = opts.volume != null ? opts.volume : 1.0;
       speechSynthesis.speak(u);
+      return true;
     } catch (e) {
-      console.warn('[tts] speak failed', e);
+      console.warn('[tts] Web Speech failed', e);
+      return false;
     }
   }
 
-  // 开奖播报：宜必购盲盒 + 恭喜中奖 + 奖品名 + 渠道
-  function speakPrize(prizeName, emoji, channel, chName) {
-    var msg = BRAND + '恭喜您中奖了！';
-    if (chName) msg += '参与方式' + chName + '。';
-    if (prizeName) msg += ' 您抽中' + prizeName + '。';
-    if (chName) msg += '本次为' + chName + '渠道。';
-    msg += '请前往付款结算页完成下单。';
+  function speakNative(text) {
+    try {
+      if (window.AndroidPrinter && typeof window.AndroidPrinter.speak === 'function') {
+        window.AndroidPrinter.speak(text);
+        return true;
+      }
+    } catch (e) {}
+    return false;
+  }
+
+  function speak(text, opts) {
+    opts = opts || {};
+    if (!text) return;
+    if (speakAudio(text, opts)) return;
+    if (speakWeb(text, opts)) return;
+    speakNative(text);
+  }
+
+  function speakPrize(prizeName, emoji, channel, chName, rank) {
+    var msg = '宜必购便民生活圈，恭喜您！您是本店第' + (rank || '') + '位顾客，恭喜您开出' + (prizeName || '神秘礼品') + '奖品，请问商家本次商品金额，输入金额即可享受抵扣结算。';
     speak(msg, { rate: 0.98 });
   }
 
-  // 支付播报：宜必购盲盒 + 实付金额，可选带订单金额与节省
   function speakPay(pay, prizeName, input, save) {
     var msg = BRAND;
     var chName2 = '';

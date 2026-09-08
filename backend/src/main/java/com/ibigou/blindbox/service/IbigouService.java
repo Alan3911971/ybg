@@ -29,6 +29,7 @@ public class IbigouService {
     private final CouponService couponService;
     private final BalanceService balanceService;
     private final FlowCloseService flowCloseService;
+    private final AnnounceService announceService;
 
     /** 总开关校验 */
     public void checkChannelOpen() {
@@ -89,6 +90,24 @@ public class IbigouService {
         order.setPayTime(now);
         order.setUpdateTime(now);
         IbigouOrder saved = orderRepository.save(order);
+        // 播报：商城订单创建成功 → 商家端语音播报（女声TTS），内容与顾客端 speakPay 提示一致
+        try {
+            BigDecimal payAmt = saved.getPayAmount() == null ? BigDecimal.ZERO : saved.getPayAmount();
+            BigDecimal saveAmt = saved.getOrderAmount().subtract(payAmt).max(BigDecimal.ZERO);
+            StringBuilder sb = new StringBuilder("宜必购盲盒。");
+            if (saved.getOrderAmount() != null && saved.getOrderAmount().signum() > 0) {
+                sb.append("订单金额").append(saved.getOrderAmount()).append("元。");
+            }
+            if (saveAmt.signum() > 0) {
+                sb.append("优惠节省").append(saveAmt).append("元。");
+            }
+            sb.append("应付").append(payAmt).append("元。");
+            sb.append("请选择支付方式完成付款。宜必购盲盒只是做优惠，不做收款，请商家查收是否真实付款成功，请注意。");
+            announceService.record(saved.getMerchantNo(), "pay", sb.toString());
+        } catch (Exception e) {
+            // 播报失败不影响下单
+            System.err.println("宜必购订单播报失败: " + e.getMessage());
+        }
         // 流程闭环③：宜必购下单成功 → 本次盲盒产出所有奖品 can_use_after_draw=1
         if (drawBatchNo != null && !drawBatchNo.isBlank()) {
             flowCloseService.closeByDrawBatch(drawBatchNo);

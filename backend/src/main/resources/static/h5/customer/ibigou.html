@@ -205,8 +205,7 @@ button{font-family:inherit;}
 </div>
 <div class="container">
 <div class="goods-grid" id="goodsGrid"></div>
-<div class="sec-title"><span class="bar"></span>我的订单</div>
-<div id="ordersList"></div>
+
 </div>
 <div class="modal-bg" id="orderModal">
 <div class="modal" id="orderModalContent"></div>
@@ -214,6 +213,7 @@ button{font-family:inherit;}
 <nav class="nav">
 <div class="tab" data-go="/h5/customer/index.html"><span class="ic">🎯</span><span>抽盒</span></div>
 <div class="tab active" data-go="/h5/customer/ibigou.html"><span class="ic">🛒</span><span>商城</span></div>
+<div class="tab" data-go="/h5/customer/my-orders.html"><span class="ic">📋</span><span>订单</span></div>
 <div class="tab" data-go="/h5/customer/wallet.html"><span class="ic">👤</span><span>我的</span></div>
 </nav>
 <div class="toast-host" id="toastHost"></div>
@@ -324,64 +324,10 @@ async function loadAssetsAndRender(g){
   }catch(e){$("orderForm").innerHTML='<div style="color:var(--c-text-3);text-align:center;padding:16px;">加载失败</div>'}
 }
 
-async function loadOrders(){
-  if(!tk||!ph){$("ordersList").innerHTML="";return}
-  try{
-    var resp=await fetch("/api/customer/ibigou/orders/"+ph,{headers:{"X-User-Token":tk}});
-    var r=await resp.json();
-    if(r.code===0&&r.data){renderOrders(r.data)}
-  }catch(e){}
-}
 
-function renderOrders(orders){
-  if(!orders.length){$("ordersList").innerHTML='<div class="empty" style="padding:20px;">暂无订单</div>';return}
-  var html="";
-  orders.forEach(function(o,idx){
-    var status=o.refundStatus>0?(o.refundStatus===1?"已退款":"部分退款"):"已完成";
-    var color=o.refundStatus>0?"#9b9bb0":"#2d8a4e";
-    var statusPill='<span style="margin-left:auto;color:'+color+';font-size:11px;font-weight:600;">'+status+'</span>';
-    var couponDetail=o.couponId?'<div class="detail-line"><span class="detail-label">优惠券</span><span class="detail-val">已使用 (ID:'+o.couponId+')</span></div>':'<div class="detail-line"><span class="detail-label">优惠券</span><span class="detail-val">未使用</span></div>';
-    var refundDetail=o.refundStatus===1?'<div class="detail-line"><span class="detail-label">退款金额</span><span class="detail-val" style="color:#16a34a;">¥'+(o.refundAmount||o.payAmount)+'</span></div><div class="detail-line"><span class="detail-label">退款时间</span><span class="detail-val">'+((o.refundTime||"").replace("T"," ").slice(0,16)||"--")+'</span></div>':'';
-    var refundable=o.refundStatus===0?'<div class="actions"><button class="refund-btn" onclick="refundOrder(\''+o.ibigouOrderNo+'\')">申请全额退款</button></div>':'';
-    html+='<div class="order order--expandable" data-order="'+idx+'">'
-      +'<div class="top" onclick="toggleOrderDetail('+idx+')"><span class="no">'+o.ibigouOrderNo+'</span>'+statusPill+'<span class="order-expand">▾</span></div>'
-      +'<div class="line">金额 ¥'+o.orderAmount+' · 实付 ¥'+(o.payAmount||0)+' · 余额抵扣 ¥'+(o.deductBalance||0)+'</div>'
-      +'<div class="line" style="color:var(--c-text-3);">下单：'+((o.createTime||"").replace("T"," ").slice(0,16))+'</div>'
-      +'<div class="order-detail" id="orderDetail'+idx+'">'
-      +'<div class="detail-line"><span class="detail-label">订单号</span><span class="detail-val">'+o.ibigouOrderNo+'</span></div>'
-      +'<div class="detail-line"><span class="detail-label">订单金额</span><span class="detail-val">¥'+o.orderAmount+'</span></div>'
-      +'<div class="detail-line"><span class="detail-label">实付金额</span><span class="detail-val" style="color:#ff5b3e;font-weight:600;">¥'+(o.payAmount||0)+'</span></div>'
-      +'<div class="detail-line"><span class="detail-label">余额抵扣</span><span class="detail-val">¥'+(o.deductBalance||0)+'</span></div>'
-      +couponDetail
-      +'<div class="detail-line"><span class="detail-label">下单时间</span><span class="detail-val">'+((o.createTime||"").replace("T"," ").slice(0,16))+'</span></div>'
-      +(o.payTime?'<div class="detail-line"><span class="detail-label">支付时间</span><span class="detail-val">'+((o.payTime||"").replace("T"," ").slice(0,16))+'</span></div>':'')
-      +refundDetail
-      +'</div>'+refundable+'</div>';
-  });
-  $("ordersList").innerHTML=html;
-}
-function toggleOrderDetail(idx){
-  var el=document.getElementById("orderDetail"+idx);
-  var head=document.querySelector('[data-order="'+idx+'"] .order-expand');
-  if(!el)return;
-  if(el.style.display==="none"||el.style.display===""){el.style.display="block";if(head)head.textContent="▴";}
-  else{el.style.display="none";if(head)head.textContent="▾";}
-}
-async function refundOrder(orderNo){
-  if(!confirm("确认对订单 "+orderNo+" 发起全额退款？"))return;
-  var tk=localStorage.getItem("ibigou_user_token");
-  var ph=localStorage.getItem("ibigou_phone");
-  try{
-    var resp=await fetch("/api/customer/ibigou/order/"+orderNo+"/refund?userPhone="+ph,{method:"POST",headers:{"X-User-Token":tk}});
-    var r=await resp.json();
-    if(r.code===0){toast("退款成功","success");loadOrders();}
-    else{toast(r.msg||"退款失败","danger");}
-  }catch(e){toast("退款失败","danger");}
-}
 
 $("orderModal").addEventListener("click",function(e){if(e.target===$("orderModal")){$("orderModal").classList.remove("show")}});
 loadGoods();
-loadOrders();
 </script>
 </body>
 </html>

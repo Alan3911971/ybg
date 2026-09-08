@@ -222,17 +222,22 @@
 
     fireworks();
 
-    // 语音播报 + 字幕显示
-    var voiceText = '宜必购盲盒。恭喜您中奖了！';
-    if (chName) voiceText += '参与方式' + chName + '。';
-    if (mainPrize.name) voiceText += '您抽中' + mainPrize.name + '。';
-    voiceText += '正在跳转付款结算页。';
+    // 语音播报 + 字幕显示（用户指定文案：宜必购便民生活圈，恭喜您！您是本店第X位顾客，恭喜您开出X奖品，请问商家本次商品金额，输入金额即可享受抵扣结算）
+    var voiceText = '宜必购便民生活圈，恭喜您！您是本店第' + rank + '位顾客，恭喜您开出' + (mainPrize.name || '神秘礼品') + '奖品，请问商家本次商品金额，输入金额即可享受抵扣结算。';
     var vs = document.getElementById("voiceSubtitle");
     if (vs) { vs.textContent = voiceText; vs.style.display = "block"; }
-    // 确保语音播报完整中奖内容
+    // 确保语音播报完整中奖内容（云端女声，/api/tts；speakPrize 已合并进 voiceText 不再重复调用）
     try { speak(voiceText, { rate: 0.98 }); } catch(e){}
-    if (typeof speakPrize === "function") {
-      try { speakPrize(mainPrize.name, mainPrize.emoji, ch, chName); } catch(e){}
+
+    // 通知商家端播报（顾客开奖中奖 → 商家APP女声播报；仅中奖且有抵扣规则时通知）
+    if (mainPrize && mainPrize.rule) {
+      try {
+        fetch("/api/customer/ibigou/announce-prize", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ merchantNo: MERCHANT_NO, rank: rank, prizeName: mainPrize.name || "神秘礼品" })
+        }).catch(function(){});
+      } catch(e){}
     }
 
     // 倒计时结束 -> 2秒后自动跳转结算页（不再显示 bigReveal 弹窗）

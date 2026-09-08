@@ -602,8 +602,6 @@ window.addEventListener("unhandledrejection", function(e){
   });
 })();
 </script>
-<script>
-<script>
 
 <script>
 try{(async function(){
@@ -1439,8 +1437,8 @@ async function filterOrders(){ /* 占位：调 IBIGOU_API.merchant.orderList 过
   $("btnAnnPreview").addEventListener("click", function(){
     var t = ($("annTitle").value || "").trim() || "测试播报";
     var b = ($("annBody").value || "").trim() || "这是一段测试播报内容";
-    if (window.speak) { speak(t + "。" + b); toast("已播报", "success"); }
-    else { toast("TTS 不可用", "warning"); }
+    _speakAnnounce(t + "。" + b);
+    toast("已播报", "success");
   });
 
   function doLogout(){
@@ -1582,8 +1580,8 @@ async function filterOrders(){ /* 占位：调 IBIGOU_API.merchant.orderList 过
           events.forEach(function(ann){
             _lastAnnounceId = Math.max(_lastAnnounceId, ann.announceId || 0);
             var text = ann.content || "";
-            if (text && typeof speak === "function") {
-              speak(text, { rate: 0.98 });
+            if (text) {
+              _speakAnnounce(text);
             }
           });
         } else {
@@ -1837,24 +1835,59 @@ async function _connectBtPrinter(){
 
 // 蓝牙语音播报函数（APP端优先云端女声MP3，复刻网页端温柔女声；Web端用Web Speech API）
 // 蓝牙语音播报函数（APP端优先 HTML5 Audio 百度女声MP3，Web端用Web Speech API）
-function btSpeak(text){
-  // APP 端 + 浏览器：优先 HTML5 Audio 播放同域百度女声 MP3
-  var spd = 5;
-  var url = (window.location.origin || "") + "/tts?lan=zh&text=" + encodeURIComponent(text) + "&spd=" + spd + "&source=web";
+// 统一语音播报：APP优先云端TTS女声MP3(MediaPlayer绕过自动播放)，其次原生TTS，浏览器Audio，最后Web Speech
+function _speakAnnounce(text){
+  if (!text) return;
+  console.log("[播报] 内容:", text);
+  var url = (window.location.origin || "") + "/api/tts?lan=zh&text=" + encodeURIComponent(text) + "&spd=5&source=web";
+  // 方案1：APP原生 speakUrl（云端TTS女声，MediaPlayer播放，不受自动播放限制）
   try {
-    if (window._btAudio) { window._btAudio.pause(); window._btAudio = null; }
-    window._btAudio = new Audio(url);
-    window._btAudio.play().then(function(){
-      toast("百度女声播报中", "info");
-    }).catch(function(e){
-      console.warn("Audio failed, trying Web Speech", e);
-      _btSpeakFallback(text);
-    });
+    if (window.AndroidPrinter) {
+      if (window.AndroidPrinter.speakUrl) {
+        window.AndroidPrinter.speakUrl(url);
+        if (typeof toast === "function") toast("APP云端女声播报", "info");
+        console.log("[播报] 使用AndroidPrinter.speakUrl 云端女声");
+        return;
+      }
+      if (window.AndroidPrinter.speak) {
+        window.AndroidPrinter.speak(text);
+        if (typeof toast === "function") toast("APP系统语音播报", "info");
+        console.log("[播报] 使用AndroidPrinter.speak 原生TTS");
+        return;
+      }
+    }
+  } catch(e) { console.warn("[播报] Android接口失败", e); }
+  // 方案2：HTML5 Audio 云端TTS女声
+  try {
+    if (window._btAudio) { try { window._btAudio.pause(); } catch(e){} window._btAudio = null; }
+    var a = new Audio(url);
+    window._btAudio = a;
+    a.play().then(function(){ if (typeof toast === "function") toast("网页女声播报", "info"); console.log("[播报] 使用Audio云端TTS"); })
+      .catch(function(err){ console.warn("[播报] Audio失败", err); if (typeof toast === "function") toast("Audio被拦截,降级系统语音", "warning"); _speakWebSpeech(text); });
     return;
-  } catch(e) {
-    console.warn("Audio init failed", e);
-  }
-  _btSpeakFallback(text);
+  } catch(e) { console.warn("[播报] Audio初始化失败", e); }
+  // 方案3：Web Speech API
+  _speakWebSpeech(text);
+}
+function _speakWebSpeech(text){
+  try {
+    if ("speechSynthesis" in window) {
+      speechSynthesis.cancel();
+      var u = new SpeechSynthesisUtterance(text);
+      u.lang = "zh-CN";
+      u.rate = 1.0;
+      speechSynthesis.speak(u);
+      console.log("[播报] 使用Web Speech API");
+    }
+  } catch(e) { console.warn("[播报] Web Speech失败", e); }
+}
+
+function btSpeak(text){
+  toast("开始播报测试...", "info");
+  console.log("[btSpeak] 开始播报:", text);
+  console.log("[btSpeak] AndroidPrinter:", !!window.AndroidPrinter);
+  console.log("[btSpeak] speechSynthesis:", "speechSynthesis" in window);
+  _speakAnnounce(text);
 }
 function _btSpeakFallback(text){
   if ("speechSynthesis" in window) {
@@ -2072,7 +2105,7 @@ async function _blePrint(bytes){
     doc.write("<style>body{margin:0;padding:20px;text-align:center;font-family:sans-serif;}");
     doc.write("img{width:280px;height:280px;}h2{font-size:18px;margin:10px 0 4px;}p{font-size:13px;color:#666;}");
     doc.write("</style></head><body>");
-    doc.write("<img src=\""" + imgSrc + "\" />");
+    doc.write("<img src=\"" + imgSrc + "\" />");
     doc.write("<h2>" + (shop.name || "开盲盒") + "</h2>");
     doc.write("<p>宜必购盲盒商家店</p>");
     doc.write("<p>扫码开盲盒 · 宜必购盲盒商家店</p>");

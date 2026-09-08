@@ -34,6 +34,7 @@ public class CustomerController {
     private final IbigouService ibigouService;
     private final com.ibigou.blindbox.repository.MerchantRepository merchantRepository;
     private final ChatService chatService;
+    private final AnnounceService announceService;
 
     // ---------------- 短信验证码登录（P0） ----------------
 
@@ -231,6 +232,22 @@ public class CustomerController {
     @GetMapping("/ibigou/assets/{userPhone}")
     public Result<IbigouService.IbigouAssets> ibigouAssets(@PathVariable String userPhone) {
         return Result.ok(ibigouService.availableAssets(userPhone));
+    }
+
+    /** 顾客开盲盒中奖 → 商家端语音播报（draw 事件，女声）；文案与顾客端提示一致 */
+    @PostMapping("/ibigou/announce-prize")
+    public Result<Void> announcePrize(@RequestBody java.util.Map<String, String> body) {
+        String merchantNo = body.get("merchantNo");
+        if (merchantNo == null || merchantNo.isEmpty()) {
+            return Result.fail("缺少商家编号");
+        }
+        String rank = body.get("rank");
+        String prizeName = body.get("prizeName");
+        if (prizeName == null || prizeName.isEmpty()) prizeName = "神秘礼品";
+        String content = "宜必购便民生活圈，恭喜您！您是本店第" + (rank == null ? "" : rank)
+                + "位顾客，恭喜您开出" + prizeName + "奖品，请问商家本次商品金额，输入金额即可享受抵扣结算。";
+        announceService.record(merchantNo, "draw", content);
+        return Result.ok();
     }
 
     @PostMapping("/ibigou/order")
