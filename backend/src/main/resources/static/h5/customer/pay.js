@@ -359,17 +359,36 @@ var _payPending = false;  // 标记用户已跳转APP支付, 返回时自动完�
     btns.forEach(function(btn){
       btn.addEventListener('click', async function(){
         var method = btn.getAttribute('data-pay') || btn.textContent.trim();
-        // 先调用支付接口，获取支付信息（支持静态码和API支付两种模式）
+        // 先调用支付接口，获取支付信息（支持静态码、API拉起、二维码）
         if (currentPayOrderNo) {
           try {
+            // scene：wechat 非微信内=mweb直接拉起；alipay=wap直接拉起；微信内/其他=二维码
+            var scene = '';
+            if (method === 'wechat' && !isInWeChat()) scene = 'mweb';
+            else if (method === 'alipay') scene = 'wap';
             var resp = await fetch('/api/customer/pay/create', {
               method: 'POST',
               headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'X-User-Token': (function(){ try { return localStorage.getItem('ibigou_user_token') || ''; } catch(e){ return ''; } })() },
-              body: 'orderNo=' + encodeURIComponent(currentPayOrderNo) + '&payType=' + encodeURIComponent(method)
+              body: 'orderNo=' + encodeURIComponent(currentPayOrderNo) + '&payType=' + encodeURIComponent(method) + (scene ? '&scene=' + scene : '')
             });
             var payData = await resp.json();
             if (payData.code === 0 && payData.data) {
-              showMerchantQR(method, payData.data);
+              var d = payData.data;
+              if (d.mwebUrl) {
+                // 微信H5支付：跳转拉起微信收银台
+                location.href = d.mwebUrl;
+                return;
+              }
+              if (d.wapForm) {
+                // 支付宝WAP支付：提交form拉起支付宝收银台
+                var wf = document.createElement('div');
+                wf.style.display = 'none';
+                wf.innerHTML = d.wapForm;
+                document.body.appendChild(wf);
+                var wform = wf.querySelector('form');
+                if (wform) { wform.submit(); return; }
+              }
+              showMerchantQR(method, d);
             } else {
               showMerchantQR(method, null);
             }

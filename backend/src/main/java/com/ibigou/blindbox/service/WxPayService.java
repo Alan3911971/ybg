@@ -51,6 +51,23 @@ public class WxPayService {
             log.info("微信支付未开启(测试mock)，订单 {}", outTradeNo);
             return null;
         }
+        return unifiedOrder(outTradeNo, amountYuan, description, notifyUrl, "NATIVE", null);
+    }
+
+    /** H5 支付下单：返回 mweb_url（跳转拉起微信收银台）；未开启返回 null */
+    public String h5Pay(String outTradeNo, BigDecimal amountYuan, String description, String notifyUrl) {
+        if (!enabled()) {
+            log.info("微信支付未开启(测试mock)，订单 {}", outTradeNo);
+            return null;
+        }
+        // H5 支付场景信息（必填：场景类型+客户端IP+用户代理）
+        String sceneInfo = "{\"h5_info\":{\"type\":\"Wap\",\"wap_url\":\"" + configService.get("IBIGOU_DOMAIN", "https://ybgtc.com") + "\",\"wap_name\":\"宜必购\"}}";
+        return unifiedOrder(outTradeNo, amountYuan, description, notifyUrl, "MWEB", sceneInfo);
+    }
+
+    /** 统一下单（V2）：tradeType=NATIVE/MWEB，返回 code_url 或 mweb_url */
+    private String unifiedOrder(String outTradeNo, BigDecimal amountYuan, String description, String notifyUrl,
+                                String tradeType, String sceneInfo) {
         String appId = configService.get("wx_pay_app_id", "");
         String mchId = configService.get("wx_pay_mch_id", "");
         String apiKey = configService.get("wx_pay_api_key", "");
@@ -67,11 +84,14 @@ public class WxPayService {
         params.put("total_fee", amountYuan.multiply(BigDecimal.valueOf(100)).intValue() + "");
         params.put("spbill_create_ip", "127.0.0.1");
         params.put("notify_url", notifyUrl);
-        params.put("trade_type", "NATIVE");
+        params.put("trade_type", tradeType);
+        if (sceneInfo != null && !sceneInfo.isBlank()) {
+            params.put("scene_info", sceneInfo);
+        }
         params.put("sign", sign(params, apiKey));
 
         String xml = toXml(params);
-        log.info("微信V2下单请求: {}", xml);
+        log.info("微信V2下单({})请求: {}", tradeType, xml);
         try {
             HttpRequest request = HttpRequest.newBuilder()
                     .uri(URI.create(UNIFIED_ORDER_URL))
@@ -87,6 +107,9 @@ public class WxPayService {
             }
             if (!"SUCCESS".equals(resp.get("result_code"))) {
                 throw new BizException("微信支付下单失败: " + resp.get("err_code") + " " + resp.get("err_code_des"));
+            }
+            if ("MWEB".equals(tradeType)) {
+                return resp.get("mweb_url");
             }
             return resp.get("code_url");
         } catch (BizException e) {
