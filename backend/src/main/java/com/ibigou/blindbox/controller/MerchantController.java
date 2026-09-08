@@ -204,6 +204,70 @@ public class MerchantController {
         return Result.ok(offlineOrderService.listOrders(merchantNo, userPhone, date));
     }
 
+    /** 商家端：会员管理——聚合本店消费顾客（宜必购+线下），按最近消费倒序 */
+    @GetMapping("/members")
+    public Result<java.util.List<java.util.Map<String, Object>>> members(@RequestHeader("X-Merchant-Token") String token) {
+        String merchantNo = authService.merchantNoByToken(token);
+        java.util.Map<String, java.util.Map<String, Object>> agg = new java.util.LinkedHashMap<>();
+        java.util.List<com.ibigou.blindbox.entity.IbigouOrder> ib = ibigouOrderRepository.findByMerchantNoOrderByCreateTimeDesc(merchantNo);
+        java.util.List<com.ibigou.blindbox.entity.OfflineOrder> of = offlineOrderRepository.findByMerchantNoOrderByCreateTimeDesc(merchantNo);
+        java.util.List<Object[]> rows = new java.util.ArrayList<>();
+        for (var o : ib) rows.add(new Object[]{o.getUserPhone(), o.getPayAmount(),
+                o.getOrderAmount().subtract(o.getPayAmount()).max(BigDecimal.ZERO), o.getCreateTime(), o.getCouponId()});
+        for (var o : of) rows.add(new Object[]{o.getUserPhone(), o.getPayAmount(),
+                o.getOrderAmount().subtract(o.getPayAmount()).max(BigDecimal.ZERO), o.getCreateTime(), o.getCouponId()});
+        for (Object[] r : rows) {
+            String phone = (String) r[0];
+            if (phone == null || phone.isEmpty()) continue;
+            var m = agg.computeIfAbsent(phone, k -> {
+                var mm = new java.util.HashMap<String, Object>();
+                mm.put("userPhone", k);
+                mm.put("orderCount", 0);
+                mm.put("totalAmount", BigDecimal.ZERO);
+                mm.put("totalSave", BigDecimal.ZERO);
+                mm.put("lastTs", null);
+                mm.put("lastPrize", "");
+                mm.put("lastPrizeEmoji", "🎁");
+                return mm;
+            });
+            m.put("orderCount", (Integer) m.get("orderCount") + 1);
+            m.put("totalAmount", ((BigDecimal) m.get("totalAmount")).add((BigDecimal) r[1]));
+            m.put("totalSave", ((BigDecimal) m.get("totalSave")).add((BigDecimal) r[2]));
+            java.time.LocalDateTime ts = (java.time.LocalDateTime) r[3];
+            if (m.get("lastTs") == null || ((java.time.LocalDateTime) m.get("lastTs")).isBefore(ts)) {
+                m.put("lastTs", ts);
+                // 最近一笔的奖品
+                String pn = "";
+                String pe = "🎁";
+                Long cid = (Long) r[4];
+                if (cid != null) {
+                    var uc = userCouponRepository.findById(cid);
+                    if (uc.isPresent()) {
+                        var coupon = uc.get();
+                        String src = coupon.getSourceMerchantNo() == null ? merchantNo : coupon.getSourceMerchantNo();
+                        var pools = boxPrizePoolRepository.findByMerchantNoAndPrizeTypeAndPrizeValue(
+                                src, coupon.getPrizeType(), coupon.getPrizeValue());
+                        for (var p : pools) { if (p.getRemark() != null && !p.getRemark().isEmpty()) { pn = p.getRemark(); break; } }
+                        int pt = coupon.getPrizeType() == null ? 1 : coupon.getPrizeType();
+                        String[] emojis = {"", "🎟️", "💵", "💰", "👑"};
+                        String[] tns = {"", "折扣券", "立减券", "余额券", "免单券"};
+                        if (pt >= 1 && pt <= 4) { pe = emojis[pt]; if (pn.isEmpty()) pn = tns[pt]; }
+                    }
+                }
+                m.put("lastPrize", pn);
+                m.put("lastPrizeEmoji", pe);
+            }
+        }
+        java.util.List<java.util.Map<String, Object>> result = new java.util.ArrayList<>(agg.values());
+        result.sort((a, b) -> {
+            Object ta = a.get("lastTs"); Object tb = b.get("lastTs");
+            if (ta == null) return 1;
+            if (tb == null) return -1;
+            return ((java.time.LocalDateTime) tb).compareTo((java.time.LocalDateTime) ta);
+        });
+        return Result.ok(result);
+    }
+
     /** 商家端：订单列表（宜必购商城订单 + 线下订单 合并，新→旧，含真实奖品名） */
     @GetMapping("/ibigou/orders")
     public Result<java.util.List<java.util.Map<String, Object>>> ibigouOrders(@RequestHeader("X-Merchant-Token") String token) {
