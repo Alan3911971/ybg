@@ -618,6 +618,14 @@ textarea.input{height:80px;padding:10px 12px;resize:vertical;}
     <button class="btn btn--sm" onclick="closeMemberDetail()">✕ 关闭</button>
   </div>
   <div class="drawer-body" id="mdBody"></div>
+    <div class="drawer-mask" id="detailMask" onclick="closeDetail()"></div>
+    <div class="drawer" id="detailDrawer">
+      <div class="drawer-head">
+        <div style="font-size:16px;font-weight:700;" id="detailTitle">明细</div>
+        <button class="btn btn--sm" onclick="closeDetail()">✕ 关闭</button>
+      </div>
+      <div class="drawer-body" id="detailBody"></div>
+    </div>
 </div>
 
 <script src="./api.js"></script>
@@ -918,8 +926,11 @@ async function filterOrders(){ /* 占位：调 IBIGOU_API.merchant.orderList 过
         + '<div style="margin-top:8px;">';
       var vList = dta.visits || [];
       if (vList.length === 0) h += '<div style="color:#9ca3af;font-size:12px;padding:6px 0;">暂无回访记录</div>';
+      window._visitList = [];
       vList.forEach(function(v){
-        h += '<div class="vitem"><span>📞</span><div style="flex:1;">' + escHtml(v.content) + (v.result ? '<br><span style="color:#6b7280;">结果：' + escHtml(v.result) + '</span>' : "") + '<div style="color:#9ca3af;font-size:11px;margin-top:2px;">📅 ' + fmtFullTs(v.visitTime) + '</div></div></div>';
+        window._visitList.push(v);
+        var vi = window._visitList.length - 1;
+        h += '<div class="vitem" style="cursor:pointer;" onclick="showVisitDetail(' + vi + ')"><span>📞</span><div style="flex:1;">' + escHtml(v.content) + (v.result ? '<br><span style="color:#6b7280;">结果：' + escHtml(v.result) + '</span>' : "") + '<div style="color:#9ca3af;font-size:11px;margin-top:2px;">📅 ' + fmtFullTs(v.visitTime) + '</div></div></div>';
       });
       h += '</div></div>';
       h += '<div class="mcard"><div class="mt">🎁 礼品赠送</div>'
@@ -949,10 +960,13 @@ async function filterOrders(){ /* 占位：调 IBIGOU_API.merchant.orderList 过
         + '<div style="margin-top:8px;">';
       var aList = dta.appointments || [];
       if (aList.length === 0) h += '<div style="color:#9ca3af;font-size:12px;padding:6px 0;">暂无预约</div>';
+      window._apptList = [];
       aList.forEach(function(a){
+        window._apptList.push(a);
+        var ai = window._apptList.length - 1;
         var st = a.status === 0 ? '<span class="tag">待服务</span>' : (a.status === 1 ? '<span class="tag done">已完成</span>' : '<span class="tag cancel">已取消</span>');
         var btns = a.status === 0 ? ' <button class="btn btn--sm" onclick="apptStatus(' + a.id + ',1)">完成</button> <button class="btn btn--sm" onclick="apptStatus(' + a.id + ',2)">取消</button>' : '';
-        h += '<div class="vitem"><span>📅</span><div style="flex:1;">' + fmtFullTs(a.apptTime) + (a.serviceItem ? ' · ' + escHtml(a.serviceItem) : "") + (a.remark ? '<br><span style="color:#6b7280;">' + escHtml(a.remark) + '</span>' : "") + '<br>' + st + btns + '<div style="color:#9ca3af;font-size:11px;margin-top:2px;">⏰ 提前' + (a.remindMinutes || 30) + '分钟提醒 · 创建于 ' + fmtShortTs(a.createTime) + '</div></div></div>';
+        h += '<div class="vitem" style="cursor:pointer;" onclick="showApptDetail(' + ai + ')"><span>📅</span><div style="flex:1;">' + fmtFullTs(a.apptTime) + (a.serviceItem ? ' · ' + escHtml(a.serviceItem) : "") + (a.remark ? '<br><span style="color:#6b7280;">' + escHtml(a.remark) + '</span>' : "") + '<br>' + st + btns + '<div style="color:#9ca3af;font-size:11px;margin-top:2px;">⏰ 提前' + (a.remindMinutes || 30) + '分钟提醒 · 创建于 ' + fmtShortTs(a.createTime) + '</div></div></div>';
       });
       h += '</div></div>';
       // 礼品赠送
@@ -1029,6 +1043,43 @@ async function filterOrders(){ /* 占位：调 IBIGOU_API.merchant.orderList 过
       }).join("");
       if (cur) sel.value = cur;
     });
+  }
+  function showApptDetail(idx){
+    var a = window._apptList && window._apptList[idx]; if (!a) return;
+    var st = a.status === 0 ? '待服务' : (a.status === 1 ? '已完成' : '已取消');
+    var rows = [
+      ['📅 预约时间', fmtFullTs(a.apptTime)],
+      ['🧾 服务项目', a.serviceItem || '-'],
+      ['📝 备注', a.remark || '-'],
+      ['📌 状态', st],
+      ['⏰ 提醒设置', '提前' + (a.remindMinutes || 30) + '分钟'],
+      ['🕐 创建于', fmtFullTs(a.createTime)]
+    ];
+    showDetail('📅 预约明细', rows);
+  }
+  function showVisitDetail(idx){
+    var v = window._visitList && window._visitList[idx]; if (!v) return;
+    var gift = v.giftGoodsName ? v.giftGoodsName + (v.giftQuantity > 1 ? ' ×' + v.giftQuantity : '') + (v.giftRemark ? '（' + v.giftRemark + '）' : '') : '';
+    var rows = [
+      ['📝 回访内容', v.content || '-'],
+      ['📌 结果', v.result || '-'],
+      ['📅 回访时间', fmtFullTs(v.visitTime)],
+      ['🎁 附带赠送', gift || '无']
+    ];
+    showDetail('📞 回访明细', rows);
+  }
+  function showDetail(title, rows){
+    document.getElementById('detailTitle').textContent = title;
+    var h = rows.map(function(r){
+      return '<div class="vitem"><span>' + r[0] + '</span><div style="flex:1;text-align:right;color:#111827;font-weight:500;">' + escHtml(r[1]) + '</div></div>';
+    }).join('');
+    document.getElementById('detailBody').innerHTML = h;
+    document.getElementById('detailMask').classList.add('show');
+    document.getElementById('detailDrawer').classList.add('show');
+  }
+  function closeDetail(){
+    document.getElementById('detailMask').classList.remove('show');
+    document.getElementById('detailDrawer').classList.remove('show');
   }
   function loadPrefTags(){
     var tk = lsGet("ibigou_merchant_token", null); if (!tk) return;
@@ -1135,6 +1186,9 @@ async function filterOrders(){ /* 占位：调 IBIGOU_API.merchant.orderList 过
   window.addMemberGift = addMemberGift;
   window.togglePrefTag = togglePrefTag;
   window.switchMemberTab = switchMemberTab;
+  window.showApptDetail = showApptDetail;
+  window.showVisitDetail = showVisitDetail;
+  window.closeDetail = closeDetail;
   window.openMemberTypes = openMemberTypes;
   window.closeMemberTypes = closeMemberTypes;
   window.addNewMemberType = addNewMemberType;
