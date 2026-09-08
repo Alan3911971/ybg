@@ -896,6 +896,14 @@ async function filterOrders(){ /* 占位：调 IBIGOU_API.merchant.orderList 过
         + '<label>备注</label><input id="pfRemark" value="' + escHtml(prof.remark) + '">'
         + (prof.editor ? '<div style="color:#9ca3af;font-size:11px;margin-top:8px;">👤 录入：' + escHtml(prof.editor) + '</div>' : '')
         + '<button class="btn btn--primary btn--block" style="margin-top:10px;" onclick="saveMemberProfile()">💾 保存资料</button></div>';
+      // 最近订单
+      h += '<div class="mcard"><div class="mt">🧾 最近订单</div>';
+      var oList = dta.orders || [];
+      if (oList.length === 0) h += '<div style="color:#9ca3af;font-size:12px;padding:6px 0;">暂无订单</div>';
+      oList.forEach(function(o){
+        h += '<div class="vitem"><span>🧾</span><div style="flex:1;">' + escHtml(String(o.orderNo||"").slice(0,22)) + '</div><div>¥' + (o.amount||0).toFixed(2) + '</div></div>';
+      });
+      h += '</div>';
       h += '</div>';
       h += '<div id="mdTabVisit" style="display:none;">';
       // 回访
@@ -931,7 +939,7 @@ async function filterOrders(){ /* 占位：调 IBIGOU_API.merchant.orderList 过
       h += '</div>';
       h += '<div id="mdTabAppt" style="display:none;">';
       // 预约
-      h += '<div class="mcard"><div class="mt">📅 预约</div>'
+      h += '<div class="mcard"><div class="mt">📅 预约记录</div>'
         + '<div style="display:flex;gap:8px;flex-wrap:wrap;">'
         + '<input id="aTime" type="datetime-local" style="flex:1;min-width:150px;">'
         + '<input id="aItem" placeholder="服务项目" style="flex:0 0 100px;">'
@@ -949,14 +957,7 @@ async function filterOrders(){ /* 占位：调 IBIGOU_API.merchant.orderList 过
       h += '</div></div>';
       // 礼品赠送
 
-      // 最近订单
-      h += '<div class="mcard"><div class="mt">🧾 最近订单</div>';
-      var oList = dta.orders || [];
-      if (oList.length === 0) h += '<div style="color:#9ca3af;font-size:12px;padding:6px 0;">暂无订单</div>';
-      oList.forEach(function(o){
-        h += '<div class="vitem"><span>🧾</span><div style="flex:1;">' + escHtml(String(o.orderNo||"").slice(0,22)) + '</div><div>¥' + (o.amount||0).toFixed(2) + '</div></div>';
-      });
-      h += '</div>';
+
       h += '</div>';
       document.getElementById("mdBody").innerHTML = h;
     loadGiftGoodsSelect();
