@@ -339,3 +339,37 @@
 3. 测试支付0.01限制：pay.js btnOrder点击处加 amt>0.01 拦截+toast；已部署公网生效(27434字符)。
 4. bu环境限制记录：headless不触发 rAF/animationend(开奖动画卡住但接口真实开奖)、bu注入pay.js后点击交互异常(手动fetch验证正常)、bu无法模拟微信UA、电脑浏览器无法完成H5收款。
 5. 支付闭环验证：手动创建订单OFF-cf0a58(0.01元)→createPay返回weixin:// native码→本地生成二维码→用户手机扫码支付0.01元成功(order_status=1)。
+
+
+【G25】2026-09-09 折扣券未生效 + 微信拉起 + 0.01保底 + 二维码样式
+现象:
+  1. 顾客结算输入20元显示19.24（9折券没算，只扣余额0.76）
+  2. 0.01输入显示¥0.00（被立减券/余额抵光）
+  3. 微信支付bu点击无反应、二维码没居中、扫码步骤指引多余
+根因:
+  1. 后端offline/calc、offline/order只认用户券(couponId)，不认前端URL里的开奖规则(rule JSON)，
+     前端rule只本地算、下单被后端无券结果覆盖 → 折扣券不生效
+  2. 0.01元订单被大额立减券(如minus5)减到0 → 无法支付
+  3. bu(headless)环境点击不触发JS；pay.js二维码容器flex默认不居中；scanSteps扫码步骤指引
+修复:
+  1. 后端OrderCalcService.calc加rule参数+applyRule(JSON: free/discount/minus/threshold)，
+     rule非空时不选券直接按规则算；Controller calcOffline/createOfflineOrder加rule；
+     pay.js offlineCalc/offlineOrder传rule(0.01时传undefined)
+  2. pay.js calc开头0.01保底(不应用任何优惠,pay固定0.01)；rule传参条件加 amt!==0.01
+  3. pay.js二维码容器加justifyContent/alignItems居中+margin:0 auto；scanSteps数组清空、
+     tip统一为"长按识别上方二维码完成付款"(取消扫码步骤指引)
+部署:
+  服务器mvn重建(mvn -Dmaven.test.skip=true -DskipTests package, JAVA_HOME=/usr/lib/jvm/java-17-openjdk-17.0.18.0.8-2.el9.x86_64)
+  → cp新jar(102064386B)+stop+setsid启动(pid 1899117,8085)；pay.js scp公网
+验证:
+  - 接口calc(20,rule=9折): afterCoupon=18,payAmount=17.24(9折+余额0.76) ✅
+  - 页面20元: 确认下单¥17.24 ✅
+  - 0.01+minus5券: 确认下单¥0.01(保底) ✅
+  - createPay scene=mweb: mwebUrl=null(H5支付未开通,后端退回二维码) — 需商户平台开通H5支付
+  - createPay scene=native: qrCode=weixin://wxpay/bizpayurl?pr=... ✅ 长按识别拉起
+  - 二维码容器ri: flex center/center 居中 ✅ ; 弹窗只显示"长按识别上方二维码完成付款" ✅
+坑:
+  - bu.js fetch时resp.text()只能读一次(body stream)
+  - scp后服务器文件字节>本地(CRLF行尾转换,不影响JS)
+  - 服务器mvn需JAVA_HOME+跳过测试编译(-Dmaven.test.skip=true)
+  - H5支付(mweb)未开通→微信支付当前靠native二维码长按识别(微信内JSAPI待手机实测)

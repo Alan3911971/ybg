@@ -43,9 +43,9 @@ public class OfflineOrderService {
      */
     @Transactional
     public OfflineOrder createOrder(String userPhone, String merchantNo, Long couponId,
-                                    BigDecimal orderAmount, BigDecimal paidAmount, String drawBatchNo) {
+                                    BigDecimal orderAmount, BigDecimal paidAmount, String drawBatchNo, String rule) {
         memberService.requireWriteAllowed(merchantNo);
-        OrderCalcService.OrderCalc calc = orderCalcService.calc(userPhone, merchantNo, couponId, orderAmount);
+        OrderCalcService.OrderCalc calc = orderCalcService.calc(userPhone, merchantNo, couponId, orderAmount, rule);
         String bizNo = "OFF-" + orderNo();
         Long usedCouponId = calc.coupon() == null ? null : calc.coupon().getCouponId();
         BigDecimal deducted = calc.actualDeduct();
@@ -198,7 +198,7 @@ public class OfflineOrderService {
     public OfflineOrder createOrderB(String userPhone, String merchantNo, Long couponId,
                                      BigDecimal orderAmount) {
         memberService.requireWriteAllowed(merchantNo);
-        OrderCalcService.OrderCalc calc = orderCalcService.calc(userPhone, merchantNo, couponId, orderAmount);
+        OrderCalcService.OrderCalc calc = orderCalcService.calc(userPhone, merchantNo, couponId, orderAmount, null);
         String bizNo = "OFF-" + orderNo();
         OfflineOrder order = new OfflineOrder();
         order.setOfflineOrderNo(bizNo);
@@ -242,7 +242,7 @@ public class OfflineOrderService {
         }
         // 重算（以用户下单时的金额与券为准）
         OrderCalcService.OrderCalc calc = orderCalcService.calc(order.getUserPhone(),
-                operatorMerchantNo, order.getCouponId(), order.getOrderAmount());
+                operatorMerchantNo, order.getCouponId(), order.getOrderAmount(), null);
         String bizNo = order.getOfflineOrderNo();
         BigDecimal deducted = calc.actualDeduct();
         settleAssets(order, calc, deducted, order.getCouponId(), order.getUserPhone(),
@@ -288,7 +288,7 @@ public class OfflineOrderService {
             return order;
         }
         OrderCalcService.OrderCalc calc = orderCalcService.calc(order.getUserPhone(),
-                order.getMerchantNo(), order.getCouponId(), order.getOrderAmount());
+                order.getMerchantNo(), order.getCouponId(), order.getOrderAmount(), null);
         String bizNo = order.getOfflineOrderNo();
         BigDecimal deducted = calc.actualDeduct();
         settleAssets(order, calc, deducted, order.getCouponId(), order.getUserPhone(),

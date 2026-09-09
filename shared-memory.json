@@ -1,6 +1,6 @@
 {
   "project": "宜必购盲盒系统 (ybgtc.com)",
-  "last_updated": "2026-09-09 23:05",
+  "last_updated": "2026-09-09 23:50",
   "note": "顾客端完整流程闭环：开盒→中奖→抵扣→0.01元真实支付（微信native扫码已支付成功）；每日限次已取消并成功部署（新jar运行中）；测试支付锁定0.01元（pay.js）",
   "environment": {
     "code_root": "D:\\workspace-java\\ybg-master",
@@ -73,7 +73,9 @@
       "app_id": "2021002144664045（宜必购便民生活圈）",
       "gateway": "https://openapi.alipay.com/gateway.do",
       "note": "应用私钥曾丢失，用户后补；以用户最后提供为准"
-    }
+    },
+    "wx_h5_status": "H5支付(mweb)未开通,createPay scene=mweb返回mwebUrl=null,后端退回native二维码; 需商户平台(pay.weixin.qq.com)开通H5支付",
+    "wx_pull_mode": "微信内=JSAPI自动拉起(公众号wx05a588674344ed25已配授权目录); H5浏览器=native二维码长按识别; 不使用扫一扫"
   },
   "github": {
     "backend": "https://github.com/Alan3911971/ybg",
@@ -96,7 +98,17 @@
     "customer_h5": "backend/src/main/resources/static/h5/customer/（pay.js已取消顾客端播报，已同步）",
     "order_detail": "backend/src/main/resources/static/h5/customer/order-detail.html",
     "my_orders": "backend/src/main/resources/static/h5/customer/my-orders.html",
-    "ibigou_mall": "backend/src/main/resources/static/h5/customer/ibigou.html（4tab：抽盒/商城/订单/我的）"
+    "ibigou_mall": "backend/src/main/resources/static/h5/customer/ibigou.html（4tab：抽盒/商城/订单/我的）",
+    "offline_calc_rule": {
+      "desc": "后端offline/calc、offline/order支持rule参数(开奖规则JSON)",
+      "files": [
+        "D:\\workspace-java\\ybg-master\\backend\\src\\main\\java\\com\\ibigou\\blindbox\\service\\OrderCalcService.java (calc加rule+applyRule: free/discount/minus/threshold)",
+        "D:\\workspace-java\\ybg-master\\backend\\src\\main\\java\\com\\ibigou\\blindbox\\controller\\CustomerController.java (calcOffline/createOfflineOrder加rule)",
+        "D:\\workspace-java\\ybg-master\\backend\\src\\main\\java\\com\\ibigou\\blindbox\\service\\OfflineOrderService.java (createOrder传rule)",
+        "D:\\workspace-java\\ybg-master\\backend\\src\\main\\resources\\static\\h5\\customer\\pay.js (offlineCalc/offlineOrder传rule; 0.01保底; 二维码居中; 取消扫码步骤)"
+      ],
+      "note": "折扣券生效(20元9折→18→余额0.76→17.24); 0.01保底不应用优惠; 微信H5未开通时native二维码长按识别"
+    }
   },
   "announce_restore_info": {
     "status": "生产jar已反编译确认播报逻辑，D盘IbigouService.java待补",

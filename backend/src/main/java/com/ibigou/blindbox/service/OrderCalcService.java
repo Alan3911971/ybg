@@ -42,28 +42,31 @@ public class OrderCalcService {
 
     /** 计算订单（couponId 为空时自动选择对用户最有利的券） */
     @Transactional
-    public OrderCalc calc(String userPhone, String merchantNo, Long couponId, BigDecimal orderAmount) {
+    public OrderCalc calc(String userPhone, String merchantNo, Long couponId, BigDecimal orderAmount, String rule) {
         if (orderAmount == null || orderAmount.signum() <= 0) {
             throw new BizException("订单金额必须大于 0");
         }
         Merchant merchant = merchantRepository.findById(merchantNo)
                 .orElseThrow(() -> new BizException("商家不存在"));
 
-        // 1) 自动选券：指定券 或 对用户最有利（盲盒后金额最小）
+        // 1) 自动选券：指定券 或 对用户最有利（盲盒后金额最小）；rule 非空时按开奖规则直接计算
         UserCoupon coupon = null;
-        if (couponId != null) {
-            coupon = couponService.get(couponId);
+        BigDecimal afterCoupon;
+        if (rule != null && !rule.isBlank()) {
+            afterCoupon = applyRule(rule, orderAmount);
         } else {
-            List<UserCoupon> usable = couponService.availableForOffline(userPhone, merchantNo);
-            if (!usable.isEmpty()) {
-                coupon = usable.stream()
-                        .min(java.util.Comparator.comparing(c -> CouponService.afterCoupon(c, orderAmount)))
-                        .orElse(null);
+            if (couponId != null) {
+                coupon = couponService.get(couponId);
+            } else {
+                List<UserCoupon> usable = couponService.availableForOffline(userPhone, merchantNo);
+                if (!usable.isEmpty()) {
+                    coupon = usable.stream()
+                            .min(java.util.Comparator.comparing(c -> CouponService.afterCoupon(c, orderAmount)))
+                            .orElse(null);
+                }
             }
+            afterCoupon = coupon == null ? orderAmount : CouponService.afterCoupon(coupon, orderAmount);
         }
-
-        // 2) 盲盒后金额
-        BigDecimal afterCoupon = coupon == null ? orderAmount : CouponService.afterCoupon(coupon, orderAmount);
 
         // 3) 免单边界：盲盒后金额=0 → 抵扣=0 实付=0
         if (afterCoupon.signum() <= 0) {
@@ -93,6 +96,43 @@ public class OrderCalcService {
                 merchant.getReceiveQrImgWechat(), merchant.getReceiveQrImgAlipay(),
                 merchant.getReceiveQrImgUnionpay(), merchant.getReceiveQrImgOther(),
                 merchant.getReceiveMode(), merchant.getReceiveQrStatus());
+    }
+
+    /** 按开奖规则计算盲盒后金额（rule JSON：free/discount/minus/threshold）；解析失败回退原价 */
+    public static BigDecimal applyRule(String ruleJson, BigDecimal orderAmount) {
+        if (ruleJson == null || ruleJson.isBlank()) {
+            return orderAmount;
+        }
+        try {
+            var node = new com.fasterxml.jackson.databind.ObjectMapper().readTree(ruleJson);
+            String type = node.path("type").asText("");
+            switch (type) {
+                case "free":
+                    return BigDecimal.ZERO;
+                case "discount": {
+                    double rate = node.path("rate").asDouble(1.0);
+                    if (rate <= 0 || rate >= 1) {
+                        return orderAmount;
+                    }
+                    return orderAmount.multiply(BigDecimal.valueOf(rate)).setScale(2, RoundingMode.HALF_UP);
+                }
+                case "minus":
+                    return orderAmount.subtract(node.path("amount").decimalValue()).max(BigDecimal.ZERO)
+                            .setScale(2, RoundingMode.DOWN);
+                case "threshold": {
+                    BigDecimal threshold = node.path("threshold").decimalValue();
+                    BigDecimal minus = node.path("minus").decimalValue();
+                    if (orderAmount.compareTo(threshold) >= 0) {
+                        return orderAmount.subtract(minus).max(BigDecimal.ZERO).setScale(2, RoundingMode.DOWN);
+                    }
+                    return orderAmount;
+                }
+                default:
+                    return orderAmount;
+            }
+        } catch (Exception e) {
+            return orderAmount;
+        }
     }
 
     /** 今日剩余单日额度（无限制返回一个大数） */

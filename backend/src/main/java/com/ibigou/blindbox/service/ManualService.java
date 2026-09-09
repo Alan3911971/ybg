@@ -42,7 +42,7 @@ public class ManualService {
     public void manualCompleteOrder(String userPhone, String operatorMerchantNo,
                                     BigDecimal orderAmount) {
         memberService.requireWriteAllowed(operatorMerchantNo);
-        OrderCalcService.OrderCalc calc = orderCalcService.calc(userPhone, operatorMerchantNo, null, orderAmount);
+        OrderCalcService.OrderCalc calc = orderCalcService.calc(userPhone, operatorMerchantNo, null, orderAmount, null);
         String bizNo = "MANUAL-" + operatorMerchantNo + "-" + System.currentTimeMillis();
         if (calc.coupon() != null) {
             couponService.verifyManual(calc.coupon().getCouponId(), operatorMerchantNo);

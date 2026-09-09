@@ -83,6 +83,10 @@
   function calc(amount, rule, channel, useBalance, userBalance){
     userBalance = userBalance || 0;
     lastInputAmount = amount;
+    // 测试阶段锁定：0.01 元订单不应用任何优惠，实付保底 0.01
+    if (amount === 0.01) {
+      return { steps: [{ label:'订单金额', value: amount, isAmount:true }, { label:'实付', coupon: 0, isFinal:true, value: 0.01 }], couponName: '无优惠', pay: 0.01, save: 0, couponSave: 0, balanceSave: 0, testLock: true };
+    }
     var steps = [{ label:'订单金额', value: amount, isAmount:true }];
     var pay = amount, couponSave = 0, balanceSave = 0, couponLabel = '无优惠';
     var gb = isGroupBuy();
@@ -209,7 +213,8 @@ var _payPending = false;  // 标记用户已跳转APP支付, 返回时自动完�
       try {
         if (!mno || mno === '') { alert('请扫描商家二维码进入'); location.replace('/h5/customer/login.html'); return; }
     var r = await api.customer.offlineCalc({
-          userPhone: ph, merchantNo: mno, orderAmount: amt
+          userPhone: ph, merchantNo: mno, orderAmount: amt,
+          rule: (amt !== 0.01 && prizeRule && prizeRule.type && prizeRule.type !== 'none') ? JSON.stringify(prizeRule) : undefined
         });
         if (r && r.code === 0 && r.data) {
           var d = r.data;
@@ -284,8 +289,10 @@ var _payPending = false;  // 标记用户已跳转APP支付, 返回时自动完�
         }).then(function(r){ return r.json(); }).then(function(r){
           if (r.code === 0 && r.data && r.data.svg) {
             if (empty) {
-              empty.innerHTML = '<div style="width:200px;height:200px;">' + r.data.svg + '</div>';
+              empty.innerHTML = '<div style="width:200px;height:200px;margin:0 auto;">' + r.data.svg + '</div>';
               empty.style.display = 'flex';
+              empty.style.justifyContent = 'center';
+              empty.style.alignItems = 'center';
             }
             if (qrImg) qrImg.style.display = 'none';
           }
@@ -347,11 +354,7 @@ var _payPending = false;  // 标记用户已跳转APP支付, 返回时自动完�
       alipay: 'alipays://platformapi/startapp?saId=10000007',
       unionpay: 'uppay://platformapi/startapp?saId=10000007'
     };
-    var scanSteps = {
-      wechat: ['打开微信', '点击右上角「+」', '点击「扫一扫」', '对准下方收款码扫码付款'],
-      alipay: ['打开支付宝', '点击首页「扫一扫」', '对准下方收款码扫码付款'],
-      unionpay: ['打开云闪付', '点击首页「扫一扫」', '对准下方收款码扫码付款']
-    };
+    var scanSteps = { wechat: [], alipay: [], unionpay: [] };
     function isInWeChat(){
       var ua = navigator.userAgent.toLowerCase();
       return ua.indexOf('micromessenger') >= 0;
@@ -492,9 +495,7 @@ var _payPending = false;  // 标记用户已跳转APP支付, 返回时自动完�
               + '<span>' + steps[si] + '</span>'
               + '</div>';
           }
-          var tip = inWeChat && method === 'wechat'
-            ? '微信内请点击右上角「+」→「扫一扫」'
-            : '长按上方二维码识别，或用' + lb + '扫一扫';
+          var tip = '长按识别上方二维码完成付款';
           info.innerHTML = '<div style="text-align:left;max-width:280px;margin:0 auto;">' + stepsHtml + '</div>'
             + '<div style="text-align:center;margin-top:4px;font-size:11px;color:var(--c-text-3);">' + tip + '</div>';
         } else if (info && method === 'other') {
@@ -571,7 +572,8 @@ var _payPending = false;  // 标记用户已跳转APP支付, 返回时自动完�
       try {
         r = await api.customer.offlineOrder({
           userPhone: ph, merchantNo: mno2, orderAmount: amt,
-          paidAmount: lastResult ? lastResult.pay : amt
+          paidAmount: lastResult ? lastResult.pay : amt,
+          rule: (amt !== 0.01 && prizeRule && prizeRule.type && prizeRule.type !== 'none') ? JSON.stringify(prizeRule) : undefined
         });
       } catch(e) {
         console.warn('[pay] order api error', e);
