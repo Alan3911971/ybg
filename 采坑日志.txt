@@ -419,3 +419,13 @@
   - pay_mode=0返回商家静态收款码(qrUrl), pay_mode=1走平台微信/支付宝商户号下单(qrCode/mwebUrl/jsapi)
   - 微信内jsapi直接拉起wx.chooseWXPay不跳出; H5浏览器mweb未开通则降级native二维码长按识别
   - 前端判断API模式的依据: offlineCalc不返回receiveQrImgWechat(静态码模式才返回收款码URL)
+
+
+【G29】2026-09-10 微信内点支付弹出授权跳转 → 改为进入页面提前静默授权
+现象: 微信内点微信支付时页面跳转到 open.weixin.qq.com 授权页再回来,用户感觉"弹出微信js"
+根因: pay.js点支付时才检查openid,没有则当场调oauth-url跳转授权(snsapi_base静默)
+修复: pay.js开头加提前静默授权:微信内+无openid+URL无openid参数 → 进入页面即跳转授权,
+      回调后openid存sessionStorage,点支付时直接用已有openid调jsapi拉起,不再跳转
+部署: scp pay.js
+验证: 非微信环境不跳转; 提前授权代码已部署 ✅
+坑: snsapi_base是静默授权(不弹确认页),但页面会跳转一次; openid存sessionStorage(关闭标签页失效)

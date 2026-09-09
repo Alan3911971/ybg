@@ -1,6 +1,6 @@
 {
   "project": "宜必购盲盒系统 (ybgtc.com)",
-  "last_updated": "2026-09-10 00:50",
+  "last_updated": "2026-09-10 01:00",
   "note": "顾客端完整流程闭环：开盒→中奖→抵扣→0.01元真实支付（微信native扫码已支付成功）；每日限次已取消并成功部署（新jar运行中）；测试支付锁定0.01元（pay.js）",
   "environment": {
     "code_root": "D:\\workspace-java\\ybg-master",
@@ -129,6 +129,12 @@
       "desc": "API模式只显示微信支付宝(pay.js下单后隐藏unionpay/other)",
       "files": [
         "pay.js(第589行后加isApiMode判断)"
+      ]
+    },
+    "wx_early_oauth": {
+      "desc": "微信内进入pay.html提前静默授权获取openid,避免点支付时跳转",
+      "files": [
+        "pay.js(登录守卫后加提前授权IIFE)"
       ]
     }
   },

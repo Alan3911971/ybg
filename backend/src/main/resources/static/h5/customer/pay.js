@@ -8,6 +8,23 @@
   try { tk = localStorage.getItem('ibigou_user_token'); } catch(e){}
   if (!tk) { location.replace('/h5/customer/login.html?redirect=' + encodeURIComponent('pay.html' + location.search)); return; }
 
+  // 微信内提前静默授权获取openid（避免点支付时才跳转，2026-09-10）
+  (function(){
+    var ua = navigator.userAgent.toLowerCase();
+    if (ua.indexOf('micromessenger') < 0) return;
+    var hasOpenid = false;
+    try { hasOpenid = !!sessionStorage.getItem('ibigou_wx_openid'); } catch(e){}
+    if (hasOpenid) return;
+    if (location.search.indexOf('openid=') >= 0) return;
+    var cur = location.href.split('#')[0];
+    fetch('/api/pay/wx/oauth-url?redirect=' + encodeURIComponent(cur))
+      .then(function(r){ return r.json(); })
+      .then(function(j){
+        if (j.code === 0 && j.data && j.data.url) { location.href = j.data.url; }
+      })
+      .catch(function(){});
+  })();
+
   function $(id){ return document.getElementById(id); }
   function fmt(n){ return (Math.round(n*100)/100).toFixed(2); }
   function toast(msg, type){
