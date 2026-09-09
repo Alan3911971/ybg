@@ -407,3 +407,15 @@
 改动: draw.html移除btnAgain按钮; draw.js第186/318行加空检查防报错; buildPayUrl函数保留供后续自动跳转
 部署: scp draw.html+draw.js（纯前端）
 验证: btnAgain=removed, btnOpen保留, cta-wrap只剩打开盲盒按钮 ✅
+
+
+【G28】2026-09-10 API支付模式只显示微信支付宝 + 商家pay_mode切换
+改动:
+  1. 商家M90380836 pay_mode 0→1（静态收款码→API支付模式）
+  2. pay.js: 下单显示支付弹窗时,根据lastResult.qrWechat判断API模式(无商家收款码),隐藏unionpay/other按钮
+部署: scp pay.js（纯前端）; pay_mode改数据库无需重启
+验证: wechat=flex, alipay=flex, unionpay=none, other=none ✅
+坑:
+  - pay_mode=0返回商家静态收款码(qrUrl), pay_mode=1走平台微信/支付宝商户号下单(qrCode/mwebUrl/jsapi)
+  - 微信内jsapi直接拉起wx.chooseWXPay不跳出; H5浏览器mweb未开通则降级native二维码长按识别
+  - 前端判断API模式的依据: offlineCalc不返回receiveQrImgWechat(静态码模式才返回收款码URL)

@@ -1,6 +1,6 @@
 {
   "project": "宜必购盲盒系统 (ybgtc.com)",
-  "last_updated": "2026-09-10 00:35",
+  "last_updated": "2026-09-10 00:50",
   "note": "顾客端完整流程闭环：开盒→中奖→抵扣→0.01元真实支付（微信native扫码已支付成功）；每日限次已取消并成功部署（新jar运行中）；测试支付锁定0.01元（pay.js）",
   "environment": {
     "code_root": "D:\\workspace-java\\ybg-master",
@@ -75,7 +75,8 @@
       "note": "应用私钥曾丢失，用户后补；以用户最后提供为准"
     },
     "wx_h5_status": "H5支付(mweb)未开通,createPay scene=mweb返回mwebUrl=null,后端退回native二维码; 需商户平台(pay.weixin.qq.com)开通H5支付",
-    "wx_pull_mode": "微信内=JSAPI自动拉起(公众号wx05a588674344ed25已配授权目录); H5浏览器=native二维码长按识别; 不使用扫一扫"
+    "wx_pull_mode": "微信内=JSAPI自动拉起(公众号wx05a588674344ed25已配授权目录); H5浏览器=native二维码长按识别; 不使用扫一扫",
+    "merchant_M90380836_pay_mode": 1
   },
   "github": {
     "backend": "https://github.com/Alan3911971/ybg",
@@ -122,6 +123,12 @@
       "files": [
         "draw.html(移除btnAgain)",
         "draw.js(加空检查)"
+      ]
+    },
+    "api_mode_pay_buttons": {
+      "desc": "API模式只显示微信支付宝(pay.js下单后隐藏unionpay/other)",
+      "files": [
+        "pay.js(第589行后加isApiMode判断)"
       ]
     }
   },

@@ -589,6 +589,17 @@ var _payPending = false;  // 标记用户已跳转APP支付, 返回时自动完�
         if ($('payMask')) $('payMask').classList.add('show');
         if ($('qrEmpty')) $('qrEmpty').style.display = 'none';
         if ($('payQr')) $('payQr').style.display = 'none';
+        // API mode: hide unionpay/other, only wechat/alipay (2026-09-10)
+        var isApiMode = !(lastResult && lastResult.qrWechat);
+        var _ub = document.querySelector('[data-pay="unionpay"]');
+        var _ob = document.querySelector('[data-pay="other"]');
+        if (isApiMode) {
+          if (_ub) _ub.style.display = 'none';
+          if (_ob) _ob.style.display = 'none';
+        } else {
+          if (_ub) _ub.style.display = '';
+          if (_ob) _ob.style.display = '';
+        }
         // 语音播报(区分渠道):含输入金额、优惠、实付
         try {
           var _input = parseFloat($('amountInput').value) || 0;
