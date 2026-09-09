@@ -373,3 +373,31 @@
   - scp后服务器文件字节>本地(CRLF行尾转换,不影响JS)
   - 服务器mvn需JAVA_HOME+跳过测试编译(-Dmaven.test.skip=true)
   - H5支付(mweb)未开通→微信支付当前靠native二维码长按识别(微信内JSAPI待手机实测)
+
+
+【G26】2026-09-10 奖品不自动加载（draw.js映射 + pay.html script标签未闭合）
+现象:
+  1. 顾客开盲盒后跳pay.html，奖品区域显示"--"，奖品名称/emoji都不显示
+  2. draw.js开奖后走本地随机池而非接口真实奖品
+根因:
+  1. draw.js第136行期望 r.data.prize（嵌套对象），但后端 /api/customer/draw/normal 返回
+     奖品字段直接在 r.data 下（prizeType/prizeValue/isCoupon/drawBatchNo），r.data.prize 为
+     undefined → 条件不满足 → 走 fallback 本地 PRIZE_POOL 随机
+  2. pay.html第210行 <script src="./jweixin-1.6.0.js" 未闭合（缺 ></script>），
+     浏览器把下一行 <script src="./pay.js"> 吞进jweixin标签属性，pay.js无法正常加载执行
+     → 奖品渲染代码(第36-38行)不执行 → DOM保持初始值"--"
+修复:
+  1. draw.js: 兼容两种返回结构 (r.data.prize || r.data)，prizeName/prizeEmoji/prizeId 兜底
+     （接口可能不返回这些字段，按prizeType构造默认名称）
+  2. pay.html: 第210行补全 <script src="./jweixin-1.6.0.js"></script>
+部署:
+  scp draw.js + pay.html 到 /www/wwwroot/ybgtc.com/h5/customer/（纯前端，无需重启jar）
+验证:
+  - pay.html奖品: prizeName="9.0 折优惠券", prName="9.0 折优惠券", prizeEmoji="🎟️" ✅
+  - 20元9.05折: 订单20→券减1.90→余额0.76→实付17.34 ✅
+  - 0.01保底: 实付0.01 ✅
+  - 微信二维码: 居中(center/center) + "长按识别上方二维码完成付款" ✅
+坑:
+  - HTML script标签未闭合会静默吞掉下一个script，排查时应先检查HTML语法
+  - 后端接口返回结构变更（奖品从嵌套改平铺）前端必须兼容，不能只认一种结构
+  - bu(headless)环境 requestAnimationFrame 不触发，开奖动画会卡住但接口已真实开奖

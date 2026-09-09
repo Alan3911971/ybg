@@ -133,15 +133,37 @@
     if (api && ph) {
       if (!MERCHANT_NO) { alert('请扫描商家二维码进入'); location.replace('/h5/customer/login.html'); return; }
       var r = await api.customer.drawNormal(ph, MERCHANT_NO);
-      if (r && r.code === 0 && r.data && r.data.prize) {
-        var pr = r.data.prize;
+      // 兼容两种返回结构：r.data.prize 或 r.data 直接含 prizeType（2026-09-10 修复）
+      if (r && r.code === 0 && r.data && (r.data.prize || r.data.prizeType !== undefined)) {
+        var pr = r.data.prize || r.data;
         var storeOnly = !!pr.storeOnly;
         var rule = null;
         if (pr.prizeType === 1) rule = { type:'discount', rate: 1 - pr.prizeValue/100 };
         else if (pr.prizeType === 2) rule = { type:'minus', amount: pr.prizeValue };
         else if (pr.prizeType === 3) rule = { type:'balance', amount: pr.prizeValue, storeOnly: storeOnly };
         else if (pr.prizeType === 4) rule = { type:'free', storeOnly: true };
-        return { id:'api_'+pr.prizeId, name: pr.prizeName, emoji: pr.prizeEmoji || '🎁', rule: rule, amount: pr.prizeType===3 ? pr.prizeValue : 0, storeOnly: storeOnly };
+        // 奖品名称兜底（接口可能不返回 prizeName）
+        var pName = pr.prizeName;
+        if (!pName) {
+          if (pr.prizeType === 1) pName = (Math.round((1-pr.prizeValue/100)*100)/10) + ' 折优惠券';
+          else if (pr.prizeType === 2) pName = '¥' + pr.prizeValue + ' 立减券';
+          else if (pr.prizeType === 3) pName = '¥' + pr.prizeValue + ' 余额';
+          else if (pr.prizeType === 4) pName = '免单券';
+          else pName = '幸运奖品';
+        }
+        var pEmoji = pr.prizeEmoji || (pr.prizeType === 1 ? '🎟️' : pr.prizeType === 2 ? '💵' : pr.prizeType === 3 ? '💰' : '🎁');
+        var pId = pr.prizeId ? ('api_'+pr.prizeId) : ('batch_'+(r.data.drawBatchNo || Date.now()));
+        return { id:pId, name:pName, emoji:pEmoji, rule:rule, amount: pr.prizeType===3 ? pr.prizeValue : 0, storeOnly:storeOnly };
+      }
+      // 未登录/登录失效 → 跳登录页（仅"登录"相关提示；不 fallback 神秘礼品 2026-09-09）
+      if (r && r.msg && r.msg.indexOf('登录') >= 0) {
+        location.replace('/h5/customer/login.html?redirect=' + encodeURIComponent('draw.html' + location.search));
+        return;
+      }
+      // 今日已参与过 → 友好提示，不跳登录、不 fallback
+      if (r && r.msg && r.msg.indexOf('参与') >= 0) {
+        alert(r.msg);
+        return;
       }
       console.warn('[draw] draw api failed, fallback', r);
     }
@@ -224,10 +246,11 @@
 
     // 语音播报 + 字幕显示（用户指定文案：宜必购便民生活圈，恭喜您！您是本店第X位顾客，恭喜您开出X奖品，请问商家本次商品金额，输入金额即可享受抵扣结算）
     var voiceText = '宜必购便民生活圈，恭喜您！您是本店第' + rank + '位顾客，恭喜您开出' + (mainPrize.name || '神秘礼品') + '奖品，请问商家本次商品金额，输入金额即可享受抵扣结算。';
-    var vs = document.getElementById("voiceSubtitle");
-    if (vs) { vs.textContent = voiceText; vs.style.display = "block"; }
-    // 确保语音播报完整中奖内容（云端女声，/api/tts；speakPrize 已合并进 voiceText 不再重复调用）
-    try { speak(voiceText, { rate: 0.98 }); } catch(e){}
+    // 顾客端不再显示语音字幕（语音统一在商家端播报 2026-09-09）
+    // var vs = document.getElementById("voiceSubtitle");
+    // if (vs) { vs.textContent = voiceText; vs.style.display = "block"; }
+    // 顾客端不再播报语音（语音统一在商家端播报 2026-09-09）
+    // try { speak(voiceText, { rate: 0.98 }); } catch(e){}
 
     // 通知商家端播报（顾客开奖中奖 → 商家APP女声播报；仅中奖且有抵扣规则时通知）
     if (mainPrize && mainPrize.rule) {

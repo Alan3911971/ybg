@@ -1,6 +1,6 @@
 {
   "project": "宜必购盲盒系统 (ybgtc.com)",
-  "last_updated": "2026-09-09 23:50",
+  "last_updated": "2026-09-10 00:20",
   "note": "顾客端完整流程闭环：开盒→中奖→抵扣→0.01元真实支付（微信native扫码已支付成功）；每日限次已取消并成功部署（新jar运行中）；测试支付锁定0.01元（pay.js）",
   "environment": {
     "code_root": "D:\\workspace-java\\ybg-master",
@@ -108,6 +108,14 @@
         "D:\\workspace-java\\ybg-master\\backend\\src\\main\\resources\\static\\h5\\customer\\pay.js (offlineCalc/offlineOrder传rule; 0.01保底; 二维码居中; 取消扫码步骤)"
       ],
       "note": "折扣券生效(20元9折→18→余额0.76→17.24); 0.01保底不应用优惠; 微信H5未开通时native二维码长按识别"
+    },
+    "prize_loading_fix": {
+      "desc": "奖品不自动加载修复（draw.js映射+pay.html script闭合）",
+      "files": [
+        "D:\\workspace-java\\ybg-master\\backend\\src\\main\\resources\\static\\h5\\customer\\draw.js (pickPrize兼容r.data.prize||r.data, 奖品名称/emoji/id兜底)",
+        "D:\\workspace-java\\ybg-master\\backend\\src\\main\\resources\\static\\h5\\customer\\pay.html (第210行jweixin script标签补全闭合)"
+      ],
+      "note": "draw/normal接口返回奖品字段平铺在data下(prizeType/prizeValue/isCoupon/drawBatchNo),非嵌套prize对象; pay.html的script标签未闭合会静默吞掉pay.js"
     }
   },
   "announce_restore_info": {
