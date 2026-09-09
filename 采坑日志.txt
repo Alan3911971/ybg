@@ -401,3 +401,9 @@
   - HTML script标签未闭合会静默吞掉下一个script，排查时应先检查HTML语法
   - 后端接口返回结构变更（奖品从嵌套改平铺）前端必须兼容，不能只认一种结构
   - bu(headless)环境 requestAnimationFrame 不触发，开奖动画会卡住但接口已真实开奖
+
+
+【G27】2026-09-10 删除draw页"去付款结算"按钮
+改动: draw.html移除btnAgain按钮; draw.js第186/318行加空检查防报错; buildPayUrl函数保留供后续自动跳转
+部署: scp draw.html+draw.js（纯前端）
+验证: btnAgain=removed, btnOpen保留, cta-wrap只剩打开盲盒按钮 ✅

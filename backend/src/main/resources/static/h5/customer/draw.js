@@ -183,7 +183,7 @@
     mainPrize = await pickPrize();
 
     document.getElementById("prompt").classList.remove("show");
-    document.getElementById("btnAgain").style.display = "none";
+    var _ba = document.getElementById("btnAgain"); if (_ba) _ba.style.display = "none";
     document.getElementById("btnOpen").style.display = "none";
 
     var cube = document.getElementById("cube");
@@ -314,8 +314,9 @@
     }
     startDraw();
   });
-  // "去付款结算"按钮：直接跳到 pay.html（金额输入在那边）
-  document.getElementById("btnAgain").addEventListener("click", function(){
+  // "去付款结算"按钮已移除（2026-09-10），保留 buildPayUrl 供自动跳转使用
+  var _ba2 = document.getElementById("btnAgain");
+  if (_ba2) _ba2.addEventListener("click", function(){
     location.href = buildPayUrl(mainPrize || { id:"gift", name:"神秘礼品", emoji:"🎁" });
   });
 

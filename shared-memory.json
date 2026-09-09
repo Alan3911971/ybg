@@ -1,6 +1,6 @@
 {
   "project": "宜必购盲盒系统 (ybgtc.com)",
-  "last_updated": "2026-09-10 00:20",
+  "last_updated": "2026-09-10 00:35",
   "note": "顾客端完整流程闭环：开盒→中奖→抵扣→0.01元真实支付（微信native扫码已支付成功）；每日限次已取消并成功部署（新jar运行中）；测试支付锁定0.01元（pay.js）",
   "environment": {
     "code_root": "D:\\workspace-java\\ybg-master",
@@ -116,6 +116,13 @@
         "D:\\workspace-java\\ybg-master\\backend\\src\\main\\resources\\static\\h5\\customer\\pay.html (第210行jweixin script标签补全闭合)"
       ],
       "note": "draw/normal接口返回奖品字段平铺在data下(prizeType/prizeValue/isCoupon/drawBatchNo),非嵌套prize对象; pay.html的script标签未闭合会静默吞掉pay.js"
+    },
+    "draw_btn_removed": {
+      "desc": "draw页\"去付款结算\"按钮已删除(2026-09-10), buildPayUrl保留",
+      "files": [
+        "draw.html(移除btnAgain)",
+        "draw.js(加空检查)"
+      ]
     }
   },
   "announce_restore_info": {
