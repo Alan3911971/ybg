@@ -356,24 +356,93 @@ var _payPending = false;  // 标记用户已跳转APP支付, 返回时自动完�
       var ua = navigator.userAgent.toLowerCase();
       return ua.indexOf('micromessenger') >= 0;
     }
+    function getUrlParam(name){
+      var m = new RegExp('[?&]' + name + '=([^&]*)').exec(location.search);
+      return m ? decodeURIComponent(m[1]) : '';
+    }
+    // 微信静默授权回调带回 openid → 存 sessionStorage 复用
+    (function(){
+      var oid = getUrlParam('openid');
+      if (oid) { try { sessionStorage.setItem('ibigou_wx_openid', oid); } catch(e){} }
+    })();
+    // 微信内 JSAPI 拉起（wx.chooseWXPay）
+    function launchJsapi(js){
+      if (!window.wx) { showMerchantQR('wechat', null); return; }
+      var curUrl = location.href.split('#')[0];
+      fetch('/api/pay/wx/jssdk-config?url=' + encodeURIComponent(curUrl))
+        .then(function(r){ return r.json(); })
+        .then(function(j){
+          if (j.code !== 0 || !j.data) { showMerchantQR('wechat', null); return; }
+          var cfg = j.data;
+          wx.config({
+            debug: false,
+            appId: cfg.appId,
+            timestamp: cfg.timestamp,
+            nonceStr: cfg.nonceStr,
+            signature: cfg.signature,
+            jsApiList: ['chooseWXPay']
+          });
+          wx.ready(function(){
+            wx.chooseWXPay({
+              timestamp: js.timeStamp,
+              nonceStr: js.nonceStr,
+              package: js.package,
+              signType: js.signType,
+              paySign: js.paySign,
+              success: function(res){
+                toast('支付成功', 'success');
+                setTimeout(function(){ location.href = '/h5/customer/index.html'; }, 1500);
+              },
+              fail: function(err){ showMerchantQR('wechat', null); }
+            });
+          });
+          wx.error(function(err){ showMerchantQR('wechat', null); });
+        })
+        .catch(function(){ showMerchantQR('wechat', null); });
+    }
     btns.forEach(function(btn){
       btn.addEventListener('click', async function(){
         var method = btn.getAttribute('data-pay') || btn.textContent.trim();
         // 先调用支付接口，获取支付信息（支持静态码、API拉起、二维码）
         if (currentPayOrderNo) {
           try {
-            // scene：wechat 非微信内=mweb直接拉起；alipay=wap直接拉起；微信内/其他=二维码
+            // scene：wechat 非微信内=mweb直接拉起；wechat 微信内=jsapi（公众号内拉起）；alipay=wap；其他=二维码
             var scene = '';
             if (method === 'wechat' && !isInWeChat()) scene = 'mweb';
+            else if (method === 'wechat' && isInWeChat()) scene = 'jsapi';
             else if (method === 'alipay') scene = 'wap';
+            var openid = '';
+            if (scene === 'jsapi') {
+              openid = getUrlParam('openid') || (function(){ try { return sessionStorage.getItem('ibigou_wx_openid') || ''; } catch(e){ return ''; } })();
+            }
+            if (scene === 'jsapi' && !openid) {
+              // 微信内静默授权：跳转公众号授权拿 openid（回调带回原页）
+              var cur = location.href.split('#')[0];
+              fetch('/api/pay/wx/oauth-url?redirect=' + encodeURIComponent(cur))
+                .then(function(r){ return r.json(); })
+                .then(function(j){
+                  if (j.code === 0 && j.data && j.data.url) {
+                    location.href = j.data.url;
+                  } else {
+                    showMerchantQR(method, null);
+                  }
+                })
+                .catch(function(){ showMerchantQR(method, null); });
+              return;
+            }
             var resp = await fetch('/api/customer/pay/create', {
               method: 'POST',
               headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'X-User-Token': (function(){ try { return localStorage.getItem('ibigou_user_token') || ''; } catch(e){ return ''; } })() },
-              body: 'orderNo=' + encodeURIComponent(currentPayOrderNo) + '&payType=' + encodeURIComponent(method) + (scene ? '&scene=' + scene : '')
+              body: 'orderNo=' + encodeURIComponent(currentPayOrderNo) + '&payType=' + encodeURIComponent(method) + (scene ? '&scene=' + scene : '') + (openid ? '&openid=' + encodeURIComponent(openid) : '')
             });
             var payData = await resp.json();
             if (payData.code === 0 && payData.data) {
               var d = payData.data;
+              if (d.jsapi) {
+                // 微信内 JSAPI 拉起收银台
+                launchJsapi(d.jsapi);
+                return;
+              }
               if (d.mwebUrl) {
                 // 微信H5支付：跳转拉起微信收银台
                 location.href = d.mwebUrl;
@@ -490,6 +559,12 @@ var _payPending = false;  // 标记用户已跳转APP支付, 返回时自动完�
       this.disabled = true; this.textContent = '下单中...';
       var ph = null; try { ph = localStorage.getItem('ibigou_phone'); } catch(e){}
       var amt = parseFloat($('amountInput').value) || 0;
+      // 测试阶段：真实支付固定 0.01 元（防止误扣大额，验收后移除本段）
+      if (amt > 0.01) {
+        toast('测试阶段仅支持 0.01 元支付，请将金额改为 0.01', 'warning');
+        this.disabled = false; this.textContent = '💳 确认下单 ¥' + fmt(lastResult ? lastResult.pay : 0);
+        return;
+      }
       var useBal = $('balCheck') && $('balCheck').checked;
       var mno2 = (function(){ try { var m = location.search.match(/merchantNo=([^&]+)/); if (m) { localStorage.setItem('ibigou_merchant_no', m[1]); return m[1]; } var _s = localStorage.getItem('ibigou_merchant_no'); if (_s === 'M001') { localStorage.removeItem('ibigou_merchant_no'); return ''; } return _s || ''; } catch(e){ return ''; } })();
       var r;

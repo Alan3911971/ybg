@@ -1,0 +1,394 @@
+{
+  "project": "宜必购盲盒系统 (ybgtc.com)",
+  "last_updated": "2026-09-09 23:05",
+  "note": "顾客端完整流程闭环：开盒→中奖→抵扣→0.01元真实支付（微信native扫码已支付成功）；每日限次已取消并成功部署（新jar运行中）；测试支付锁定0.01元（pay.js）",
+  "environment": {
+    "code_root": "D:\\workspace-java\\ybg-master",
+    "backend_root": "D:\\workspace-java\\ybg-master\\backend",
+    "java_package": "com.ibigou.blindbox",
+    "h5_root": "D:\\workspace-java\\ybg-master\\backend\\src\\main\\resources\\static\\h5",
+    "drive_mapping": "subst Z: => D:\\（用户已建，Z盘NAS未恢复）",
+    "jdk": {
+      "可用JDK": "D:\\devtools\\jdk（Temurin 17.0.20.1，完整）",
+      "坏JDK": "C:\\tools\\jdk-17.0.12+7（缺lib/modules，java/javap无法启动，PATH靠前会踩坑）",
+      "maven": "C:\\tools\\apache-maven-3.9.5"
+    },
+    "docs": {
+      "规矩文档": "D:\\workspace-java\\ybg-master\\规矩文档.txt",
+      "采坑日志": "D:\\workspace-java\\ybg-master\\采坑日志.txt",
+      "共享记忆": "D:\\workspace-java\\ybg-master\\shared-memory.json",
+      "知识图谱": "D:\\workspace-java\\ybg-master\\知识图谱.md"
+    },
+    "restore_dir": "D:\\workspace-java\\ybg-master\\_restore（生产jar + 解压产物 + 反编译脚本）"
+  },
+  "production_server": {
+    "host": "121.229.160.2",
+    "ssh_port": 5366,
+    "ssh_user": "root",
+    "ssh_key": "C:\\Users\\Administrator\\.ssh\\ybg_key",
+    "root": "/www/wwwroot/ybgtc.com/",
+    "jar": "/www/wwwroot/ybgtc.com/ibigou.jar",
+    "start_cmd": "cd /www/wwwroot/ybgtc.com && set -a && . ./.env && set +a && nohup java -Xms512m -Xmx1024m -Dspring.profiles.active=prod -Dspring.flyway.enabled=false -jar ibigou.jar > ibigou.log 2>&1 &",
+    "port": 8085,
+    "health_check": "curl -s http://127.0.0.1:8085/actuator/health",
+    "deploy_script": "/tmp/deploy_announce.sh（需sed去BOM头）",
+    "baota": {
+      "url": "https://121.229.160.2:8888/696120cf",
+      "user": "su3911971",
+      "password": "Su001912"
+    },
+    "web_root": "/www/wwwroot/ybgmh"
+  },
+  "database": {
+    "name": "ybgtc.com（带点号，SQL需反引号）",
+    "user": "ybgtc.com",
+    "password": "sy7wGesYn5y22jsZ",
+    "key_tables": [
+      "sys_global_config(config_value=TEXT)",
+      "merchant",
+      "offline_order",
+      "ibigou_order",
+      "announce_log",
+      "user_coupon"
+    ]
+  },
+  "accounts": {
+    "platform_admin": "https://ybgtc.com/h5/admin/index.html  admin / Admin@2026",
+    "merchant": "https://ybgtc.com/h5/merchant/index.html  13851918986 / 123321",
+    "customer": "https://ybgtc.com/h5/customer/login.html?merchantNo=M90380836  手机号13851918986 验证码123456（测试环境固定）",
+    "merchant_no": "M90380836（鲜果时光生产水果店）",
+    "login_param": "userPhone（form-urlencoded）"
+  },
+  "payment_config": {
+    "wx": {
+      "enabled": 1,
+      "mode": "V2（用户明确要求V2不用V3）",
+      "mch_id": "1440071102（南京微汀网络科技有限公司）",
+      "app_id": "wx05a588674344ed25",
+      "api_key_v2": "NanJingweitingwangluokejigaabbxy",
+      "customer_pay_mode": "1（API支付）"
+    },
+    "alipay": {
+      "enabled": 1,
+      "app_id": "2021002144664045（宜必购便民生活圈）",
+      "gateway": "https://openapi.alipay.com/gateway.do",
+      "note": "应用私钥曾丢失，用户后补；以用户最后提供为准"
+    }
+  },
+  "github": {
+    "backend": "https://github.com/Alan3911971/ybg",
+    "android": "https://github.com/Alan3911971/ibigou-merchant-android",
+    "lenscabin": "https://github.com/Alan3911971/lenscabin",
+    "pat": "***已脱敏（GitHub Secret 检测，勿再写入）***（推送时嵌入URL，推送后改回）",
+    "git_user": "doubao / doubao@ibigou.local",
+    "note": "D:\\workspace-java\\ybg-master 为GitHub下载旧版，不含播报改造；播报改造源码正从生产jar反编译/补写中",
+    "android_apk_build": "CI: push main触发build.yml构建debug APK; artifact下载api.github.com/repos/Alan3911971/ibigou-merchant-android/actions/artifacts/{id}/zip"
+  },
+  "code_locations": {
+    "wx_pay": "backend/src/main/java/com/ibigou/blindbox/service/WxPayService.java",
+    "alipay": "backend/src/main/java/com/ibigou/blindbox/service/AlipayService.java",
+    "customer_pay_controller": "backend/src/main/java/com/ibigou/blindbox/controller/CustomerPayController.java",
+    "pay_notify": "backend/src/main/java/com/ibigou/blindbox/controller/PayNotifyController.java",
+    "announce_service": "backend/src/main/java/com/ibigou/blindbox/service/AnnounceService.java",
+    "ibigou_order": "backend/src/main/java/com/ibigou/blindbox/service/IbigouService.java（createOrder成功后announceService.record()——生产jar已有，D盘源码待补）",
+    "tts_controller": "backend/src/main/java/com/ibigou/blindbox/controller/TtsController.java（路径/api/tts）",
+    "merchant_h5": "backend/src/main/resources/static/h5/merchant/index.html（pollAnnounce轮询/btSpeak测试播报/蓝牙打印，已同步生产最新版）",
+    "customer_h5": "backend/src/main/resources/static/h5/customer/（pay.js已取消顾客端播报，已同步）",
+    "order_detail": "backend/src/main/resources/static/h5/customer/order-detail.html",
+    "my_orders": "backend/src/main/resources/static/h5/customer/my-orders.html",
+    "ibigou_mall": "backend/src/main/resources/static/h5/customer/ibigou.html（4tab：抽盒/商城/订单/我的）"
+  },
+  "announce_restore_info": {
+    "status": "生产jar已反编译确认播报逻辑，D盘IbigouService.java待补",
+    "template": "宜必购盲盒。新订单。订单原价{orderAmount}元，{余额抵扣X元，}实付{payAmount}元。订单号{ibigouOrderNo}。",
+    "record_signature": "announceService.record(String merchantNo, String eventType='pay', String content)",
+    "condition": "deductBalance != null && deductBalance.signum() > 0 时拼接'余额抵扣X元，'",
+    "insert_position": "createOrder方法中 orderRepository.save(order) 之后",
+    "required_changes": [
+      "新增字段 private final AnnounceService announceService",
+      "构造函数增加AnnounceService参数",
+      "save后插入播报代码"
+    ]
+  },
+  "user_rules": [
+    "每处理完问题：测试给用户看 → 记录采坑日志 → 记录共享记忆（顺序不可变）",
+    "共享记忆必须记录到 shared-memory.json，每条包括代码位置",
+    "GitHub代码库开发完一个功能、测试没问题后必须备份（提交+推送）",
+    "每次开工前先检测知识库（规矩文档）、系统图谱（知识图谱.md），修改/增加/删除功能后必须补充完整",
+    "微信支付使用V2版本",
+    "订单详情独立页面跳转，不在列表页accordion展开",
+    "我的订单独立页面，不放在商城页面底部",
+    "订单列表删除申请全额退款按钮",
+    "语音播报必须女声（云端TTS百度女声），不用Web Speech男声（待解决：APP端无声音）",
+    "顾客支付播报在商家端播报，不在顾客端播报"
+  ],
+  "known_pitfalls": [
+    "pkill -f ibigou.jar 会断开SSH，必须用具体PID kill",
+    "SSH命令中awk '{print $2}'在PowerShell会被展开 → 用脚本文件方式",
+    "nginx中/h5/customer/wallet.html直读磁盘 → 修改后必须单独scp",
+    "PATH中C:\\tools\\jdk-17.0.12+7缺lib/modules，java/javap报Failed setting boot class path → 用D:\\devtools\\jdk（JAVA_HOME正确指向它）",
+    "GitHub直连超时 → PAT嵌入URL推送",
+    "jar上传不完整会Invalid or corrupt jarfile → 验证大小一致（约102MB）",
+    "重复创建MerchantAnnounceController会Ambiguous mapping启动失败",
+    "/tmp/deploy.sh有BOM头 → sed去BOM",
+    "Maven打包必须在backend目录执行",
+    "APP WebView自动播放限制导致Audio无声 → 需原生TTS或Web Speech",
+    "生产jar只有.class无.java源码 → 恢复源码需反编译(javap -c)或按字节码重写"
+  ],
+  "pending_tasks": [
+    "补齐D盘IbigouService.java播报改造（模板已还原，待插入代码）",
+    "APP商家端播报没声音（主线）：需确认APP WebView支持哪种语音方案，测试播报按钮无声音",
+    "多商户支付方案（公共小程序+支付到每商户）未选型：服务商模式/代收+分账/静态收款码",
+    "小程序开发暂停",
+    "订单详情页底部申请退款按钮是否删除未确认",
+    "Z盘NAS未恢复：新会话须选 D:\\workspace-java\\ybg-master 或确认subst映射"
+  ],
+  "announce_system": {
+    "根因": "nginx location=/h5/merchant/index.html root /www/wwwroot/ybgtc.com 直读磁盘，jar里的H5修改不生效；磁盘旧版用/tts(500)无声",
+    "现状": "磁盘index.html=最新版：统一播报函数_speakAnnounce，APP优先AndroidPrinter.speakUrl(云端女声MediaPlayer)→speak(系统TTS)→Audio(网页女声)→WebSpeech",
+    "代码位置": "D:\\workspace-java\\ybg-master\\backend\\src\\main\\resources\\static\\h5\\merchant\\index.html（_speakAnnounce/_speakWebSpeech/btSpeak/btnAnnPreview绑定/pollAnnounce）",
+    "后端播报": "IbigouService.createOrder save后 announceService.record(merchantNo,\"pay\",模板)，模板含余额抵扣",
+    "磁盘同步铁律": "改H5必须双通道：①改jar重新打包部署 ②scp同步磁盘/www/wwwroot/ybgtc.com/h5/xxx（nginx读磁盘）",
+    "线上生效文件": "/www/wwwroot/ybgtc.com/h5/merchant/index.html（磁盘，nginx实际读取）",
+    "已验证": "浏览器点击btnAnnPreview→console[播报]使用Audio云端TTS→toast网页女声播报→access log /api/tts 200(35424B)",
+    "开奖中奖商家播报": {
+      "接口": "POST /api/customer/ibigou/announce-prize（公开白名单，body: merchantNo/rank/prizeName）",
+      "触发": "draw.js中奖后(mainPrize.rule非空)自动fetch通知",
+      "事件": "announceService.record(merchantNo,\"draw\",文案)",
+      "文案": "宜必购便民生活圈，恭喜您！您是本店第X位顾客，恭喜您开出X奖品，请问商家本次商品金额，输入金额即可享受抵扣结算。",
+      "代码位置": "CustomerController.java announcePrize方法 / draw.js onStop中奖块 / WebConfig白名单"
+    },
+    "磁盘tts.js修复": "speakAudio接口 /tts(500) → /api/tts(200女声)；顾客端无声根因之一",
+    "部署铁律2": "生产启动必须先 source .env（IBIGOU_DB_USER等环境变量）；脚本/tmp/start_ibigou.sh",
+    "播报文案统一": "后端订单播报模板、speakPrize、draw.js voiceText 全用顾客端原文案"
+  },
+  "android_shell": {
+    "源码位置": "D:\\workspace-java\\ibigou-merchant-android\\Alan3911971-ibigou-merchant-android-bd5403a\\",
+    "仓库": "https://github.com/Alan3911971/ibigou-merchant-android（main分支）",
+    "关键文件": "app/src/main/java/com/ibigou/blindbox/NativeTTS.java、MainActivity.java(AndroidBridge,JS对象名AndroidPrinter,speak/speakUrl/isTtsReady)",
+    "已改进": "speakUrl云端TTS失败自动fallbackToSystemTts(解析url text参数→系统TTS；失败→通知音)，commit fe6fde40",
+    "APK构建": "GitHub Actions build.yml(push main触发)，artifact名ibigou-merchant-debug，最新APK已下载到 D:\\workspace-java\\ibigou-apk\\app-debug.apk（已交付用户，用户安装后APP测试播报成功）",
+    "注意": "debug签名与旧版不同，用户需卸载旧APP再装；WebView已setMediaPlaybackRequiresUserGesture(false)自动播放不限制"
+  },
+  "todo": [
+    "顾客真实下单→商家APP自动女声播报验证（用户核心诉求）",
+    "ybg仓库推送：D盘ybg-master无.git，需用PAT嵌入URL新建/推送到github.com/Alan3911971/ybg",
+    "Z盘NAS未恢复，后续代码以D:\\workspace-java\\ybg-master为准"
+  ],
+  "backup": {
+    "本地": "D:\\workspace-java\\backup_ibigou_20260908.zip（87MB，后端源码+最新jar+Android壳+4份文档）",
+    "GitHub": "Alan3911971/ybg master commit 1755c66f803b（完整backend 304文件+播报改造+开奖接口）",
+    "推送方式": "Git Data API（blobs→trees→commit→PATCH refs/heads/master force）脚本_push_gh.py"
+  },
+  "merchant_backend_fix": {
+    "date": "2026-09-08",
+    "问题": "①商家后台顶部显示\"??PE html>\"代码泄漏 ②概览近5单显示\"--\"/\"奖品\"占位，无真实奖品名",
+    "根因1_顶部泄漏": "index.html文件头被历史patch损坏：<!DOCTY + 误插入<div class=\"tab\" data-p=\"p10\">💬 ??</div> + PE html>（DOCTYPE截断拆分），浏览器渲染在页面顶部",
+    "根因2_近5单": "a)前端读/api/merchant/orders(OfflineOrder实体无prizeName字段) b)refreshKPI用orders.slice(-5).reverse()取末尾最旧5条",
+    "代码位置": {
+      "后端新接口": "MerchantController.java → GET /api/merchant/ibigou/orders（合并IbigouOrder+OfflineOrder按ts倒序，resolvePrize映射奖品名）",
+      "奖品名链路": "couponId → UserCoupon → BoxPrizePool.remark（本店奖品池存真实奖品名，UserCoupon不存名字）；匹配不到用券类型名",
+      "新repo方法": "IbigouOrderRepository.findByMerchantNoOrderByCreateTimeDesc；BoxPrizePoolRepository.findByMerchantNoAndPrizeTypeAndPrizeValue",
+      "前端": "index.html refreshKPI近5单 orders.slice(0,5)；无券订单文案\"普通订单\"；api.js加ibigouOrders()",
+      "本地路径": "D:\\workspace-java\\ybg-master\\backend\\src\\main\\resources\\static\\h5\\merchant\\index.html / api.js；MerchantController.java"
+    },
+    "部署": "jar已部署(ibigou.jar UP)，磁盘index.html/api.js已同步（nginx直读双通道）",
+    "验证": "浏览器登录13851918986/123321：顶部正常，近5单显示\"默认折扣券7.5折 ¥70.25 9-8 9:05\"等真实奖品名"
+  },
+  "member_management": {
+    "date": "2026-09-08",
+    "需求": "商家后台概览后面增加\"会员管理\"tab",
+    "方案": "系统无现成顾客会员模型（MemberOrder/MemberWallet是商家向平台续费），会员管理=聚合本店消费顾客",
+    "代码位置": {
+      "后端接口": "MerchantController.java → GET /api/merchant/members（聚合ibigou_order+offline_order按userPhone分组：orderCount/totalAmount/totalSave/lastTs/lastPrize，按最近消费倒序）",
+      "奖品名复用": "lastPrize复用resolvePrize链路 couponId→UserCoupon→BoxPrizePool.remark",
+      "前端tab": "index.html tabs概览后 data-p=\"p10\" 👥 会员；panel p10（KPI+会员列表）",
+      "前端渲染": "loadMembers()：手机号脱敏138****8986、头像emoji、最近奖品、笔数、累计优惠、最近消费时间",
+      "api": "merchant/api.js 加 members()",
+      "本地路径": "D:\\workspace-java\\ybg-master\\backend\\src\\main\\java\\com\\ibigou\\blindbox\\controller\\MerchantController.java；static\\h5\\merchant\\index.html / api.js"
+    },
+    "部署": "jar已部署UP，磁盘index.html/api.js已同步",
+    "验证": "浏览器实测：3会员/¥2896.04累计消费/¥537.20累计优惠；会员明细真实（138****8986 23笔·517.80优惠·9-8 9:05）"
+  },
+  "member_crm": {
+    "date": "2026-09-08",
+    "需求": "会员管理升级：记录客户喜好、家人喜好、回访记录、预约、预约提醒",
+    "数据表": "V8__member_crm.sql（member_profile/member_visit/member_appointment，生产已执行建表）",
+    "后端接口": {
+      "detail": "GET /api/merchant/members/{phone}/detail（资料+回访+预约+最近10单）",
+      "profile": "POST /api/merchant/members/{phone}/profile（喜好/家人喜好/备注 upsert）",
+      "visit": "POST /api/merchant/members/{phone}/visit（回访）",
+      "appointment": "POST /api/merchant/members/{phone}/appointment（预约，remindMinutes默认30）",
+      "status": "POST /api/merchant/appointments/{id}/status（1完成2取消）",
+      "upcoming": "GET /api/merchant/appointments/upcoming（近7天待服务）"
+    },
+    "预约提醒": "JobService.appointmentRemind 每5分钟扫描（status=0且未提醒且appt_time<=now+60min）→ 写MerchantMessage(appointment_remind) → remind_sent=1幂等；前端boot loadApptRemind 2小时内toast",
+    "前端": "会员tab点击会员→右侧抽屉：资料编辑/回访添加/预约创建+完成取消/最近订单；函数必须window暴露（IIFE内不可onclick直接调用）",
+    "代码位置": {
+      "后端": "MerchantController.java（CRM接口）、JobService.java（appointmentRemind）、entity/MemberProfile|MemberVisit|MemberAppointment.java、repository/对应3个Repo",
+      "前端": "static/h5/merchant/index.html（抽屉+CRM JS）、api.js（memberDetail/saveProfile/addVisit/addAppointment/updateAppointmentStatus/upcomingAppointments）",
+      "SQL": "static/../db/migration/V8__member_crm.sql"
+    },
+    "关键踩坑": "$ = document.getElementById(id) 传参不带#（getElementById(\"#memberDrawer\")返回null）；带点库名ssh执行SQL须脚本文件方式",
+    "验证": "浏览器实测：保存喜好/回访/预约成功；定时任务11:15自动写\"138****8986 预约了家庭水果套餐，将于 09-08 11:23 开始（还有7分钟）\"提醒，remind_sent=1",
+    "部署": "jar已部署UP（含最新前端），磁盘index.html/api.js已同步"
+  },
+  "member_gift": {
+    "date": "2026-09-08",
+    "需求": "生日或其他时间店长赠送商品库任意商品给客户；回访时也可添加赠送并记录",
+    "数据表": "V9__member_gift.sql（member_gift：merchant_no/user_phone/goods_id/goods_name/quantity/remark/source(gift/visit)/create_time，生产已建）",
+    "接口": {
+      "独立赠送": "POST /api/merchant/members/{phone}/gift（body: goodsId/goodsName/quantity/remark，source=gift）",
+      "回访附带": "POST /api/merchant/members/{phone}/visit 扩展 giftGoodsId/giftGoodsName/giftQuantity/giftRemark（source=visit）",
+      "查询": "GET /members/{phone}/detail 返回 gifts（倒序）"
+    },
+    "前端": "会员抽屉「🎁礼品赠送」区：商品下拉（/api/merchant/config/goods enabled=1）+数量+备注+赠送+记录列表；回访表单带「🎁附带赠送商品」下拉+数量；addMemberGift window暴露",
+    "代码位置": {
+      "后端": "MerchantController.java（addMemberGift/addMemberVisit扩展/memberDetail gifts）、entity/MemberGift.java、repository/MemberGiftRepository.java、db/migration/V9__member_gift.sql",
+      "前端": "static/h5/merchant/index.html（礼品赠送区+回访附带赠送+loadGiftGoodsSelect）、api.js（addGift）"
+    },
+    "验证": "独立赠送\"精品卡×1 生日礼物\"、回访附带\"VIP会员月卡×2 回访赠送\"均成功；浏览器抽屉显示商品下拉4项+2条赠送记录",
+    "部署": "jar UP部署，磁盘index.html/api.js已同步"
+  },
+  "member_birthday_editor": {
+    "date": "2026-09-08",
+    "需求": "会员档期编辑：资料里有生日字段；记录哪个员工录入",
+    "数据表": "V10__member_profile_birthday.sql（member_profile 加 birthday VARCHAR(10) 存\"MM-dd\"+editor VARCHAR(64) 存登录账号，生产已执行）",
+    "接口": "POST /api/merchant/members/{phone}/profile 接收 birthday；editor=merchant.login_account 自动记录；GET /members/{phone}/detail 返回 birthday/editor",
+    "前端": "会员抽屉资料表单加「生日」输入（placeholder MM-dd如09-20）+ 资料区显示「👤 录入：账号」",
+    "代码位置": {
+      "后端": "MerchantController.java（saveMemberProfile/memberDetail）、entity/MemberProfile.java（birthday/editor）",
+      "前端": "static/h5/merchant/index.html（pfBirthday/录入显示）",
+      "SQL": "db/migration/V10__member_profile_birthday.sql"
+    },
+    "验证": "保存生日09-20成功，detail返回birthday=09-20/editor=13851918986；浏览器显示生日输入框+录入员工",
+    "部署": "jar UP部署，磁盘index.html已同步"
+  },
+  "member_name_gender": {
+    "date": "2026-09-08",
+    "需求": "会员字段扩展：姓名、电话、男女等",
+    "数据表": "V11__member_name_gender.sql（member_profile 加 name VARCHAR(32) + gender VARCHAR(8)男/女）",
+    "接口": "saveProfile 接收 name/gender；memberDetail 返回；GET /api/merchant/members 列表聚合返回 name/gender",
+    "前端": "会员列表\"姓名+👨/👩\"，无资料显示脱敏手机号；抽屉标题\"姓名 · 手机号\"；资料表单姓名输入+性别下拉",
+    "代码位置": {
+      "后端": "MerchantController.java（saveMemberProfile/memberDetail/members）、entity/MemberProfile.java（name/gender）",
+      "前端": "static/h5/merchant/index.html（列表gtxt/表单pfName/pfGender/抽屉标题）",
+      "SQL": "db/migration/V11__member_name_gender.sql"
+    },
+    "验证": "保存\"张伟/男\"；列表显示\"张伟 👨\"；抽屉标题\"张伟 · 138****8986\"；表单绑定正确",
+    "部署": "jar UP部署，磁盘index.html已同步"
+  },
+  "member_pref_tags": {
+    "date": "2026-09-08",
+    "需求": "客户/家人喜好录入后，下次其他客人多选复用已录入标签",
+    "接口": "GET /api/merchant/members/prefs（聚合本店 member_profile 喜好，按[，,、;；/空白]拆分去重）",
+    "前端": "喜好textarea下方标签区cpTags/fpTags；loadPrefTags拉取渲染；togglePrefTag点击追加/移除（逗号分隔，已选高亮）；window暴露togglePrefTag",
+    "代码位置": {
+      "后端": "MerchantController.java（memberPrefs/addPrefs）、MemberProfileRepository.java（findByMerchantNo）",
+      "前端": "static/h5/merchant/index.html（tagpick/pref-tag/togglePrefTag）"
+    },
+    "验证": "接口返回标签云；浏览器实测点选追加/取消删除正确",
+    "部署": "jar UP部署，磁盘index.html已同步"
+  },
+  "member_drawer_tabs_type_mgmt": {
+    "date": "2026-09-08",
+    "需求": "会员详情抽屉太长→顶部三tab（资料/预约/回访）；会员类型可自定义添加；回访预约显示明细",
+    "表": "V13 merchant_member_type（merchant_no+type_name 唯一，预置普通/VIP/黑金）",
+    "接口": "GET /api/merchant/member-types 列表；POST 添加；DELETE /{id} 删除（MerchantController）",
+    "前端": "会员tab「🛡️会员类型」按钮→mtDrawer面板（添加+删除）；pfType下拉动态加载；openMemberDetail三tab（mdTabProfile/mdTabAppt/mdTabVisit+switchMemberTab）；礼品赠送区在回访tab；回访显示完整时间+结果、预约显示提醒+创建时间",
+    "代码位置": {
+      "后端": "MerchantController.java（memberTypes/addMemberType/deleteMemberType）、MerchantMemberType.java、MerchantMemberTypeRepository.java、V13__merchant_member_type.sql",
+      "前端": "static/h5/merchant/index.html（md-tabs/md-tab/switchMemberTab/openMemberTypes/loadMemberTypes）、api.js（memberTypes/addMemberType/deleteMemberType）"
+    },
+    "验证": "三tab切换✅ 回访含附带赠送+礼品赠送✅ 预约含提醒+创建✅ 钻石会员添加→下拉出现→删除闭环✅",
+    "部署": "jar UP，磁盘index.html/api.js已同步"
+  },
+  "member_tab_records_layout": {
+    "date": "2026-09-08",
+    "需求": "预约tab底部「最近订单」改为「预约记录」；回访tab为「回访记录」；订单模块移入资料tab",
+    "实现": "预约mcard标题→「📅预约记录」；订单mcard从mdTabAppt移入mdTabProfile（资料表单下方「🧾最近订单」）",
+    "代码位置": "static/h5/merchant/index.html（openMemberDetail内 // 最近订单 块 + 预约mcard标题）",
+    "大坑": "h字符串拼接HTML时div必须严格配对——订单块曾插到关profile的</div>后导致不显示；浏览器强缓存需时间戳参数刷新",
+    "验证": "资料tab=表单+最近订单✅ 预约tab=预约记录无订单✅ 回访tab=回访记录✅",
+    "部署": "jar UP，磁盘已同步"
+  },
+  "member_record_detail_dialog": {
+    "date": "2026-09-08",
+    "需求": "预约/回访记录点击查看完整明细",
+    "实现": "预约/回访条目 onclick → detailDrawer 弹窗；showApptDetail/showVisitDetail + 通用 showDetail(title, rows)；列表数据存 window._apptList/_visitList 按索引取",
+    "明细字段": "预约：时间/服务项目/备注/状态/提醒设置/创建于；回访：内容/结果/回访时间/附带赠送（giftGoodsName×数量+备注）",
+    "代码位置": "static/h5/merchant/index.html（showApptDetail/showVisitDetail/showDetail/closeDetail + aList/vList forEach onclick + detailDrawer HTML）",
+    "验证": "预约明细字段齐全✅ 回访明细含附带赠送✅",
+    "部署": "jar UP，磁盘已同步"
+  },
+  "api_pay_mode_fix": {
+    "date": "2026-09-08",
+    "问题": "pay.html 点微信/支付宝显示[商家未上传商家收款码]，尽管 customer_pay_mode=1、微信商户号/支付宝appid已入库",
+    "根因": "pay.js 三处fetch(createPay/qr-svg/pay-query)未带X-User-Token→拦截器返回请先登录→前端fallback静态码分支",
+    "修复": "pay.js 三处fetch加X-User-Token头；nginx加location=/h5/customer/pay.js磁盘直读(no-cache)即时生效",
+    "代码位置": "D:\\workspace-java\\ybg-master\\backend\\src\\main\\resources\\static\\h5\\customer\\pay.js（createPay@~16398/qr-svg@~13285/query@~14947）",
+    "nginx配置": "/www/server/panel/vhost/nginx/ybgtc.com.conf（location = /h5/customer/pay.js 磁盘直读块）",
+    "部署事故": "97MB jar scp未完成就部署→jar截断(md5不一致)→NoClassDefFoundError服务中断→恢复备份jar应急+重传md5一致后部署",
+    "部署铁律": "jar scp后必须md5校验一致再部署；恢复备份用ibigou.jar.bak.20260906_162124",
+    "验证": "微信/支付宝动态二维码SVG均正常显示+真实下单成功(bizpayurl/qr.alipay.com)+轮询正常",
+    "后端接口": "POST /api/customer/pay/create（payMode=1→API支付返回qrCode）、GET /api/customer/pay/query、POST /api/customer/qr-svg、回调 /api/pay/wx/notify + /api/pay/alipay/notify"
+  },
+  "pay_launch_mode": {
+    "date": "2026-09-08",
+    "需求": "支付点选后直接拉起收银台（不显示二维码扫码）",
+    "实现": "后端createPay新增scene参数；WxPayService.h5Pay(MWEB)+AlipayService.wapPay(WAP form)；前端pay.js按UA决定scene并拉起",
+    "代码位置": [
+      "D:\\workspace-java\\ybg-master\\backend\\src\\main\\java\\com\\ibigou\\blindbox\\service\\WxPayService.java（h5Pay/unifiedOrder）",
+      "D:\\workspace-java\\ybg-master\\backend\\src\\main\\java\\com\\ibigou\\blindbox\\service\\AlipayService.java（wapPay）",
+      "D:\\workspace-java\\ybg-master\\backend\\src\\main\\java\\com\\ibigou\\blindbox\\controller\\CustomerPayController.java（createPay scene分支+微信H5失败降级native）",
+      "D:\\workspace-java\\ybg-master\\backend\\src\\main\\resources\\static\\h5\\customer\\pay.js（点击处理器scene+拉起逻辑）"
+    ],
+    "线上状态": "支付宝WAP拉起已生效（跳mclient.alipay.com收银台）；微信MWEB未开通（NOAUTH预开通中）→自动降级动态二维码，需在pay.weixin.qq.com开通H5支付后自动拉起",
+    "部署方式": "大jar scp不稳定→改用class补丁（mvn compile+zip打包.class+服务器jar uf），jar uf一次只能更新1个文件(-C只作用紧跟文件)",
+    "微信开通提醒": "商户号1440071102需在微信商户平台申请H5支付（域名ybgtc.com已备案）；微信内打开需JSAPI（公众号appid+secret）暂未配置"
+  },
+  "nas_git_backup": {
+    "date": "2026-09-08",
+    "nas": {
+      "host": "192.168.31.228",
+      "user": "Alan",
+      "key": "C:\\Users\\Administrator\\.ssh\\id_ed25519"
+    },
+    "仓库": "/volume1/docker/github-backup/ybg-master（master分支，工作区仓库）",
+    "同步方式": "本地 tar 打包（排除 backend/target）→ ssh stdin 管道 cat > /tmp → NAS tar 解压覆盖（保留 .git）→ git add -A + commit；scp 不可用（NAS 无 scp subsystem）",
+    "注意事项": "Synology 需先 git config --global --add safe.directory；NAS 仓库历史与 GitHub 同步到 9f046ab，本次已补齐 G43+G44 全部代码",
+    "双备份": "GitHub Alan3911971/ybg（API 推送）+ NAS github-backup/ybg-master（ssh 管道）",
+    "最近commit": "74d3448（同步20260908 G43+G44 完整前后端代码）"
+  },
+  "jsapi_wechat_pay": {
+    "date": "2026-09-09",
+    "title": "JSAPI 微信内支付改造（公众号拉起收银台）G46",
+    "summary": "微信内（公众号 wx05a588674344ed25 + 商户号1440071102）点支付直接拉起微信收银台",
+    "backend": {
+      "WxPayService": "新增 jsapiPay()（trade_type=JSAPI+openid，返回 chooseWXPay 全套参数含 paySign）；OAuth2 snsapi_base 静默授权 oauthUrl/oauthOpenId；accessToken/jsapiTicket 内存缓存（2h，提前5min刷新）；jssdkConfig sha1Hex 签名（去#hash）",
+      "WxOAuthController": "新建，GET /api/pay/wx/oauth-url?redirect=、/oauth-callback?code=&redirect=（302回带openid）、/jssdk-config?url=",
+      "CustomerPayController": "createPay 新增 openid 参数 + scene=jsapi 分支（jsapiPay 异常自动降级 native 二维码 qrCode+fallbackNative）"
+    },
+    "frontend": {
+      "pay.js": "isInWeChat/getUrlParam；openid 存 sessionStorage(ibigou_wx_openid)；微信内点微信支付→静默授权拿openid→createPay(scene=jsapi)→launchJsapi（wx.config→wx.chooseWXPay，失败降级二维码）",
+      "pay.html": "引入 jweixin-1.6.0.js（官方JSSDK，本地资源已备）"
+    },
+    "deploy": "5文件（3class+pay.html+jweixin.js）25KB zip → scp → jar uf 逐条更新 → 重启 UP",
+    "pitfall": "WxPayService 缓存字段与文件已有字段重复 → javac 报错后 Lombok 注解处理连锁失效（MemberService/OfflineOrderService/GlobalConfigService 海量找不到符号 log/getUserPhone）→ 删重复字段后编译通过。教训：改文件前重读磁盘最新状态；Lombok 连锁缺失先查重复定义",
+    "verify_file": "MP_verify_vQFrz5KHyiEjou3Q.txt 已放网站根 + nginx 磁盘直读 location，公网 200 通过（用户公众号后台可完成域名验证）",
+    "pending": [
+      "用户提供公众号 AppSecret → 配置 sys_global_config.wx_pay_app_secret",
+      "商户平台 pay.weixin.qq.com 开通 JSAPI支付并绑定公众号 wx05a588674344ed25",
+      "公众号后台：网页授权域名 + JS接口安全域名填 ybgtc.com（验证文件已就绪）",
+      "AppSecret 配置后手机微信内实测 wx.chooseWXPay 拉起+回调入账"
+    ]
+  },
+  "latest_update_20260909": {
+    "限次取消": "DrawService.checkDailyParticipation 改为 return，新jar已部署并运行（ibigou.jar 102063424B，pid 1894721，8085），bu验证连续开盒code=0不再'今日已参与'",
+    "支付闭环": "顾客开盒→pay.html结算→0.01下单(offline/order OFF-cf0a58)→微信native扫码(weixin://wxpay/bizpayurl?pr=5QQN4gcqsPTRCsuA)→用户手机扫码支付0.01元成功(order_status=1)",
+    "测试支付0.01限制": "pay.js 确认下单btnOrder点击时 amt>0.01 则 toast 提示'测试阶段仅支持0.01元支付'并拦截；已部署(27434字符)，验收后需移除本段恢复真实金额",
+    "部署要点": "新jar与原jar依赖完全一致(101 lib)；之前ClassNotFound Lifecycle$SingleUse为瞬时环境问题(无.env)；启动必须 set -a; source .env; set +a；本次部署前备份 ibigou.jar.bak.2.1788965896",
+    "bu验证发现": "bu headless 不触发 rAF/animationend 导致开奖动画卡住(接口已真实开奖)，真实手机正常；bu点击btnOrder注入pay.js后交互异常，手动fetch接口验证正常",
+    "待办": "验收通过后移除pay.js 0.01限制段；微信支付已可正常拉起(native扫码)"
+  }
+}

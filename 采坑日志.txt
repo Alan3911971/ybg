@@ -1,0 +1,341 @@
+宜必购（ybg）采坑日志
+========================================
+最后更新：2026-09-07（Z盘NAS损坏后重建到 ybg-master 目录）
+
+【G01】scp/ssh 脱敏问题
+- 现象：命令中密钥/密码被日志记录
+- 解决：密钥放 C:\Users\Administrator\.ssh\ybg_key，用 -i 指定
+
+【G02】profile 未生效
+- 现象：本地/生产配置不一致
+- 解决：启动参数 -Dspring.profiles.active=prod
+
+【G03】stop+rm 误删
+- 现象：部署脚本 stop 旧进程后 rm jar 时中断导致无jar
+- 解决：先备份再删，部署脚本化
+
+【G04】setsid 与 SSH断开
+- 现象：SSH断开后进程被杀
+- 解决：nohup + & 启动，日志重定向 ibigou.log
+
+【G05】CRLF 换行符
+- 现象：脚本在Linux执行报错
+- 解决：脚本转LF，或用bash直接执行
+
+【G06】数据库反引号
+- 现象：库名 ybgtc.com 带点号，SQL报错
+- 解决：所有涉及库名/表名 SQL 加反引号
+
+【G07】Flyway 启动校验失败
+- 现象：生产启动时Flyway校验历史脚本失败
+- 解决：生产启动加 -Dspring.flyway.enabled=false
+
+【G08】DELIMITER/trigger 脚本
+- 现象：存储过程/触发器脚本执行失败
+- 解决：用DELIMITER包裹，注意客户端工具差异
+
+【G09】JVM数组/errorHandler
+- 现象：Spring Boot errorHandler 配置异常
+- 解决：统一用 GlobalExceptionHandler + BizException
+
+【G10】UNC路径同步
+- 现象：沙盒与服务器文件同步失败
+- 解决：避免UNC路径，用本地盘+scp
+
+【G11】pkill 断开SSH
+- 现象：pkill -f ibigou.jar 导致SSH连接断开
+- 解决：必须用具体PID kill（ps -ef | grep 定位）
+
+【G12】PowerShell 展开 $2
+- 现象：ssh命令中 awk '{print $2}' 被PowerShell当变量
+- 解决：写成脚本文件上传执行
+
+【G13】jar上传不完整
+- 现象：Invalid or corrupt jarfile
+- 解决：scp后验证大小一致（本地约102MB）
+
+【G14】重复Controller Ambiguous mapping
+- 现象：误创建 MerchantAnnounceController 与已有接口冲突，启动失败
+- 解决：恢复原文件，删除重复Controller（announce接口在MerchantController中已有）
+
+【G15】部署脚本BOM头
+- 现象：bash /tmp/deploy.sh 报 "#!/bin/bash: No such file or directory"
+- 解决：sed -i '1s/^\xEF\xBB\xBF//' 去BOM
+
+【G16】TTS接口路径错误
+- 现象：商家后台语音播报报错 GET /tts 500
+- 解决：后端TtsController路径是 /api/tts，前端调用 /tts 少了/api前缀，改为 /api/tts
+
+【G17】APP WebView 播报无声（未完全解决）
+- 现象：APP商家端测试播报无声音；顾客端播报已取消但旧缓存仍播报
+- 排查：APP WebView 自动播放限制导致 Audio.play() 被拦截；Web Speech API 在部分WebView无中文语音
+- 尝试：云端TTS队列→Web Speech→多方案降级（原生TTS/Web Speech/云端TTS）均未让APP出声
+- 结论（待办）：需确认APP壳（ibigou-merchant-android）是否暴露原生TTS接口（AndroidPrinter.speak）；若无，需在Android壳里加原生TTS桥接
+- 注意：顾客端播报已从 pay.js 注释掉，线上确认无 speak 调用；顾客端再播报=缓存
+
+【G18】NAS Z盘损坏（2026-09-07）
+- 现象：Z盘NAS硬盘损坏，Z:\ybg、Z:\workspace-java 全部丢失，Bash/命令环境cwd绑定旧路径无法启动
+- 处置：共享记忆/规矩文档/采坑日志/知识图谱重建到 D:\workspace-java\ybg-master\；代码以生产服务器jar为最新副本
+- 教训：项目关键文档应放本地D盘并定期git备份；代码必须每次功能完成后推送GitHub
+
+【G19】Z盘NAS损坏未恢复，subst临时映射
+- 现象：Z盘NAS硬盘损坏，Z:\ybg、Z:\workspace-java 数据丢失；Bash/命令环境cwd绑定旧路径无法启动
+- 处置：用户建 subst Z: => D:\ 临时映射（Z:\ 显示为 D:\ 内容）；命令环境恢复
+- 注意：Z:\ybg\ibigou-blindbox 只是占位目录，不是恢复的代码；勿误当源码使用
+- 待办：新会话选 D:\workspace-java\ybg-master 为项目目录；NAS恢复后取消subst
+
+【G20】JDK损坏导致 java/javap 无法启动
+- 现象：java -version / javap 报 "Error occurred during initialization of VM / Failed setting boot class path"
+- 原因：PATH中 C:\tools\jdk-17.0.12+7 缺少 lib/modules（不完整JDK），且排在PATH前面
+- 解决：使用 D:\devtools\jdk（Temurin 17.0.20.1，完整，JAVA_HOME本就指向它）；用完整路径调用 java/javap/mvn
+- 命令示例：& "D:\devtools\jdk\bin\javap.exe" -p -c xxx.class
+
+【G21】生产jar恢复源码（无.java源码）
+- 现象：从生产服务器拉取 ibigou.jar（约102MB），jar内只有 .class 无 .java 源码
+- 解决：
+  1. scp 拉取 jar 到本地 _restore 目录
+  2. python zipfile 解压 BOOT-INF/classes，resources（static/h5、yml）可直接同步回 backend/src/main/resources（187个文件）
+  3. Java源码：javap -p -c 反编译关键class还原逻辑；常量池字符串用python解析（避免控制台GBK乱码）
+  4. IbigouService 播报改造已还原：announceService.record(merchantNo, 'pay', 内容)，模板='宜必购盲盒。新订单。订单原价X元，[余额抵扣X元，]实付X元。订单号X。'
+- 对比确认：D盘ybg-master源码130个class对应112外部类+18内部类，内部类父文件全部存在；仅IbigouService.java缺播报改造待补
+- 经验：javap输出中文乱码时，用python struct解析class常量池（CONSTANT_Utf8）获取准确字符串
+
+【G22】★nginx直读磁盘H5文件——改jar里的H5不生效（本次播报无声的真正根因）
+- 现象：所有H5修改（播报改造、订单详情、优惠券二维码）部署后线上无变化；用户手机APP加载的index.html一直是旧版
+- 根因：nginx配置 location = /h5/merchant/index.html { root /www/wwwroot/ybgtc.com; }（还有/h5/tts.js、/h5/customer/wallet.html 等），
+  直接读磁盘文件，不读jar里的static/h5！
+- 解决：改H5必须双通道：①改jar里的文件并重新打包部署；②scp同步到磁盘 /www/wwwroot/ybgtc.com/h5/xxx
+  scp -i key -P 5366 本地index.html root@121.229.160.2:/www/wwwroot/ybgtc.com/h5/merchant/index.html
+- 教训：先查nginx location规则再决定改哪份文件！判断线上生效版本：unzip -p jar BOOT-INF/classes/static/h5/merchant/index.html vs 磁盘文件对比
+
+【G23】生产jar里的index.html带2个JS bug
+- ①605行附近重复 <script> 标签（script开8闭7），浏览器报 Unexpected token '<'
+- ②doc.write("<img src=\""" + imgSrc ...) 转义错误（2108行附近），报 missing ) after argument list
+- 原因：打包时引入，nginx不读jar所以线上未暴露；把jar文件同步磁盘前必须先修复
+- 解决：删重复<script>；改 src=\"" ；修复后用node --check全部内联script块校验（python提取<script>(.*?)</script>→node --check）
+
+【G24】Chrome DevTools Console粘贴需先输入 allow pasting
+- 现象：粘贴命令被拦（Don't paste code...Type "allow pasting"）
+- 解决：console输入 allow pasting 回车后再粘贴；自动化用 cu.set_clipboard + ctrl+v
+
+【G25】Android壳 NativeTTS.speakUrl 云端TTS失败无回退
+- 现象：MediaPlayer onError后静默（注释说交给JS层，但H5已return），导致APP无声
+- 解决：onError/异常时 fallbackToSystemTts(url)：从url解析text参数→speak(text)系统TTS；解析不到→playFallbackSound通知音
+- 已推送GitHub（commit fe6fde40），CI自动构建APK（artifact下载：api.github.com/actions/artifacts）
+
+【G26】patch脚本引入重复函数定义（function btSpeak双头）
+- 现象：插入speak_fn时以function btSpeak(text){结尾+new_bt完整定义=双重函数头，外层未闭合，点击无反应
+- 解决：部署前node --check校验；python断言 count('function xxx')==1
+
+【G27】PowerShell下curl.exe -d '{"ref":"main"}' JSON解析失败
+- 现象：GitHub API workflow_dispatch返回400 Problems parsing JSON
+- 解决：用python urllib发POST（urllib.request.Request(url, data=json.dumps(...), method='POST')）
+
+【G28】GitHub直连不通，用API操作仓库
+- git clone/push github.com:443不通；api.github.com可用（带Authorization: token PAT）
+- 更新文件触发CI：PUT /repos/{owner}/{repo}/contents/{path}（需先GET拿sha）
+- 下载CI产物：GET /repos/{owner}/{repo}/actions/artifacts/{id}/zip
+- 触发构建：POST /repos/{owner}/{repo}/actions/workflows/{wf}/dispatches {"ref":"main"}
+
+【G29】浏览器端播报验证方法
+- 打开商家后台→devtools(F12)→Console→输入allow pasting→粘贴 document.getElementById('btnAnnPreview').click()
+- 验证：console输出 [播报] 使用Audio云端TTS + toast"网页女声播报" + 服务器access log出现 /api/tts 200
+- 服务器验证：grep 'api/tts' /www/wwwlogs/ybgtc.com.log | tail
+
+【G30】播报改造收尾全记录（2026-09-08 顾客开奖中奖→商家APP播报全链路）
+- 顾客端开盲盒中奖→商家端播报：draw.js开奖本身不调后端（纯前端本地抽奖），商家端无感知
+- 解决：新增公开接口 POST /api/customer/ibigou/announce-prize（body: merchantNo/rank/prizeName）
+  → announceService.record(merchantNo,"draw",文案)；draw.js中奖后(mainPrize.rule非空)fetch通知
+- 拦截器：/api/customer/** 默认要登录，新接口必须加进 WebConfig excludePathPatterns 白名单
+- 顾客端无声根因2：磁盘 /h5/tts.js 的 speakAudio 用 /tts 接口（500），已改为 /api/tts（200女声）
+- 顾客端draw.html引用 ../tts.js = 磁盘nginx直读；draw.js在jar里（Spring服务）——双通道部署铁律再验证
+- 播报内容统一：后端订单播报模板、顾客端speakPrize、draw.js voiceText 全部用顾客端原文案
+  （宜必购便民生活圈，恭喜您！您是本店第X位顾客，恭喜您开出X奖品，请问商家本次商品金额，输入金额即可享受抵扣结算）
+
+【G31】生产部署三连坑（2026-09-08）
+- ①直接nohup java启动缺环境变量：生产配置用 ${IBIGOU_DB_USER} 等，必须 set -a; . ./.env; set +a 后启动
+  部署脚本 /tmp/start_ibigou.sh（先source .env再nohup java -jar ibigou.jar）
+- ②pkill -f 'ibigou.jar' 会误杀SSH自己（ssh命令行含该字符串）→ 用 pgrep -f '^java.*ibigou.jar' 精确匹配java开头
+- ③PowerShell双引号内 $() 会被本地解析（P=$(pgrep...)报错）→ 部署脚本写本地文件(scp)/tmp/deploy_now.sh 再 ssh bash 执行
+
+【G32】GitHub API 推送完整代码（2026-09-08，304文件）
+- git clone/push直连github.com:443不通；用 Git Data API（blobs→trees→commit→ref）
+- PATCH /git/refs/master 报422 → 用 /git/refs/heads/master + {"sha":..., "force":true} 成功
+- 完整推送脚本 D:\workspace-java\_push_gh.py（递归blob+tree合并保留其他顶层文件）
+- 本次备份：commit 1755c66f803b（master），本地 zip D:\workspace-java\backup_ibigou_20260908.zip（87MB）
+
+【G33】商家后台两问题修复：顶部代码泄漏 + 近5单奖品不显示（2026-09-08）
+- 问题①：商家后台顶部显示 "??PE html>"——根因：index.html 文件头被历史patch脚本损坏，
+  文件开头变成 `<!DOCTY` + 误插入的 `<div class="tab" data-p="p10">💬 ??</div>` + `PE html>`
+  （DOCTYPE 被截断拆成 DOCTY...PE html>，中间混入异常tab节点），浏览器把<html>前的非法文本渲染在页面顶部
+- 修复：python 二进制替换损坏头部为 `<!DOCTYPE html>`，p10残留tab删除；线上磁盘+jar双通道同步
+- 问题②：概览"近5单"全部显示"--"/"奖品"占位——根因：
+  a) 数据源错误：前端读 /api/merchant/orders（返回 OfflineOrder 实体，无 prizeName/orderNo 字段）→ 全占位
+  b) 切片bug：refreshKPI 用 orders.slice(-5).reverse() 取数组末尾5条（=最旧5条）再反转
+- 修复：
+  a) 后端新增 GET /api/merchant/ibigou/orders：合并 宜必购订单(IbigouOrder)+线下订单(OfflineOrder) 按ts倒序；
+     奖品名映射链 couponId → UserCoupon → BoxPrizePool(本店奖品池.remark)；匹配不到用券类型名（折扣券/立减券/余额券/免单券）
+  b) MerchantController 新注入 ibigouOrderRepository/userCouponRepository/boxPrizePoolRepository/offlineOrderRepository
+  c) 新增repo方法：IbigouOrderRepository.findByMerchantNoOrderByCreateTimeDesc、
+     BoxPrizePoolRepository.findByMerchantNoAndPrizeTypeAndPrizeValue
+  d) 前端 index.html + api.js：orders调用全部改 ibigouOrders()；近5单切片改 orders.slice(0,5)；无券订单文案"普通订单"
+- 验证：浏览器登录 13851918986/123321 → 顶部正常无泄漏；近5单显示"默认折扣券7.5折 ¥70.25 9-8 9:05"等真实奖品名
+- 注意：OfflineOrder/UserCoupon 均有 couponId 可关联奖品；BoxPrizePool.remark 才是真实奖品名（UserCoupon 不存名字）
+
+【G34】商家后台新增"会员管理"tab（2026-09-08）
+- 需求：概览后面增加"会员管理"——聚合本店消费顾客
+- 实现：系统无现成顾客会员模型（MemberOrder/MemberWallet是商家向平台续费的订单，不是顾客会员）
+- 后端：MerchantController 新增 GET /api/merchant/members——聚合 ibigou_order + offline_order 按 userPhone 分组：
+  orderCount/totalAmount/totalSave/lastTs(最近消费)/lastPrize(最近一笔奖品名,复用resolvePrize链路 couponId→UserCoupon→BoxPrizePool.remark)
+  输出按最近消费倒序；新repo无新增（复用已有 findByMerchantNoOrderByCreateTimeDesc）
+- 前端：index.html tabs 概览后加 <div class="tab" data-p="p10">👥 会员</div>；
+  panel p10（会员总数/累计消费/累计优惠 KPI + 会员列表卡片：头像emoji、手机号脱敏138****8986、
+  最近奖品、消费笔数、累计优惠、最近消费时间）；loadMembers() boot时加载+刷新按钮；
+  api.js 加 members()；新增 .avatar/.member-item 样式
+- 验证：浏览器实测会员tab正常显示——3会员/¥2896.04累计消费/¥537.20累计优惠，会员明细真实（23笔·517.80优惠等）
+- 注意：手机号在商家端脱敏显示（138****8986）；tab切换是通用 data-p 机制，新增tab只需加 tab+panel+数据加载函数
+
+【G35】会员管理CRM升级：喜好/家人喜好/回访/预约/提醒（2026-09-08）
+- 需求：会员管理需记录客户喜好、家人喜好、回访记录、预约、预约提醒
+- 数据表（V8__member_crm.sql，生产已执行）：
+  member_profile（merchant_no+user_phone唯一，customer_pref/family_pref/remark）
+  member_visit（回访内容/结果/时间）
+  member_appointment（appt_time/service_item/status 0待服务1完成2取消/remind_minutes/remind_sent）
+- 后端接口（MerchantController）：
+  GET /api/merchant/members/{phone}/detail（资料+回访+预约+最近10单）
+  POST /members/{phone}/profile（保存喜好，upsert）
+  POST /members/{phone}/visit、POST /members/{phone}/appointment
+  POST /appointments/{id}/status（完成/取消）、GET /appointments/upcoming（近7天待服务）
+- 预约提醒：JobService.appointmentRemind 每5分钟（0 */5 * * * ?）扫描 findPendingRemind（status=0且未提醒且appt_time<=now+60min）
+  → 写 MerchantMessage(msgType=appointment_remind，"138****8986 预约了X，将于 MM-dd HH:mm 开始（还有N分钟）") → remind_sent=1 幂等
+- 前端：会员tab→点击会员→右侧详情抽屉（资料编辑/回访添加/预约创建+完成取消/最近订单）；boot时 loadApptRemind 2小时内预约toast提醒
+- 踩坑1：前端函数定义在 IIFE 内，HTML onclick 找不到 → 必须 window.openMemberDetail=... 暴露全局
+- 踩坑2（重要）：本项目的 $ = document.getElementById(id)，传参**不带#**！写 $("#memberDrawer") 会返回null（getElementById("#memberDrawer")找不到）
+  → 17处带#的调用全部修复；CRM函数改 document.getElementById 直接调用
+- 踩坑3：MySQL带点库名/用户名在ssh命令行会被bash反引号执行 → SQL执行必须写脚本文件 scp 后 bash 执行
+- 验证：浏览器端到端实测——保存喜好"喜欢甜口，爱喝杨枝甘露，忌香菜"成功、回访"电话回访…满意"成功、
+  预约"2026-09-08 11:23 家庭水果套餐"成功、定时任务11:15:00自动写入"还有7分钟"提醒（幂等remind_sent=1）
+
+【G36】会员礼品赠送：独立赠送 + 回访附带赠送（2026-09-08）
+- 需求：生日或其他时间店长可赠送商品库任意商品给客户；回访时也可添加赠送并记录
+- 数据表：V9__member_gift.sql（member_gift：merchant_no/user_phone/goods_id/goods_name/quantity/remark/source/﻿create_time）
+- 后端（MerchantController）：
+  POST /api/merchant/members/{phone}/gift（独立赠送：goodsId/goodsName/quantity/remark，source=gift）
+  POST /members/{phone}/visit 扩展（可选 giftGoodsId/giftGoodsName/giftQuantity/giftRemark，source=visit）
+  GET /members/{phone}/detail 返回 gifts（最近全部，按create_time倒序）
+- 前端：会员抽屉「🎁 礼品赠送」区块（商品下拉从 /api/merchant/config/goods 加载 enabled=1 商品 +数量+备注+赠送按钮+赠送记录）
+  回访表单加「🎁 附带赠送商品」下拉+数量；addMemberGift 需 window 暴露
+- 踩坑1：python 批量改 Java 时断言中断会丢全部未落盘改动——分步执行并每步验证
+- 踩坑2：注入字段检查不能用方法体内的变量名判断（方法里也有 memberGiftRepository）——要用字段声明全文匹配
+- 验证：独立赠送"精品卡×1 生日礼物"、回访附带"VIP会员月卡×2 回访赠送"均成功，浏览器抽屉显示商品下拉4项+2条赠送记录
+
+【G37】会员档期编辑：生日 + 录入员工（2026-09-08）
+- 需求：会员资料编辑要有生日字段；记录哪个员工录入
+- 数据库：V10__member_profile_birthday.sql（member_profile 加 birthday VARCHAR(10) 存"MM-dd"如09-20 + editor VARCHAR(64) 存登录账号）
+- 后端：saveMemberProfile 接收 birthday；editor = merchantRepository.findByMerchantNo(merchantNo).getLoginAccount()；memberDetail 返回 birthday/editor
+- 前端：资料表单加「生日」输入（placeholder MM-dd如09-20）；资料区显示「👤 录入：账号」
+- 踩坑：python 脚本多步 replace 时中间 assert 失败会丢全部未落盘改动（改动1/2丢失只剩3）——每步独立脚本执行并验证，或断言放最前
+- 验证：保存生日"09-20"成功，detail 返回 birthday=09-20/editor=13851918986，浏览器显示生日输入框值09-20+录入员工
+
+【G38】会员字段扩展：姓名 + 性别（2026-09-08）
+- 需求：会员信息要有姓名、电话、男女等更多字段
+- 数据库：V11__member_name_gender.sql（member_profile 加 name VARCHAR(32) + gender VARCHAR(8)）
+- 后端：saveProfile 接收 name/gender；memberDetail 返回 name/gender；members 列表聚合时从 profile 取 name/gender
+- 前端：会员列表显示"姓名+性别图标（👨/👩）"，无资料仍显示脱敏手机号；抽屉标题"姓名 · 手机号"；资料表单加姓名输入+性别下拉（未设置/男/女）
+- 验证：保存"张伟/男"成功；列表显示"张伟 👨"；抽屉标题"张伟 · 138****8986"；表单绑定正确
+
+【G39】会员喜好标签多选复用（2026-09-08）
+- 需求：客户喜好/家人喜好录入后，下次其他客人可多选复用已录入标签
+- 后端：GET /api/merchant/members/prefs——聚合本店所有 member_profile 的 customerPref/familyPref，按[，,、;；/空白]拆分去重返回标签云
+- 前端：资料表单喜好 textarea 下方加标签区（cpTags/fpTags）；loadPrefTags 拉取渲染；点击 togglePrefTag 追加/移除（逗号分隔去重）；已选高亮 .pref-tag.on
+- 踩坑：togglePrefTag 由 onclick 调用必须在 window 暴露（IIFE 内函数默认不全局），漏了导致点击无效果
+- 验证：接口返回客户喜好[喜欢甜口/爱喝杨枝甘露/忌香菜]；浏览器实测 click1→"喜欢甜口"、click2→"喜欢甜口，爱喝杨枝甘露"、unclick1→"爱喝杨枝甘露"
+
+【G40】会员详情抽屉三tab改版 + 会员类型自定义（2026-09-08）
+- 需求1：抽屉内容太长，改为顶部「📋资料/📅预约/📞回访」三tab切换
+- 需求2：会员类型可自定义添加（原来只有写死的普通/VIP/黑金）
+- 实现：V13 merchant_member_type 表（merchant_no+type_name 唯一）+ GET/POST/DELETE /api/merchant/member-types；前端 openMemberTypes 面板（列表+添加+删除），资料表单类型下拉改为接口动态加载；openMemberDetail 重构为 mdTabProfile/mdTabAppt/mdTabVisit 三div + switchMemberTab 切换；礼品赠送区移入回访tab，回访/预约明细增强（完整时间+提前提醒+创建时间）
+- 大坑1：python 脚本多步替换中，中间某步 assert 失败 → 整个文件不保存（with open 在末尾），后续脚本基于旧文件运行导致 tab 栏/CSS 缺失而函数存在——改后必须自查关键标记（md-tab 计数）
+- 大坑2：rmMemberType 用 confirm() 在浏览器自动化里会阻塞 JS → COMMAND_TIMEOUT；改用 bu 原生 click+handle_dialog 或直调接口
+- 大坑3：新增 onclick 函数必须 window 暴露（延续 G39）
+- 验证：三tab切换正常、回访含完整时间+附带赠送+礼品赠送区、预约含提醒+创建时间+订单、类型添加「钻石会员」→下拉出现→删除成功闭环
+
+【G41】会员详情预约tab改「预约记录」+订单移入资料tab（2026-09-08）
+- 需求：预约tab底部「🧾最近订单」不合适→改为「📅预约记录」；回访tab同理为「📞回访记录」；订单模块移到资料tab
+- 实现：预约mcard标题改「预约记录」；订单mcard（// 最近订单块）从mdTabAppt移入mdTabProfile（资料表单下方）
+- 大坑：h 字符串拼接HTML时，订单块被插到「关profile的</div>」之后→订单在tab外不显示，且多一层</div>导致结构错乱（资料tab只剩表单、订单丢失、后续div边界错位）——修复=删除资料mcard闭合后多余的 h += '</div>';，保证 div 严格配对：资料mcard→订单mcard→关profile→visit
+- 另：浏览器对 index.html 有强缓存，改版后必须带新时间戳参数强制刷新验证（v=<ts>），否则看到旧版误判
+- 验证：资料tab=表单+最近订单(OFF-订单号)、预约tab=预约记录无订单、回访tab=回访记录 ✅
+
+【G42】预约/回访明细弹窗（2026-09-08）
+- 需求：预约tab、回访tab 点击记录条目查看完整明细
+- 实现：点击预约/回访条目（cursor:pointer+onclick）→ detailDrawer 弹窗：预约明细（时间/项目/备注/状态/提醒/创建于）、回访明细（内容/结果/时间/附带赠送）
+- 细节：列表数据存 window._apptList/_visitList，onclick 传索引；复用 drawer-mask/drawer 样式；showDetail(title, rows) 通用渲染
+- 验证：预约明细字段齐全✅ 回访明细含附带赠送字段✅
+
+
+【G43】顾客端API支付修复（2026-09-08）——"商家未上传收款码"根因 + 部署事故
+- 现象：pay.html 点微信/支付宝显示"[ 商家未上传商家收款码 ]"，即使全局 customer_pay_mode=1、微信商户号1440071102/支付宝appid均已入库
+- 排查：后端 /api/customer/pay/create 手动带 X-User-Token 调 → payMode:1 + 真实 qrCode（微信 weixin://wxpay/bizpayurl、支付宝 qr.alipay.com）→ 后端链路通；前端 pay.js 调 createPay 却走静态码分支
+- 根因1（前端）：pay.js 三处 fetch（/api/customer/pay/create、/api/customer/qr-svg、/api/customer/pay/query）均未带 X-User-Token 请求头 → 拦截器返回"请先登录"(code:-1) → payData.code!==0 → showMerchantQR(method, null) → 静态码分支显示"未上传"
+- 修复1：本地 pay.js 三处 fetch 统一加 X-User-Token（读 localStorage ibigou_user_token，IIFE try/catch 防错）；nginx ybgtc.com.conf 加 `location = /h5/customer/pay.js` 磁盘直读（同 wallet.html 模式，no-cache）→ reload 即时生效，无需等 jar
+- 根因2（部署事故）：97MB jar scp 未等完成就执行部署 → 服务器 ibigou.jar md5 与本地不一致（差14字节，截断）→ 启动报 NoClassDefFoundError: SpringApplication → 8085 服务中断
+- 修复2：① 恢复备份 jar（ibigou.jar.bak.20260906_162124，md5=29a5c087 可用）应急启动 → {"status":"UP"}；② 重新完整 scp 新 jar → 服务器 md5=196e85a409ecba7ac222acdc00952cb4 与本地一致 → bash /tmp/deploy_now.sh → UP+DEPLOY_DONE
+- 补充架构：/h5/** 默认全部走 Spring Boot jar(8085)（nginx location ^~ / proxy_pass 127.0.0.1:8085）；仅个别文件配 `location = /xxx` 精确匹配从磁盘直读（merchant/index.html、tts.js、wallet.html、customer/pay.js）——改 jar 内 h5 文件必须 jar 重打包，改磁盘直读文件只需 scp+reload
+- 部署铁律补充：jar scp 完成后必须 md5 校验一致再部署（服务器 md5sum /tmp/ibigou_new.jar 对比本地 hashlib.md5），部署脚本会 cp 正在写入的半成品=灾难
+- 验证：新jar UP后 会员接口 member-types(3)/prefs 正常；pay.html 输入100→确认下单→微信动态二维码SVG✅→切支付宝动态二维码SVG✅→轮询pay/query正常；API支付真实下单成功（微信 bizpayurl 链接、支付宝 qr.alipay.com 链接）
+
+
+【G44】支付"直接拉起"改造：支付宝WAP拉起✅ / 微信H5待开通（2026-09-08）
+- 需求：用户反馈"这个不对，应该直接拉起支付"——点微信/支付宝应直接唤起收银台，而非显示二维码扫码
+- 实现：
+  ① WxPayService.h5Pay：统一下单 trade_type=MWEB + scene_info(h5_info type=Wap wap_url=域名 wap_name=宜必购) → 返回 mweb_url；原 nativePay 重构为 unifiedOrder(outTradeNo,金额,描述,notifyUrl,tradeType,sceneInfo) 共用
+  ② AlipayService.wapPay：AlipayTradeWapPayRequest + pageExecute → 返回 form HTML（action=openapi.alipay.com/gateway.do method=alipay.trade.wap.pay，product_code=QUICK_WAP_WAY）
+  ③ CustomerPayController.createPay 新增 scene 参数：wechat scene=mweb → h5Pay（失败自动降级 nativePay 返回 qrCode + fallbackNative 标记）；alipay scene=wap → wapPay 返回 wapForm
+  ④ pay.js 点击处理器：wechat 非微信UA→scene=mweb，alipay→scene=wap；响应 mwebUrl→location.href 拉起、wapForm→隐藏div+form.submit() 拉起、否则二维码
+- 部署：97MB jar scp 两次均失败/超时（50KB/s+断连）→ 改用「class 补丁」：mvn compile 后打包 3 个 .class（14KB zip）→ scp 秒传 → 服务器 /usr/bin/jar uf ibigou.jar -C /tmp/xxx BOOT-INF/classes/...class → 重启。**大坑：jar uf 的 -C dir 只作用于紧跟的1个文件**，一次带多文件会报 no such file（后几个按当前目录找）——必须每条 jar uf 只更新1个文件
+- 测试结果：
+  ① 支付宝 WAP：点支付宝 → createPay(wap) 返回 form(1217B) → form.submit() → **页面跳转 mclient.alipay.com/h5pay/landing 支付宝收银台** ✅（bu 报 target navigated 是跳转正常现象）
+  ② 微信 MWEB：**返回 NOAUTH「商户号该产品权限预开通中」**（商户号1440071102 未开通 H5 支付产品）→ 已加自动降级 native 动态二维码（SVG 显示正常，不再"未上传"）；**开通路径：pay.weixin.qq.com → 产品中心 → H5支付 → 申请开通（域名 ybgtc.com 已备案），开通后无需改代码自动拉起**
+  ③ 微信内（MicroMessenger UA）点微信 → 走 native 二维码（JSAPI 需公众号 appid+secret 或小程序支付，暂未配置）
+- 验证：支付宝跳收银台✅；微信降级SVG✅；同单先微信后支付宝 wap 均成功✅
+
+
+【G45】NAS git 备份通道建立（2026-09-08）
+- NAS：Synology 192.168.31.228（Alan 用户，本地 SSH 免密：~/.ssh/id_ed25519）
+- 仓库：/volume1/docker/github-backup/ybg-master（工作区仓库，master 分支）
+- 传输方式：**scp 不可用**（NAS 未启用 scp subsystem，报 subsystem request failed）→ 用 ssh stdin 管道：python subprocess Popen ssh 'cat > /tmp/xxx.tar' + communicate(字节)（202MB 35 秒）
+- 打包：本地 tar -cf - --exclude=backend/target -C D:\workspace-java ybg-master → 202MB（含 _restore/ 恢复目录与 ybg-master.zip，勿删）
+- NAS 提交：git config --global safe.directory（Synology 默认 dubious ownership）→ tar 解压到仓库目录（保留 .git）→ git add -A && commit
+- 注意：NAS 仓库历史与 GitHub 曾同步到 9f046ab（会员明细弹窗），本次补齐 G43（93444c5e）+G44（e8de0b5b）+ 完整文件
+- 双备份状态：GitHub（Alan3911971/ybg master，API 推送最稳）+ NAS（github-backup/ybg-master）
+
+【G46】JSAPI 微信内支付改造（公众号拉起收银台）（2026-09-09）
+- 背景：G44 微信 MWEB 未开通（NOAUTH），用户手机实测选微信仍无法拉起 → 明确改用**公众号 wx05a588674344ed25（商户号1440071102 配套）走微信内 JSAPI**：顾客在微信里打开 pay.html → 点微信支付 → 直接拉起微信收银台
+- 公众号域名验证：用户上传验证文件 MP_verify_vQFrz5KHyiEjou3Q.txt → 根 location `^~ /` 全量反代 Java 会 500 → nginx conf 加 `location = /MP_verify_vQFrz5KHyiEjou3Q.txt { root /www/wwwroot/ybgtc.com; default_type text/plain; }` → reload → 公网 200 验证通过（conf 已 .bak.时间戳 备份）
+- 后端改造（3 文件）：
+  ① WxPayService：新增 jsapiPay()（trade_type=JSAPI，openid 必传，返回 prepay_id+paySign 全套 chooseWXPay 参数）；OAuth2 snsapi_base 静默授权 oauthUrl/oauthOpenId；accessToken/jsapiTicket 内存缓存（2小时，提前5分钟刷新）；jssdkConfig 签名（sha1Hex，串=jsapi_ticket&noncestr&timestamp&url 去掉 #hash）
+  ② WxOAuthController（新）：GET /api/pay/wx/oauth-url?redirect=（返回授权链接）、/oauth-callback?code=&redirect=（302 回原页附 openid，URL 已有 ? 用 & 否则 ?）、/jssdk-config?url=
+  ③ CustomerPayController.createPay：新增 openid 参数 + scene=jsapi 分支（jsapiPay 抛异常自动降级 native 二维码返回 qrCode+fallbackNative）
+- 前端改造：pay.js 加 isInWeChat/getUrlParam，openid 存 sessionStorage(ibigou_wx_openid)，微信内点微信支付→先静默授权拿 openid→createPay(scene=jsapi)→launchJsapi（wx.config→wx.chooseWXPay，失败降级二维码）；pay.html 引入 jweixin-1.6.0.js（官方 JSSDK，已下载到本地资源）
+- **部署大坑（本次新增）**：mvn clean compile 时 WxPayService 报「已在类中定义了变量 accessTokenCache/jsapiTicketCache」→ **重复字段导致 javac 报错后 Lombok 注解处理连锁失效**，MemberService/OfflineOrderService/GlobalConfigService 海量「找不到符号 log/getUserPhone/getMerchantNo」（G44 增量编译没触发是因为只重编译变化的文件，旧 .class 复用）。**教训：① 改文件前必须重读磁盘最新状态（本文件曾含未见的缓存字段，疑似被外部同步覆盖过）；② 看到 Lombok 符号连锁缺失先查重复定义/结构错误，别先怀疑 Lombok 本身**
+- 部署：5 文件（3 class + pay.html + jweixin.js）打包 25KB zip → scp → jar uf 逐条更新（1条1文件）→ 重启 UP（6.9s）
+- 接口验证：/api/pay/wx/oauth-url 上线返回「公众号配置不完整（AppID/AppSecret）」——预期（AppID 已有，**AppSecret 未配置**）
+- **待用户提供/操作**：① 公众号 AppSecret（配置 sys_global_config.wx_pay_app_secret）② 商户平台开通 JSAPI支付并绑定公众号 wx05a588674344ed25 ③ 公众号后台网页授权域名+JS接口安全域名填 ybgtc.com（验证文件已 200 就绪）
+
+==========================================================
+【2026-09-09 22:30-23:05】顾客端完整流程+支付闭环+限次取消
+----------------------------------------------------------
+1. 开盒限次"今日已参与"根因：drawNormal 返回 -1 被前端误判为登录失效跳登录页。
+   修复：draw.js 仅 msg 含"登录"才跳登录；msg 含"参与"则 alert。
+2. 限次取消部署（核心）：
+   - DrawService.checkDailyParticipation 改为 return（本地已改）；
+   - 自建新jar启动曾报 ClassNotFoundException org.apache.catalina.Lifecycle$SingleUse → 回滚；
+   - 深度排查：新旧jar的 BOOT-INF/lib 完全一致(101个)、MANIFEST一致(SB 3.2.5/Tomcat 10.1.20)；
+   - 试启(端口8090)发现并非 ClassNotFound 而是"Port 8085 already in use"(IBIGOU_PORT环境变量未生效，端口写死8085)；
+   - 结论：之前 ClassNotFound 为瞬时/环境问题(无.env)，新jar本身能启动；
+   - 正式部署：备份 ibigou.jar.bak.2.1788965896 → 停旧(kill 1889322) → cp新jar → source .env 启动(pid 1894721, 7.5s)；
+   - 验证：连续2次 drawNormal code=0（不再限）✅。
+3. 测试支付0.01限制：pay.js btnOrder点击处加 amt>0.01 拦截+toast；已部署公网生效(27434字符)。
+4. bu环境限制记录：headless不触发 rAF/animationend(开奖动画卡住但接口真实开奖)、bu注入pay.js后点击交互异常(手动fetch验证正常)、bu无法模拟微信UA、电脑浏览器无法完成H5收款。
+5. 支付闭环验证：手动创建订单OFF-cf0a58(0.01元)→createPay返回weixin:// native码→本地生成二维码→用户手机扫码支付0.01元成功(order_status=1)。

@@ -271,14 +271,9 @@ public class DrawService {
         }
     }
 
-    /** 一天一次：同一顾客在同一个商家（含所有渠道二维码）每天只能参与一次盲盒 */
+    /** 一天一次限制已取消（2026-09-09 用户要求：不限参与次数） */
     private void checkDailyParticipation(String merchantNo, String userPhone) {
-        LocalDateTime todayStart = LocalDateTime.now().toLocalDate().atStartOfDay();
-        long participated = statRepository.countByMerchantNoAndUserPhoneAndCreateTimeAfter(
-                merchantNo, userPhone, todayStart);
-        if (participated > 0) {
-            throw new BizException("今日已参与过本店盲盒，请明天再来");
-        }
+        return;
     }
 
     private long countInWindow(Long prizeId, String merchantNo, String userPhone,
