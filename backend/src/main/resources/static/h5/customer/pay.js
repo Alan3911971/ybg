@@ -317,7 +317,7 @@ var _payPending = false;  // 标记用户已跳转APP支付, 返回时自动完�
             if (qrImg) qrImg.style.display = 'none';
           }
         }).catch(function(){});
-        if (info) info.textContent = '请使用' + label.replace('收款码','').replace('支付','') + '扫码支付，支付成功后自动关闭';
+        if (info) info.textContent = '长按二维码识别完成付款';
         // 开始轮询支付状态
         startPayPolling(payData.orderNo);
         return;
