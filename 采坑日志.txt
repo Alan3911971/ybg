@@ -497,3 +497,14 @@
 验证: oauth-url接口返回正常授权链接 ✅; 公众号网页授权域名已添加ybgtc.com ✅
 坑: @RestController=@Controller+@ResponseBody,所有方法返回值都会被序列化,不能用"redirect:"前缀做重定向;
     需要重定向的方法必须用ResponseEntity设置Location头+302状态码,或移到@Controller类
+
+
+【G36】2026-09-10 微信JSAPI拉起失败后错误降级到静态码模式 + 修复为native二维码
+现象: 微信内点微信支付→JSAPI拉起→wx.config失败(URL未注册)→降级showMerchantQR(wechat,null)→显示"商家未上传商家收款码"
+根因: launchJsapi所有失败分支都调用showMerchantQR(wechat,null),payData=null走静态码模式,而不是API模式的native二维码
+修复: 新增fallbackNativeQr(method)函数,重新调用createPay(scene=native)获取二维码,
+      然后showMerchantQR(method, {payMode:1, qrCode, orderNo})走API模式;
+      launchJsapi所有失败分支(window.wx不存在/jssdk失败/wx.error/wx.ready fail/catch)都改调fallbackNativeQr
+部署: scp pay.js
+验证: 服务器pay.js包含fallbackNativeQr ✅
+坑: API模式(pay_mode=1)下,JSAPI拉起失败后必须降级到native二维码(调createPay),不能降级到静态码(商家收款码)

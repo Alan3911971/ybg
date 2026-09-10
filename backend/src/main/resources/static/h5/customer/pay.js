@@ -360,7 +360,7 @@ var _payPending = false;  // 标记用户已跳转APP支付, 返回时自动完�
             var doneBtn = $('btnPayDone');
             if (doneBtn) doneBtn.classList.remove('btn-gray');
             toast('支付成功', 'success');
-            setTimeout(function(){ location.reload(); }, 1500);
+            setTimeout(function(){ location.href = '/h5/customer/index.html'; }, 1500);
           }
         }).catch(function(){});
     }, 3000);
@@ -391,14 +391,30 @@ var _payPending = false;  // 标记用户已跳转APP支付, 返回时自动完�
       var oid = getUrlParam('openid');
       if (oid) { try { sessionStorage.setItem('ibigou_wx_openid', oid); } catch(e){} }
     })();
+    // JSAPI失败后降级到native二维码（API模式，不是静态码）
+    function fallbackNativeQr(method){
+      if (!currentPayOrderNo) { showMerchantQR(method, null); return; }
+      fetch('/api/customer/pay/create', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'X-User-Token': (function(){ try { return localStorage.getItem('ibigou_user_token') || ''; } catch(e){ return ''; } })() },
+        body: 'orderNo=' + encodeURIComponent(currentPayOrderNo) + '&payType=' + encodeURIComponent(method) + '&scene=native'
+      }).then(function(r){ return r.json(); })
+        .then(function(payData){
+          if (payData.code === 0 && payData.data && (payData.data.codeUrl || payData.data.qrCode)) {
+            showMerchantQR(method, { payMode: 1, qrCode: payData.data.codeUrl || payData.data.qrCode, orderNo: payData.data.orderNo || currentPayOrderNo, label: method === 'wechat' ? '微信支付' : '支付宝' });
+          } else {
+            showMerchantQR(method, null);
+          }
+        }).catch(function(){ showMerchantQR(method, null); });
+    }
     // 微信内 JSAPI 拉起（wx.chooseWXPay）
     function launchJsapi(js){
-      if (!window.wx) { showMerchantQR('wechat', null); return; }
+      if (!window.wx) { fallbackNativeQr('wechat'); return; }
       var curUrl = location.href.split('#')[0];
       fetch('/api/pay/wx/jssdk-config?url=' + encodeURIComponent(curUrl))
         .then(function(r){ return r.json(); })
         .then(function(j){
-          if (j.code !== 0 || !j.data) { showMerchantQR('wechat', null); return; }
+          if (j.code !== 0 || !j.data) { fallbackNativeQr('wechat'); return; }
           var cfg = j.data;
           wx.config({
             debug: false,
@@ -419,12 +435,12 @@ var _payPending = false;  // 标记用户已跳转APP支付, 返回时自动完�
                 toast('支付成功', 'success');
                 setTimeout(function(){ location.href = '/h5/customer/index.html'; }, 1500);
               },
-              fail: function(err){ showMerchantQR('wechat', null); }
+              fail: function(err){ fallbackNativeQr('wechat'); }
             });
           });
-          wx.error(function(err){ showMerchantQR('wechat', null); });
+          wx.error(function(err){ fallbackNativeQr('wechat'); });
         })
-        .catch(function(){ showMerchantQR('wechat', null); });
+        .catch(function(){ fallbackNativeQr('wechat'); });
     }
     btns.forEach(function(btn){
       btn.addEventListener('click', async function(){
