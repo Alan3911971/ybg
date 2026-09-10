@@ -331,7 +331,7 @@ var _payPending = false;  // 标记用户已跳转APP支付, 返回时自动完�
         } else if (qrImg) {
           qrImg.src = qrPngUrl; qrImg.style.display = 'block';
         }
-        if (info) info.textContent = '请使用微信扫一扫完成付款';
+        if (info) info.textContent = method === 'alipay' ? '请使用支付宝扫一扫完成付款' : '请使用微信扫一扫完成付款';
         // 开始轮询支付状态
         startPayPolling(payData.orderNo);
         return;
@@ -349,7 +349,7 @@ var _payPending = false;  // 标记用户已跳转APP支付, 返回时自动完�
     if (qrUrl) {
       if (qrImg) { qrImg.src = qrUrl; qrImg.style.display = 'block'; }
       if (empty) empty.style.display = 'none';
-      if (info) info.textContent = '请使用微信扫一扫完成付款';
+      if (info) info.textContent = method === 'alipay' ? '请使用支付宝扫一扫完成付款' : '请使用微信扫一扫完成付款';
     } else {
       if (qrImg) qrImg.style.display = 'none';
       if (empty) {
@@ -459,10 +459,13 @@ var _payPending = false;  // 标记用户已跳转APP支付, 返回时自动完�
     btns.forEach(function(btn){
       btn.addEventListener('click', async function(){
         var method = btn.getAttribute('data-pay') || btn.textContent.trim();
+        // 选中状态切换
+        document.querySelectorAll('[data-pay]').forEach(function(b){ b.classList.remove('selected'); });
+        btn.classList.add('selected');
         // 先调用支付接口，获取支付信息（支持静态码、API拉起、二维码）
         if (currentPayOrderNo) {
           try {
-            // scene：wechat 非微信内=mweb直接拉起；wechat 微信内=native二维码长按识别（JSAPI待域名配置生效后启用）；alipay=wap；其他=二维码
+            // scene：wechat 非微信内=mweb直接拉起；wechat 微信内=native二维码扫一扫；alipay=wap拉起支付宝APP；其他=二维码
             var scene = '';
             if (method === 'wechat' && !isInWeChat()) scene = 'mweb';
             else if (method === 'wechat' && isInWeChat()) scene = 'native';
@@ -549,11 +552,11 @@ var _payPending = false;  // 标记用户已跳转APP支付, 返回时自动完�
               + '<span>' + steps[si] + '</span>'
               + '</div>';
           }
-          var tip = '请使用微信扫一扫完成付款';
+          var tip = method === 'alipay' ? '请使用支付宝扫一扫完成付款' : '请使用微信扫一扫完成付款';
           info.innerHTML = '<div style="text-align:left;max-width:280px;margin:0 auto;">' + stepsHtml + '</div>'
             + '<div style="text-align:center;margin-top:4px;font-size:11px;color:var(--c-text-3);">' + tip + '</div>';
         } else if (info && method === 'other') {
-          info.textContent = '请使用微信扫一扫完成付款';
+          info.textContent = method === 'alipay' ? '请使用支付宝扫一扫完成付款' : '请使用微信扫一扫完成付款';
         }
       });
     });
