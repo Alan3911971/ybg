@@ -426,6 +426,9 @@ var _payPending = false;  // 标记用户已跳转APP支付, 返回时自动完�
     btns.forEach(function(btn){
       btn.addEventListener('click', async function(){
         var method = btn.getAttribute('data-pay') || btn.textContent.trim();
+        // 选择支付方式后，完成支付按钮变亮可点击（2026-09-10）
+        var doneBtn = $('btnPayDone');
+        if (doneBtn) { doneBtn.disabled = false; }
         // 先调用支付接口，获取支付信息（支持静态码、API拉起、二维码）
         if (currentPayOrderNo) {
           try {

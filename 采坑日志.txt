@@ -450,3 +450,12 @@
       3..qb加flexDirection:column+gap:10px确保二维码和提示文字分层
 部署: scp pay.js
 验证: qbHeight=234, qrDiv=200x200, SVG自适应, 二维码垂直居中, 文字在框外 ✅
+
+
+【G32】2026-09-10 完成支付按钮默认灰色 选择支付方式后变亮
+改动:
+  1. pay.html: btnPayDone加disabled属性(默认灰色)
+  2. pay.js: 支付方式按钮点击事件里移除btnPayDone.disabled(变亮可点击)
+部署: scp pay.html + pay.js
+验证: btnDisabled=true, opacity=0.5(默认灰色); 选支付方式后disabled=false ✅
+坑: .btn[disabled]样式已有opacity:.5,只需加disabled属性即可; finishPay点击事件不受disabled影响(浏览器默认阻止)

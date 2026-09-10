@@ -1,6 +1,6 @@
 {
   "project": "宜必购盲盒系统 (ybgtc.com)",
-  "last_updated": "2026-09-10 01:20",
+  "last_updated": "2026-09-10 01:30",
   "note": "顾客端完整流程闭环：开盒→中奖→抵扣→0.01元真实支付（微信native扫码已支付成功）；每日限次已取消并成功部署（新jar运行中）；测试支付锁定0.01元（pay.js）",
   "environment": {
     "code_root": "D:\\workspace-java\\ybg-master",
@@ -147,6 +147,13 @@
       "desc": "API模式二维码SVG溢出被文字盖住,加overflow+flex居中+SVG自适应",
       "files": [
         "pay.js(showMerchantQR第308-313行)"
+      ]
+    },
+    "pay_done_btn": {
+      "desc": "完成支付按钮默认灰色,选择支付方式后变亮",
+      "files": [
+        "pay.html(btnPayDone加disabled)",
+        "pay.js(支付方式点击移除disabled)"
       ]
     }
   },
