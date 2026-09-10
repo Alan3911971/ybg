@@ -316,25 +316,21 @@ var _payPending = false;  // 标记用户已跳转APP支付, 返回时自动完�
     if (payData && payData.payMode == 1) {
       label = payData.label || t.label;
       if (payData.qrCode) {
-        // 调用后端生成二维码SVG
-        fetch('/api/customer/qr-svg', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'X-User-Token': (function(){ try { return localStorage.getItem('ibigou_user_token') || ''; } catch(e){ return ''; } })() },
-          body: 'content=' + encodeURIComponent(payData.qrCode)
-        }).then(function(r){ return r.json(); }).then(function(r){
-          if (r.code === 0 && r.data && r.data.svg) {
-            if (empty) {
-              var svgHtml = r.data.svg.replace(/<svg /, '<svg style="width:100%;height:100%;display:block;" ');
-              empty.innerHTML = '<div style="width:200px;height:200px;margin:0 auto;overflow:hidden;display:flex;align-items:center;justify-content:center;">' + svgHtml + '</div>';
-              empty.style.display = 'flex';
-              empty.style.justifyContent = 'center';
-              empty.style.alignItems = 'center';
-              empty.style.flexDirection = 'column';
-              empty.style.gap = '10px';
-            }
-            if (qrImg) qrImg.style.display = 'none';
-          }
-        }).catch(function(){});
+        // 用PNG图片显示二维码（微信长按可识别），不用SVG
+        var qrPngUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=400x400&margin=10&data=' + encodeURIComponent(payData.qrCode);
+        if (empty) {
+          empty.innerHTML = '<div style="width:220px;height:220px;margin:0 auto;display:flex;align-items:center;justify-content:center;">' +
+            '<img src="' + qrPngUrl + '" style="width:200px;height:200px;display:block;" alt="支付二维码" />' +
+            '</div>';
+          empty.style.display = 'flex';
+          empty.style.justifyContent = 'center';
+          empty.style.alignItems = 'center';
+          empty.style.flexDirection = 'column';
+          empty.style.gap = '10px';
+          if (qrImg) qrImg.style.display = 'none';
+        } else if (qrImg) {
+          qrImg.src = qrPngUrl; qrImg.style.display = 'block';
+        }
         if (info) info.textContent = '长按二维码识别完成付款';
         // 开始轮询支付状态
         startPayPolling(payData.orderNo);

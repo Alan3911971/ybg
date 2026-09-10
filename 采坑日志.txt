@@ -573,3 +573,15 @@
   4. 创建新测试订单后,商家端5秒内轮询到并播放 ✅
 结论: 播报功能正常,之前没声音是因为页面加载时已获取最新ID,旧订单不重复播放;需保持商家端页面/APP在前台
 坑: 商家端播报依赖页面前台轮询(5秒一次),APP退到后台可能不播放;announce_log表主键是announce_id不是id
+
+
+【G42】2026-09-10 微信长按二维码无法识别 + 二维码格式修复
+现象: 用户在微信里长按支付二维码,没有弹出"识别图中二维码"提示
+根因: API支付模式的二维码是后端生成的SVG格式,用innerHTML插入页面,微信不支持长按识别SVG,
+      必须是<img>标签的PNG/JPG图片才能长按识别
+修复: 
+  1. 改用 https://api.qrserver.com/v1/create-qr-code/ 生成PNG格式二维码
+  2. 用<img src="...">标签显示,width=200px
+  3. 修复empty和qrImg同时显示导致出现两个二维码的问题(empty存在时隐藏qrImg)
+验证: 页面只有一个img标签的二维码,svgCount=0
+坑: 微信长按识别二维码只支持img标签的位图(PNG/JPG),不支持SVG/canvas/背景图;api.qrserver.com支持跨域生成PNG
