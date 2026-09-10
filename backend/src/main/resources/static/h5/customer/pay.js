@@ -306,10 +306,13 @@ var _payPending = false;  // 标记用户已跳转APP支付, 返回时自动完�
         }).then(function(r){ return r.json(); }).then(function(r){
           if (r.code === 0 && r.data && r.data.svg) {
             if (empty) {
-              empty.innerHTML = '<div style="width:200px;height:200px;margin:0 auto;">' + r.data.svg + '</div>';
+              var svgHtml = r.data.svg.replace(/<svg /, '<svg style="width:100%;height:100%;display:block;" ');
+              empty.innerHTML = '<div style="width:200px;height:200px;margin:0 auto;overflow:hidden;display:flex;align-items:center;justify-content:center;">' + svgHtml + '</div>';
               empty.style.display = 'flex';
               empty.style.justifyContent = 'center';
               empty.style.alignItems = 'center';
+              empty.style.flexDirection = 'column';
+              empty.style.gap = '10px';
             }
             if (qrImg) qrImg.style.display = 'none';
           }

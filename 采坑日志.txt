@@ -439,3 +439,14 @@
 部署: scp pay.js
 验证: 代码已部署(hasReturnFix=true); 页面无scheme iframe(schemeIframes=0) ✅
 坑: 二维码长按识别是微信内的能力,普通浏览器显示二维码即可,不需要拉起微信APP
+
+
+【G31】2026-09-10 API支付模式二维码底部被提示文字盖住/未垂直居中
+现象: 点微信支付→二维码在虚线框内底部溢出,被"请使用微信扫码支付"文字盖住
+根因: pay.js showMerchantQR第309行二维码容器200x200,但qr-svg接口返回SVG默认260x260,
+      SVG无width:100%导致溢出容器;容器无overflow:hidden;flex布局未垂直居中
+修复: 1.SVG加style="width:100%;height:100%;display:block;"自适应容器
+      2.容器加overflow:hidden+display:flex+align-items:center+justify-content:center
+      3..qb加flexDirection:column+gap:10px确保二维码和提示文字分层
+部署: scp pay.js
+验证: qbHeight=234, qrDiv=200x200, SVG自适应, 二维码垂直居中, 文字在框外 ✅
