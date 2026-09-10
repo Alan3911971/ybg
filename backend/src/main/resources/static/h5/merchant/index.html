@@ -1991,12 +1991,20 @@ async function filterOrders(){ /* 占位：调 IBIGOU_API.merchant.orderList 过
     if (!window.IBIGOU_API) return;
     var tk = lsGet("ibigou_merchant_token", "");
     if (!tk) return;
-    // Init: get current max announce ID so we don't replay old events
+    // Init: get current max announce ID, 播放最近5分钟内的最新播报（防止开奖后才打开页面听不到）
     fetch("/api/merchant/announce/list", { headers: { "X-Merchant-Token": tk } })
       .then(function(r){ return r.json(); })
       .then(function(d){
         if (d && d.code === 0 && d.data && d.data.length > 0) {
-          _lastAnnounceId = d.data[0].announceId || 0;
+          var latest = d.data[0];
+          _lastAnnounceId = latest.announceId || 0;
+          // 播放最近5分钟内的最新播报
+          if (latest.content && latest.createTime) {
+            var t = new Date(latest.createTime.replace(/-/g,'/')).getTime();
+            if (Date.now() - t < 5 * 60 * 1000) {
+              setTimeout(function(){ _speakAnnounce(latest.content); }, 1500);
+            }
+          }
         }
         // Start polling every 5 seconds
         setInterval(pollAnnounce, 5000);

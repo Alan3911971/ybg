@@ -1,6 +1,6 @@
 {
   "project": "宜必购盲盒系统 (ybgtc.com)",
-  "last_updated": "2026-09-10 14:50",
+  "last_updated": "2026-09-10 15:10",
   "note": "顾客端完整流程闭环：开盒→中奖→抵扣→0.01元真实支付（微信native扫码已支付成功）；每日限次已取消并成功部署（新jar运行中）；测试支付锁定0.01元（pay.js）",
   "environment": {
     "code_root": "D:\\workspace-java\\ybg-master",
@@ -184,7 +184,8 @@
     "qr_code": "支付二维码必须用img标签PNG格式(api.qrserver.com),微信才能长按识别;pay.js showMerchantQR第316行API模式",
     "wxpay_native": "微信Native支付二维码只能扫一扫不能长按识别;JSAPI才能微信内直接拉起;H5(mweb)只能非微信浏览器",
     "pay_method_selected": "支付方式选中状态.pc2.selected CSS在pay.html第75-82行;JS切换在pay.js第462行",
-    "alipay_wap": "支付宝scene=wap拉起APP;微信内被拦截需浏览器打开;pay.js第469行"
+    "alipay_wap": "支付宝scene=wap拉起APP;微信内被拦截需浏览器打开;pay.js第469行",
+    "announce_init": "商家端播报初始化index.html第1994行,页面加载播放最近5分钟内最新播报;轮询第2007行pollAnnounce"
   },
   "announce_restore_info": {
     "status": "生产jar已反编译确认播报逻辑，D盘IbigouService.java待补",
