@@ -240,6 +240,19 @@ var _payPending = false;  // 标记用户已跳转APP支付, 返回时自动完�
           res.save = (parseFloat(d.afterCoupon) - parseFloat(d.payAmount)) || res.save;
           res.couponSave = (parseFloat(d.afterCoupon) < amt) ? (amt - parseFloat(d.afterCoupon)) : 0;
           res.balanceSave = parseFloat(d.actualDeduct) || 0;
+          // 同步更新steps里的实付金额和余额抵扣（2026-09-10 修复按钮与实付显示不一致）
+          var _actualDeduct = parseFloat(d.actualDeduct) || 0;
+          if (_actualDeduct > 0) {
+            // 移除旧的余额抵扣步骤，重新添加
+            res.steps = res.steps.filter(function(s){ return s.label !== '余额抵扣'; });
+            // 在实付步骤前插入余额抵扣
+            var _finalIdx = res.steps.findIndex(function(s){ return s.isFinal; });
+            if (_finalIdx >= 0) {
+              res.steps.splice(_finalIdx, 0, { label:'余额抵扣', coupon: _actualDeduct });
+            }
+          }
+          // 更新实付步骤的值
+          res.steps.forEach(function(s){ if (s.isFinal) s.value = res.pay; });
           if (d.coupon && d.coupon.couponName) res.couponName = d.coupon.couponName;
           if (d.receiveQrImgWechat) res.qrWechat = d.receiveQrImgWechat;
           if (d.receiveQrImgAlipay) res.qrAlipay = d.receiveQrImgAlipay;

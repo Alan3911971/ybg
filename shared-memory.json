@@ -1,6 +1,6 @@
 {
   "project": "宜必购盲盒系统 (ybgtc.com)",
-  "last_updated": "2026-09-10 13:30",
+  "last_updated": "2026-09-10 13:40",
   "note": "顾客端完整流程闭环：开盒→中奖→抵扣→0.01元真实支付（微信native扫码已支付成功）；每日限次已取消并成功部署（新jar运行中）；测试支付锁定0.01元（pay.js）",
   "environment": {
     "code_root": "D:\\workspace-java\\ybg-master",
@@ -177,7 +177,8 @@
     },
     "pay_fallback": "JSAPI失败后fallbackNativeQr重新调createPay(scene=native)走API二维码,不降级静态码",
     "free_order": "OfflineOrderService.createOrder应付0元直接完成订单(payChannel=free)；pay.js前端判断payAmount<=0跳转首页",
-    "wechat_native_fallback": "微信内微信支付scene临时改为native(不走JSAPI),等JS接口安全域名生效后改回jsapi"
+    "wechat_native_fallback": "微信内微信支付scene临时改为native(不走JSAPI),等JS接口安全域名生效后改回jsapi",
+    "pay_steps_sync": "后端calc返回后必须同步更新res.steps里的实付金额和余额抵扣,否则按钮与页面显示不一致"
   },
   "announce_restore_info": {
     "status": "生产jar已反编译确认播报逻辑，D盘IbigouService.java待补",
