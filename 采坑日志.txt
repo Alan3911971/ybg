@@ -562,3 +562,14 @@
   - 多行calc调用(参数换行)用Python replace比sed更可靠
   - pkill -f ibigou.jar可能杀不掉进程(命令行参数截断),需用kill -9 PID
   - setsid nohup启动可能导致ssh挂起超时,改用bash -c包裹启动命令
+
+
+【G41】2026-09-10 商家端语音播报排查 + 播报机制说明
+现象: 用户反馈"商家没有语音播报",但测试播报有声音
+排查:
+  1. 数据库announce_log表: 开奖(draw)和支付成功(order_auto)播报记录都正常写入 ✅
+  2. 商家端轮询接口/api/merchant/announce/poll: isBroadcastDevice=true, events正常返回 ✅
+  3. 商家端页面加载时获取最新announce_id,只播放之后的新订单(避免重复播放旧播报)
+  4. 创建新测试订单后,商家端5秒内轮询到并播放 ✅
+结论: 播报功能正常,之前没声音是因为页面加载时已获取最新ID,旧订单不重复播放;需保持商家端页面/APP在前台
+坑: 商家端播报依赖页面前台轮询(5秒一次),APP退到后台可能不播放;announce_log表主键是announce_id不是id
