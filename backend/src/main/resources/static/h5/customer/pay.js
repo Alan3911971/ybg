@@ -331,7 +331,7 @@ var _payPending = false;  // 标记用户已跳转APP支付, 返回时自动完�
         } else if (qrImg) {
           qrImg.src = qrPngUrl; qrImg.style.display = 'block';
         }
-        if (info) info.textContent = '长按二维码识别完成付款';
+        if (info) info.textContent = '请使用微信扫一扫完成付款';
         // 开始轮询支付状态
         startPayPolling(payData.orderNo);
         return;
@@ -349,7 +349,7 @@ var _payPending = false;  // 标记用户已跳转APP支付, 返回时自动完�
     if (qrUrl) {
       if (qrImg) { qrImg.src = qrUrl; qrImg.style.display = 'block'; }
       if (empty) empty.style.display = 'none';
-      if (info) info.textContent = '长按二维码识别完成付款';
+      if (info) info.textContent = '请使用微信扫一扫完成付款';
     } else {
       if (qrImg) qrImg.style.display = 'none';
       if (empty) {
@@ -549,11 +549,11 @@ var _payPending = false;  // 标记用户已跳转APP支付, 返回时自动完�
               + '<span>' + steps[si] + '</span>'
               + '</div>';
           }
-          var tip = '长按识别上方二维码完成付款';
+          var tip = '请使用微信扫一扫完成付款';
           info.innerHTML = '<div style="text-align:left;max-width:280px;margin:0 auto;">' + stepsHtml + '</div>'
             + '<div style="text-align:center;margin-top:4px;font-size:11px;color:var(--c-text-3);">' + tip + '</div>';
         } else if (info && method === 'other') {
-          info.textContent = '长按上方二维码识别完成付款';
+          info.textContent = '请使用微信扫一扫完成付款';
         }
       });
     });
