@@ -1992,17 +1992,30 @@ async function filterOrders(){ /* 占位：调 IBIGOU_API.merchant.orderList 过
     var tk = lsGet("ibigou_merchant_token", "");
     if (!tk) return;
     // Init: get current max announce ID, 播放最近5分钟内的最新播报（防止开奖后才打开页面听不到）
+    var _pendingSpeak = null;
+    var _userInteracted = false;
+    // 用户第一次交互后允许自动播放
+    document.addEventListener('click', function once(){
+      _userInteracted = true;
+      document.removeEventListener('click', once);
+      if (_pendingSpeak) { var t = _pendingSpeak; _pendingSpeak = null; _speakAnnounce(t); }
+    }, { once: true });
     fetch("/api/merchant/announce/list", { headers: { "X-Merchant-Token": tk } })
       .then(function(r){ return r.json(); })
       .then(function(d){
         if (d && d.code === 0 && d.data && d.data.length > 0) {
           var latest = d.data[0];
           _lastAnnounceId = latest.announceId || 0;
-          // 播放最近5分钟内的最新播报
+          // 播放最近5分钟内的最新播报（浏览器自动播放限制：需用户交互后才能播放）
           if (latest.content && latest.createTime) {
             var t = new Date(latest.createTime.replace(/-/g,'/')).getTime();
             if (Date.now() - t < 5 * 60 * 1000) {
-              setTimeout(function(){ _speakAnnounce(latest.content); }, 1500);
+              if (_userInteracted) {
+                _speakAnnounce(latest.content);
+              } else {
+                _pendingSpeak = latest.content;
+                if (typeof toast === 'function') toast('有新播报，点击页面任意位置播放', 'info');
+              }
             }
           }
         }

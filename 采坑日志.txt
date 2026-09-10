@@ -615,3 +615,14 @@
   - broadcast_token为NULL时所有设备都能播报;设置后只有匹配token的设备能播报
   - 轮询每5秒一次,需页面在前台;APP退后台可能暂停
   - 开奖播报DrawService.announceDraw第220行;支付成功播报OfflineOrderService.confirmPaid
+
+
+【G46】2026-09-10 浏览器自动播放限制导致播报无声
+现象: 商家端页面加载后没有语音播报,TTS接口正常
+根因: 浏览器自动播放策略,页面加载时直接new Audio().play()会被拦截,必须用户先交互(点击/触摸)后才能播放
+修复: 
+  1. 页面加载时如有最近5分钟内新播报,提示"有新播报,点击页面任意位置播放"
+  2. 监听document第一次click事件,触发后播放未读播报
+  3. 用户交互后后续轮询播报可正常自动播放
+坑: 所有现代浏览器(Chrome/Safari/微信内置浏览器)都有自动播放限制;Audio.play()返回rejected Promise;
+    Web Speech API的speechSynthesis也受同样限制;APP端WebView需setMediaPlaybackRequiresUserGesture(false)
