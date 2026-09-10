@@ -478,3 +478,22 @@
   - jar文件名是ibigou-blindbox-1.0.0-SNAPSHOT.jar(不是ibigou-0.0.1)
   - 部署用setsid + </dev/null避免SSH挂起; PowerShell执行ssh命令会解析$(...)为PS语法,需用Python subprocess
   - 下单时不扣余额/不核销券,支付成功回调后confirmPaid才结算;用户不支付则资产不扣(正确)
+
+
+【G34】2026-09-10 支付成功后reload当前页改为跳转首页
+现象: 支付成功后轮询检测到paid=true,执行location.reload()刷新pay.html,没有跳到首页
+修复: startPayPolling成功后 setTimeout(location.href='/h5/customer/index.html', 1500)
+部署: scp pay.js
+验证: hasRedirect=true, hasReload=false ✅
+
+
+【G35】2026-09-10 微信授权回调页面空白显示redirect文字 + @RestController导致redirect前缀不生效
+现象: 微信内打开pay.html→静默授权→回调/oauth-callback→页面空白,顶部显示"redirect:https://ybgtc.com/..."
+根因: WxOAuthController类有@RestController注解,方法return "redirect:" + location 不会触发302重定向,
+      而是被@ResponseBody序列化为字符串返回,浏览器显示"redirect:..."文字
+修复: oauthCallback方法返回类型改为ResponseEntity<Void>,设置Location头+302状态码
+      ResponseEntity.status(302).headers(headers).build()
+部署: 后端mvn重建jar+重启
+验证: oauth-url接口返回正常授权链接 ✅; 公众号网页授权域名已添加ybgtc.com ✅
+坑: @RestController=@Controller+@ResponseBody,所有方法返回值都会被序列化,不能用"redirect:"前缀做重定向;
+    需要重定向的方法必须用ResponseEntity设置Location头+302状态码,或移到@Controller类

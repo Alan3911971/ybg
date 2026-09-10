@@ -1,6 +1,6 @@
 {
   "project": "宜必购盲盒系统 (ybgtc.com)",
-  "last_updated": "2026-09-10 01:45",
+  "last_updated": "2026-09-10 09:50",
   "note": "顾客端完整流程闭环：开盒→中奖→抵扣→0.01元真实支付（微信native扫码已支付成功）；每日限次已取消并成功部署（新jar运行中）；测试支付锁定0.01元（pay.js）",
   "environment": {
     "code_root": "D:\\workspace-java\\ybg-master",
@@ -77,7 +77,8 @@
     "wx_h5_status": "H5支付(mweb)未开通,createPay scene=mweb返回mwebUrl=null,后端退回native二维码; 需商户平台(pay.weixin.qq.com)开通H5支付",
     "wx_pull_mode": "微信内=JSAPI自动拉起(公众号wx05a588674344ed25已配授权目录); H5浏览器=native二维码长按识别; 不使用扫一扫",
     "merchant_M90380836_pay_mode": 1,
-    "order_status_note": "下单时不扣余额/不核销券,支付回调后才结算"
+    "order_status_note": "下单时不扣余额/不核销券,支付回调后才结算",
+    "wx_mp_domains": "公众号试镜舱(wx05a588674344ed25): 业务域名/JS安全域名/网页授权域名均已添加ybgtc.com"
   },
   "github": {
     "backend": "https://github.com/Alan3911971/ybg",
@@ -165,6 +166,13 @@
         "WxPayService.handleNotify",
         "AlipayService.handleNotify",
         "pay.js(finishPay查pay/query)"
+      ]
+    },
+    "wx_oauth": {
+      "desc": "微信公众号OAuth2授权: oauth-url生成授权链接, oauth-callback用ResponseEntity 302重定向(不能用redirect前缀因为@RestController)",
+      "files": [
+        "WxOAuthController.java(oauthUrl/oauthCallback)",
+        "pay.js(提前静默授权IIFE)"
       ]
     }
   },
