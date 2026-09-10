@@ -626,3 +626,11 @@
   3. 用户交互后后续轮询播报可正常自动播放
 坑: 所有现代浏览器(Chrome/Safari/微信内置浏览器)都有自动播放限制;Audio.play()返回rejected Promise;
     Web Speech API的speechSynthesis也受同样限制;APP端WebView需setMediaPlaybackRequiresUserGesture(false)
+
+
+【G47】2026-09-10 播报时间解析NaN导致不播放
+现象: 商家端页面加载后有新播报但不播放,控制台显示"时间差: NaN ms"
+根因: 后端返回createTime是ISO格式"2026-09-10T16:21:16"(带T),前端用replace(/-/g,"/")只替换横杠没处理T,
+      new Date("2026/09/10T16:21:16")解析失败返回Invalid Date,getTime()=NaN,NaN<300000为false,判断超过5分钟不播放
+修复: new Date(latest.createTime)直接解析ISO格式,不需要replace
+坑: Java Spring Boot默认返回ISO格式带T;前端解析时间要先看后端返回格式;new Date("2026-09-10T16:21:16")可直接解析
