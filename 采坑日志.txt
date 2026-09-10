@@ -544,3 +544,21 @@
   2. 遍历steps,将isFinal步骤的value更新为res.pay
 验证: 按钮¥2.01,实付¥2.01,余额抵扣-¥8.00,三者一致 ✅
 坑: 本地calc函数和后端calc接口逻辑不一致时(如余额每日限额),必须以后端返回为准,同步更新所有显示字段
+
+
+【G40】2026-09-10 取消"余额自动抵扣"后中奖余额仍抵扣 + useBalance参数全链路
+现象: 用户取消"余额自动抵扣"勾选后,中奖余额(10元)仍然自动抵扣了8.08元,用户要求"我取消就不扣余额"
+根因: 中奖余额(rule.type=balance)入用户账户后,后端calc接口按门店百分比+每日限额自动抵扣,
+      前端"余额自动抵扣"复选框只控制前端本地calc的userBalance抵扣,不影响后端calc的中奖余额抵扣
+修复: 全链路添加useBalance参数
+  1. CustomerController.calcOffline/createOfflineOrder 添加 useBalance 参数(默认true)
+  2. OrderCalcService.calc 添加 useBalance 参数,false时直接返回actualDeduct=0,pay=afterCoupon
+  3. OfflineOrderService.createOrder 添加 useBalance 参数,所有calc调用点同步传值
+  4. ManualService/OfflineOrderService其他calc调用点默认传true(保持原行为)
+  5. 前端pay.js的calc和order接口调用传入useBalance参数
+验证: useBalance=false → payAmount=10.01,actualDeduct=0 ✅; useBalance=true → payAmount=2.01,actualDeduct=8 ✅
+坑: 
+  - scp多个Java文件到同一目录后需手动mv到controller/和service/子目录
+  - 多行calc调用(参数换行)用Python replace比sed更可靠
+  - pkill -f ibigou.jar可能杀不掉进程(命令行参数截断),需用kill -9 PID
+  - setsid nohup启动可能导致ssh挂起超时,改用bash -c包裹启动命令

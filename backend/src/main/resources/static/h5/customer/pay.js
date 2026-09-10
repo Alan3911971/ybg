@@ -159,6 +159,10 @@
       balanceSave = Math.min(userBalance, pay);
       pay = +(pay - balanceSave).toFixed(2);
     }
+    // 中奖余额(rule.type=balance)也受useBalance控制：取消勾选则不抵扣（2026-09-10）
+    if (!useBalance && rule && rule.type === 'balance') {
+      // 不抵扣，保持pay不变
+    }
     if (balanceSave > 0) steps.push({ label:'余额抵扣', coupon: balanceSave });
     steps.push({ label:'实付', coupon: 0, isFinal:true, value: pay });
     var save = Math.round((couponSave + balanceSave)*100)/100;
@@ -231,7 +235,8 @@ var _payPending = false;  // 标记用户已跳转APP支付, 返回时自动完�
         if (!mno || mno === '') { alert('请扫描商家二维码进入'); location.replace('/h5/customer/login.html'); return; }
     var r = await api.customer.offlineCalc({
           userPhone: ph, merchantNo: mno, orderAmount: amt,
-          rule: (amt !== 0.01 && prizeRule && prizeRule.type && prizeRule.type !== 'none') ? JSON.stringify(prizeRule) : undefined
+          rule: (amt !== 0.01 && prizeRule && prizeRule.type && prizeRule.type !== 'none') ? JSON.stringify(prizeRule) : undefined,
+          useBalance: useBal ? 'true' : 'false'
         });
         if (r && r.code === 0 && r.data) {
           var d = r.data;
@@ -638,7 +643,8 @@ var _payPending = false;  // 标记用户已跳转APP支付, 返回时自动完�
         r = await api.customer.offlineOrder({
           userPhone: ph, merchantNo: mno2, orderAmount: amt,
           paidAmount: lastResult ? lastResult.pay : amt,
-          rule: (amt !== 0.01 && prizeRule && prizeRule.type && prizeRule.type !== 'none') ? JSON.stringify(prizeRule) : undefined
+          rule: (amt !== 0.01 && prizeRule && prizeRule.type && prizeRule.type !== 'none') ? JSON.stringify(prizeRule) : undefined,
+          useBalance: useBal ? 'true' : 'false'
         });
       } catch(e) {
         console.warn('[pay] order api error', e);

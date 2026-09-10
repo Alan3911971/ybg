@@ -42,7 +42,7 @@ public class OrderCalcService {
 
     /** 计算订单（couponId 为空时自动选择对用户最有利的券） */
     @Transactional
-    public OrderCalc calc(String userPhone, String merchantNo, Long couponId, BigDecimal orderAmount, String rule) {
+    public OrderCalc calc(String userPhone, String merchantNo, Long couponId, BigDecimal orderAmount, String rule, Boolean useBalance) {
         if (orderAmount == null || orderAmount.signum() <= 0) {
             throw new BizException("订单金额必须大于 0");
         }
@@ -77,7 +77,16 @@ public class OrderCalcService {
                     merchant.getReceiveMode(), merchant.getReceiveQrStatus());
         }
 
-        // 4) 理论抵扣 = 盲盒后金额 × 门店百分比%（null 回退平台全局；0=本店禁止）
+        // 4) 用户取消余额抵扣时，不抵扣任何余额（2026-09-10）
+        if (useBalance != null && !useBalance) {
+            return new OrderCalc(coupon, afterCoupon, BigDecimal.ZERO, BigDecimal.ZERO,
+                    afterCoupon, BigDecimal.ZERO,
+                    merchant.getReceiveQrImgWechat(), merchant.getReceiveQrImgAlipay(),
+                    merchant.getReceiveQrImgUnionpay(), merchant.getReceiveQrImgOther(),
+                    merchant.getReceiveMode(), merchant.getReceiveQrStatus());
+        }
+
+        // 5) 理论抵扣 = 盲盒后金额 × 门店百分比%（null 回退平台全局；0=本店禁止）
         int percent = merchant.getBalanceDeductPercent() == null
                 ? configService.balanceDeductRate()
                 : merchant.getBalanceDeductPercent();
@@ -86,7 +95,7 @@ public class OrderCalcService {
                 : afterCoupon.multiply(BigDecimal.valueOf(percent))
                         .divide(BigDecimal.valueOf(100), 2, RoundingMode.DOWN);
 
-        // 5) 四重 min
+        // 6) 四重 min
         BigDecimal available = balanceService.availableBalance(userPhone);
         BigDecimal quotaLimit = remainingDailyQuota(userPhone, merchantNo, merchant);
         BigDecimal actual = min4(available, theoretical, quotaLimit, afterCoupon);

@@ -96,8 +96,9 @@ public class CustomerController {
                                                           @RequestParam String merchantNo,
                                                           @RequestParam(required = false) Long couponId,
                                                           @RequestParam BigDecimal orderAmount,
-                                                          @RequestParam(required = false) String rule) {
-        return Result.ok(orderCalcService.calc(userPhone, merchantNo, couponId, orderAmount, rule));
+                                                          @RequestParam(required = false) String rule,
+                                                          @RequestParam(required = false, defaultValue = "true") Boolean useBalance) {
+        return Result.ok(orderCalcService.calc(userPhone, merchantNo, couponId, orderAmount, rule, useBalance));
     }
 
     @PostMapping("/offline/order")
@@ -107,9 +108,10 @@ public class CustomerController {
                                                    @RequestParam BigDecimal orderAmount,
                                                    @RequestParam(required = false) BigDecimal paidAmount,
                                                    @RequestParam(required = false) String drawBatchNo,
-                                                   @RequestParam(required = false) String rule) {
+                                                   @RequestParam(required = false) String rule,
+                                                   @RequestParam(required = false, defaultValue = "true") Boolean useBalance) {
         return Result.ok(offlineOrderService.createOrder(userPhone, merchantNo, couponId,
-                orderAmount, paidAmount, drawBatchNo, rule));
+                orderAmount, paidAmount, drawBatchNo, rule, useBalance));
     }
 
     @PostMapping("/offline/order/{orderNo}/refund")
