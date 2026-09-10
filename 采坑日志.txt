@@ -634,3 +634,11 @@
       new Date("2026/09/10T16:21:16")解析失败返回Invalid Date,getTime()=NaN,NaN<300000为false,判断超过5分钟不播放
 修复: new Date(latest.createTime)直接解析ISO格式,不需要replace
 坑: Java Spring Boot默认返回ISO格式带T;前端解析时间要先看后端返回格式;new Date("2026-09-10T16:21:16")可直接解析
+
+
+【G48】2026-09-10 播报分两段+播放锁+端口占用重启
+1. 播报分两段: 第一段开奖立即播"恭喜开中XXX"(DrawService.announceDraw), 第二段进入结算页pay.html时播完整内容(announce-prize接口)
+2. 播放锁_announcePlaying: 避免同一条播报重复播放, Audio/WebSpeech/APP播放结束后释放锁
+3. 重启坑: pkill -9 -f ibigou.jar杀不掉进程时用fuser -k 8085/tcp杀端口占用; nohup启动SSH会超时, 用bash -c包裹或直接nohup &
+4. announce-prize接口自己查rank(statRepository.countByMerchantNo), 不需要前端传
+5. pay.js用sessionStorage标记已播报, 避免刷新重复触发第二段

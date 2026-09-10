@@ -2313,8 +2313,11 @@ async function _connectBtPrinter(){
 // 蓝牙语音播报函数（APP端优先云端女声MP3，复刻网页端温柔女声；Web端用Web Speech API）
 // 蓝牙语音播报函数（APP端优先 HTML5 Audio 百度女声MP3，Web端用Web Speech API）
 // 统一语音播报：APP优先云端TTS女声MP3(MediaPlayer绕过自动播放)，其次原生TTS，浏览器Audio，最后Web Speech
+var _announcePlaying = false;
 function _speakAnnounce(text){
   if (!text) return;
+  if (_announcePlaying) { console.log("[播报] 正在播放中，跳过重复:", text.substring(0,20)); return; }
+  _announcePlaying = true;
   console.log("[播报] 内容:", text);
   var url = (window.location.origin || "") + "/api/tts?lan=zh&text=" + encodeURIComponent(text) + "&spd=5&source=web";
   // 方案1：APP原生 speakUrl（云端TTS女声，MediaPlayer播放，不受自动播放限制）
@@ -2324,12 +2327,14 @@ function _speakAnnounce(text){
         window.AndroidPrinter.speakUrl(url);
         if (typeof toast === "function") toast("APP云端女声播报", "info");
         console.log("[播报] 使用AndroidPrinter.speakUrl 云端女声");
+        setTimeout(function(){ _announcePlaying = false; }, 15000);
         return;
       }
       if (window.AndroidPrinter.speak) {
         window.AndroidPrinter.speak(text);
         if (typeof toast === "function") toast("APP系统语音播报", "info");
         console.log("[播报] 使用AndroidPrinter.speak 原生TTS");
+        setTimeout(function(){ _announcePlaying = false; }, 15000);
         return;
       }
     }
@@ -2339,8 +2344,8 @@ function _speakAnnounce(text){
     if (window._btAudio) { try { window._btAudio.pause(); } catch(e){} window._btAudio = null; }
     var a = new Audio(url);
     window._btAudio = a;
-    a.play().then(function(){ if (typeof toast === "function") toast("网页女声播报", "info"); console.log("[播报] 使用Audio云端TTS"); })
-      .catch(function(err){ console.warn("[播报] Audio失败", err); if (typeof toast === "function") toast("Audio被拦截,降级系统语音", "warning"); _speakWebSpeech(text); });
+    a.play().then(function(){ if (typeof toast === "function") toast("网页女声播报", "info"); console.log("[播报] 使用Audio云端TTS"); a.onended = function(){ _announcePlaying = false; }; a.onerror = function(){ _announcePlaying = false; }; })
+      .catch(function(err){ console.warn("[播报] Audio失败", err); _announcePlaying = false; if (typeof toast === "function") toast("Audio被拦截,降级系统语音", "warning"); _speakWebSpeech(text); });
     return;
   } catch(e) { console.warn("[播报] Audio初始化失败", e); }
   // 方案3：Web Speech API
@@ -2353,10 +2358,14 @@ function _speakWebSpeech(text){
       var u = new SpeechSynthesisUtterance(text);
       u.lang = "zh-CN";
       u.rate = 1.0;
+      u.onend = function(){ _announcePlaying = false; };
+      u.onerror = function(){ _announcePlaying = false; };
       speechSynthesis.speak(u);
       console.log("[播报] 使用Web Speech API");
+    } else {
+      _announcePlaying = false;
     }
-  } catch(e) { console.warn("[播报] Web Speech失败", e); }
+  } catch(e) { console.warn("[播报] Web Speech失败", e); _announcePlaying = false; }
 }
 
 function btSpeak(text){

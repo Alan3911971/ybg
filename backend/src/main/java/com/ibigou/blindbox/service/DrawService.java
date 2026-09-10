@@ -15,7 +15,10 @@ import java.time.LocalDateTime;
 import java.time.LocalDate;
 import java.time.temporal.TemporalAdjusters;
 import java.util.List;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.concurrent.TimeUnit;
 
 /**
  * 盲盒开奖服务。
@@ -27,6 +30,7 @@ import java.util.concurrent.ThreadLocalRandom;
 @Service
 @RequiredArgsConstructor
 public class DrawService {
+    private static final ScheduledExecutorService ANNOUNCE_SCHEDULER = Executors.newScheduledThreadPool(2);
 
     private final MerchantRepository merchantRepository;
     private final BoxPrizePoolRepository prizePoolRepository;
@@ -201,23 +205,15 @@ public class DrawService {
         return new DrawResult(batchNo, prizeType, prizeValue, true);
     }
 
-    /** 开奖播报（定稿话术：第X位用户/中奖/余额/抵扣比例/今日剩余额度） */
+    /** 开奖播报（第一段：立即播报中奖内容；第二段由结算页pay.html加载时触发） */
     private void announceDraw(String merchantNo, String userPhone, DrawResult result, String channel) {
         try {
-            Merchant m = merchantRepository.findById(merchantNo).orElse(null);
-            long seq = statRepository.countByMerchantNo(merchantNo);
-            BigDecimal balance = balanceService.availableBalance(userPhone);
-            int percent = m == null || m.getBalanceDeductPercent() == null
-                    ? configService.balanceDeductRate() : m.getBalanceDeductPercent();
             String prizeTxt = result.isCoupon()
-                    ? (result.prizeType() == 1 ? result.prizeValue() + "折" : "立减" + result.prizeValue() + "元")
+                    ? (result.prizeType() == 1 ? result.prizeValue() + "折优惠券" : "立减" + result.prizeValue() + "元券")
                     : "余额" + result.prizeValue() + "元";
-            BigDecimal dailyRemain = m == null ? BigDecimal.ZERO
-                    : orderCalcService.remainingDailyQuota(userPhone, merchantNo, m);
-            String content = "您好，这是本店第" + seq + "位参与盲盒活动的用户，恭喜您中奖，盲盒优惠" + prizeTxt
-                    + "，您账户可用余额" + balance + "元，本店抵扣比例" + percent + "%"
-                    + "，本店今日您余额最多还可以抵扣" + dailyRemain + "元，请告知收银员本单消费原价。";
-            announceService.record(merchantNo, "draw", content);
+            // 第一段：立即播报中奖内容
+            String firstContent = "恭喜您的盲盒开中了" + prizeTxt + "。";
+            announceService.record(merchantNo, "draw", firstContent);
         } catch (Exception e) {
             // 播报失败不影响主流程
         }

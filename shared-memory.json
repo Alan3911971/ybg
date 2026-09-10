@@ -1,6 +1,6 @@
 {
   "project": "宜必购盲盒系统 (ybgtc.com)",
-  "last_updated": "2026-09-10 16:25",
+  "last_updated": "2026-09-10 16:45",
   "note": "顾客端完整流程闭环：开盒→中奖→抵扣→0.01元真实支付（微信native扫码已支付成功）；每日限次已取消并成功部署（新jar运行中）；测试支付锁定0.01元（pay.js）",
   "environment": {
     "code_root": "D:\\workspace-java\\ybg-master",
@@ -187,7 +187,9 @@
     "alipay_wap": "支付宝scene=wap拉起APP;微信内被拦截需浏览器打开;pay.js第469行",
     "announce_init": "商家端播报初始化index.html第1994行,页面加载播放最近5分钟内最新播报;轮询第2007行pollAnnounce",
     "autoplay_policy": "浏览器自动播放限制:页面加载需用户先交互才能play Audio;商家端index.html第1994行_pendingSpeak机制",
-    "announce_time_parse": "播报时间解析用new Date(createTime)直接解析ISO格式,不要replace(/-/g,\"/\")会导致NaN;商家端index.html第2010行"
+    "announce_time_parse": "播报时间解析用new Date(createTime)直接解析ISO格式,不要replace(/-/g,\"/\")会导致NaN;商家端index.html第2010行",
+    "announce_two_stage": "播报分两段: DrawService.java第209行announceDraw只播第一段; pay.js第58行进入结算页触发第二段announce-prize; CustomerController.java第242行announce-prize自己查rank",
+    "announce_play_lock": "商家端index.html _announcePlaying播放锁, Audio/WebSpeech/APP播放结束释放, 避免重复播放"
   },
   "announce_restore_info": {
     "status": "生产jar已反编译确认播报逻辑，D盘IbigouService.java待补",

@@ -54,6 +54,19 @@
   if ($('prizeName'))  $('prizeName').textContent  = prizeName;
   if ($('prizeSub'))   $('prizeSub').textContent   = '可使用「' + prizeName + '」参与本店结算';
 
+  // 第二段播报：进入结算页时触发完整播报（第一段开奖时已播"恭喜开中XXX"）
+  (function(){
+    var merchantNo = qs('merchantNo') || '';
+    if (!merchantNo || !prizeName) return;
+    var flagKey = 'ibigou_announce_' + prizeId + '_' + merchantNo;
+    try { if (sessionStorage.getItem(flagKey)) return; } catch(e){}
+    fetch('/api/customer/ibigou/announce-prize', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ merchantNo: merchantNo, prizeName: prizeName })
+    }).then(function(){ try { sessionStorage.setItem(flagKey, '1'); } catch(e){} }).catch(function(){});
+  })();
+
   function ruleDesc(rule){
     if (!rule) return { html: '实物礼品 / 不参与金额试算', tag: '不可用', muted: true };
     var t = rule.type;
