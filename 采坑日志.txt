@@ -508,3 +508,16 @@
 部署: scp pay.js
 验证: 服务器pay.js包含fallbackNativeQr ✅
 坑: API模式(pay_mode=1)下,JSAPI拉起失败后必须降级到native二维码(调createPay),不能降级到静态码(商家收款码)
+
+
+【G37】2026-09-10 应付0元（立减券全额抵扣）时微信支付下单失败 total_fee低于最小值1 + 修复为直接完成订单
+现象: 中了15元立减券，订单0.01元，立减券全额抵扣后应付0元，点微信支付报错"微信支付下单失败: total_fee值低于最小值1"
+根因: 微信支付不允许0元下单(total_fee最低1分)，但前端没有判断应付0元的情况，仍然调用createPay
+修复:
+  后端 OfflineOrderService.createOrder: 保存订单后判断calc.payAmount()<=0，直接settleAssets+orderStatus=1+payChannel="free"+payTime，完成订单
+  前端 pay.js: 去掉0.01元测试限制；创建订单后判断payAmount<=0，toast"立减券已全额抵扣，无需支付"，1.5秒后跳转首页
+部署: 后端重新mvn打包(98M)→kill旧进程→复制jar→setsid启动；前端scp pay.js
+验证:
+  应付0元订单: orderStatus=1, payChannel=free, payTime有值 ✅
+  正常金额订单: orderStatus=0, payAmount>0 ✅
+坑: 立减券金额大于订单金额时，应付0元，必须直接完成订单，不能调支付接口

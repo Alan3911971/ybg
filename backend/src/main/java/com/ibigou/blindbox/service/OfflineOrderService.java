@@ -70,6 +70,17 @@ public class OfflineOrderService {
         order.setCreateTime(now);
         order.setUpdateTime(now);
         OfflineOrder saved = orderRepository.save(order);
+        // 应付0元（立减券/余额全额抵扣）：直接完成订单，无需调支付接口（2026-09-10）
+        if (calc.payAmount() != null && calc.payAmount().signum() <= 0) {
+            settleAssets(saved, calc, deducted, usedCouponId, userPhone, merchantNo, bizNo);
+            saved.setOrderStatus(1);
+            saved.setPayChannel("free");
+            saved.setPayTime(LocalDateTime.now());
+            saved.setUpdateTime(LocalDateTime.now());
+            saved = orderRepository.save(saved);
+            announceOrder(merchantNo, saved, "order_auto", false);
+            return saved;
+        }
         // 流程 C1：支付成功 → 本次抽奖产出全部资产闭环
         if (drawBatchNo != null && !drawBatchNo.isBlank()) {
             flowCloseService.closeByDrawBatch(drawBatchNo);

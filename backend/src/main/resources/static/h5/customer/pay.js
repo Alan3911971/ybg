@@ -618,12 +618,6 @@ var _payPending = false;  // 标记用户已跳转APP支付, 返回时自动完�
       this.disabled = true; this.textContent = '下单中...';
       var ph = null; try { ph = localStorage.getItem('ibigou_phone'); } catch(e){}
       var amt = parseFloat($('amountInput').value) || 0;
-      // 测试阶段：真实支付固定 0.01 元（防止误扣大额，验收后移除本段）
-      if (amt > 0.01) {
-        toast('测试阶段仅支持 0.01 元支付，请将金额改为 0.01', 'warning');
-        this.disabled = false; this.textContent = '💳 确认下单 ¥' + fmt(lastResult ? lastResult.pay : 0);
-        return;
-      }
       var useBal = $('balCheck') && $('balCheck').checked;
       var mno2 = (function(){ try { var m = location.search.match(/merchantNo=([^&]+)/); if (m) { localStorage.setItem('ibigou_merchant_no', m[1]); return m[1]; } var _s = localStorage.getItem('ibigou_merchant_no'); if (_s === 'M001') { localStorage.removeItem('ibigou_merchant_no'); return ''; } return _s || ''; } catch(e){ return ''; } })();
       var r;
@@ -644,6 +638,13 @@ var _payPending = false;  // 标记用户已跳转APP支付, 返回时自动完�
         renderBalance();
         var _finalAmt = (r.data.payAmount != null) ? r.data.payAmount : (lastResult ? lastResult.pay : 0);
         if ($('payAmount')) $('payAmount').textContent = '¥' + fmt(parseFloat(_finalAmt));
+        // 应付0元（立减券全额抵扣）：后端已直接完成订单，前端提示并跳转（2026-09-10）
+        if (parseFloat(_finalAmt) <= 0) {
+          toast('立减券已全额抵扣，无需支付', 'success');
+          setTimeout(function(){ location.href = '/h5/customer/index.html'; }, 1500);
+          this.disabled = false; this.textContent = '💳 确认下单 ¥' + fmt(lastResult.pay);
+          return;
+        }
         if ($('payMask')) $('payMask').classList.add('show');
         if ($('qrEmpty')) $('qrEmpty').style.display = 'none';
         if ($('payQr')) $('payQr').style.display = 'none';
