@@ -521,3 +521,15 @@
   应付0元订单: orderStatus=1, payChannel=free, payTime有值 ✅
   正常金额订单: orderStatus=0, payAmount>0 ✅
 坑: 立减券金额大于订单金额时，应付0元，必须直接完成订单，不能调支付接口
+
+
+【G38】2026-09-10 微信内JSAPI拉起wx.config失败提示"当前页面URL未注册" + 临时改为native二维码
+现象: 微信内点微信支付→JSAPI拉起→wx.config失败→弹出"当前页面的URL未注册:https://ybgtc.com/h5/customer/pay.html"
+根因: 公众号"JS接口安全域名"配置ybgtc.com后未生效(微信配置缓存),导致wx.config验证失败
+临时方案: pay.js微信内微信支付scene从jsapi改为native,直接调用createPay(scene=native)生成二维码长按识别支付,
+        不走wx.config,避免弹出"URL未注册"提示;等JS接口安全域名配置生效后再改回jsapi
+验证:
+  createPay scene=native返回qrCode(weixin://wxpay/bizpayurl?pr=...) ✅
+  qr-svg接口生成二维码SVG(31KB) ✅
+  pay.js识别qrCode并显示二维码 ✅
+坑: 微信JS接口安全域名配置后可能需要5-30分钟生效,期间wx.config会失败;native二维码不需要JS接口安全域名,可直接用

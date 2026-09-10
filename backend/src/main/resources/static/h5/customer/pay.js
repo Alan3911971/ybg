@@ -448,10 +448,10 @@ var _payPending = false;  // 标记用户已跳转APP支付, 返回时自动完�
         // 先调用支付接口，获取支付信息（支持静态码、API拉起、二维码）
         if (currentPayOrderNo) {
           try {
-            // scene：wechat 非微信内=mweb直接拉起；wechat 微信内=jsapi（公众号内拉起）；alipay=wap；其他=二维码
+            // scene：wechat 非微信内=mweb直接拉起；wechat 微信内=native二维码长按识别（JSAPI待域名配置生效后启用）；alipay=wap；其他=二维码
             var scene = '';
             if (method === 'wechat' && !isInWeChat()) scene = 'mweb';
-            else if (method === 'wechat' && isInWeChat()) scene = 'jsapi';
+            else if (method === 'wechat' && isInWeChat()) scene = 'native';
             else if (method === 'alipay') scene = 'wap';
             var openid = '';
             if (scene === 'jsapi') {
