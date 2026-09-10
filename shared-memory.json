@@ -1,6 +1,6 @@
 {
   "project": "宜必购盲盒系统 (ybgtc.com)",
-  "last_updated": "2026-09-10 01:30",
+  "last_updated": "2026-09-10 01:45",
   "note": "顾客端完整流程闭环：开盒→中奖→抵扣→0.01元真实支付（微信native扫码已支付成功）；每日限次已取消并成功部署（新jar运行中）；测试支付锁定0.01元（pay.js）",
   "environment": {
     "code_root": "D:\\workspace-java\\ybg-master",
@@ -76,7 +76,8 @@
     },
     "wx_h5_status": "H5支付(mweb)未开通,createPay scene=mweb返回mwebUrl=null,后端退回native二维码; 需商户平台(pay.weixin.qq.com)开通H5支付",
     "wx_pull_mode": "微信内=JSAPI自动拉起(公众号wx05a588674344ed25已配授权目录); H5浏览器=native二维码长按识别; 不使用扫一扫",
-    "merchant_M90380836_pay_mode": 1
+    "merchant_M90380836_pay_mode": 1,
+    "order_status_note": "下单时不扣余额/不核销券,支付回调后才结算"
   },
   "github": {
     "backend": "https://github.com/Alan3911971/ybg",
@@ -154,6 +155,16 @@
       "files": [
         "pay.html(btnPayDone加disabled)",
         "pay.js(支付方式点击移除disabled)"
+      ]
+    },
+    "order_status_flow": {
+      "desc": "订单状态流程: createOrder=0(未支付) -> 支付回调confirmPaid=1(已支付)+settleAssets",
+      "files": [
+        "OfflineOrderService.java(createOrder/confirmPaid)",
+        "PayNotifyController.java",
+        "WxPayService.handleNotify",
+        "AlipayService.handleNotify",
+        "pay.js(finishPay查pay/query)"
       ]
     }
   },

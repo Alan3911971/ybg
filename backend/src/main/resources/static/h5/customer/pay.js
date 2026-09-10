@@ -356,6 +356,9 @@ var _payPending = false;  // 标记用户已跳转APP支付, 返回时自动完�
           if (r.code === 0 && r.data && r.data.paid) {
             clearInterval(payPollTimer);
             payPollTimer = null;
+            // 支付成功后按钮变亮
+            var doneBtn = $('btnPayDone');
+            if (doneBtn) doneBtn.classList.remove('btn-gray');
             toast('支付成功', 'success');
             setTimeout(function(){ location.reload(); }, 1500);
           }
@@ -426,9 +429,6 @@ var _payPending = false;  // 标记用户已跳转APP支付, 返回时自动完�
     btns.forEach(function(btn){
       btn.addEventListener('click', async function(){
         var method = btn.getAttribute('data-pay') || btn.textContent.trim();
-        // 选择支付方式后，完成支付按钮变亮可点击（2026-09-10）
-        var doneBtn = $('btnPayDone');
-        if (doneBtn) { doneBtn.disabled = false; }
         // 先调用支付接口，获取支付信息（支持静态码、API拉起、二维码）
         if (currentPayOrderNo) {
           try {
@@ -531,11 +531,29 @@ var _payPending = false;  // 标记用户已跳转APP支付, 返回时自动完�
 
   // 完成按钮
   (function(){
-    function finishPay(){
+    function _doFinish(){
       if (_payPending) _payPending = false;
+      // 支付完成后按钮变亮
+      var doneBtn = $('btnPayDone');
+      if (doneBtn) doneBtn.classList.remove('btn-gray');
       toast('支付完成，正在返回首页', 'success');
-      // 顾客端不播报，改为商家端播报（announce系统）
       setTimeout(function(){ location.href = '/h5/customer/index.html'; }, 1500);
+    }
+    function finishPay(){
+      // 先查询支付状态，未支付则提示（2026-09-10）
+      if (!currentPayOrderNo) { _doFinish(); return; }
+      fetch('/api/customer/pay/query?orderNo=' + encodeURIComponent(currentPayOrderNo), {
+        headers: { 'X-User-Token': (function(){ try { return localStorage.getItem('ibigou_user_token') || ''; } catch(e){ return ''; } })() }
+      })
+      .then(function(r){ return r.json(); })
+      .then(function(r){
+        if (r.code === 0 && r.data && r.data.paid) {
+          _doFinish();
+        } else {
+          toast('请先扫码完成支付', 'warning');
+        }
+      })
+      .catch(function(){ toast('请先扫码完成支付', 'warning'); });
     }
     var doneBtn = $('btnPayDone');
     if (doneBtn) doneBtn.addEventListener('click', finishPay);

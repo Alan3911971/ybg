@@ -55,20 +55,19 @@ public class OfflineOrderService {
         order.setMerchantNo(merchantNo);
         order.setCouponId(usedCouponId);
         order.setDeductBalance(deducted);
+        order.setReturnBalance(BigDecimal.ZERO);
         order.setOrderAmount(orderAmount);
         order.setPayAmount(calc.payAmount());
         // V1.5 细化：用户回填实际付金额（对账用，平台不碰资金）；P0 差异标识
         order.setPaidAmount(paidAmount);
         order.setPaidDiff(paidAmount == null ? null
                 : paidAmount.subtract(calc.payAmount()).setScale(2, java.math.RoundingMode.HALF_UP));
-        // 模式 A：下单即结算闭环（券核销/扣余额/额度/返还统一在 settleAssets）
-        order.setOrderStatus(1);
-        settleAssets(order, calc, deducted, usedCouponId, userPhone, merchantNo, bizNo);
+        // API支付模式：下单时未支付，微信/支付宝回调后 confirmPaid 才结算（扣余额/核销券）
+        order.setOrderStatus(0);
         order.setRefundStatus(0);
         order.setRefundAmount(BigDecimal.ZERO);
         LocalDateTime now = LocalDateTime.now();
         order.setCreateTime(now);
-        order.setPayTime(now);
         order.setUpdateTime(now);
         OfflineOrder saved = orderRepository.save(order);
         // 流程 C1：支付成功 → 本次抽奖产出全部资产闭环

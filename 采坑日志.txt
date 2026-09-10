@@ -459,3 +459,22 @@
 部署: scp pay.html + pay.js
 验证: btnDisabled=true, opacity=0.5(默认灰色); 选支付方式后disabled=false ✅
 坑: .btn[disabled]样式已有opacity:.5,只需加disabled属性即可; finishPay点击事件不受disabled影响(浏览器默认阻止)
+
+
+【G33】2026-09-10 订单创建即已支付导致未支付点完成直接完成 + 修复为下单未支付/回调才结算
+现象: 未支付时点"完成支付"直接跳转首页,订单查询返回paid=true
+根因: OfflineOrderService.createOrder第65行order.setOrderStatus(1)+第66行settleAssets,下单即结算闭环;
+      pay/query接口paid=orderStatus==1,所以所有新订单都返回已支付
+修复:
+  1. createOrder: orderStatus=0(未支付),删除settleAssets调用,删除payTime,加returnBalance=0
+  2. confirmPaid(支付回调): 已有settleAssets+orderStatus=1+payTime,无需修改
+  3. 微信/支付宝回调: WxPayService.handleNotify+AlipayService.handleNotify均调用confirmPaid ✅
+  4. pay.js: 完成按钮默认灰色(btn-gray),点击先查pay/query,未支付toast提示,已支付才_doFinish
+  5. API模式轮询startPayPolling成功后移除btn-gray(变亮)
+部署: 后端mvn重建jar(ibigou-blindbox-1.0.0-SNAPSHOT.jar)+重启; 前端scp pay.js/pay.html
+验证: 新订单OFF-f5cb7352... paid=false,orderStatus=0 ✅; 未支付点完成不跳转 ✅; 按钮灰色 ✅
+坑:
+  - 删除settleAssets后必须加order.setReturnBalance(BigDecimal.ZERO),否则DB报错Column return_balance cannot be null
+  - jar文件名是ibigou-blindbox-1.0.0-SNAPSHOT.jar(不是ibigou-0.0.1)
+  - 部署用setsid + </dev/null避免SSH挂起; PowerShell执行ssh命令会解析$(...)为PS语法,需用Python subprocess
+  - 下单时不扣余额/不核销券,支付成功回调后confirmPaid才结算;用户不支付则资产不扣(正确)
