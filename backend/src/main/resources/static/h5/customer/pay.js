@@ -487,6 +487,7 @@ var _payPending = false;  // 标记用户已跳转APP支付, 返回时自动完�
         } else {
           showMerchantQR(method, null);
         }
+        return; // 二维码模式已显示，阻止后续scheme iframe拉起APP（2026-09-10）
         var lb = payLabels[method] || '其它';
         var emoji = method === 'wechat' ? '💚' : (method === 'alipay' ? '💙' : (method === 'unionpay' ? '💜' : '❓'));
         var color = method === 'wechat' ? '#1aad19' : (method === 'alipay' ? '#1677ff' : (method === 'unionpay' ? '#e60012' : '#9095a8'));

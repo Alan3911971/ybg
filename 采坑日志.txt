@@ -429,3 +429,13 @@
 部署: scp pay.js
 验证: 非微信环境不跳转; 提前授权代码已部署 ✅
 坑: snsapi_base是静默授权(不弹确认页),但页面会跳转一次; openid存sessionStorage(关闭标签页失效)
+
+
+【G30】2026-09-10 非微信浏览器点微信支付弹出"要打开Weixin吗?"系统对话框
+现象: 普通浏览器点微信支付→显示二维码的同时弹出系统对话框"要打开Weixin吗? https://ybgtc.com想打开此应用"
+根因: pay.js点支付按钮→createPay返回native二维码→showMerchantQR显示二维码,但之后没有return,
+      继续执行到第496行scheme iframe逻辑(weixin://alipays://),iframe加载协议链接触发浏览器"打开应用"对话框
+修复: showMerchantQR后加return,阻止后续scheme iframe拉起APP
+部署: scp pay.js
+验证: 代码已部署(hasReturnFix=true); 页面无scheme iframe(schemeIframes=0) ✅
+坑: 二维码长按识别是微信内的能力,普通浏览器显示二维码即可,不需要拉起微信APP
