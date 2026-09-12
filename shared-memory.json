@@ -1,7 +1,7 @@
 {
   "project": "宜必购盲盒系统 (ybgtc.com)",
-  "last_updated": "2026-09-11 21:00",
-  "note": "顾客端首页商家信息展示（行业分类/地址/电话/导航地图）已上线；新增公开接口/api/customer/merchant/info/{merchantNo}；支付页输入0直接完成；Spec Kit已安装初始化（G14规矩）",
+  "last_updated": "2026-09-12 21:00",
+  "note": "商家列表页(merchants.html)上线+商家信息公开接口+G15/G16规矩+完整闭环执行",
   "environment": {
     "code_root": "D:\\workspace-java\\ybg-master",
     "backend_root": "D:\\workspace-java\\ybg-master\\backend",
@@ -35,14 +35,14 @@
     "baota": {
       "url": "https://121.229.160.2:8888/696120cf",
       "user": "su3911971",
-      "password": "Su001912"
+      "password": "宝塔密码（已脱敏）"
     },
     "web_root": "/www/wwwroot/ybgmh"
   },
   "database": {
     "name": "ybgtc.com（带点号，SQL需反引号）",
     "user": "ybgtc.com",
-    "password": "sy7wGesYn5y22jsZ",
+    "password": "MySQL密码（已脱敏）",
     "key_tables": [
       "sys_global_config(config_value=TEXT)",
       "merchant",
@@ -53,8 +53,8 @@
     ]
   },
   "accounts": {
-    "platform_admin": "https://ybgtc.com/h5/admin/index.html  admin / Admin@2026",
-    "merchant": "https://ybgtc.com/h5/merchant/index.html  13851918986 / 123321",
+    "platform_admin": "https://ybgtc.com/h5/admin/index.html  admin / 平台密码（已脱敏）",
+    "merchant": "https://ybgtc.com/h5/merchant/index.html  13851918986 / 商家密码（已脱敏）",
     "customer": "https://ybgtc.com/h5/customer/login.html?merchantNo=M90380836  手机号13851918986 验证码123456（测试环境固定）",
     "merchant_no": "M90380836（鲜果时光生产水果店）",
     "login_param": "userPhone（form-urlencoded）"
@@ -65,7 +65,7 @@
       "mode": "V2（用户明确要求V2不用V3）",
       "mch_id": "1440071102（南京微汀网络科技有限公司）",
       "app_id": "wx05a588674344ed25",
-      "api_key_v2": "NanJingweitingwangluokejigaabbxy",
+      "api_key_v2": "微信V2密钥（已脱敏）",
       "customer_pay_mode": "1（API支付）"
     },
     "alipay": {
@@ -286,7 +286,7 @@
       "本地路径": "D:\\workspace-java\\ybg-master\\backend\\src\\main\\resources\\static\\h5\\merchant\\index.html / api.js；MerchantController.java"
     },
     "部署": "jar已部署(ibigou.jar UP)，磁盘index.html/api.js已同步（nginx直读双通道）",
-    "验证": "浏览器登录13851918986/123321：顶部正常，近5单显示\"默认折扣券7.5折 ¥70.25 9-8 9:05\"等真实奖品名"
+    "验证": "浏览器登录13851918986/商家密码（已脱敏）：顶部正常，近5单显示\"默认折扣券7.5折 ¥70.25 9-8 9:05\"等真实奖品名"
   },
   "member_management": {
     "date": "2026-09-08",
@@ -507,6 +507,27 @@
       ],
       "deployed": true,
       "tested": true
+    },
+    {
+      "date": "2026-09-12",
+      "features": [
+        "商家列表页 merchants.html：搜索框+行业筛选+商家抽屉卡片（导航/电话/进入店铺）",
+        "后端新增公开接口：GET /api/customer/merchant/list、GET /api/customer/merchant/industries",
+        "WebConfig排除路径新增 /api/customer/merchant/list 和 /api/customer/merchant/industries",
+        "顾客端首页新增\"宜必购便民生活圈\"入口卡片（跳转merchants.html）",
+        "规矩文档新增G15（演示验证与主动修复）、G16（完整闭环8步流程）",
+        "GitHub token更新为 ghp_CpBA...（已脱敏）"
+      ],
+      "files_changed": [
+        "backend/src/main/java/com/ibigou/blindbox/controller/CustomerController.java (新增2个接口)",
+        "backend/src/main/java/com/ibigou/blindbox/config/WebConfig.java (排除路径)",
+        "backend/src/main/resources/static/h5/customer/merchants.html (新建)",
+        "backend/src/main/resources/static/h5/customer/index.html (添加入口)",
+        "规矩文档.txt (G15+G16)",
+        "采坑日志.txt (G53)"
+      ],
+      "deployed": true,
+      "tested": true
     }
   ],
   "spec_kit": {
@@ -528,5 +549,6 @@
       "speckit-checklist",
       "speckit-taskstoissues"
     ]
-  }
+  },
+  "github_token": "ghp_CpBA...（已脱敏，完整token见本地环境变量）"
 }

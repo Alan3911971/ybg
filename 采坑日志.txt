@@ -681,3 +681,15 @@
   - uv tool安装后路径不在PATH, 需手动添加; 当前会话用 $env:PATH 临时生效
   - 非空目录初始化要加 --force, 否则会报错
   - 无交互环境(CI/AI代理)要加 --non-interactive, 否则会卡在选择器
+
+【G53】2026-09-12 商家列表页完整闭环开发 + G15/G16规矩
+1. 商家列表页(merchants.html)开发：
+   - 后端新增2个公开接口：GET /api/customer/merchant/list（支持keyword/industry/page/size）、GET /api/customer/merchant/industries
+   - 接口需要在WebConfig.customerAuthInterceptor排除路径注册，否则返回"请先登录"
+   - 前端新建merchants.html：顶部搜索框(300ms防抖)+行业筛选横向滚动+商家抽屉卡片(名称/行业/地址/电话/导航/电话/进入店铺按钮)
+   - nginx需添加location = /h5/customer/merchants.html直读磁盘，否则从jar包加载旧版
+2. 顾客端首页添加入口：紫色渐变卡片"宜必购便民生活圈 - 查看全部合作商家"，点击跳merchants.html
+3. G15规矩：修改bug/更新服务器后必须操作演示给用户看，过程中有bug主动解决
+4. G16规矩：完整闭环8步流程（需求理解→代码修改→构建部署→测试验证→演示给用户→主动修复bug→四文档更新→双向备份），缺一不可
+5. GitHub token更新：ghp_CpBA...（已脱敏，见共享记忆github_token字段）（旧token ghp_xUNZ...已失效）
+坑：商家列表接口用merchantRepository.findAll()内存过滤，商家数量多时需改数据库查询；目前只有1家测试商家，后续商家多了要优化分页查询
