@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover">
+<title>商家列表 - 宜必购便民生活圈</title>
+<style>
+:root{
+  --c-primary:#ff6b35;
+  --c-primary-100:#fff3ee;
+  --c-success:#22c55e;
+  --c-warning:#f59e0b;
+  --c-text:#1a1a2e;
+  --c-text-2:#6b7280;
+  --c-text-3:#9ca3af;
+  --c-border:#e5e7eb;
+  --c-bg:#f5f6fa;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;background:var(--c-bg);color:var(--c-text);min-height:100vh;}
+
+/* 顶部搜索区 */
+.header{position:sticky;top:0;z-index:100;background:linear-gradient(135deg,#1a1a2e 0%,#2d1b69 100%);padding:16px 16px 12px;}
+.header h1{color:#fff;font-size:18px;font-weight:700;margin-bottom:12px;display:flex;align-items:center;gap:8px;}
+.header h1 .back{cursor:pointer;font-size:20px;opacity:.8;}
+.search-box{display:flex;align-items:center;background:rgba(255,255,255,.15);border-radius:12px;padding:10px 14px;gap:8px;}
+.search-box input{flex:1;background:transparent;border:none;outline:none;color:#fff;font-size:14px;}
+.search-box input::placeholder{color:rgba(255,255,255,.5);}
+.search-box .icon{color:rgba(255,255,255,.6);font-size:16px;}
+
+/* 行业筛选 */
+.industry-bar{display:flex;gap:8px;padding:12px 16px;overflow-x:auto;scrollbar-width:none;background:#fff;border-bottom:1px solid var(--c-border);}
+.industry-bar::-webkit-scrollbar{display:none;}
+.industry-tag{flex-shrink:0;padding:6px 14px;border-radius:999px;font-size:12px;font-weight:600;background:var(--c-bg);color:var(--c-text-2);border:1px solid var(--c-border);cursor:pointer;transition:all .2s;white-space:nowrap;}
+.industry-tag.active{background:var(--c-primary);color:#fff;border-color:var(--c-primary);}
+
+/* 商家卡片列表 */
+.merchant-list{padding:12px 16px 80px;}
+.merchant-card{background:#fff;border-radius:16px;padding:16px;margin-bottom:12px;box-shadow:0 2px 12px rgba(0,0,0,.06);cursor:pointer;transition:transform .15s,box-shadow .15s;border:1px solid var(--c-border);}
+.merchant-card:active{transform:scale(.98);box-shadow:0 1px 6px rgba(0,0,0,.1);}
+.merchant-card .top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:10px;}
+.merchant-card .name{font-size:16px;font-weight:700;color:var(--c-text);flex:1;}
+.merchant-card .badge{font-size:11px;font-weight:600;padding:3px 8px;border-radius:6px;background:var(--c-primary-100);color:var(--c-primary);flex-shrink:0;margin-left:8px;}
+.merchant-card .info-row{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--c-text-2);margin-top:6px;}
+.merchant-card .info-row .emoji{font-size:14px;flex-shrink:0;}
+.merchant-card .info-row .text{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.merchant-card .actions{display:flex;gap:8px;margin-top:12px;padding-top:12px;border-top:1px solid var(--c-border);}
+.merchant-card .btn{flex:1;padding:8px;text-align:center;border-radius:10px;font-size:12px;font-weight:600;cursor:pointer;border:none;transition:opacity .15s;}
+.merchant-card .btn:active{opacity:.7;}
+.merchant-card .btn-nav{background:#eff6ff;color:#2563eb;}
+.merchant-card .btn-call{background:#f0fdf4;color:#16a34a;}
+.merchant-card .btn-enter{background:var(--c-primary);color:#fff;}
+
+/* 空状态 */
+.empty{text-align:center;padding:60px 20px;color:var(--c-text-3);}
+.empty .emoji{font-size:48px;margin-bottom:12px;}
+.empty p{font-size:14px;}
+
+/* 底部统计 */
+.footer-stat{text-align:center;padding:16px;color:var(--c-text-3);font-size:12px;}
+
+/* Toast */
+.toast{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:rgba(0,0,0,.8);color:#fff;padding:12px 20px;border-radius:10px;font-size:14px;z-index:9999;opacity:0;transition:opacity .3s;pointer-events:none;}
+.toast.show{opacity:1;}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1><span class="back" onclick="history.back()">←</span> 🏪 宜必购便民生活圈</h1>
+  <div class="search-box">
+    <span class="icon">🔍</span>
+    <input type="text" id="searchInput" placeholder="搜索商家名称、地址、行业..." oninput="onSearch()">
+  </div>
+</div>
+
+<div class="industry-bar" id="industryBar">
+  <div class="industry-tag active" data-industry="" onclick="selectIndustry(this)">全部</div>
+</div>
+
+<div class="merchant-list" id="merchantList">
+  <div class="empty"><div class="emoji">🏪</div><p>加载中...</p></div>
+</div>
+
+<div class="footer-stat" id="footerStat"></div>
+<div class="toast" id="toast"></div>
+
+<script>
+const industryEmoji = {"水果生鲜":"🍎","餐饮美食":"🍜","便利店":"🏪","美容美发":"💇","服饰鞋包":"👗","数码家电":"📱","教育培训":"📚","医疗健康":"🏥","休闲娱乐":"🎮","生活服务":"🔧","其他":"🏪"};
+let currentIndustry = "";
+let searchTimer = null;
+
+function $(id){return document.getElementById(id);}
+
+function toast(msg){
+  const t=$("toast");t.textContent=msg;t.classList.add("show");
+  setTimeout(()=>t.classList.remove("show"),2000);
+}
+
+async function loadIndustries(){
+  try{
+    const r = await fetch("/api/customer/merchant/industries");
+    const data = await r.json();
+    if(data.code===0 && data.data){
+      const bar = $("industryBar");
+      data.data.forEach(ind => {
+        const tag = document.createElement("div");
+        tag.className = "industry-tag";
+        tag.dataset.industry = ind;
+        tag.textContent = (industryEmoji[ind]||"🏪")+" "+ind;
+        tag.onclick = ()=>selectIndustry(tag);
+        bar.appendChild(tag);
+      });
+    }
+  }catch(e){console.error(e);}
+}
+
+function selectIndustry(el){
+  document.querySelectorAll(".industry-tag").forEach(t=>t.classList.remove("active"));
+  el.classList.add("active");
+  currentIndustry = el.dataset.industry;
+  loadMerchants();
+}
+
+function onSearch(){
+  clearTimeout(searchTimer);
+  searchTimer = setTimeout(loadMerchants, 300);
+}
+
+async function loadMerchants(){
+  const keyword = $("searchInput").value.trim();
+  let url = "/api/customer/merchant/list?size=50";
+  if(keyword) url += "&keyword="+encodeURIComponent(keyword);
+  if(currentIndustry) url += "&industry="+encodeURIComponent(currentIndustry);
+  
+  try{
+    const r = await fetch(url);
+    const data = await r.json();
+    if(data.code===0 && data.data){
+      renderMerchants(data.data.list, data.data.total);
+    }else{
+      $("merchantList").innerHTML = '<div class="empty"><div class="emoji">😕</div><p>加载失败</p></div>';
+    }
+  }catch(e){
+    $("merchantList").innerHTML = '<div class="empty"><div class="emoji">😕</div><p>网络错误</p></div>';
+  }
+}
+
+function renderMerchants(list, total){
+  const container = $("merchantList");
+  if(!list || list.length===0){
+    container.innerHTML = '<div class="empty"><div class="emoji">🔍</div><p>没有找到相关商家</p></div>';
+    $("footerStat").textContent = "";
+    return;
+  }
+  
+  container.innerHTML = list.map(m => {
+    const ind = m.industry || "其他";
+    const emoji = industryEmoji[ind] || "🏪";
+    return `
+    <div class="merchant-card" onclick="enterMerchant('${m.merchantNo}')">
+      <div class="top">
+        <div class="name">${emoji} ${m.merchantName || m.merchantNo}</div>
+        <div class="badge">${ind}</div>
+      </div>
+      ${m.address ? `<div class="info-row"><span class="emoji">📍</span><span class="text">${m.address}</span></div>` : ''}
+      ${m.reservePhone ? `<div class="info-row"><span class="emoji">📞</span><span class="text">${m.reservePhone}</span></div>` : ''}
+      <div class="actions">
+        ${m.latitude && m.longitude ? `<button class="btn btn-nav" onclick="event.stopPropagation();openMap('${m.merchantNo}','${(m.merchantName||m.merchantNo).replace(/'/g,"")}','${m.latitude}','${m.longitude}')">🗺️ 导航</button>` : ''}
+        ${m.reservePhone ? `<button class="btn btn-call" onclick="event.stopPropagation();callPhone('${m.reservePhone}')">📞 电话</button>` : ''}
+        <button class="btn btn-enter" onclick="event.stopPropagation();enterMerchant('${m.merchantNo}')">进入店铺 →</button>
+      </div>
+    </div>`;
+  }).join("");
+  
+  $("footerStat").textContent = `共 ${total} 家商家`;
+}
+
+function enterMerchant(merchantNo){
+  window.location.href = "index.html?merchantNo="+merchantNo;
+}
+
+function openMap(merchantNo, name, lat, lng){
+  const ua = navigator.userAgent.toLowerCase();
+  const url = "https://uri.amap.com/marker?position="+lng+","+lat+"&name="+encodeURIComponent(name);
+  if(/android|iphone|ipad|ipod/.test(ua)){
+    window.location.href = url;
+  }else{
+    window.open(url);
+  }
+}
+
+function callPhone(phone){
+  window.location.href = "tel:"+phone;
+}
+
+// 初始化
+loadIndustries();
+loadMerchants();
+</script>
+</body>
+</html>

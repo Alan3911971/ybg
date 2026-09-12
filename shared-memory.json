@@ -1,7 +1,7 @@
 {
   "project": "宜必购盲盒系统 (ybgtc.com)",
-  "last_updated": "2026-09-10 16:45",
-  "note": "顾客端完整流程闭环：开盒→中奖→抵扣→0.01元真实支付（微信native扫码已支付成功）；每日限次已取消并成功部署（新jar运行中）；测试支付锁定0.01元（pay.js）",
+  "last_updated": "2026-09-11 21:00",
+  "note": "顾客端首页商家信息展示（行业分类/地址/电话/导航地图）已上线；新增公开接口/api/customer/merchant/info/{merchantNo}；支付页输入0直接完成；Spec Kit已安装初始化（G14规矩）",
   "environment": {
     "code_root": "D:\\workspace-java\\ybg-master",
     "backend_root": "D:\\workspace-java\\ybg-master\\backend",
@@ -483,5 +483,50 @@
     "部署要点": "新jar与原jar依赖完全一致(101 lib)；之前ClassNotFound Lifecycle$SingleUse为瞬时环境问题(无.env)；启动必须 set -a; source .env; set +a；本次部署前备份 ibigou.jar.bak.2.1788965896",
     "bu验证发现": "bu headless 不触发 rAF/animationend 导致开奖动画卡住(接口已真实开奖)，真实手机正常；bu点击btnOrder注入pay.js后交互异常，手动fetch接口验证正常",
     "待办": "验收通过后移除pay.js 0.01限制段；微信支付已可正常拉起(native扫码)"
+  },
+  "dev_log": [
+    {
+      "date": "2026-09-11",
+      "features": [
+        "顾客端首页商家信息卡片：行业分类标签、地址、预约电话、导航地图（点击跳转高德）",
+        "Merchant实体新增字段：address、reservePhone、latitude、longitude、industry",
+        "新增公开接口 GET /api/customer/merchant/info/{merchantNo}（无需登录）",
+        "WebConfig customerAuthInterceptor排除路径新增 /api/customer/merchant/info/**",
+        "支付页输入0元：不参与运算，完成按钮变亮，确认下单直接完成跳转",
+        "其他支付提示文字改为长按二维码识别完成付款",
+        "Spec Kit (specify-cli v1.0.7) 安装并在ybg-master初始化，集成GitHub Copilot"
+      ],
+      "files_changed": [
+        "backend/src/main/java/com/ibigou/blindbox/entity/Merchant.java",
+        "backend/src/main/java/com/ibigou/blindbox/controller/CustomerController.java (新增merchantInfo接口)",
+        "backend/src/main/java/com/ibigou/blindbox/config/WebConfig.java (排除路径)",
+        "backend/src/main/resources/static/h5/customer/index.html (商家信息卡片+JS)",
+        "backend/src/main/resources/static/h5/customer/pay.js (输入0处理+提示文字)",
+        "规矩文档.txt (G12扩展四文档+G14 Spec Kit)",
+        "采坑日志.txt (G49-G52)"
+      ],
+      "deployed": true,
+      "tested": true
+    }
+  ],
+  "spec_kit": {
+    "version": "1.0.7.dev0",
+    "cli_path": "C:\\Users\\Administrator\\.local\\bin\\specify.exe",
+    "project_initialized": "D:\\workspace-java\\ybg-master",
+    "skills_dir": ".github/skills/",
+    "config_dir": ".specify/",
+    "integration": "copilot",
+    "commands": [
+      "speckit-constitution",
+      "speckit-specify",
+      "speckit-clarify",
+      "speckit-plan",
+      "speckit-tasks",
+      "speckit-implement",
+      "speckit-converge",
+      "speckit-analyze",
+      "speckit-checklist",
+      "speckit-taskstoissues"
+    ]
   }
 }

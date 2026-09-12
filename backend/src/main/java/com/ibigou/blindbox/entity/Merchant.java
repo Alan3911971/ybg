@@ -89,6 +89,26 @@ public class Merchant {
     @Column(nullable = false)
     private Integer payMode;
 
+    /** 商家地址 */
+    @Column(length = 255)
+    private String address;
+
+    /** 预约电话 */
+    @Column(length = 32)
+    private String reservePhone;
+
+    /** 纬度 */
+    @Column(precision = 10, scale = 6)
+    private java.math.BigDecimal latitude;
+
+    /** 经度 */
+    @Column(precision = 10, scale = 6)
+    private java.math.BigDecimal longitude;
+
+    /** 行业分类 */
+    @Column(length = 32)
+    private String industry;
+
     @Column(nullable = false, updatable = false)
     private LocalDateTime createTime;
 

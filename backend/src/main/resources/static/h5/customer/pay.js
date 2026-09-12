@@ -232,11 +232,20 @@ var _payPending = false;  // 标记用户已跳转APP支付, 返回时自动完�
   async function autoCalc(){
     var raw = ($('amountInput') && $('amountInput').value || '').trim();
     var amt = parseFloat(raw);
-    if (!raw || isNaN(amt) || amt <= 0) {
+    if (!raw || isNaN(amt) || amt < 0) {
       var box = $('calcBox');
       if (box) { box.innerHTML = '<div class="row" style="color:var(--c-text-3);"><span>请先输入本单金额</span><span>—</span></div>'; box.style.display = 'block'; }
       if ($('btnOrder')) { $('btnOrder').disabled = true; $('btnOrder').textContent = '💳 请先输入金额'; }
       lastResult = null;
+      return;
+    }
+    // 输入0：不参与运算，直接允许完成（2026-09-11）
+    if (amt === 0) {
+      lastResult = { pay: 0, save: 0, couponSave: 0, balanceSave: 0, steps: [{ label:'订单金额', value: 0, isAmount:true }, { label:'实付', value: 0, isFinal:true }], couponName: '免单' };
+      renderCalc(lastResult);
+      if ($('btnOrder')) { $('btnOrder').disabled = false; $('btnOrder').textContent = '💳 确认下单 ¥0'; }
+      var _done0 = $('btnPayDone');
+      if (_done0) _done0.classList.remove('btn-gray');
       return;
     }
     var useBal = $('balCheck') && $('balCheck').checked;
@@ -272,10 +281,10 @@ var _payPending = false;  // 标记用户已跳转APP支付, 返回时自动完�
           // 更新实付步骤的值
           res.steps.forEach(function(s){ if (s.isFinal) s.value = res.pay; });
           if (d.coupon && d.coupon.couponName) res.couponName = d.coupon.couponName;
-          if (d.receiveQrImgWechat) res.qrWechat = d.receiveQrImgWechat;
-          if (d.receiveQrImgAlipay) res.qrAlipay = d.receiveQrImgAlipay;
-          if (d.receiveQrImgUnionpay) res.qrUnionpay = d.receiveQrImgUnionpay;
-          if (d.receiveQrImgOther) res.qrOther = d.receiveQrImgOther;
+          if (d.receiveQrImgWechat) res.receiveQrImgWechat = d.receiveQrImgWechat;
+          if (d.receiveQrImgAlipay) res.receiveQrImgAlipay = d.receiveQrImgAlipay;
+          if (d.receiveQrImgUnionpay) res.receiveQrImgUnionpay = d.receiveQrImgUnionpay;
+          if (d.receiveQrImgOther) res.receiveQrImgOther = d.receiveQrImgOther;
         } else {
           res = calc(amt, prizeRule, ch, useBal, userBalance);
           if (r && r.msg) toast(r.msg, 'warning');
@@ -290,6 +299,12 @@ var _payPending = false;  // 标记用户已跳转APP支付, 返回时自动完�
     lastResult = res;
     renderCalc(res);
     if ($('btnOrder')) { $('btnOrder').disabled = false; $('btnOrder').textContent = '💳 确认下单 ¥' + fmt(res.pay); }
+    // 用户输入金额后，应付为0则完成按钮变亮（2026-09-11）
+    var _done = $('btnPayDone');
+    if (_done) {
+      if (res.pay <= 0) _done.classList.remove('btn-gray');
+      else _done.classList.add('btn-gray');
+    }
   }
 
   // 输入框聚焦
@@ -319,44 +334,44 @@ var _payPending = false;  // 标记用户已跳转APP支付, 返回时自动完�
     var eh = empty ? empty.querySelector('.eh') : null;
     var qrUrl = null, label = '商家收款码';
     var typeMap = {
-      wechat: { key: 'qrWechat', label: '微信收款码' },
-      alipay: { key: 'qrAlipay', label: '支付宝收款码' },
-      unionpay: { key: 'qrUnionpay', label: '云闪付收款码' },
-      other: { key: 'qrOther', label: '商家聚合收款码' }
+      wechat: { key: 'receiveQrImgWechat', label: '微信收款码' },
+      alipay: { key: 'receiveQrImgAlipay', label: '支付宝收款码' },
+      unionpay: { key: 'receiveQrImgUnionpay', label: '云闪付收款码' },
+      other: { key: 'receiveQrImgOther', label: '商家聚合收款码' }
     };
     var t = typeMap[method] || typeMap.other;
-    // API支付模式：使用支付接口返回的二维码
-    if (payData && payData.payMode == 1) {
-      label = payData.label || t.label;
-      if (payData.qrCode) {
-        // 用PNG图片显示二维码（微信长按可识别），不用SVG
-        var qrPngUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=400x400&margin=10&data=' + encodeURIComponent(payData.qrCode);
-        if (empty) {
-          empty.innerHTML = '<div style="width:220px;height:220px;margin:0 auto;display:flex;align-items:center;justify-content:center;">' +
-            '<img src="' + qrPngUrl + '" style="width:200px;height:200px;display:block;" alt="支付二维码" />' +
-            '</div>';
-          empty.style.display = 'flex';
-          empty.style.justifyContent = 'center';
-          empty.style.alignItems = 'center';
-          empty.style.flexDirection = 'column';
-          empty.style.gap = '10px';
-          if (qrImg) qrImg.style.display = 'none';
-        } else if (qrImg) {
-          qrImg.src = qrPngUrl; qrImg.style.display = 'block';
-        }
-        if (info) info.textContent = method === 'alipay' ? '请使用支付宝扫一扫完成付款' : '请使用微信扫一扫完成付款';
-        // 开始轮询支付状态
-        startPayPolling(payData.orderNo);
-        return;
-      } else {
-        if (info) info.textContent = '支付通道未配置，请选择其他方式';
-        return;
-      }
-    }
-    // 静态码模式：使用商家上传的收款码图片
+    // 优先：静态码模式（商家上传的收款码）
     if (lastResult && lastResult[t.key]) {
       qrUrl = lastResult[t.key];
       label = t.label;
+    }
+    // 其次：API支付模式（payMode=1 且 有支付接口返回的二维码）
+    else if (payData && payData.payMode == 1 && payData.qrCode) {
+      label = payData.label || t.label;
+      // 用PNG图片显示二维码（微信长按可识别），不用SVG
+      var qrPngUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=400x400&margin=10&data=' + encodeURIComponent(payData.qrCode);
+      if (empty) {
+        empty.innerHTML = '<div style="width:220px;height:220px;margin:0 auto;display:flex;align-items:center;justify-content:center;">' +
+          '<img src="' + qrPngUrl + '" style="width:200px;height:200px;display:block;" alt="支付二维码" />' +
+          '</div>';
+        empty.style.display = 'flex';
+        empty.style.justifyContent = 'center';
+        empty.style.alignItems = 'center';
+        empty.style.flexDirection = 'column';
+        empty.style.gap = '10px';
+        if (qrImg) qrImg.style.display = 'none';
+      } else if (qrImg) {
+        qrImg.src = qrPngUrl; qrImg.style.display = 'block';
+      }
+      if (info) {
+        if (method === 'alipay') info.textContent = '请打开支付宝扫码完成付款';
+        else if (method === 'other') info.textContent = '请长按二维码识别完成付款';
+        else if (method === 'unionpay') info.textContent = '请打开云闪付扫码完成付款';
+        else info.textContent = '请长按二维码识别完成付款';
+      }
+      // 开始轮询支付状态
+      if (payData.orderNo) startPayPolling(payData.orderNo);
+      return;
     }
     if (eh) eh.textContent = label;
     if (qrUrl) {
@@ -475,6 +490,28 @@ var _payPending = false;  // 标记用户已跳转APP支付, 返回时自动完�
         // 选中状态切换
         document.querySelectorAll('[data-pay]').forEach(function(b){ b.classList.remove('selected'); });
         btn.classList.add('selected');
+        // 优先：商家上传了静态码，直接显示静态码，不调用支付接口
+        var staticKeyMap = { wechat: 'receiveQrImgWechat', alipay: 'receiveQrImgAlipay', unionpay: 'receiveQrImgUnionpay', other: 'receiveQrImgOther' };
+        var staticKey = staticKeyMap[method] || '';
+        if (lastResult && staticKey && lastResult[staticKey]) {
+          showMerchantQR(method, null);
+          // 支付宝：尝试直接拉起支付宝扫一扫摄像头
+          if (method === 'alipay') {
+            try {
+              var ua = navigator.userAgent.toLowerCase();
+              var isMobile = /android|iphone|ipad|ipod/.test(ua);
+              var isWeChat = /micromessenger/.test(ua);
+              if (isMobile && !isWeChat) {
+                // 非微信手机浏览器：拉起支付宝扫一扫
+                setTimeout(function(){
+                  window.location.href = 'alipays://platformapi/startapp?saId=10000007';
+                }, 500);
+                if (typeof toast === 'function') toast('已打开支付宝扫一扫，请对准商家收款码扫码', 'info');
+              }
+            } catch(e){}
+          }
+          return;
+        }
         // 先调用支付接口，获取支付信息（支持静态码、API拉起、二维码）
         if (currentPayOrderNo) {
           try {
@@ -569,7 +606,7 @@ var _payPending = false;  // 标记用户已跳转APP支付, 返回时自动完�
           info.innerHTML = '<div style="text-align:left;max-width:280px;margin:0 auto;">' + stepsHtml + '</div>'
             + '<div style="text-align:center;margin-top:4px;font-size:11px;color:var(--c-text-3);">' + tip + '</div>';
         } else if (info && method === 'other') {
-          info.textContent = method === 'alipay' ? '请使用支付宝扫一扫完成付款' : '请使用微信扫一扫完成付款';
+          info.textContent = '请长按二维码识别完成付款';
         }
       });
     });
@@ -586,7 +623,10 @@ var _payPending = false;  // 标记用户已跳转APP支付, 返回时自动完�
       setTimeout(function(){ location.href = '/h5/customer/index.html'; }, 1500);
     }
     function finishPay(){
-      // 先查询支付状态，未支付则提示（2026-09-10）
+      // 金额为0时直接完成，不需要支付（2026-09-11）
+      var payAmt = (lastResult && lastResult.pay) ? lastResult.pay : 0;
+      if (payAmt <= 0) { _doFinish(); return; }
+      // 先查询支付状态，未支付则提示
       if (!currentPayOrderNo) { _doFinish(); return; }
       fetch('/api/customer/pay/query?orderNo=' + encodeURIComponent(currentPayOrderNo), {
         headers: { 'X-User-Token': (function(){ try { return localStorage.getItem('ibigou_user_token') || ''; } catch(e){ return ''; } })() }
@@ -645,6 +685,13 @@ var _payPending = false;  // 标记用户已跳转APP支付, 返回时自动完�
     btn.addEventListener('click', async function(){
       if (!lastResult) { toast('请先输入金额', 'warning'); return; }
       if (this.disabled) return;
+      // 输入0元：直接完成，不调用下单接口（2026-09-11）
+      var _amt0 = parseFloat($('amountInput').value) || 0;
+      if (_amt0 === 0 || (lastResult && lastResult.pay <= 0)) {
+        toast('支付完成，正在返回首页', 'success');
+        setTimeout(function(){ location.href = '/h5/customer/index.html'; }, 1000);
+        return;
+      }
       this.disabled = true; this.textContent = '下单中...';
       var ph = null; try { ph = localStorage.getItem('ibigou_phone'); } catch(e){}
       var amt = parseFloat($('amountInput').value) || 0;
@@ -679,17 +726,6 @@ var _payPending = false;  // 标记用户已跳转APP支付, 返回时自动完�
         if ($('payMask')) $('payMask').classList.add('show');
         if ($('qrEmpty')) $('qrEmpty').style.display = 'none';
         if ($('payQr')) $('payQr').style.display = 'none';
-        // API mode: hide unionpay/other, only wechat/alipay (2026-09-10)
-        var isApiMode = !(lastResult && lastResult.qrWechat);
-        var _ub = document.querySelector('[data-pay="unionpay"]');
-        var _ob = document.querySelector('[data-pay="other"]');
-        if (isApiMode) {
-          if (_ub) _ub.style.display = 'none';
-          if (_ob) _ob.style.display = 'none';
-        } else {
-          if (_ub) _ub.style.display = '';
-          if (_ob) _ob.style.display = '';
-        }
         // 语音播报(区分渠道):含输入金额、优惠、实付
         try {
           var _input = parseFloat($('amountInput').value) || 0;

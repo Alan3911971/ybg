@@ -61,10 +61,20 @@ button{font-family:inherit;cursor:pointer;border:none;background:none;color:inhe
 .nav .tab{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;color:var(--c-text-3);font-size:10px;}
 .nav .tab .ic{font-size:20px;}
 .nav .tab.active{color:var(--c-primary);font-weight:600;}
+.industry-tag{display:inline-block;padding:4px 12px;border-radius:999px;font-size:12px;font-weight:600;background:rgba(255,213,74,.15);border:1px solid rgba(255,213,74,.4);color:#ffd54a;margin-bottom:10px;position:relative;z-index:1;}
+.shop-info-card{max-width:480px;margin:16px auto 0;padding:0 16px;}
+.shop-info-card .info-box{background:#fff;border-radius:12px;padding:12px 14px;border:1px solid var(--c-border);box-shadow:0 2px 8px rgba(20,23,40,.06);}
+.shop-info-row{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--c-text-2);line-height:1.5;}
+.shop-info-row+.shop-info-row{margin-top:8px;padding-top:8px;border-top:1px solid var(--c-divider);}
+.shop-info-ic{font-size:16px;flex:0 0 auto;}
+.shop-info-text{flex:1;min-width:0;word-break:break-all;}
+.shop-map{margin-top:10px;border-radius:12px;overflow:hidden;height:120px;background:linear-gradient(135deg,#e8f5e9,#c8e6c9);display:flex;align-items:center;justify-content:center;cursor:pointer;border:1px solid var(--c-border);}
+.map-placeholder{font-size:14px;color:var(--c-text-2);font-weight:600;}
 </style>
 </head>
 <body>
 <div class="hero">
+<div class="industry-tag" id="industryTag" style="display:none;"></div>
 <div class="shop-row">
 <div class="avatar">🏪</div>
 <div><div class="shop-name" id="shopName">加载中…</div><div class="shop-sub" id="shopSub">宜必购盒盒</div></div>
@@ -72,6 +82,25 @@ button{font-family:inherit;cursor:pointer;border:none;background:none;color:inhe
 <div class="chip">⚡ 实时开奖 · 中奖自动进我的</div>
 <h1>开始你的<span class="accent">盒盒</span>之旅</h1>
 <div class="tagline">折扣券 / 立减券 / 余额赠送 / 免单，中奖后到店消费自动抵扣</div>
+</div>
+<div class="shop-info-card" id="shopInfoCard" style="display:none;">
+<div class="info-box">
+<div class="shop-info-row"><span class="shop-info-ic">📍</span><span class="shop-info-text" id="shopAddress">--</span></div>
+<div class="shop-info-row"><span class="shop-info-ic">📞</span><span class="shop-info-text" id="shopPhone">--</span></div>
+</div>
+<div class="shop-map" id="shopMap" style="display:none;"><div class="map-placeholder">🗺️ 点击导航到店</div></div>
+</div>
+<div style="max-width:480px;margin:12px auto 0;padding:0 16px;">
+<div onclick="window.location.href='merchants.html'" style="background:linear-gradient(135deg,#667eea,#764ba2);border-radius:12px;padding:14px 16px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;box-shadow:0 4px 12px rgba(102,126,234,.3);">
+<div style="display:flex;align-items:center;gap:10px;">
+<span style="font-size:24px;">🏪</span>
+<div>
+<div style="color:#fff;font-size:14px;font-weight:700;">宜必购便民生活圈</div>
+<div style="color:rgba(255,255,255,.8);font-size:11px;margin-top:2px;">查看全部合作商家 →</div>
+</div>
+</div>
+<span style="color:#fff;font-size:18px;">›</span>
+</div>
 </div>
 <div class="prizes">
 <div class="label">🎰 奖池预览 <span class="count" id="prizeCount"></span></div>
@@ -129,8 +158,41 @@ const r=await get("/customer/wallet/"+ph);
 if(r.code===0&&r.data){}
 }catch(e){}
 try{
-const r2=await fetch("/api/merchant/config/weights",{headers:{"X-Merchant-Token":""}}).then(r=>r.json()).catch(()=>null);
-if(r2&&r2.code===0&&r2.data){$("shopName").textContent=r2.data.merchantName||mno;$("shopSub").textContent=mno;}
+const r2=await fetch("/api/customer/merchant/info/"+mno).then(r=>r.json()).catch(()=>null);
+if(r2&&r2.code===0&&r2.data){
+  var d=r2.data;
+  $("shopName").textContent=d.merchantName||mno;
+  $("shopSub").textContent=mno;
+  // 行业分类
+  var industryEmoji={ "水果生鲜":"🍎","餐饮美食":"🍜","便利店":"🏪","美容美发":"💇","服饰鞋包":"👗","数码家电":"📱","教育培训":"📚","医疗健康":"🏥","休闲娱乐":"🎮","生活服务":"🔧","其他":"🏪" };
+  if(d.industry){
+    var ic=industryEmoji[d.industry]||"🏪";
+    var tag=$("industryTag");
+    tag.textContent=ic+" "+d.industry;
+    tag.style.display="inline-block";
+  }
+  // 商家信息卡片
+  var card=$("shopInfoCard");
+  var hasInfo=false;
+  if(d.address){$("shopAddress").textContent=d.address;hasInfo=true;}
+  if(d.reservePhone){$("shopPhone").textContent=d.reservePhone;hasInfo=true;}
+  if(hasInfo)card.style.display="block";
+  // 导航地图
+  if(d.latitude&&d.longitude){
+    var map=$("shopMap");
+    map.style.display="flex";
+    map.onclick=function(){
+      var lat=d.latitude, lng=d.longitude, name=d.merchantName||mno;
+      var ua=navigator.userAgent.toLowerCase();
+      if(/android|iphone|ipad|ipod/.test(ua)){
+        // 手机端：尝试拉起高德/百度地图
+        window.location.href="https://uri.amap.com/marker?position="+lng+","+lat+"&name="+encodeURIComponent(name);
+      }else{
+        window.open("https://uri.amap.com/marker?position="+lng+","+lat+"&name="+encodeURIComponent(name));
+      }
+    };
+  }
+}
 }catch(e){$("shopName").textContent=mno;}
 }
 async function loadPrizes(){
@@ -163,6 +225,7 @@ loadPrizes();
 loadStats();
 loadLuckyList();
 loadPrizeHistory();
+loadShopInfo();
 
 async function loadLuckyList(){
   if(!mno)return;

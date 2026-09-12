@@ -642,3 +642,42 @@
 3. 重启坑: pkill -9 -f ibigou.jar杀不掉进程时用fuser -k 8085/tcp杀端口占用; nohup启动SSH会超时, 用bash -c包裹或直接nohup &
 4. announce-prize接口自己查rank(statRepository.countByMerchantNo), 不需要前端传
 5. pay.js用sessionStorage标记已播报, 避免刷新重复触发第二段
+
+【G49】2026-09-11 顾客端首页商家信息获取失败 - weights接口需要商家token
+现象: 顾客端首页调用 /api/merchant/config/weights 获取商家信息, 传空X-Merchant-Token, 接口返回"请先登录", 导致商家名称/地址/电话都不显示
+根因: MerchantConfigController的weights接口用 authService.merchantNoByToken(token) 校验, 空token直接抛BizException; 顾客端没有商家token
+修复: 新建公开接口 GET /api/customer/merchant/info/{merchantNo}, 不需要登录, 直接按merchantNo查Merchant表; 同时在WebConfig的customerAuthInterceptor排除路径加 /api/customer/merchant/info/**
+坑: 顾客端不要调用商家端的接口(/api/merchant/**), 那些都需要商家token; 顾客端公开接口要在WebConfig排除列表里注册
+
+
+【G50】2026-09-11 CSS选择器 .shop-info-card>div 误伤地图卡片
+现象: 顾客端首页商家信息卡片的地址/电话行样式正常, 但下面的导航地图卡片也被加上了白色背景/圆角/边框, 导致布局混乱
+根因: CSS写了 .shop-info-card>div{...}, 选中了shop-info-card下所有直接子div, 包括地址行、电话行、地图卡片
+修复: 给地址/电话行加包裹div.info-box, CSS改为 .shop-info-card .info-box{...}, 地图卡片独立样式
+坑: CSS用 >div 通配子元素时要小心, 如果容器内有多种类型的子元素, 应该用class精确选择, 不要用标签通配
+
+
+【G51】2026-09-11 支付页输入0无法完成 - autoCalc中amt<=0直接return
+现象: 用户在支付页输入金额0, 完成按钮不变亮, 点确认下单提示"请先输入金额"
+根因: autoCalc函数中 if(!raw || isNaN(amt) || amt <= 0) 直接return, lastResult=null, 后续所有逻辑都不执行
+修复:
+  1. 把判断条件从 amt <= 0 改为 amt < 0 (允许0)
+  2. 新增 amt === 0 分支: 不调用calc/后端接口, 直接设置lastResult={pay:0,...}, 渲染计算结果, 完成按钮变亮, return
+  3. 确认下单按钮点击时, 如果输入0或lastResult.pay<=0, 直接提示完成并跳转, 不调用后端下单接口
+坑: 金额校验要区分"未输入"和"输入0", 0是合法金额(免单/全额抵扣); 输入0时不需要调用后端下单和支付接口
+
+
+【G52】2026-09-11 Spec Kit 安装与初始化
+工具: GitHub官方 Spec Kit (规格驱动开发工具包), specify-cli v1.0.7.dev0
+安装:
+  1. 前置: uv 0.12.12 (Python包管理)
+  2. uv tool install specify-cli (安装到 C:\Users\Administrator\.local\bin)
+  3. setx PATH 添加 C:\Users\Administrator\.local\bin 到用户环境变量
+初始化: specify init --here --force --non-interactive --integration copilot
+  - 生成 .github/skills/ 下10个speckit-* skills
+  - 生成 .specify/ 模板和配置
+  - 集成GitHub Copilot, 用 $speckit-xxx 调用
+坑:
+  - uv tool安装后路径不在PATH, 需手动添加; 当前会话用 $env:PATH 临时生效
+  - 非空目录初始化要加 --force, 否则会报错
+  - 无交互环境(CI/AI代理)要加 --non-interactive, 否则会卡在选择器
