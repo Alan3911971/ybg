@@ -701,3 +701,9 @@
 4. 保存按钮改为async，先存localStorage再调后端接口同步到数据库
 5. 坑：scp命令在PowerShell中偶尔找不到，改用ssh管道cat>传输文件；base64编码太长会导致命令行参数超限，必须用stdin管道
 坑：商家信息之前只存localStorage不存数据库，换设备就丢失；现在双写（localStorage+数据库），以数据库为准
+
+【G55】2026-09-13 商家列表接口性能优化+安全修复
+1. 性能优化：MerchantRepository新增findActiveMerchants（@Query分页查询）和findDistinctActiveIndustries（@Query去重查询），CustomerController的merchantList和merchantIndustries从findAll内存过滤改为数据库查询
+2. 安全修复：Merchant实体类loginPwd字段添加@JsonIgnore，公开接口不再返回密码哈希
+3. 坑：公开接口返回完整实体对象会泄露敏感字段（密码、账号等），必须用@JsonIgnore或DTO过滤
+坑：JPA @Query中用:keyword IS NULL OR :keyword = ''可以实现可选参数查询，不需要动态拼接SQL

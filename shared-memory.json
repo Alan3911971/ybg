@@ -1,7 +1,7 @@
 {
   "project": "宜必购盲盒系统 (ybgtc.com)",
-  "last_updated": "2026-09-13 21:00",
-  "note": "商家后台店铺信息编辑功能上线+完整闭环执行",
+  "last_updated": "2026-09-13 21:10",
+  "note": "商家列表接口性能优化+安全修复+完整闭环执行",
   "environment": {
     "code_root": "D:\\workspace-java\\ybg-master",
     "backend_root": "D:\\workspace-java\\ybg-master\\backend",
@@ -540,6 +540,22 @@
       "files_changed": [
         "backend/src/main/java/com/ibigou/blindbox/controller/MerchantConfigController.java (新增shop-info接口)",
         "backend/src/main/resources/static/h5/merchant/index.html (新增字段+保存逻辑+加载逻辑)"
+      ],
+      "deployed": true,
+      "tested": true
+    },
+    {
+      "date": "2026-09-13",
+      "features": [
+        "商家列表接口从findAll内存过滤改为数据库@Query分页查询",
+        "行业分类接口改为数据库@Query去重查询",
+        "Merchant实体loginPwd添加@JsonIgnore，公开接口不再返回密码",
+        "商家后台店铺信息编辑功能（行业/地址/电话/经纬度）"
+      ],
+      "files_changed": [
+        "backend/src/main/java/com/ibigou/blindbox/repository/MerchantRepository.java (新增2个查询方法)",
+        "backend/src/main/java/com/ibigou/blindbox/controller/CustomerController.java (改用数据库查询)",
+        "backend/src/main/java/com/ibigou/blindbox/entity/Merchant.java (@JsonIgnore)"
       ],
       "deployed": true,
       "tested": true

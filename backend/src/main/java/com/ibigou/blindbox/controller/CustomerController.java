@@ -57,46 +57,29 @@ public class CustomerController {
         return Result.ok(merchantRepository.findById(merchantNo).orElse(null));
     }
 
-    /** 公开：商家列表（支持关键词搜索、行业筛选、分页） */
+    /** 公开：商家列表（支持关键词搜索、行业筛选、分页）—— 数据库查询，非内存过滤 */
     @GetMapping("/merchant/list")
     public Result<java.util.Map<String, Object>> merchantList(
             @RequestParam(required = false) String keyword,
             @RequestParam(required = false) String industry,
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "50") int size) {
-        List<com.ibigou.blindbox.entity.Merchant> all = merchantRepository.findAll();
-        java.util.List<com.ibigou.blindbox.entity.Merchant> filtered = all.stream()
-                .filter(m -> m.getStatus() != null && m.getStatus() == 1)
-                .filter(m -> keyword == null || keyword.isEmpty()
-                        || (m.getMerchantName() != null && m.getMerchantName().contains(keyword))
-                        || (m.getAddress() != null && m.getAddress().contains(keyword))
-                        || (m.getIndustry() != null && m.getIndustry().contains(keyword)))
-                .filter(m -> industry == null || industry.isEmpty()
-                        || (m.getIndustry() != null && m.getIndustry().equals(industry)))
-                .collect(java.util.stream.Collectors.toList());
-        int total = filtered.size();
-        int from = Math.min((page - 1) * size, total);
-        int to = Math.min(from + size, total);
-        java.util.List<com.ibigou.blindbox.entity.Merchant> pageList = filtered.subList(from, to);
+        org.springframework.data.domain.Pageable pageable =
+                org.springframework.data.domain.PageRequest.of(Math.max(page - 1, 0), Math.min(size, 100));
+        org.springframework.data.domain.Page<com.ibigou.blindbox.entity.Merchant> resultPage =
+                merchantRepository.findActiveMerchants(keyword, industry, pageable);
         java.util.Map<String, Object> result = new java.util.HashMap<>();
-        result.put("list", pageList);
-        result.put("total", total);
+        result.put("list", resultPage.getContent());
+        result.put("total", resultPage.getTotalElements());
         result.put("page", page);
         result.put("size", size);
         return Result.ok(result);
     }
 
-    /** 公开：获取所有行业分类 */
+    /** 公开：获取所有行业分类 —— 数据库查询，非内存过滤 */
     @GetMapping("/merchant/industries")
     public Result<java.util.List<String>> merchantIndustries() {
-        List<com.ibigou.blindbox.entity.Merchant> all = merchantRepository.findAll();
-        java.util.List<String> industries = all.stream()
-                .map(com.ibigou.blindbox.entity.Merchant::getIndustry)
-                .filter(i -> i != null && !i.isEmpty())
-                .distinct()
-                .sorted()
-                .collect(java.util.stream.Collectors.toList());
-        return Result.ok(industries);
+        return Result.ok(merchantRepository.findDistinctActiveIndustries());
     }
 
     // ---------------- 盲盒抽奖 ----------------

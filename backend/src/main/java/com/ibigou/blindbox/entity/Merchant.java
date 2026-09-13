@@ -1,5 +1,6 @@
 package com.ibigou.blindbox.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -26,6 +27,7 @@ public class Merchant {
     private String loginAccount;
 
     /** BCrypt 加密存储 */
+    @JsonIgnore
     @Column(nullable = false, length = 128)
     private String loginPwd;
 
