@@ -749,3 +749,14 @@
 3. 修复：.prizes的margin从-24px改为16px
 4. 坑：删除页面元素后要检查相关元素的margin/padding是否有依赖关系，负margin常用于视觉重叠效果，删除相邻元素后需要调整
 5. 验证：entryCardTop=274, prizesTop=354, overlap=False
+
+【G62】2026-09-13 中奖榜分页显示优化
+1. 需求：中奖榜显示20条太长，分页显示，默认10条
+2. 实现：
+   - 全局变量_luckyAll保存完整列表，_luckyShown当前显示数量，_luckyPageSize=10
+   - renderLuckyList()函数只渲染前_luckyShown条
+   - 底部添加"加载更多（还有N条）"按钮，点击增加10条
+   - 全部显示后隐藏按钮
+   - luckyHint显示"共 N 条"
+3. 坑：bu.find找不到视口外的按钮，用bu.js el.click()代替
+4. 验证：默认10条→点击加载更多→20条→按钮隐藏
