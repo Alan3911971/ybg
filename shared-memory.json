@@ -1,7 +1,7 @@
 {
   "project": "宜必购盲盒系统 (ybgtc.com)",
-  "last_updated": "2026-09-13 21:30",
-  "note": "导航地图真实静态地图实现（后端代理高德API）+完整闭环",
+  "last_updated": "2026-09-13 21:45",
+  "note": "高德Key配置成功+首页入口优化+完整闭环",
   "environment": {
     "code_root": "D:\\workspace-java\\ybg-master",
     "backend_root": "D:\\workspace-java\\ybg-master\\backend",
@@ -576,6 +576,21 @@
       "deployed": true,
       "tested": true,
       "pending": "AMAP_KEY待配置"
+    },
+    {
+      "date": "2026-09-13",
+      "features": [
+        "高德地图Key配置成功（AMAP_KEY写入.env）",
+        "首页导航地图和商家列表页地图缩略图均显示真实地图",
+        "首页入口卡片文字优化为\"查询参与活动商家\"",
+        "商家列表页支持搜索+行业分类筛选"
+      ],
+      "files_changed": [
+        "backend/src/main/resources/static/h5/customer/index.html (入口卡片文字)",
+        "服务器.env (AMAP_KEY)"
+      ],
+      "deployed": true,
+      "tested": true
     }
   ],
   "spec_kit": {
@@ -598,5 +613,6 @@
       "speckit-taskstoissues"
     ]
   },
-  "github_token": "ghp_CpBA...（已脱敏，完整token见本地环境变量）"
+  "github_token": "ghp_CpBA...（已脱敏，完整token见本地环境变量）",
+  "amap_key_configured": true
 }
