@@ -1,7 +1,7 @@
 {
   "project": "宜必购盲盒系统 (ybgtc.com)",
-  "last_updated": "2026-09-13 22:45",
-  "note": "顾客端首页商家信息区域删除+移至商家列表页+完整闭环",
+  "last_updated": "2026-09-13 23:00",
+  "note": "首页布局重叠bug修复+现有功能优化+完整闭环",
   "environment": {
     "code_root": "D:\\workspace-java\\ybg-master",
     "backend_root": "D:\\workspace-java\\ybg-master\\backend",
@@ -626,6 +626,18 @@
         "删除顾客端首页商家信息区域（地址/电话/地图）",
         "商家信息移至merchants.html商家列表页显示",
         "首页保留入口卡片，点击跳商家列表页"
+      ],
+      "files_changed": [
+        "backend/src/main/resources/static/h5/customer/index.html"
+      ],
+      "deployed": true,
+      "tested": true
+    },
+    {
+      "date": "2026-09-13",
+      "features": [
+        "修复首页入口卡片与奖池预监重叠bug（.prizes负margin）",
+        "现有功能优化：商家列表页搜索防抖/行业筛选已完善"
       ],
       "files_changed": [
         "backend/src/main/resources/static/h5/customer/index.html"

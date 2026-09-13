@@ -742,3 +742,10 @@
 2. 修改：删除index.html中的shopInfoCard（地址+电话）和shopMap（导航地图）HTML块及相关JS逻辑
 3. 商家信息在merchants.html商家列表页的商家卡片中显示（名称/行业/地址/电话/地图缩略图/导航/电话/进入店铺）
 4. 入口卡片保留："查询参与活动商家 / 按分类筛选 / 搜索商家 →"，点击跳merchants.html
+
+【G61】2026-09-13 首页布局重叠bug修复
+1. 现象：删除首页商家信息区域后，入口卡片"查询参与活动商家"和"奖池预览"重叠
+2. 根因：.prizes使用了margin:-24px auto 0负边距，之前是为了和商家信息区域有重叠效果，删除商家信息后导致和入口卡片重叠
+3. 修复：.prizes的margin从-24px改为16px
+4. 坑：删除页面元素后要检查相关元素的margin/padding是否有依赖关系，负margin常用于视觉重叠效果，删除相邻元素后需要调整
+5. 验证：entryCardTop=274, prizesTop=354, overlap=False
