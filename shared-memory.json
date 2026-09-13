@@ -1,7 +1,7 @@
 {
   "project": "宜必购盲盒系统 (ybgtc.com)",
-  "last_updated": "2026-09-13 22:30",
-  "note": "安全加固（敏感字段@JsonIgnore）+测试类修复+完整闭环",
+  "last_updated": "2026-09-13 22:45",
+  "note": "顾客端首页商家信息区域删除+移至商家列表页+完整闭环",
   "environment": {
     "code_root": "D:\\workspace-java\\ybg-master",
     "backend_root": "D:\\workspace-java\\ybg-master\\backend",
@@ -616,6 +616,19 @@
       "files_changed": [
         "backend/src/test/java/.../OrderCalcServiceTest.java",
         "backend/src/main/java/.../entity/Merchant.java"
+      ],
+      "deployed": true,
+      "tested": true
+    },
+    {
+      "date": "2026-09-13",
+      "features": [
+        "删除顾客端首页商家信息区域（地址/电话/地图）",
+        "商家信息移至merchants.html商家列表页显示",
+        "首页保留入口卡片，点击跳商家列表页"
+      ],
+      "files_changed": [
+        "backend/src/main/resources/static/h5/customer/index.html"
       ],
       "deployed": true,
       "tested": true

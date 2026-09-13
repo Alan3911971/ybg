@@ -736,3 +736,9 @@
 3. 修复：loginAccount和broadcastToken字段添加@JsonIgnore注解（loginPwd之前已有）
 4. 坑：公开接口返回完整实体对象是常见安全漏洞，必须用@JsonIgnore或DTO过滤敏感字段；每次新增实体字段都要评估是否需要过滤
 5. 验证：公开接口返回字段从26个减少到25个，loginAccount/broadcastToken/loginPwd均不在返回中
+
+【G60】2026-09-13 顾客端首页商家信息区域调整
+1. 用户要求：首页不显示商家地址/电话/地图，点击"查询参与活动商家"入口进去后再显示
+2. 修改：删除index.html中的shopInfoCard（地址+电话）和shopMap（导航地图）HTML块及相关JS逻辑
+3. 商家信息在merchants.html商家列表页的商家卡片中显示（名称/行业/地址/电话/地图缩略图/导航/电话/进入店铺）
+4. 入口卡片保留："查询参与活动商家 / 按分类筛选 / 搜索商家 →"，点击跳merchants.html

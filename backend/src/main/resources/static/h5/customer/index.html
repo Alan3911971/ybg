@@ -83,13 +83,6 @@ button{font-family:inherit;cursor:pointer;border:none;background:none;color:inhe
 <h1>开始你的<span class="accent">盒盒</span>之旅</h1>
 <div class="tagline">折扣券 / 立减券 / 余额赠送 / 免单，中奖后到店消费自动抵扣</div>
 </div>
-<div class="shop-info-card" id="shopInfoCard" style="display:none;">
-<div class="info-box">
-<div class="shop-info-row"><span class="shop-info-ic">📍</span><span class="shop-info-text" id="shopAddress">--</span></div>
-<div class="shop-info-row"><span class="shop-info-ic">📞</span><span class="shop-info-text" id="shopPhone">--</span></div>
-</div>
-<div class="shop-map" id="shopMap" style="display:none;"><img id="shopMapImg" src="" alt="店铺位置地图"><div class="map-overlay">🗺️ 点击导航到店</div></div>
-</div>
 <div style="max-width:480px;margin:12px auto 0;padding:0 16px;">
 <div onclick="window.location.href='merchants.html'" style="background:linear-gradient(135deg,#667eea,#764ba2);border-radius:12px;padding:14px 16px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;box-shadow:0 4px 12px rgba(102,126,234,.3);">
 <div style="display:flex;align-items:center;gap:10px;">
@@ -171,30 +164,7 @@ if(r2&&r2.code===0&&r2.data){
     tag.textContent=ic+" "+d.industry;
     tag.style.display="inline-block";
   }
-  // 商家信息卡片
-  var card=$("shopInfoCard");
-  var hasInfo=false;
-  if(d.address){$("shopAddress").textContent=d.address;hasInfo=true;}
-  if(d.reservePhone){$("shopPhone").textContent=d.reservePhone;hasInfo=true;}
-  if(hasInfo)card.style.display="block";
-  // 导航地图
-  if(d.latitude&&d.longitude){
-    var map=$("shopMap");
-    var mapImg=$("shopMapImg");
-    var lat=d.latitude, lng=d.longitude, name=d.merchantName||mno;
-    // OpenStreetMap静态地图（无需API key）
-    var mapUrl="/api/map/static?lat="+lat+"&lng="+lng+"&zoom=16&size=460*160";
-    mapImg.src=mapUrl;
-    map.style.display="block";
-    map.onclick=function(){
-      var ua=navigator.userAgent.toLowerCase();
-      if(/android|iphone|ipad|ipod/.test(ua)){
-        window.location.href="https://uri.amap.com/marker?position="+lng+","+lat+"&name="+encodeURIComponent(name);
-      }else{
-        window.open("https://uri.amap.com/marker?position="+lng+","+lat+"&name="+encodeURIComponent(name));
-      }
-    };
-  }
+  // 商家信息已移至商家列表页显示，首页不显示
 }
 }catch(e){$("shopName").textContent=mno;}
 }
