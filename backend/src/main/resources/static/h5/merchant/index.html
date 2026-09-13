@@ -367,6 +367,11 @@ textarea.input{height:80px;padding:10px 12px;resize:vertical;}
     <div class="sec"><span class="ic">🏪</span>商家信息</div>
     <div class="field"><label>商家名称</label><input id="shopName" class="input" placeholder="如 鲜果时光·宜必购合作店"></div>
     <div class="field"><label>联系电话</label><input id="shopPhone" class="input" type="tel" placeholder="如 138xxxx8888"></div>
+    <div class="field"><label>行业分类</label><input id="shopIndustry" class="input" placeholder="如 水果生鲜 / 餐饮美食 / 生活服务"></div>
+    <div class="field"><label>店铺地址</label><input id="shopAddress" class="input" placeholder="如 南京市江宁区竹山路68号万达广场"></div>
+    <div class="field"><label>预约电话</label><input id="shopReservePhone" class="input" type="tel" placeholder="如 138xxxx8888"></div>
+    <div class="field"><label>纬度（选填，用于导航）</label><input id="shopLatitude" class="input" type="number" step="0.000001" placeholder="如 31.9582"></div>
+    <div class="field"><label>经度（选填，用于导航）</label><input id="shopLongitude" class="input" type="number" step="0.000001" placeholder="如 118.8247"></div>
     <div class="field"><label>退款说明</label><textarea id="refundNote" class="input" placeholder="如 退款需提供订单号和手机号"></textarea></div>
     <button class="btn btn--primary btn--block" id="btnSaveShop">💾 保存信息</button>
   </div>
@@ -1213,6 +1218,18 @@ async function filterOrders(){ /* 占位：调 IBIGOU_API.merchant.orderList 过
         _merchantData = d.data;
         renderQrSlots();
       }
+      // 加载商家信息到设置页
+      var r2 = await fetch('/api/merchant/config/weights', { headers: { 'X-Merchant-Token': tk } });
+      var d2 = await r2.json();
+      if (d2 && d2.code === 0 && d2.data) {
+        var m = d2.data;
+        if ($("shopIndustry")) $("shopIndustry").value = m.industry || "";
+        if ($("shopAddress")) $("shopAddress").value = m.address || "";
+        if ($("shopReservePhone")) $("shopReservePhone").value = m.reservePhone || "";
+        if ($("shopLatitude")) $("shopLatitude").value = m.latitude || "";
+        if ($("shopLongitude")) $("shopLongitude").value = m.longitude || "";
+        if (m.merchantName && !$("shopName").value) $("shopName").value = m.merchantName;
+      }
     } catch(e) {}
   }
 
@@ -1230,15 +1247,24 @@ async function filterOrders(){ /* 占位：调 IBIGOU_API.merchant.orderList 过
         + '</div>'
         + (url ? '<div style="text-align:center;margin-bottom:8px;"><img src="' + url + '" style="max-width:140px;max-height:140px;border-radius:8px;border:1px solid var(--c-border);"></div>' : '')
         + '<div style="display:flex;gap:8px;">'
-        + '<label style="flex:1;text-align:center;padding:8px;border:1px solid ' + t.color + ';border-radius:8px;font-size:13px;font-weight:600;color:' + t.color + ';cursor:pointer;">'
+        + '<button type="button" class="qr-upload-btn" data-type="' + t.key + '" style="flex:1;text-align:center;padding:8px;border:1px solid ' + t.color + ';border-radius:8px;font-size:13px;font-weight:600;color:' + t.color + ';cursor:pointer;background:transparent;">'
         + '📷 ' + (url ? '重新上传' : '点击上传')
+        + '</button>'
         + '<input type="file" accept="image/png,image/jpeg,image/webp" style="display:none;" class="qr-file-input" data-type="' + t.key + '">'
-        + '</label>'
-        + (url ? '<button class="btn btn--ghost btn--sm" onclick="removeQrCode(' + "'" + t.key + "'" + ')" style="flex:0 0 auto;">🗑</button>' : '')
+        + (url ? '<button type="button" class="btn btn--ghost btn--sm" onclick="removeQrCode(' + "'" + t.key + "'" + ')" style="flex:0 0 auto;">🗑</button>' : '')
         + '</div></div>';
     });
     host.innerHTML = html;
-    // Bind file inputs
+    // Bind upload buttons
+    host.querySelectorAll('.qr-upload-btn').forEach(function(btn){
+      btn.addEventListener('click', function(e){
+        e.preventDefault();
+        e.stopPropagation();
+        var type = btn.getAttribute('data-type');
+        var inp = host.querySelector('.qr-file-input[data-type="' + type + '"]');
+        if (inp) inp.click();
+      });
+    });
     host.querySelectorAll('.qr-file-input').forEach(function(inp){
       inp.addEventListener('change', function(e){
         var f = e.target.files[0]; if (!f) return;
@@ -1261,8 +1287,8 @@ async function filterOrders(){ /* 占位：调 IBIGOU_API.merchant.orderList 过
       var r = await fetch('/api/merchant/config/qr-upload', { method: 'POST', headers: { 'X-Merchant-Token': tk }, body: fd });
       var d = await r.json();
       if (d && d.code === 0) {
-        toast('上传成功，刷新中...', 'success');
-        setTimeout(function(){ location.reload(); }, 800);
+        toast('上传成功', 'success');
+        loadMerchantConfig();
       } else {
         toast(d.msg || '上传失败', 'danger');
       }
@@ -1275,7 +1301,7 @@ async function filterOrders(){ /* 占位：调 IBIGOU_API.merchant.orderList 过
     try {
       var r = await fetch('/api/merchant/config/qr-remove', { method: 'POST', headers: { 'X-Merchant-Token': tk, 'Content-Type': 'application/x-www-form-urlencoded' }, body: 'type=' + type });
       var d = await r.json();
-      if (d && d.code === 0) { toast('已删除，刷新中...', 'success'); setTimeout(function(){ location.reload(); }, 800); }
+      if (d && d.code === 0) { toast('已删除', 'success'); loadMerchantConfig(); }
       else { toast(d.msg || '删除失败', 'danger'); }
     } catch(e) { toast('删除失败', 'danger'); }
   };
@@ -1668,13 +1694,39 @@ async function filterOrders(){ /* 占位：调 IBIGOU_API.merchant.orderList 过
   $("shopName").value = shop.name || "";
   $("shopPhone").value = shop.phone || "";
   $("refundNote").value = shop.refund || "";
-  $("btnSaveShop").addEventListener("click", function(){
-    shop.name = $("shopName").value.trim();
-    shop.phone = $("shopPhone").value.trim();
+  $("btnSaveShop").addEventListener("click", async function(){
+    var name = $("shopName").value.trim();
+    var phone = $("shopPhone").value.trim();
+    var industry = $("shopIndustry").value.trim();
+    var address = $("shopAddress").value.trim();
+    var reservePhone = $("shopReservePhone").value.trim();
+    var lat = $("shopLatitude").value.trim();
+    var lng = $("shopLongitude").value.trim();
+    shop.name = name;
+    shop.phone = phone;
     shop.refund = $("refundNote").value.trim();
     lsSet("ibigou_shop", shop);
-    $("topSub").textContent = "m001 · " + (shop.name || "未命名商家");
-    toast("商家信息已保存", "success");
+    $("topSub").textContent = "m001 · " + (name || "未命名商家");
+    // 同步到后端数据库
+    try {
+      var tk = lsGet("ibigou_merchant_token", "");
+      var fd = new FormData();
+      fd.append("merchantName", name);
+      fd.append("address", address);
+      fd.append("reservePhone", reservePhone);
+      fd.append("industry", industry);
+      if (lat) fd.append("latitude", lat);
+      if (lng) fd.append("longitude", lng);
+      var r = await fetch("/api/merchant/config/shop-info", { method: "POST", headers: { "X-Merchant-Token": tk }, body: fd });
+      var d = await r.json();
+      if (d && d.code === 0) {
+        toast("商家信息已保存", "success");
+      } else {
+        toast("保存失败: " + (d.msg || "未知错误"), "danger");
+      }
+    } catch(e) {
+      toast("保存异常: " + e.message, "danger");
+    }
   });
 
   $("btnClearOrders").addEventListener("click", function(){
@@ -1991,22 +2043,23 @@ async function filterOrders(){ /* 占位：调 IBIGOU_API.merchant.orderList 过
     if (!window.IBIGOU_API) return;
     var tk = lsGet("ibigou_merchant_token", "");
     if (!tk) return;
-    // 音频解锁：播放静音音频绕过浏览器自动播放限制
-    try {
-      var _unlock = new Audio('data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAESsAACJWAAACABAAZGF0YQAAAAA=');
-      _unlock.volume = 0;
-      _unlock.play().catch(function(){});
-    } catch(e){}
     // Init: get current max announce ID, 播放最近5分钟内的最新播报
     var _pendingSpeak = null;
     var _userInteracted = false;
+    var _audioUnlocked = false;
     console.log("[播报] startAnnouncePoller 启动, token:", tk ? tk.substring(0,10)+'...' : '无');
-    // 用户第一次交互后允许自动播放
+    // 用户第一次交互：解锁音频 + 播放待播报
     document.addEventListener('click', function once(){
       _userInteracted = true;
       document.removeEventListener('click', once);
+      // 音频解锁：播放静音音频绕过浏览器自动播放限制（必须在用户交互时调用）
+      try {
+        var _unlock = new Audio('data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAESsAACJWAAACABAAZGF0YQAAAAA=');
+        _unlock.volume = 0;
+        _unlock.play().then(function(){ _audioUnlocked = true; console.log("[播报] 音频解锁成功"); }).catch(function(){ console.warn("[播报] 音频解锁失败"); });
+      } catch(e){}
       console.log("[播报] 用户已交互, _pendingSpeak:", _pendingSpeak ? '有' : '无');
-      if (_pendingSpeak) { var t = _pendingSpeak; _pendingSpeak = null; _speakAnnounce(t); }
+      if (_pendingSpeak) { var t = _pendingSpeak; _pendingSpeak = null; setTimeout(function(){ _speakAnnounce(t); }, 300); }
     }, { once: true });
     fetch("/api/merchant/announce/list", { headers: { "X-Merchant-Token": tk } })
       .then(function(r){ return r.json(); })
@@ -2058,7 +2111,12 @@ async function filterOrders(){ /* 占位：调 IBIGOU_API.merchant.orderList 过
             _lastAnnounceId = Math.max(_lastAnnounceId, ann.announceId || 0);
             var text = ann.content || "";
             if (text) {
-              _speakAnnounce(text);
+              if (_userInteracted) {
+                _speakAnnounce(text);
+              } else {
+                _pendingSpeak = text;
+                if (typeof toast === 'function') toast('有新播报，点击页面任意位置播放', 'info');
+              }
             }
           });
         } else {

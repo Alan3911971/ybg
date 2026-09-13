@@ -525,5 +525,28 @@ public class MerchantConfigController {
         }
     }
 
+    /** 更新店铺信息：地址、预约电话、经纬度、行业分类 */
+    @PostMapping("/shop-info")
+    public Result<Void> updateShopInfo(@RequestHeader("X-Merchant-Token") String token,
+                                       @RequestParam(required = false) String merchantName,
+                                       @RequestParam(required = false) String address,
+                                       @RequestParam(required = false) String reservePhone,
+                                       @RequestParam(required = false) BigDecimal latitude,
+                                       @RequestParam(required = false) BigDecimal longitude,
+                                       @RequestParam(required = false) String industry) {
+        String mno = authService.merchantNoByToken(token);
+        com.ibigou.blindbox.entity.Merchant m = merchantRepository.findById(mno)
+                .orElseThrow(() -> new com.ibigou.blindbox.common.BizException("商家不存在"));
+        if (merchantName != null && !merchantName.isBlank()) m.setMerchantName(merchantName.trim());
+        if (address != null) m.setAddress(address.trim());
+        if (reservePhone != null) m.setReservePhone(reservePhone.trim());
+        if (latitude != null) m.setLatitude(latitude);
+        if (longitude != null) m.setLongitude(longitude);
+        if (industry != null) m.setIndustry(industry.trim());
+        m.setUpdateTime(java.time.LocalDateTime.now());
+        merchantRepository.save(m);
+        return Result.ok();
+    }
+
 
 }

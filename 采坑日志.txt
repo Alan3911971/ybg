@@ -693,3 +693,11 @@
 4. G16规矩：完整闭环8步流程（需求理解→代码修改→构建部署→测试验证→演示给用户→主动修复bug→四文档更新→双向备份），缺一不可
 5. GitHub token更新：ghp_CpBA...（已脱敏，见共享记忆github_token字段）（旧token ghp_xUNZ...已失效）
 坑：商家列表接口用merchantRepository.findAll()内存过滤，商家数量多时需改数据库查询；目前只有1家测试商家，后续商家多了要优化分页查询
+
+【G54】2026-09-13 商家后台店铺信息编辑功能
+1. 后端新增接口：POST /api/merchant/config/shop-info（参数：merchantName/address/reservePhone/latitude/longitude/industry），鉴权X-Merchant-Token
+2. 前端商家端设置页(p8)商家信息card新增6个字段：行业分类、店铺地址、预约电话、纬度、经度（原已有商家名称、联系电话、退款说明）
+3. loadMerchantConfig函数新增调用/api/merchant/config/weights获取商家信息并自动填充表单
+4. 保存按钮改为async，先存localStorage再调后端接口同步到数据库
+5. 坑：scp命令在PowerShell中偶尔找不到，改用ssh管道cat>传输文件；base64编码太长会导致命令行参数超限，必须用stdin管道
+坑：商家信息之前只存localStorage不存数据库，换设备就丢失；现在双写（localStorage+数据库），以数据库为准

@@ -1,7 +1,7 @@
 {
   "project": "宜必购盲盒系统 (ybgtc.com)",
-  "last_updated": "2026-09-12 21:00",
-  "note": "商家列表页(merchants.html)上线+商家信息公开接口+G15/G16规矩+完整闭环执行",
+  "last_updated": "2026-09-13 21:00",
+  "note": "商家后台店铺信息编辑功能上线+完整闭环执行",
   "environment": {
     "code_root": "D:\\workspace-java\\ybg-master",
     "backend_root": "D:\\workspace-java\\ybg-master\\backend",
@@ -525,6 +525,21 @@
         "backend/src/main/resources/static/h5/customer/index.html (添加入口)",
         "规矩文档.txt (G15+G16)",
         "采坑日志.txt (G53)"
+      ],
+      "deployed": true,
+      "tested": true
+    },
+    {
+      "date": "2026-09-13",
+      "features": [
+        "商家后台设置页新增店铺信息编辑：行业分类/地址/预约电话/纬度/经度",
+        "后端新增POST /api/merchant/config/shop-info接口",
+        "loadMerchantConfig自动从后端加载商家信息填充表单",
+        "保存按钮双写localStorage+数据库"
+      ],
+      "files_changed": [
+        "backend/src/main/java/com/ibigou/blindbox/controller/MerchantConfigController.java (新增shop-info接口)",
+        "backend/src/main/resources/static/h5/merchant/index.html (新增字段+保存逻辑+加载逻辑)"
       ],
       "deployed": true,
       "tested": true
