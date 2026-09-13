@@ -9,7 +9,6 @@ import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
 import java.math.BigDecimal;
-import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -54,7 +53,7 @@ class OrderCalcServiceTest {
     void 理论抵扣限制_余额充足_单日不限() {
         // 余额 100，理论 50，单日上限 30 -> min(100,50,30,100)=30
         when(balanceService.availableBalance("P1")).thenReturn(new BigDecimal("100.00"));
-        OrderCalcService.OrderCalc calc = service.calc("P1", "M001", null, new BigDecimal("100.00"));
+        OrderCalcService.OrderCalc calc = service.calc("P1", "M001", null, new BigDecimal("100.00"), null, true);
         assertTrue(calc.actualDeduct().compareTo(new BigDecimal("30.00")) == 0);
         assertTrue(calc.payAmount().compareTo(new BigDecimal("70.00")) == 0);
     }
@@ -63,7 +62,7 @@ class OrderCalcServiceTest {
     void 余额不足限制() {
         // 余额 10，理论 50，上限 30 -> min(10,50,30,100)=10
         when(balanceService.availableBalance("P1")).thenReturn(new BigDecimal("10.00"));
-        OrderCalcService.OrderCalc calc = service.calc("P1", "M001", null, new BigDecimal("100.00"));
+        OrderCalcService.OrderCalc calc = service.calc("P1", "M001", null, new BigDecimal("100.00"), null, true);
         assertTrue(calc.actualDeduct().compareTo(new BigDecimal("10.00")) == 0);
         assertTrue(calc.payAmount().compareTo(new BigDecimal("90.00")) == 0);
     }
@@ -73,12 +72,11 @@ class OrderCalcServiceTest {
         // 门店 percent=0：抵扣 0，实付全款
         when(balanceService.availableBalance("P1")).thenReturn(new BigDecimal("100.00"));
         Merchant m = merchant(0, "30");
-        service = service; // 保留原 service，用反射改 merchant？直接重建
         MerchantRepository mr = Mockito.mock(MerchantRepository.class);
         when(mr.findById("M001")).thenReturn(Optional.of(m));
         service = new OrderCalcService(mr, quotaRepo, balanceService,
                 Mockito.mock(GlobalConfigService.class), couponService);
-        OrderCalcService.OrderCalc calc = service.calc("P1", "M001", null, new BigDecimal("100.00"));
+        OrderCalcService.OrderCalc calc = service.calc("P1", "M001", null, new BigDecimal("100.00"), null, true);
         assertTrue(calc.actualDeduct().compareTo(new BigDecimal("0.00")) == 0);
         assertTrue(calc.payAmount().compareTo(new BigDecimal("100.00")) == 0);
     }
@@ -92,9 +90,18 @@ class OrderCalcServiceTest {
         coupon.setPrizeValue(new BigDecimal("8.00"));
         when(couponService.get(1L)).thenReturn(coupon);
         when(balanceService.availableBalance("P1")).thenReturn(new BigDecimal("100.00"));
-        OrderCalcService.OrderCalc calc = service.calc("P1", "M001", 1L, new BigDecimal("100.00"));
+        OrderCalcService.OrderCalc calc = service.calc("P1", "M001", 1L, new BigDecimal("100.00"), null, true);
         assertTrue(calc.afterCoupon().compareTo(new BigDecimal("80.00")) == 0);
         assertTrue(calc.actualDeduct().compareTo(new BigDecimal("30.00")) == 0);
         assertTrue(calc.payAmount().compareTo(new BigDecimal("50.00")) == 0);
+    }
+
+    @Test
+    void 不使用余额抵扣时实付全款() {
+        // useBalance=false：不抵扣余额，实付全款
+        when(balanceService.availableBalance("P1")).thenReturn(new BigDecimal("100.00"));
+        OrderCalcService.OrderCalc calc = service.calc("P1", "M001", null, new BigDecimal("100.00"), null, false);
+        assertTrue(calc.actualDeduct().compareTo(new BigDecimal("0.00")) == 0);
+        assertTrue(calc.payAmount().compareTo(new BigDecimal("100.00")) == 0);
     }
 }

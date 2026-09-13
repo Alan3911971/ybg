@@ -729,3 +729,10 @@
 4. 坑：商家端同时登录顾客端和商家端时，localStorage中同时存在ibigou_user_token和ibigou_merchant_token，必须按页面类型选择正确的token
 5. 新增：nginx配置merchant/api.js直读磁盘，以后修改api.js无需重新打包jar
 6. 验证：会员列表显示4个会员，会员详情/预约/回访功能全部正常
+
+【G59】2026-09-13 安全加固+测试类修复
+1. OrderCalcServiceTest.java编译失败：calc方法加了useBalance参数后测试类还是4参数调用，已更新为6参数并新增useBalance=false测试用例
+2. Merchant实体类敏感字段泄露：公开接口/api/customer/merchant/info和list返回完整Merchant对象，包含loginAccount(登录手机号)和broadcastToken(播报token)
+3. 修复：loginAccount和broadcastToken字段添加@JsonIgnore注解（loginPwd之前已有）
+4. 坑：公开接口返回完整实体对象是常见安全漏洞，必须用@JsonIgnore或DTO过滤敏感字段；每次新增实体字段都要评估是否需要过滤
+5. 验证：公开接口返回字段从26个减少到25个，loginAccount/broadcastToken/loginPwd均不在返回中

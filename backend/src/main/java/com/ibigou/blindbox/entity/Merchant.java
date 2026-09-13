@@ -23,6 +23,7 @@ public class Merchant {
     @Column(nullable = false, length = 128)
     private String merchantName;
 
+    @JsonIgnore
     @Column(nullable = false, length = 64)
     private String loginAccount;
 
@@ -80,6 +81,7 @@ public class Merchant {
     private String receiveQrImgOther;
 
     /** 指定播报设备的登录token（null=所有设备播报） */
+    @JsonIgnore
     @Column(length = 128)
     private String broadcastToken;
 

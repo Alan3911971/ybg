@@ -1,7 +1,7 @@
 {
   "project": "宜必购盲盒系统 (ybgtc.com)",
-  "last_updated": "2026-09-13 22:00",
-  "note": "商家端会员列表为空bug修复+会员管理功能验收通过+完整闭环",
+  "last_updated": "2026-09-13 22:30",
+  "note": "安全加固（敏感字段@JsonIgnore）+测试类修复+完整闭环",
   "environment": {
     "code_root": "D:\\workspace-java\\ybg-master",
     "backend_root": "D:\\workspace-java\\ybg-master\\backend",
@@ -602,6 +602,20 @@
       "files_changed": [
         "backend/src/main/resources/static/h5/merchant/api.js (token优先级修复)",
         "nginx配置 ybgtc.com.conf (merchant/api.js直读磁盘)"
+      ],
+      "deployed": true,
+      "tested": true
+    },
+    {
+      "date": "2026-09-13",
+      "features": [
+        "修复OrderCalcServiceTest编译问题（calc方法6参数）",
+        "Merchant实体类loginAccount/broadcastToken加@JsonIgnore",
+        "安全加固：公开接口不再泄露商家登录手机号和播报token"
+      ],
+      "files_changed": [
+        "backend/src/test/java/.../OrderCalcServiceTest.java",
+        "backend/src/main/java/.../entity/Merchant.java"
       ],
       "deployed": true,
       "tested": true
