@@ -721,3 +721,11 @@
 2. 配置后地图接口返回从67字节(占位图)变为15653字节(真实地图)
 3. 首页入口卡片文字从"宜必购便民生活圈/查看全部合作商家"改为"查询参与活动商家/按分类筛选 / 搜索商家"
 4. 商家列表页merchants.html已支持：搜索框(名称/地址/行业) + 行业分类横向筛选 + 商家卡片(含地图缩略图)
+
+【G58】2026-09-13 商家端会员列表为空bug修复
+1. 现象：商家端会员tab显示0个会员，但后端接口/api/merchant/members正常返回4个会员
+2. 根因：api.js中token()函数优先返回ibigou_user_token，导致请求头是X-User-Token，而商家接口需要X-Merchant-Token
+3. 修复：token()改为优先返回ibigou_merchant_token；header判断改为优先使用X-Merchant-Token
+4. 坑：商家端同时登录顾客端和商家端时，localStorage中同时存在ibigou_user_token和ibigou_merchant_token，必须按页面类型选择正确的token
+5. 新增：nginx配置merchant/api.js直读磁盘，以后修改api.js无需重新打包jar
+6. 验证：会员列表显示4个会员，会员详情/预约/回访功能全部正常

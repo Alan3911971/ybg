@@ -1,7 +1,7 @@
 {
   "project": "宜必购盲盒系统 (ybgtc.com)",
-  "last_updated": "2026-09-13 21:45",
-  "note": "高德Key配置成功+首页入口优化+完整闭环",
+  "last_updated": "2026-09-13 22:00",
+  "note": "商家端会员列表为空bug修复+会员管理功能验收通过+完整闭环",
   "environment": {
     "code_root": "D:\\workspace-java\\ybg-master",
     "backend_root": "D:\\workspace-java\\ybg-master\\backend",
@@ -588,6 +588,20 @@
       "files_changed": [
         "backend/src/main/resources/static/h5/customer/index.html (入口卡片文字)",
         "服务器.env (AMAP_KEY)"
+      ],
+      "deployed": true,
+      "tested": true
+    },
+    {
+      "date": "2026-09-13",
+      "features": [
+        "修复商家端api.js token冲突bug（会员列表为空）",
+        "会员管理功能验收通过（列表/详情/预约/回访/赠送）",
+        "nginx新增merchant/api.js直读磁盘配置"
+      ],
+      "files_changed": [
+        "backend/src/main/resources/static/h5/merchant/api.js (token优先级修复)",
+        "nginx配置 ybgtc.com.conf (merchant/api.js直读磁盘)"
       ],
       "deployed": true,
       "tested": true

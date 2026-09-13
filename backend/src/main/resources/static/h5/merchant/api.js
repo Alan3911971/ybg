@@ -11,7 +11,7 @@
   function lsSet(k, v){ try { localStorage.setItem(k, JSON.stringify(v)); } catch(e){} }
   function lsDel(k){ try { localStorage.removeItem(k); } catch(e){} }
 
-  function token(){ return lsGet('ibigou_user_token', null) || lsGet('ibigou_merchant_token', null); }
+  function token(){ return lsGet('ibigou_merchant_token', null) || lsGet('ibigou_user_token', null); }
 
   function fullUrl(path){
     if (/^https?:/i.test(path)) return path;
@@ -25,11 +25,12 @@
     var tk = token();
     if (tk) {
       // 后端拦截器用 X-User-Token / X-Merchant-Token, 不是 Authorization
+      // 商家端优先用 X-Merchant-Token
       try {
-        if (localStorage.getItem('ibigou_user_token')) headers['X-User-Token'] = tk;
-        else if (localStorage.getItem('ibigou_merchant_token')) headers['X-Merchant-Token'] = tk;
-        else headers['X-User-Token'] = tk;
-      } catch(e) { headers['X-User-Token'] = tk; }
+        if (localStorage.getItem('ibigou_merchant_token')) headers['X-Merchant-Token'] = tk;
+        else if (localStorage.getItem('ibigou_user_token')) headers['X-User-Token'] = tk;
+        else headers['X-Merchant-Token'] = tk;
+      } catch(e) { headers['X-Merchant-Token'] = tk; }
     }
     var init = { method: method, headers: headers };
     if (body !== undefined && body !== null) {
@@ -56,11 +57,12 @@
     var tk = token();
     if (tk) {
       // 后端拦截器用 X-User-Token / X-Merchant-Token, 不是 Authorization
+      // 商家端优先用 X-Merchant-Token
       try {
-        if (localStorage.getItem('ibigou_user_token')) headers['X-User-Token'] = tk;
-        else if (localStorage.getItem('ibigou_merchant_token')) headers['X-Merchant-Token'] = tk;
-        else headers['X-User-Token'] = tk;
-      } catch(e) { headers['X-User-Token'] = tk; }
+        if (localStorage.getItem('ibigou_merchant_token')) headers['X-Merchant-Token'] = tk;
+        else if (localStorage.getItem('ibigou_user_token')) headers['X-User-Token'] = tk;
+        else headers['X-Merchant-Token'] = tk;
+      } catch(e) { headers['X-Merchant-Token'] = tk; }
     }
     var body = new URLSearchParams();
     if (params) for (var k in params) { if (params[k] != null) body.append(k, params[k]); }
