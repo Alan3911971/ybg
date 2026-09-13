@@ -44,7 +44,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;b
 .merchant-card .info-row{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--c-text-2);margin-top:6px;}
 .merchant-card .info-row .emoji{font-size:14px;flex-shrink:0;}
 .merchant-card .info-row .text{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-.merchant-card .actions{display:flex;gap:8px;margin-top:12px;padding-top:12px;border-top:1px solid var(--c-border);}
+.merchant-card .map-thumb{margin-top:10px;border-radius:10px;overflow:hidden;height:100px;position:relative;border:1px solid var(--c-border);}.merchant-card .map-thumb img{width:100%;height:100%;object-fit:cover;display:block;}.merchant-card .map-thumb .map-label{position:absolute;bottom:0;left:0;right:0;background:linear-gradient(transparent,rgba(0,0,0,.55));color:#fff;padding:16px 8px 6px;font-size:11px;font-weight:600;text-align:center;}.merchant-card .actions{display:flex;gap:8px;margin-top:12px;padding-top:12px;border-top:1px solid var(--c-border);}
 .merchant-card .btn{flex:1;padding:8px;text-align:center;border-radius:10px;font-size:12px;font-weight:600;cursor:pointer;border:none;transition:opacity .15s;}
 .merchant-card .btn:active{opacity:.7;}
 .merchant-card .btn-nav{background:#eff6ff;color:#2563eb;}
@@ -165,6 +165,7 @@ function renderMerchants(list, total){
       </div>
       ${m.address ? `<div class="info-row"><span class="emoji">📍</span><span class="text">${m.address}</span></div>` : ''}
       ${m.reservePhone ? `<div class="info-row"><span class="emoji">📞</span><span class="text">${m.reservePhone}</span></div>` : ''}
+      ${m.latitude && m.longitude ? `<div class="map-thumb" onclick="event.stopPropagation();openMap('${m.merchantNo}','${(m.merchantName||m.merchantNo).replace(/'/g,"")}','${m.latitude}','${m.longitude}')"><img src="/api/map/static?lat=${m.latitude}&lng=${m.longitude}&zoom=15&size=460*140" alt="地图"><div class="map-label">🗺️ 点击导航</div></div>` : ''}
       <div class="actions">
         ${m.latitude && m.longitude ? `<button class="btn btn-nav" onclick="event.stopPropagation();openMap('${m.merchantNo}','${(m.merchantName||m.merchantNo).replace(/'/g,"")}','${m.latitude}','${m.longitude}')">🗺️ 导航</button>` : ''}
         ${m.reservePhone ? `<button class="btn btn-call" onclick="event.stopPropagation();callPhone('${m.reservePhone}')">📞 电话</button>` : ''}

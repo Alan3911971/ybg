@@ -1,7 +1,7 @@
 {
   "project": "宜必购盲盒系统 (ybgtc.com)",
-  "last_updated": "2026-09-13 21:10",
-  "note": "商家列表接口性能优化+安全修复+完整闭环执行",
+  "last_updated": "2026-09-13 21:30",
+  "note": "导航地图真实静态地图实现（后端代理高德API）+完整闭环",
   "environment": {
     "code_root": "D:\\workspace-java\\ybg-master",
     "backend_root": "D:\\workspace-java\\ybg-master\\backend",
@@ -559,6 +559,23 @@
       ],
       "deployed": true,
       "tested": true
+    },
+    {
+      "date": "2026-09-13",
+      "features": [
+        "新增MapController代理高德静态地图API（/api/map/static）",
+        "顾客端首页导航地图从占位图改为真实静态地图",
+        "商家列表页merchants.html新增地图缩略图",
+        "AMAP_KEY配置项已添加到.env（待用户申请key）"
+      ],
+      "files_changed": [
+        "backend/src/main/java/com/ibigou/blindbox/controller/MapController.java (新增)",
+        "backend/src/main/resources/static/h5/customer/index.html (地图img+后端代理URL)",
+        "backend/src/main/resources/static/h5/customer/merchants.html (地图缩略图)"
+      ],
+      "deployed": true,
+      "tested": true,
+      "pending": "AMAP_KEY待配置"
     }
   ],
   "spec_kit": {

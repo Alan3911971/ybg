@@ -68,7 +68,7 @@ button{font-family:inherit;cursor:pointer;border:none;background:none;color:inhe
 .shop-info-row+.shop-info-row{margin-top:8px;padding-top:8px;border-top:1px solid var(--c-divider);}
 .shop-info-ic{font-size:16px;flex:0 0 auto;}
 .shop-info-text{flex:1;min-width:0;word-break:break-all;}
-.shop-map{margin-top:10px;border-radius:12px;overflow:hidden;height:120px;background:linear-gradient(135deg,#e8f5e9,#c8e6c9);display:flex;align-items:center;justify-content:center;cursor:pointer;border:1px solid var(--c-border);}
+.shop-map{margin-top:10px;border-radius:12px;overflow:hidden;height:140px;cursor:pointer;border:1px solid var(--c-border);position:relative;background:linear-gradient(135deg,#e0f2fe,#bae6fd);}.shop-map img{width:100%;height:100%;object-fit:cover;display:block;}.shop-map .map-overlay{position:absolute;bottom:0;left:0;right:0;background:linear-gradient(transparent,rgba(0,0,0,.6));color:#fff;padding:20px 12px 8px;font-size:12px;font-weight:600;text-align:center;}
 .map-placeholder{font-size:14px;color:var(--c-text-2);font-weight:600;}
 </style>
 </head>
@@ -88,7 +88,7 @@ button{font-family:inherit;cursor:pointer;border:none;background:none;color:inhe
 <div class="shop-info-row"><span class="shop-info-ic">📍</span><span class="shop-info-text" id="shopAddress">--</span></div>
 <div class="shop-info-row"><span class="shop-info-ic">📞</span><span class="shop-info-text" id="shopPhone">--</span></div>
 </div>
-<div class="shop-map" id="shopMap" style="display:none;"><div class="map-placeholder">🗺️ 点击导航到店</div></div>
+<div class="shop-map" id="shopMap" style="display:none;"><img id="shopMapImg" src="" alt="店铺位置地图"><div class="map-overlay">🗺️ 点击导航到店</div></div>
 </div>
 <div style="max-width:480px;margin:12px auto 0;padding:0 16px;">
 <div onclick="window.location.href='merchants.html'" style="background:linear-gradient(135deg,#667eea,#764ba2);border-radius:12px;padding:14px 16px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;box-shadow:0 4px 12px rgba(102,126,234,.3);">
@@ -180,12 +180,15 @@ if(r2&&r2.code===0&&r2.data){
   // 导航地图
   if(d.latitude&&d.longitude){
     var map=$("shopMap");
-    map.style.display="flex";
+    var mapImg=$("shopMapImg");
+    var lat=d.latitude, lng=d.longitude, name=d.merchantName||mno;
+    // OpenStreetMap静态地图（无需API key）
+    var mapUrl="/api/map/static?lat="+lat+"&lng="+lng+"&zoom=16&size=460*160";
+    mapImg.src=mapUrl;
+    map.style.display="block";
     map.onclick=function(){
-      var lat=d.latitude, lng=d.longitude, name=d.merchantName||mno;
       var ua=navigator.userAgent.toLowerCase();
       if(/android|iphone|ipad|ipod/.test(ua)){
-        // 手机端：尝试拉起高德/百度地图
         window.location.href="https://uri.amap.com/marker?position="+lng+","+lat+"&name="+encodeURIComponent(name);
       }else{
         window.open("https://uri.amap.com/marker?position="+lng+","+lat+"&name="+encodeURIComponent(name));

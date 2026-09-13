@@ -707,3 +707,11 @@
 2. 安全修复：Merchant实体类loginPwd字段添加@JsonIgnore，公开接口不再返回密码哈希
 3. 坑：公开接口返回完整实体对象会泄露敏感字段（密码、账号等），必须用@JsonIgnore或DTO过滤
 坑：JPA @Query中用:keyword IS NULL OR :keyword = ''可以实现可选参数查询，不需要动态拼接SQL
+
+【G56】2026-09-13 导航地图真实静态地图实现
+1. 方案：后端MapController代理高德静态地图API（/api/map/static），key存服务器.env不暴露前端
+2. 坑：OpenStreetMap静态地图(staticmap.openstreetmap.de)和瓦片(tile.openstreetmap.org)在国内均不可访问（连接超时）
+3. 坑：高德地图瓦片(webrd01.is.autonavi.com)返回200但只有179字节（空白图），不能直接用
+4. 坑：Spring CacheControl.maxAge()参数是Duration不是int，需用Duration.ofSeconds(3600)
+5. 待配置：AMAP_KEY需在高德开放平台申请（免费），写入服务器.env后自动显示真实地图
+6. 无key时返回1x1透明PNG占位图，前端用蓝色渐变背景兜底
