@@ -795,3 +795,14 @@
    - 按钮HTML添加onclick="window._handleBtPrint && window._handleBtPrint()"
 5. 验证：全局函数存在，点击按钮预览弹窗正常打开，商家名称正确显示
 6. 坑：IIFE内的DOMContentLoaded回调可能因为各种原因不执行，关键按钮事件应该用独立script标签+全局函数+内联onclick，最可靠
+
+【G66】2026-09-14 打印预览弹窗二维码不显示bug修复
+1. 现象：预览弹窗打开了，但纸张区域内二维码和商家名称不显示
+2. 根因：独立script中的_handleBtPrint函数只设置了img.src和name.textContent，没有调用_updatePreview()设置ppContent的left/top/transform
+3. ppContent是position:absolute，默认left:0/top:0，加上transform:translate(-50%,-50%)，内容被移到纸张外面不可见
+4. 修复：在独立script中直接设置：
+   - paper宽高（80mm: 280×210px）
+   - content的left=pw/2, top=ph/2, transform=translate(-50%,-50%) scale(1)
+   - img宽高120px，name字号13px
+5. 验证：left=140px, top=105px（正确居中），二维码和商家名称正常显示
+6. 坑：absolute定位的元素必须设置left/top，否则默认在左上角，加上translate后会跑到容器外面

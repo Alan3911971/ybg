@@ -1,7 +1,7 @@
 {
   "project": "宜必购盲盒系统 (ybgtc.com)",
-  "last_updated": "2026-09-14 01:00",
-  "note": "蓝牙打印按钮修复+完整闭环",
+  "last_updated": "2026-09-14 01:30",
+  "note": "打印预览弹窗内容位置修复+完整闭环",
   "environment": {
     "code_root": "D:\\workspace-java\\ybg-master",
     "backend_root": "D:\\workspace-java\\ybg-master\\backend",
@@ -687,6 +687,19 @@
         "修复蓝牙打印按钮点击无反应bug",
         "根因：IIFE内DOMContentLoaded回调未执行",
         "方案：独立script标签+全局函数+内联onclick"
+      ],
+      "files_changed": [
+        "backend/src/main/resources/static/h5/merchant/index.html"
+      ],
+      "deployed": true,
+      "tested": true
+    },
+    {
+      "date": "2026-09-14",
+      "features": [
+        "修复打印预览弹窗二维码不显示bug",
+        "根因：ppContent是absolute定位，未设置left/top导致内容跑到纸张外面",
+        "方案：独立script中直接设置paper宽高、content位置、img大小"
       ],
       "files_changed": [
         "backend/src/main/resources/static/h5/merchant/index.html"

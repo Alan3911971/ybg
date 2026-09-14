@@ -3093,8 +3093,23 @@ window._handleBtPrint = function() {
     var overlay = document.getElementById("printPreviewOverlay");
     var ppImg = document.getElementById("ppQrImg");
     var ppName = document.getElementById("ppShopName");
+    var paper = document.getElementById("ppPaper");
+    var content = document.getElementById("ppContent");
     if (ppImg) ppImg.src = imgSrc;
     if (ppName) ppName.textContent = shopName;
+    // 设置纸张大小（默认80mm）
+    var pw = 80 * 3.5;
+    var ph = 60 * 3.5;
+    if (paper) { paper.style.width = pw + "px"; paper.style.height = ph + "px"; }
+    // 设置内容位置（居中）
+    if (content) {
+      content.style.left = (pw / 2) + "px";
+      content.style.top = (ph / 2) + "px";
+      content.style.transform = "translate(-50%,-50%) scale(1)";
+    }
+    // 设置图片大小（80mm默认120px）
+    if (ppImg) { ppImg.style.width = "120px"; ppImg.style.height = "120px"; }
+    if (ppName) { ppName.style.fontSize = "13px"; ppName.style.maxWidth = "140px"; }
     if (overlay) overlay.classList.add("show");
   } catch(e) {
     alert("蓝牙打印出错: " + e.message);
