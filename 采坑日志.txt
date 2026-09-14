@@ -780,3 +780,18 @@
 3. 点击"立即打印"自动触发生成二维码→800ms后打开打印预览弹窗
 4. 验证：概览页可见卡片，点击直接打开预览，二维码/商家名称正常显示
 5. 坑：模拟按钮点击需要setTimeout等待二维码生成完成，否则预览中没有二维码图片
+
+【G65】2026-09-14 蓝牙打印按钮点击无反应bug修复
+1. 现象：点击"蓝牙打印"按钮无反应，预览弹窗不打开
+2. 根因：事件绑定代码在IIFE的DOMContentLoaded回调里，但回调未执行（onclick为null，typeof null==='object'）
+3. 排查过程：
+   - 检查按钮存在，onclick类型是object（实际是null）
+   - 用addEventListener重新绑定也无效（因为DOMContentLoaded回调没执行）
+   - 手动调用_showPrintPreview也无效（函数在IIFE内非全局）
+   - 最终发现window._handleBtPrint为undefined，说明函数定义代码没执行
+4. 解决方案：
+   - 在页面底部</body>前添加独立<script>标签
+   - 定义全局函数window._handleBtPrint，完整实现打印逻辑
+   - 按钮HTML添加onclick="window._handleBtPrint && window._handleBtPrint()"
+5. 验证：全局函数存在，点击按钮预览弹窗正常打开，商家名称正确显示
+6. 坑：IIFE内的DOMContentLoaded回调可能因为各种原因不执行，关键按钮事件应该用独立script标签+全局函数+内联onclick，最可靠

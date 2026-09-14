@@ -409,7 +409,7 @@ textarea.input{height:80px;padding:10px 12px;resize:vertical;}
       </div>
       <div id="qrPrinterStatus" style="margin-top:10px;padding:8px 12px;background:#f5f7fb;border-radius:8px;font-size:12px;color:var(--c-text-3);text-align:center;">蓝牙打印机未连接</div>
       <button class="btn btn--soft btn--block btn--sm" id="btnQrConnectPrinter" style="margin-top:6px;">🔵 连接蓝牙打印机</button>
-      <div style="display:flex;gap:8px;margin-top:8px;"><button class="btn btn--primary btn--sm" id="btnBtPrintQr" style="flex:1;">🔵 蓝牙打印</button></div>
+      <div style="display:flex;gap:8px;margin-top:8px;"><button class="btn btn--primary btn--sm" id="btnBtPrintQr" style="flex:1;" onclick="window._handleBtPrint && window._handleBtPrint()">🔵 蓝牙打印</button></div>
     </div>
   </div>
   <div class="card">
@@ -2712,6 +2712,39 @@ async function _blePrint(bytes){
   }
 
   // Bind events after DOM ready
+  // Bluetooth print handler - global function for reliable onclick (defined outside DOMContentLoaded)
+  window._handleBtPrint = async function(){
+    var mno2 = lsGet("ibigou_merchant_no", "");
+    if (!mno2) {
+      try {
+        var _resp2 = await fetch("/api/merchant/config/weights", { headers: { "X-Merchant-Token": lsGet("ibigou_merchant_token", "") } });
+        var mi2 = await _resp2.json();
+        if (mi2 && mi2.code === 0 && mi2.data && mi2.data.merchantNo) { mno2 = mi2.data.merchantNo; }
+      } catch(e3){}
+    }
+    if (!mno2) { toast("未获取到商家编号", "danger"); return; }
+    var url2 = location.origin + "/h5/customer/login.html?merchantNo=" + encodeURIComponent(mno2);
+    var shop2 = lsGet("ibigou_shop", {});
+    var shopName = shop2.name || "开盲盒";
+    var qrImg = $("printQrBox");
+    var imgSrc = "";
+    if (qrImg) {
+      var img = qrImg.querySelector("img") || qrImg.querySelector("canvas");
+      if (img) {
+        imgSrc = (img.tagName === "CANVAS") ? img.toDataURL("image/png") : img.src;
+      }
+    }
+    if (!imgSrc) {
+      if (window._ensureQrCode) { await window._ensureQrCode(); }
+      var img2 = qrImg ? (qrImg.querySelector("img") || qrImg.querySelector("canvas")) : null;
+      if (img2) {
+        imgSrc = (img2.tagName === "CANVAS") ? img2.toDataURL("image/png") : img2.src;
+      }
+    }
+    if (!imgSrc) { toast("请先生成二维码", "warning"); return; }
+    _showPrintPreview(url2, shopName, imgSrc);
+  };
+
   document.addEventListener("DOMContentLoaded", function() {
     // Paper size buttons
     document.querySelectorAll(".pp-size-btn").forEach(function(btn) {
@@ -2760,43 +2793,6 @@ async function _blePrint(bytes){
   };
 
   }); // end DOMContentLoaded
-
-  // Bluetooth print handler - shows preview first
-  var btPrintBtn = $("btnBtPrintQr");
-  if (btPrintBtn) btPrintBtn.onclick = async function(){
-    var mno2 = lsGet("ibigou_merchant_no", "");
-    if (!mno2) {
-      try {
-        var _resp2 = await fetch("/api/merchant/config/weights", { headers: { "X-Merchant-Token": lsGet("ibigou_merchant_token", "") } });
-        var mi2 = await _resp2.json();
-        if (mi2 && mi2.code === 0 && mi2.data && mi2.data.merchantNo) { mno2 = mi2.data.merchantNo; }
-      } catch(e3){}
-    }
-    if (!mno2) { toast("æªè·åå°åå®¶ç¼å·", "danger"); return; }
-    var url2 = location.origin + "/h5/customer/login.html?merchantNo=" + encodeURIComponent(mno2);
-    var shop2 = lsGet("ibigou_shop", {});
-    var shopName = shop2.name || "å¼ç®ç";
-    // Get QR image source
-    var qrImg = $("printQrBox");
-    var imgSrc = "";
-    if (qrImg) {
-      var img = qrImg.querySelector("img") || qrImg.querySelector("canvas");
-      if (img) {
-        imgSrc = (img.tagName === "CANVAS") ? img.toDataURL("image/png") : img.src;
-      }
-    }
-    if (!imgSrc) {
-      // Generate QR first if not already generated
-      if (window._ensureQrCode) { await window._ensureQrCode(); }
-      var img2 = qrImg ? (qrImg.querySelector("img") || qrImg.querySelector("canvas")) : null;
-      if (img2) {
-        imgSrc = (img2.tagName === "CANVAS") ? img2.toDataURL("image/png") : img2.src;
-      }
-    }
-    if (!imgSrc) { toast("è¯·åçæäºç»´ç ", "warning"); return; }
-    // Show preview
-    _showPrintPreview(url2, shopName, imgSrc);
-  };
 })();
 
 // ==================== 商品管理 ====================
@@ -3060,5 +3056,50 @@ async function _blePrint(bytes){
     </div>
   </div>
 </div>
+<script>
+// 独立蓝牙打印处理函数 - 不依赖IIFE
+window._handleBtPrint = function() {
+  try {
+    // 获取商家编号
+    var mno2 = localStorage.getItem("ibigou_merchant_no") || "";
+    if (!mno2) {
+      alert("未获取到商家编号，请重新登录");
+      return;
+    }
+    var url2 = location.origin + "/h5/customer/login.html?merchantNo=" + encodeURIComponent(mno2);
+    
+    // 获取商家名称
+    var shopName = "开盲盒";
+    try {
+      var shop = JSON.parse(localStorage.getItem("ibigou_shop") || "{}");
+      if (shop && shop.name) shopName = shop.name;
+    } catch(e) {}
+    
+    // 获取二维码图片
+    var qrBox = document.getElementById("printQrBox");
+    var imgSrc = "";
+    if (qrBox) {
+      var img = qrBox.querySelector("img") || qrBox.querySelector("canvas");
+      if (img) {
+        imgSrc = (img.tagName === "CANVAS") ? img.toDataURL("image/png") : img.src;
+      }
+    }
+    if (!imgSrc) {
+      alert("请先生成二维码");
+      return;
+    }
+    
+    // 显示预览弹窗
+    var overlay = document.getElementById("printPreviewOverlay");
+    var ppImg = document.getElementById("ppQrImg");
+    var ppName = document.getElementById("ppShopName");
+    if (ppImg) ppImg.src = imgSrc;
+    if (ppName) ppName.textContent = shopName;
+    if (overlay) overlay.classList.add("show");
+  } catch(e) {
+    alert("蓝牙打印出错: " + e.message);
+  }
+};
+</script>
 </body>
 </html>
