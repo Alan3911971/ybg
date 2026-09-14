@@ -1,7 +1,7 @@
 {
   "project": "宜必购盲盒系统 (ybgtc.com)",
-  "last_updated": "2026-09-13 23:10",
-  "note": "中奖榜分页显示优化（默认10条+加载更多）+完整闭环",
+  "last_updated": "2026-09-14 00:00",
+  "note": "蓝牙打印预览修复（乱码+默认80mm+DOM事件绑定）+完整闭环",
   "environment": {
     "code_root": "D:\\workspace-java\\ybg-master",
     "backend_root": "D:\\workspace-java\\ybg-master\\backend",
@@ -652,6 +652,19 @@
       ],
       "files_changed": [
         "backend/src/main/resources/static/h5/customer/index.html"
+      ],
+      "deployed": true,
+      "tested": true
+    },
+    {
+      "date": "2026-09-14",
+      "features": [
+        "修复打印预览乱码（标题/商家名称/按钮）",
+        "默认纸张改为80mm，保留58mm/80mm两种规格",
+        "修复纸张规格切换不生效（DOMContentLoaded事件绑定）"
+      ],
+      "files_changed": [
+        "backend/src/main/resources/static/h5/merchant/index.html"
       ],
       "deployed": true,
       "tested": true

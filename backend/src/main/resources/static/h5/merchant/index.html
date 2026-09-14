@@ -2665,7 +2665,7 @@ async function _blePrint(bytes){
     }, 500);
   };
   // ===== Print Preview System =====
-  var _ppData = { url: "", shopName: "", imgSrc: "", offsetX: 0, offsetY: 0, scale: 100, paperW: 58, paperH: 40 };
+  var _ppData = { url: "", shopName: "", imgSrc: "", offsetX: 0, offsetY: 0, scale: 100, paperW: 80, paperH: 60 };
 
   function _showPrintPreview(qrUrl, shopName, imgSrc) {
     _ppData.url = qrUrl;
@@ -2691,6 +2691,19 @@ async function _blePrint(bytes){
     var ph = _ppData.paperH * 3.5;
     paper.style.width = pw + "px";
     paper.style.height = ph + "px";
+    // 根据纸张规格动态调整内容大小，确保不被遮挡
+    var qrImg = content ? content.querySelector("img") : null;
+    var nameEl = content ? content.querySelector(".pp-name") : null;
+    var subEl = content ? content.querySelector(".pp-sub") : null;
+    if (_ppData.paperW <= 58) {
+      if (qrImg) { qrImg.style.width = "90px"; qrImg.style.height = "90px"; }
+      if (nameEl) { nameEl.style.fontSize = "11px"; nameEl.style.maxWidth = "110px"; }
+      if (subEl) { subEl.style.fontSize = "9px"; }
+    } else {
+      if (qrImg) { qrImg.style.width = "120px"; qrImg.style.height = "120px"; }
+      if (nameEl) { nameEl.style.fontSize = "13px"; nameEl.style.maxWidth = "140px"; }
+      if (subEl) { subEl.style.fontSize = "10px"; }
+    }
     var cx = (pw / 2) + _ppData.offsetX;
     var cy = (ph / 2) + _ppData.offsetY;
     content.style.left = cx + "px";
@@ -2698,8 +2711,10 @@ async function _blePrint(bytes){
     content.style.transform = "translate(-50%,-50%) scale(" + (_ppData.scale / 100) + ")";
   }
 
-  // Paper size buttons
-  document.querySelectorAll(".pp-size-btn").forEach(function(btn) {
+  // Bind events after DOM ready
+  document.addEventListener("DOMContentLoaded", function() {
+    // Paper size buttons
+    document.querySelectorAll(".pp-size-btn").forEach(function(btn) {
     btn.onclick = function() {
       document.querySelectorAll(".pp-size-btn").forEach(function(b) { b.classList.remove("active"); });
       btn.classList.add("active");
@@ -2743,6 +2758,8 @@ async function _blePrint(bytes){
       } catch(pe) { console.log("[Print] Android native error:", pe); }
     }
   };
+
+  }); // end DOMContentLoaded
 
   // Bluetooth print handler - shows preview first
   var btPrintBtn = $("btnBtPrintQr");
@@ -3008,16 +3025,16 @@ async function _blePrint(bytes){
 <!-- Print Preview Modal -->
 <div class="print-preview-overlay" id="printPreviewOverlay">
   <div class="print-preview-box">
-    <h3>ð¨ï¸ æå°é¢è§</h3>
+    <h3>🖨️ 打印预览</h3>
     <div class="pp-size-row">
-      <button class="pp-size-btn active" data-w="58" data-h="40">58mm 标签</button>
-      <button class="pp-size-btn" data-w="80" data-h="60">80mm 标签</button>
+      <button class="pp-size-btn" data-w="58" data-h="40">58mm 标签</button>
+      <button class="pp-size-btn active" data-w="80" data-h="60">80mm 标签</button>
     </div>
     <div class="pp-paper" id="ppPaper">
       <div class="pp-content" id="ppContent">
         <img id="ppQrImg" src="" alt="QR">
-        <div class="pp-name" id="ppShopName">åå®¶åç§°</div>
-        <div class="pp-sub">æ«ç å¼ç®ç</div>
+        <div class="pp-name" id="ppShopName">商家名称</div>
+        <div class="pp-sub">扫码开盲盒</div>
       </div>
     </div>
     <div class="pp-controls">
@@ -3039,7 +3056,7 @@ async function _blePrint(bytes){
     </div>
     <div class="pp-actions">
       <button class="btn btn--ghost" id="ppCancel">取消</button>
-      <button class="btn btn--primary" id="ppConfirm">ç¡®è®¤æå°</button>
+      <button class="btn btn--primary" id="ppConfirm">确认打印</button>
     </div>
   </div>
 </div>
