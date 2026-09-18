@@ -240,17 +240,17 @@ tr:hover td{background:var(--pri-bg);}
         var html = '';
         res.data.forEach(function(p){
           totalCount++;
-          totalRevenue += Number(p.paid_amount || 0);
-          totalSplit += Number(p.split_amount || 0);
+          totalRevenue += Number(p.paidAmount || 0);
+          totalSplit += Number(p.splitAmount || 0);
           html += '<tr>' +
-            '<td>' + (p.payment_no || p.id) + '</td>' +
-            '<td>' + (p.plate_no || '--') + '</td>' +
-            '<td>' + (p.duration_min != null ? p.duration_min : '--') + '</td>' +
-            '<td>¥' + Number(p.amount || 0).toFixed(2) + '</td>' +
-            '<td>¥' + Number(p.paid_amount || 0).toFixed(2) + '</td>' +
-            '<td>' + (p.pay_channel || '--') + '</td>' +
-            '<td>¥' + Number(p.split_amount || 0).toFixed(2) + '</td>' +
-            '<td>' + (p.paid_at || '--') + '</td>' +
+            '<td>' + (p.paymentNo || p.id) + '</td>' +
+            '<td>' + (p.plateNo || '--') + '</td>' +
+            '<td>' + (p.durationMin != null ? p.durationMin : '--') + '</td>' +
+            '<td>¥' + Number(p.feeAmount || 0).toFixed(2) + '</td>' +
+            '<td>¥' + Number(p.paidAmount || 0).toFixed(2) + '</td>' +
+            '<td>' + (p.payChannel || '--') + '</td>' +
+            '<td>¥' + Number(p.splitAmount || 0).toFixed(2) + '</td>' +
+            '<td>' + (p.payTime ? p.payTime.replace('T', ' ').slice(0, 19) : '--') + '</td>' +
             '<td>' + statusBadge(p.status) + '</td></tr>';
         });
         tbody.innerHTML = html;

@@ -41,6 +41,7 @@ public class PropertyOwnerP1Controller {
     private final PropertyVsOrderRepository vsOrderRepository;
     private final PropertyValueServiceRepository valueServiceRepository;
     private final PropertyAutoPayBindingRepository autoPayBindingRepository;
+    private final PropertyBindRelationRepository bindRelationRepository;
 
     static final ConcurrentHashMap<String, Long> TOKEN_STORE = PropertyOwnerController.TOKEN_STORE;
 
@@ -273,7 +274,13 @@ public class PropertyOwnerP1Controller {
         } catch (Exception e) {
             throw new BizException("入场时间格式错误，应为 yyyy-MM-ddTHH:mm:ss");
         }
-        return Result.ok(tempParkingService.createPayOrder(plateNo.toUpperCase(), et, channel));
+        Long companyId = null;
+        java.util.List<com.ibigou.blindbox.entity.PropertyBindRelation> binds = bindRelationRepository
+                .findByOwnerIdAndStatusOrderByBindTimeAsc(ownerId, 1);
+        if (!binds.isEmpty()) {
+            companyId = binds.get(0).getCompanyId();
+        }
+        return Result.ok(tempParkingService.createPayOrder(plateNo.toUpperCase(), et, channel, companyId));
     }
 
     /** 临停支付单状态（前端轮询） */

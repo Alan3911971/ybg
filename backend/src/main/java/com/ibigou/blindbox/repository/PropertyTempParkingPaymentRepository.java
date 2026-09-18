@@ -13,6 +13,8 @@ public interface PropertyTempParkingPaymentRepository extends JpaRepository<Prop
 
     List<PropertyTempParkingPayment> findByCommunityIdAndPayTimeBetweenOrderByPayTimeDesc(Long communityId, LocalDateTime start, LocalDateTime end);
 
+    List<PropertyTempParkingPayment> findByPayTimeBetweenOrderByPayTimeDesc(LocalDateTime start, LocalDateTime end);
+
     Optional<PropertyTempParkingPayment> findByVehicleLogId(Long vehicleLogId);
 
     Optional<PropertyTempParkingPayment> findByPaymentNo(String paymentNo);

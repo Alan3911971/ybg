@@ -322,16 +322,35 @@ public class PropertyAdminP1Controller {
      */
     @GetMapping("/temp-payments")
     public Result<List<PropertyTempParkingPayment>> tempPayments(@RequestHeader("X-Property-Token") String token,
-                                                                 @RequestParam Long communityId,
-                                                                 @RequestParam String startDate,
-                                                                 @RequestParam String endDate) {
+                                                                 @RequestParam(required = false) Long communityId,
+                                                                 @RequestParam(required = false) Long community_id,
+                                                                 @RequestParam(required = false) String startDate,
+                                                                 @RequestParam(required = false) String start_date,
+                                                                 @RequestParam(required = false) String endDate,
+                                                                 @RequestParam(required = false) String end_date) {
         validateToken(token);
-        LocalDate start = LocalDate.parse(startDate);
-        LocalDate end = LocalDate.parse(endDate);
-        LocalDateTime startTime = start.atStartOfDay();
-        LocalDateTime endTime = end.atTime(LocalTime.MAX);
-        return Result.ok(tempParkingPaymentRepository.findByCommunityIdAndPayTimeBetweenOrderByPayTimeDesc(
-                communityId, startTime, endTime));
+        if (communityId == null) {
+            communityId = community_id;
+        }
+        if ((startDate == null || startDate.isBlank())) {
+            startDate = start_date;
+        }
+        if ((endDate == null || endDate.isBlank())) {
+            endDate = end_date;
+        }
+        LocalDateTime startTime = LocalDateTime.of(2000, 1, 1, 0, 0);
+        LocalDateTime endTime = LocalDate.now().plusDays(1).atStartOfDay();
+        if (startDate != null && !startDate.isBlank()) {
+            startTime = LocalDate.parse(startDate).atStartOfDay();
+        }
+        if (endDate != null && !endDate.isBlank()) {
+            endTime = LocalDate.parse(endDate).atTime(LocalTime.MAX);
+        }
+        if (communityId != null) {
+            return Result.ok(tempParkingPaymentRepository.findByCommunityIdAndPayTimeBetweenOrderByPayTimeDesc(
+                    communityId, startTime, endTime));
+        }
+        return Result.ok(tempParkingPaymentRepository.findByPayTimeBetweenOrderByPayTimeDesc(startTime, endTime));
     }
 
     // ==================== 双模式分账管理 ====================

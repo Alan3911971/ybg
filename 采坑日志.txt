@@ -947,3 +947,10 @@ G71 | %s | 浏览器/curl访问生产页面被豆包翻译器注入 <script src=
 4. 坑：①PropertyOwnerP1Controller 新端点返回 Result<Map<...>> 但没 import java.util.Map → mvn 找不到符号，补 import；②python urllib POST XML 回调被吃（Content is not allowed in prolog）→ 用 curl --data-binary @file 直发成功；③发现并修复生产 bug：WxPayService 回调读 data.get("transactionId") 但微信 V2 实际字段是 transaction_id，交易号从未落库 → 加 transaction_id 回退（本次修复后 wx_transaction_id 正确入库）；④bu 截图 RPC 本会话仍损坏（同 G82），浏览器演示用 DOM 文本验证
 5. 验证：业主登录 → POST pay（苏L88888，2小时前入场）→ TP17897466338789571 ¥10.00 120min 微信真实下单（weixin://wxpay/bizpayurl）→ curl V2 回调 SUCCESS → 日志「Temp parking payment success splitAmount=1.00」→ pay-status paid=true → DB status=1 split=1.00 wx_transaction_id=WXTP...；浏览器 DOM：计算 ¥10.00 → 去缴费 → 弹窗「临停缴费·苏L88888」→ 微信通道 → 二维码+等待支付轮询，浏览器下单 TP17897467287341571 落库待支付
 6. 遗留：auto-pay 绑定仍无自动扣款调度（车辆出场自动扣费未做，待后续）；临停支付走平台商户号代收（G28 待拍板）
+
+【2026-09-19 G84】后台「临时车缴费」对账修复（admin/temp-parking.html + /admin/p1/temp-payments）
+1. 盘点发现：后台临停缴费页从上线起就加载失败——前端发 start_date/end_date/community_id（snake_case，默认还为空），后端要 startDate/endDate/communityId（必填）→ 永远 400；且页面读 p.amount/p.paid_at/payment_no 等 snake_case 字段，实体返回 camelCase（feeAmount/payTime/paymentNo）→ 应收金额恒 0、支付时间恒 --；另有 G83 建的 TP 单 community_id=0，后台按小区筛选永远看不到
+2. 修复：①Repository 加 findByPayTimeBetweenOrderByPayTimeDesc（无小区全量）；②/temp-payments 参数全部可选 + 双名兼容（startDate/start_date…），空则默认 2000-01-01 ~ 明日，小区空则全量；③createPayOrder 加 companyId 参数，P1 pay 端点按业主 bindRelation（PropertyBindRelationRepository）取首个绑定公司落库；④前端 8 处行字段 + 2 处汇总字段改 camelCase
+3. 坑：①LocalDateTime 没有 atTime()（LocalDate 才有 atTime 返回 LocalDateTime；LocalDateTime 拼日期用 atStartOfDay）→ mvn 找不到符号；②部署重启事故：pkill 后 2 秒即 start，旧进程还没释放 8085 → 新进程 Port already in use 退出、旧进程又活着响应（健康检查误报 UP，测试数据写入旧进程）→ 必须 pkill 后轮询 ss -ltn :8085 直到端口释放再 start；③python urllib 无 body POST 后台登录 502 是应用宕机表象，不是登录问题
+4. 验证：业主下单 → 新单 community_id=1（旧单 0）→ 后台无参 4 条全量、community_id=1 精确 1 条；页面 4 笔/总收入¥30.00/分账¥1.00（仅已付那笔）、筛选宜必购物业 → 1 条 TP17897485756312438
+5. 遗留：历史 TP 单（G83 期间建的）community_id=0 不归任何小区，属测试数据无碍；auto-pay 自动扣款调度仍未做

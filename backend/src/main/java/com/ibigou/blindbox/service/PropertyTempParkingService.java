@@ -107,7 +107,7 @@ public class PropertyTempParkingService {
      * 访客临停缴费（无通行记录版）：按 入场时间→当前 计算时长与费用，创建 TP- 支付单并真实下单，返回二维码。
      */
     @Transactional
-    public Map<String, Object> createPayOrder(String plateNo, LocalDateTime entryTime, String channel) {
+    public Map<String, Object> createPayOrder(String plateNo, LocalDateTime entryTime, String channel, Long companyId) {
         if (!"wechat".equals(channel) && !"alipay".equals(channel)) {
             throw new BizException("不支持的支付方式");
         }
@@ -128,7 +128,7 @@ public class PropertyTempParkingService {
         payment.setPaymentNo(paymentNo);
         payment.setVehicleLogId(0L);
         payment.setPlateNo(plateNo);
-        payment.setCommunityId(0L);
+        payment.setCommunityId(companyId != null ? companyId : 0L);
         payment.setDurationMin((int) durationMinutes);
         payment.setFeeAmount(fee);
         payment.setPaidAmount(fee);
