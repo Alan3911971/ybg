@@ -36,6 +36,7 @@ public class WxPayService {
     private final GlobalConfigService configService;
     private final MemberService memberService;
     private final OfflineOrderService offlineOrderService;
+    private final PropertyBillPaymentService propertyBillPaymentService;
 
     private static final String UNIFIED_ORDER_URL = "https://api.mch.weixin.qq.com/pay/unifiedorder";
     private static final String ORDER_QUERY_URL = "https://api.mch.weixin.qq.com/pay/orderquery";
@@ -91,7 +92,7 @@ public class WxPayService {
 
         SortedMap<String, String> params = new TreeMap<>();
         params.put("appid", appId);
-        params.put("mchId", mchId);
+        params.put("mch_id", mchId);
         params.put("nonce_str", UUID.randomUUID().toString().replace("-", ""));
         params.put("body", description.length() > 128 ? description.substring(0, 128) : description);
         params.put("out_trade_no", outTradeNo);
@@ -290,7 +291,7 @@ public class WxPayService {
 
         SortedMap<String, String> params = new TreeMap<>();
         params.put("appid", appId);
-        params.put("mchId", mchId);
+        params.put("mch_id", mchId);
         params.put("nonce_str", UUID.randomUUID().toString().replace("-", ""));
         params.put("body", description.length() > 128 ? description.substring(0, 128) : description);
         params.put("out_trade_no", outTradeNo);
@@ -343,7 +344,7 @@ public class WxPayService {
 
         SortedMap<String, String> params = new TreeMap<>();
         params.put("appid", appId);
-        params.put("mchId", mchId);
+        params.put("mch_id", mchId);
         params.put("out_trade_no", outTradeNo);
         params.put("nonce_str", UUID.randomUUID().toString().replace("-", ""));
         params.put("sign", sign(params, apiKey));
@@ -395,7 +396,9 @@ public class WxPayService {
             String transactionId = data.get("transactionId");
             log.info("微信V2回调成功，订单={}, 微信订单号={}", outTradeNo, transactionId);
             // 根据订单号前缀判断订单类型
-            if (outTradeNo != null && outTradeNo.startsWith("OFF-")) {
+            if (outTradeNo != null && outTradeNo.startsWith("PB")) {
+                propertyBillPaymentService.confirmPaid(outTradeNo, "wechat");
+            } else if (outTradeNo != null && outTradeNo.startsWith("OFF-")) {
                 offlineOrderService.confirmPaid(outTradeNo, "wechat");
             } else {
                 memberService.confirmRenewPaid(outTradeNo, "wxpay-notify");

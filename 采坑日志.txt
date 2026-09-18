@@ -1,6 +1,6 @@
 宜必购（ybg）采坑日志
 ========================================
-最后更新：2026-09-07（Z盘NAS损坏后重建到 ybg-master 目录）
+最后更新：2026-09-18（业主在线缴纳物业费闭环 + 支付侧两个现存bug修复）
 
 【G01】scp/ssh 脱敏问题
 - 现象：命令中密钥/密码被日志记录
@@ -904,3 +904,14 @@ G71 | %s | 浏览器/curl访问生产页面被豆包翻译器注入 <script src=
 4. 重启 jar 直接 java -jar 会因缺 prod profile 用 root 连库被 Flyway 拒绝 → 必须 start.sh（set -a; . .env; exec java -Dspring.profiles.active=prod -Dspring.flyway.enabled=false -jar ibigou.jar），用 setsid 后台化
 5. NAS 同步 scp 不可用（无 scp subsystem）→ ssh stdin 管道 tar 流式传输
 6. bu 测试：JS 返回值含中文 emoji 会 PY_UNICODE_ENCODE_ERROR（用纯 ASCII JS 或 curl 验证）；无 set_viewport；登录态存 localStorage 但重启后失效需重登
+
+【2026-09-18 G79】业主在线缴纳物业费闭环 + 支付侧两个现存生产bug
+1. 功能：业主端 bills.html「去缴费」→ 选微信/支付宝 → 真实下单二维码 → 轮询 pay-status → 回调确认账单置已缴。接口：POST /api/property/owner/bills/{id}/pay?channel=wechat|alipay、GET /api/property/owner/bills/{id}/pay-status?paymentNo=；新表 property_payment（单号 PB+毫秒时间戳）；WxPayService/AlipayService handleNotify 按 outTradeNo 前缀 PB 分流到 PropertyBillPaymentService.confirmPaid（幂等）
+2. 修bug①配置键名不匹配：代码读 wx_pay_appId/wx_pay_mchId/alipay_appId（驼峰），库里只有 wx_pay_app_id/wx_pay_mch_id/alipay_app_id（下划线）→ 微信报"未配置完整"；此前顾客端真实微信/支付宝支付同样受影响。已补3条驼峰别名键（sys_global_config）
+3. 修bug②WxPayService 请求XML字段名 mchId → mch_id：微信V2统一下单/查单要求 mch_id，发 mchId 微信报"mch_id参数格式错误"（统一下单/JSAPI下单/查单三处，均已改）
+4. 循环依赖：WxPayService ↔ PropertyBillPaymentService（回调路由互引）→ Spring 默认拒绝启动；PropertyBillPaymentService 用显式构造器 + @Lazy 注入两个支付服务打破
+5. 坑：paramiko 远程命令双引号内 $2a$10$... 会被 bash 展开成空 → SQL 里写密码哈希被破坏 → 一律 base64 传 SQL 文件执行（echo b64|base64 -d > f && mysql < f）
+6. 坑：PowerShell 调 mvn.cmd 传 -Dmaven.repo.local=D:\workspace-java\m2repo 冒号被截断（No plugin found for prefix '.repo.local=D'）→ 用 $env:MAVEN_OPTS="-Dmaven.repo.local=D:\workspace-java\m2repo"
+7. 坑：paramiko exec_command 启动 nohup/setsid 后台进程时 stdout 管道不关闭导致 read 超时（偶发）→ 启动步骤 try/except 容错，以进程轮询为准
+8. 验证：bill 1 微信150元全链路（真实下单 weixin://wxpay/bizpayurl → 模拟V2签名回调 return SUCCESS → 账单 paid=150 status=1）；支付宝分支真实预下单返回 qr.alipay.com；演示业主 13851918986/123456（密码已复位）；页面演示截图 _demo_0918/{bills_list,pay_qr}.png
+9. 遗留：物业费收款走平台商户号（微信1440071102/支付宝），线下结算给物业；G28「物业独立收款码/独立商户」待用户拍板

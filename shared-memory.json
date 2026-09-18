@@ -1,7 +1,7 @@
 {
   "project": "宜必购盲盒系统 (ybgtc.com)",
   "last_updated": "2026-09-18",
-  "note": "打印预览弹窗内容位置修复+完整闭环",
+  "note": "业主在线缴纳物业费闭环+支付侧两个现存bug修复",
   "environment": {
     "code_root": "D:\\workspace-java\\ybg-master",
     "backend_root": "D:\\workspace-java\\ybg-master\\backend",
@@ -731,7 +731,7 @@
       "speckit-taskstoissues"
     ]
   },
-  "github_token": "ghp_CpBA...（已脱敏，完整token见本地环境变量）",
+  "github_token": "2026-09-18 已更新为新 token（ghp_CpB... 开头），旧 token 已失效(401)；完整 token 由用户持有，使用方式见规矩文档 G31 与 _push_gh_full.py（环境变量 GH_PAT 传入，脚本内不硬编码）",
   "amap_key_configured": true,
   "entries": [
     {
@@ -796,6 +796,7 @@
     }
   ],
   "project_20260918": "需求1/2/3完成；家庭成员扫码绑定闭环；后台窄屏防变形修复",
+  "payment_20260918": "业主在线缴纳物业费闭环（bills.html去缴费→真实微信/支付宝二维码→回调确认账单已缴）；新表 property_payment；修2个支付bug：配置键名驼峰/下划线不匹配（补3条别名键）、WxPayService XML字段 mchId→mch_id；演示业主13851918986/123456；演示截图 _demo_0918/",
   "toolchain": {
     "python": "Python 3 + paramiko（pip install paramiko），所有 SSH/部署/SFTP 脚本依赖",
     "jdk": "D:\\devtools\\jdk（Temurin 17.0.20.1）",
@@ -809,5 +810,17 @@
     "github_push_script": "D:\\workspace-java\\_push_gh.py（Git Data API，github.com 443 直连不通，git 命令不可用）",
     "deploy_scripts": "D:\\workspace-java\\_deploy_family*.py（SFTP 传 jar+重启）、_upload_admin_all.py（批量传前端）、_verify_*.py（接口验证）",
     "qrcodejs_inline": "D:\\workspace-java\\_qrcodejs_inline.js（19928B 公共副本，从 dashboard.html 提取）"
+  },
+  "github_backup_20260918": {
+    "commit": "a4a3440c3f9817cff29697fe4ea355b547cc4652",
+    "files": 480,
+    "scope": "backend + property + customer + 四文档 + api.js/choose.html",
+    "script": "D:\\workspace-java\\_push_gh_full.py（用法：$env:GH_PAT=<token>; python _push_gh_full.py）",
+    "note": "旧 _push_gh.py 只推 backend 且 token 失效，勿再用"
+  },
+  "nas_backup_20260918": {
+    "commit": "659eb4b",
+    "message": "sync 20260918: 物业系统+家庭成员+四文档G31",
+    "script": "D:\\workspace-java\\_nas_sync3.py（paramiko exec stdin 管道，NAS 无 sftp/scp subsystem）"
   }
 }

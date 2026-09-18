@@ -28,6 +28,7 @@ public class AlipayService {
 
     private final GlobalConfigService configService;
     private final OfflineOrderService offlineOrderService;
+    private final PropertyBillPaymentService propertyBillPaymentService;
 
     public boolean enabled() {
         return "1".equals(configService.get("alipay_enabled", "0"));
@@ -110,11 +111,15 @@ public class AlipayService {
             String tradeStatus = params.get("trade_status");
             if ("TRADE_SUCCESS".equals(tradeStatus) || "TRADE_FINISHED".equals(tradeStatus)) {
                 log.info("支付宝回调支付成功，订单 {}", outTradeNo);
-                // 确认线下订单支付（如果是线下订单）
-                try {
-                    offlineOrderService.confirmPaid(outTradeNo, "alipay-notify");
-                } catch (Exception e) {
-                    log.warn("确认订单支付失败: {}", e.getMessage());
+                // 物业账单支付单（PB-前缀）走物业缴费确认，其余走线下订单
+                if (outTradeNo != null && outTradeNo.startsWith("PB")) {
+                    propertyBillPaymentService.confirmPaid(outTradeNo, "alipay-notify");
+                } else {
+                    try {
+                        offlineOrderService.confirmPaid(outTradeNo, "alipay-notify");
+                    } catch (Exception e) {
+                        log.warn("确认订单支付失败: {}", e.getMessage());
+                    }
                 }
             }
             return "success";

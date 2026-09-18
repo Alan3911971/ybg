@@ -4,6 +4,7 @@ import com.ibigou.blindbox.common.BizException;
 import com.ibigou.blindbox.common.Result;
 import com.ibigou.blindbox.entity.*;
 import com.ibigou.blindbox.repository.*;
+import com.ibigou.blindbox.service.PropertyBillPaymentService;
 import com.ibigou.blindbox.service.PropertyCarryOverService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -39,6 +40,7 @@ public class PropertyOwnerController {
     private final PropertyCarryOverService carryOverService;
     private final PropertyCompanyRepository companyRepository;
     private final PropertyRoomRepository roomRepository;
+    private final PropertyBillPaymentService propertyBillPaymentService;
 
     static final ConcurrentHashMap<String, Long> TOKEN_STORE = new ConcurrentHashMap<>();
     private static final BCryptPasswordEncoder PASSWORD_ENCODER = new BCryptPasswordEncoder();
@@ -356,6 +358,26 @@ public class PropertyOwnerController {
             throw new BizException("无权查看");
         }
         return Result.ok(bill);
+    }
+
+    // ======================== 12.5 账单在线缴费 ========================
+
+    /** 创建支付单：channel=wechat|alipay，返回 paymentNo/amount/qrCode */
+    @PostMapping("/bills/{id}/pay")
+    public Result<Map<String, Object>> payBill(@RequestHeader("X-Owner-Token") String token,
+                                               @PathVariable Long id,
+                                               @RequestParam String channel) {
+        Long ownerId = validateOwnerToken(token);
+        return Result.ok(propertyBillPaymentService.createPayment(ownerId, id, channel));
+    }
+
+    /** 查询支付单状态（前端轮询） */
+    @GetMapping("/bills/{id}/pay-status")
+    public Result<Map<String, Object>> payStatus(@RequestHeader("X-Owner-Token") String token,
+                                                 @PathVariable Long id,
+                                                 @RequestParam String paymentNo) {
+        Long ownerId = validateOwnerToken(token);
+        return Result.ok(propertyBillPaymentService.queryStatus(ownerId, paymentNo));
     }
 
     // ======================== 13. 扣款日志 ========================
