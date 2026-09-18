@@ -931,3 +931,11 @@ G71 | %s | 浏览器/curl访问生产页面被豆包翻译器注入 <script src=
  拼接（NL 自适应）
 4. 验证：生产接口返回5条测试缴费（微信150已确认 status=1 pay_time 2026-09-18 17:12:38 富化 测试业主/101/2026-09）；status=1 过滤精确1条；关键词按业主名/房间号过滤生效；bu 浏览器演示截图 _demo_0918/admin_payments{,_paid}.png
 5. 遗留：缴费记录分页大小默认20，关键词过滤作用于当前页（内存过滤，未下推 SQL）；G28 独立商户待拍板
+
+【2026-09-18 G82】车位费在线缴费闭环（复用物业费支付单体系）
+1. 功能：业主端 bills.html 车位费 tab 每条待缴车位费「去缴费」→ 微信/支付宝二维码 → 轮询确认 → parking_fee paid/status 翻转；property_payment 加 fee_type 列（0=物业费 1=车位费）复用同一支付单/回调路由；后台缴费记录加「类型」列区分
+2. 接口：POST /api/property/owner/parking-fees/{id}/pay?channel=wechat|alipay、GET /parking-fees/{id}/pay-status?paymentNo=（复用 queryStatus）；GET /parking-fees 富化 plateNumber（原来只有 vehicleId，前端车牌显示--）
+3. 服务：PropertyBillPaymentService 注入 parkingFeeRepository；createParkingPayment 镜像 createPayment（feeType=1，关闭旧待付单用 findByBillIdAndFeeTypeAndStatus 避免误关物业费单）；confirmPaid 按 feeType 分流更新 bill 或 parking_fee（累加 paid，扣减+已缴>=金额置 status=1）
+4. 坑：①mvn 编译失败——parkingFees 接口改返回富化 List<Map> 但方法签名还是 Result<List<PropertyParkingFee>>（编译器报 incompatible types），须同步改签名；②模拟微信V2回调 XML 用 [:-8] 切片会吃掉 CDATA 结尾导致 XML 畸形（The element type "transaction_id" must be terminated）→ 改用显式字段拼 XML；回调必须带 result_code=SUCCESS 否则 handleNotify L393 直接 FAIL；③bu 会话截图 RPC 本次会话损坏（screenshot/list_tabs/CDP 全部超时，get_page_text/js 正常）→ 页面验证改用 DOM 文本，截图交付降级说明
+5. 验证：车位费 fee1（2026-10 200元）全链路：真实微信下单（weixin://wxpay/bizpayurl）→ V2签名回调 SUCCESS → pay-status paid=true → fee paid=200 status=1；后台缴费记录显示「车位费 2026-10 ¥200 已支付 22:34:02」；浏览器 DOM 验证：车位费 tab 已缴/待缴+去缴费、弹窗标题「缴纳车位费」、微信二维码轮询等待支付
+6. 遗留：支付弹窗标题、车位费/物业费共用同一支付单序列（PB前缀）；测试数据：fee1 已缴、fee2（2026-11）待缴、支付单3条（物业费5条历史+车位费2条确认1条待付）；bu 截图 RPC 待会话重置后补车位费截图

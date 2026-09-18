@@ -333,9 +333,16 @@ public class PropertyAdminController {
             m.put("status", pm.getStatus());
             m.put("payTime", pm.getPayTime());
             m.put("createTime", pm.getCreateTime());
+            Integer ft = pm.getFeeType() == null ? 0 : pm.getFeeType();
+            m.put("feeType", ft);
+            m.put("typeLabel", ft == 1 ? "车位费" : "物业费");
             ownerRepository.findById(pm.getOwnerId()).ifPresent(o -> m.put("ownerName", o.getOwnerName()));
             roomRepository.findById(pm.getRoomId()).ifPresent(r -> m.put("roomNo", r.getRoomNo()));
-            billRepository.findById(pm.getBillId()).ifPresent(b -> m.put("billPeriod", b.getBillPeriod()));
+            if (ft == 1) {
+                parkingFeeRepository.findById(pm.getBillId()).ifPresent(f -> m.put("billPeriod", f.getPeriod()));
+            } else {
+                billRepository.findById(pm.getBillId()).ifPresent(b -> m.put("billPeriod", b.getBillPeriod()));
+            }
             return m;
         }).collect(Collectors.toList());
         if (keyword != null && !keyword.isBlank()) {

@@ -112,6 +112,10 @@ button{font-family:inherit;cursor:pointer;border:none;background:none;color:inhe
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:none;font-weight:600;cursor:pointer;transition:all .2s cubic-bezier(.4,0,.2,1);letter-spacing:.2px;white-space:nowrap;}
 .btn-xs{height:28px;padding:0 10px;font-size:12px;border-radius:6px;}
 .btn-sm{height:36px;padding:0 16px;font-size:13px;border-radius:8px;}
+.badge{display:inline-block;padding:2px 10px;border-radius:10px;font-size:12px;font-weight:600;}
+.badge.green{background:rgba(22,163,74,.12);color:#16a34a;}
+.badge.gray{background:rgba(100,116,139,.12);color:#64748b;}
+
 .btn-md{height:44px;padding:0 24px;font-size:14px;border-radius:10px;}
 .btn-lg{height:52px;padding:0 32px;font-size:16px;border-radius:12px;}
 .btn-xl{height:60px;padding:0 40px;font-size:18px;border-radius:14px;}
@@ -178,7 +182,7 @@ button{font-family:inherit;cursor:pointer;border:none;background:none;color:inhe
 <div class="pay-mask" id="payMask" style="display:none"></div>
 <div class="pay-sheet" id="paySheet" style="display:none">
   <div class="pay-head">
-    <span class="pay-title">缴纳物业费</span>
+    <span class="pay-title" id="payTitle">缴纳物业费</span>
     <span class="pay-amount" id="payAmount">¥0.00</span>
     <button class="pay-close" onclick="closePay()">✕</button>
   </div>
@@ -391,14 +395,19 @@ async function loadParkingFees(){
   if(r.code===0&&r.data&&r.data.length){
     const list=r.data;
     let html='<div class="card"><table class="fee-table"><thead><tr>'
-      +'<th>车牌</th><th>周期</th><th>状态</th><th>金额</th>'
+      +'<th>车牌</th><th>周期</th><th>状态</th><th>金额</th><th>操作</th>'
       +'</tr></thead><tbody>';
     list.forEach(function(f){
+      var isPaid = String(f.status||"0")==="1";
+      var remain = Number(f.amount||0)-Number(f.deducted||0)-Number(f.paid||0);
+      var stBadge = isPaid ? '<span class="badge green">已缴</span>' : '<span class="badge gray">待缴</span>';
+      var btn = isPaid ? '' : '<button class="btn btn-primary btn-xs" onclick="payParking('+f.feeId+','+remain+')">去缴费</button>';
       html+='<tr>'
-        +'<td>'+(f.plateNumber||f.plate||"--")+'</td>'
+        +'<td>'+(f.plateNumber||"--")+'</td>'
         +'<td>'+(f.period||fmtDate(f.createTime))+'</td>'
-        +'<td>'+(f.status||"--")+'</td>'
+        +'<td>'+stBadge+'</td>'
         +'<td class="amt">¥'+(Number(f.amount||0).toFixed(2))+'</td>'
+        +'<td>'+btn+'</td>'
         +'</tr>';
     });
     html+='</tbody></table></div>';
@@ -435,10 +444,22 @@ document.querySelectorAll(".nav .tab").forEach(el=>el.addEventListener("click",(
 }));
 
 // ======================== 账单在线缴费 ========================
-let _payBillId=null,_payPaymentNo=null,_payTimer=null;
+let _payBillId=null,_payPaymentNo=null,_payTimer=null,_payType="bill";
 
 window.payBill=function(id,amount){
-  _payBillId=id;_payPaymentNo=null;
+  _payBillId=id;_payPaymentNo=null;_payType="bill";
+  $("payTitle").textContent="缴纳物业费";
+  if(_payTimer){clearInterval(_payTimer);_payTimer=null}
+  $("payAmount").textContent="¥"+Number(amount||0).toFixed(2);
+  $("payChannels").style.display="flex";
+  $("payQr").style.display="none";
+  $("payMask").style.display="block";
+  $("paySheet").style.display="block";
+};
+
+window.payParking=function(id,amount){
+  _payBillId=id;_payPaymentNo=null;_payType="parking";
+  $("payTitle").textContent="缴纳车位费";
   if(_payTimer){clearInterval(_payTimer);_payTimer=null}
   $("payAmount").textContent="¥"+Number(amount||0).toFixed(2);
   $("payChannels").style.display="flex";
@@ -456,7 +477,7 @@ window.closePay=function(){
 window.startPay=async function(channel){
   if(!_payBillId)return;
   $("payStatusText").textContent="正在下单...";
-  const r=await req("/bills/"+_payBillId+"/pay","POST",{channel:channel});
+  const r=await req("/"+(_payType==="parking"?"parking-fees":"bills")+"/"+_payBillId+"/pay","POST",{channel:channel});
   if(r.code!==0){
     toast(r.msg||"下单失败","danger");
     closePay();
@@ -474,12 +495,12 @@ window.startPay=async function(channel){
 
 async function pollPayStatus(){
   if(!_payBillId||!_payPaymentNo)return;
-  const r=await get("/bills/"+_payBillId+"/pay-status?paymentNo="+encodeURIComponent(_payPaymentNo));
+  const r=await get("/"+(_payType==="parking"?"parking-fees":"bills")+"/"+_payBillId+"/pay-status?paymentNo="+encodeURIComponent(_payPaymentNo));
   if(r.code===0&&r.data&&r.data.paid){
     if(_payTimer){clearInterval(_payTimer);_payTimer=null}
     $("payStatusText").textContent="✅ 缴费成功";
     toast("缴费成功","success");
-    setTimeout(function(){closePay();loadPropertyBills()},900);
+    setTimeout(function(){closePay();loadCurrentTab()},900);
   }
 }
 

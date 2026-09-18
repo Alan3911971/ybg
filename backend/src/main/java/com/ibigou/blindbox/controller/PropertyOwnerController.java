@@ -541,13 +541,49 @@ public class PropertyOwnerController {
     // ======================== 22. 停车费列表 ========================
 
     @GetMapping("/parking-fees")
-    public Result<List<PropertyParkingFee>> parkingFees(@RequestHeader("X-Owner-Token") String token) {
+    public Result<List<Map<String, Object>>> parkingFees(@RequestHeader("X-Owner-Token") String token) {
         Long ownerId = validateOwnerToken(token);
         List<PropertyParkingFee> allFees = parkingFeeRepository.findAll();
         List<PropertyParkingFee> ownerFees = allFees.stream()
                 .filter(f -> f.getOwnerId().equals(ownerId))
                 .sorted(Comparator.comparing(PropertyParkingFee::getDueDate))
                 .collect(Collectors.toList());
-        return Result.ok(ownerFees);
+        List<Map<String, Object>> list = ownerFees.stream().map(f -> {
+            Map<String, Object> m = new LinkedHashMap<>();
+            m.put("feeId", f.getFeeId());
+            m.put("feeNo", f.getFeeNo());
+            m.put("ownerId", f.getOwnerId());
+            m.put("roomId", f.getRoomId());
+            m.put("companyId", f.getCompanyId());
+            m.put("feeType", f.getFeeType());
+            m.put("period", f.getPeriod());
+            m.put("amount", f.getAmount());
+            m.put("deducted", f.getDeducted());
+            m.put("paid", f.getPaid());
+            m.put("dueDate", f.getDueDate());
+            m.put("status", f.getStatus());
+            m.put("createTime", f.getCreateTime());
+            vehicleRepository.findById(f.getVehicleId()).ifPresent(v -> m.put("plateNumber", v.getPlateNo()));
+            return m;
+        }).collect(Collectors.toList());
+        return Result.ok(list);
+    }
+
+    /** 车位费在线缴费：channel=wechat|alipay，返回 paymentNo/amount/qrCode（feeType=1） */
+    @PostMapping("/parking-fees/{id}/pay")
+    public Result<Map<String, Object>> payParkingFee(@RequestHeader("X-Owner-Token") String token,
+                                                      @PathVariable Long id,
+                                                      @RequestParam String channel) {
+        Long ownerId = validateOwnerToken(token);
+        return Result.ok(propertyBillPaymentService.createParkingPayment(ownerId, id, channel));
+    }
+
+    /** 车位费支付单状态（前端轮询，与物业费同一 queryStatus） */
+    @GetMapping("/parking-fees/{id}/pay-status")
+    public Result<Map<String, Object>> parkingPayStatus(@RequestHeader("X-Owner-Token") String token,
+                                                         @PathVariable Long id,
+                                                         @RequestParam String paymentNo) {
+        Long ownerId = validateOwnerToken(token);
+        return Result.ok(propertyBillPaymentService.queryStatus(ownerId, paymentNo));
     }
 }

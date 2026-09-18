@@ -16,6 +16,8 @@ public interface PropertyPaymentRepository extends JpaRepository<PropertyPayment
 
     List<PropertyPayment> findByBillIdAndStatus(Long billId, Integer status);
 
+    List<PropertyPayment> findByBillIdAndFeeTypeAndStatus(Long billId, Integer feeType, Integer status);
+
     Page<PropertyPayment> findByCompanyId(Long companyId, Pageable pageable);
 
     Page<PropertyPayment> findByCompanyIdAndStatus(Long companyId, Integer status, Pageable pageable);

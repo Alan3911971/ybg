@@ -45,6 +45,10 @@ public class PropertyPayment {
     /** 0=待支付 1=已支付 2=已关闭 */
     private Integer status;
 
+    /** 0=物业费 1=车位费 */
+    @Column(nullable = false)
+    private Integer feeType = 0;
+
     private LocalDateTime payTime;
 
     @Column(nullable = false, insertable = false, updatable = false)

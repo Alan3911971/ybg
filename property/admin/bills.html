@@ -238,8 +238,8 @@ tr:hover td{background:var(--pri-bg);}
           <div class="sec"><span class="ic">💰</span>缴费流水</div>
           <div class="table-wrap">
             <table>
-              <thead><tr><th>支付单号</th><th>业主</th><th>房间</th><th>账单周期</th><th>金额</th><th>渠道</th><th>状态</th><th>支付时间</th></tr></thead>
-              <tbody id="payTable"><tr><td colspan="8" class="empty">加载中...</td></tr></tbody>
+              <thead><tr><th>支付单号</th><th>业主</th><th>房间</th><th>类型</th><th>账单周期</th><th>金额</th><th>渠道</th><th>状态</th><th>支付时间</th></tr></thead>
+              <tbody id="payTable"><tr><td colspan="9" class="empty">加载中...</td></tr></tbody>
             </table>
           </div>
         </div>
@@ -513,7 +513,7 @@ tr:hover td{background:var(--pri-bg);}
         var tbody = document.getElementById('payTable');
         var list = (res.data && res.data.content) ? res.data.content : res.data;
         if (res.code !== 0 || !list || list.length === 0) {
-          tbody.innerHTML = '<tr><td colspan="8" class="empty">暂无数据</td></tr>';
+          tbody.innerHTML = '<tr><td colspan="9" class="empty">暂无数据</td></tr>';
           return;
         }
         var html = '';
@@ -524,6 +524,7 @@ tr:hover td{background:var(--pri-bg);}
             '<td>' + (pm.paymentNo || '--') + '</td>' +
             '<td>' + (pm.ownerName || pm.ownerId || '--') + '</td>' +
             '<td>' + (pm.roomNo || '--') + '</td>' +
+            '<td>' + (pm.typeLabel || '--') + '</td>' +
             '<td>' + (pm.billPeriod || '--') + '</td>' +
             '<td>¥' + Number(pm.amount || 0).toFixed(2) + '</td>' +
             '<td>' + ch + '</td>' +
@@ -532,7 +533,7 @@ tr:hover td{background:var(--pri-bg);}
         });
         tbody.innerHTML = html;
       })
-      .catch(function(){ document.getElementById('payTable').innerHTML = '<tr><td colspan="8" class="empty">加载失败</td></tr>'; });
+      .catch(function(){ document.getElementById('payTable').innerHTML = '<tr><td colspan="9" class="empty">加载失败</td></tr>'; });
   }
   document.getElementById('btnPaySearch').onclick = loadPayments;
   document.getElementById('btnPayRefresh').onclick = function(){ document.getElementById('payCompanyId').value=''; document.getElementById('payStatus').value=''; document.getElementById('payKeyword').value=''; loadPayments(); };
