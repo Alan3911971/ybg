@@ -812,15 +812,15 @@
     "qrcodejs_inline": "D:\\workspace-java\\_qrcodejs_inline.js（19928B 公共副本，从 dashboard.html 提取）"
   },
   "github_backup_20260918": {
-    "commit": "a4a3440c3f9817cff29697fe4ea355b547cc4652",
-    "files": 480,
+    "commit": "d9d4765926449c08ca9fb50d227e4633b2a2cacb",
+    "files": 483,
     "scope": "backend + property + customer + 四文档 + api.js/choose.html",
     "script": "D:\\workspace-java\\_push_gh_full.py（用法：$env:GH_PAT=<token>; python _push_gh_full.py）",
-    "note": "旧 _push_gh.py 只推 backend 且 token 失效，勿再用"
+    "note": "含业主物业费缴费+支付bug修复；token 见 _addpit53.py；旧 _push_gh.py 勿用"
   },
   "nas_backup_20260918": {
-    "commit": "659eb4b",
-    "message": "sync 20260918: 物业系统+家庭成员+四文档G31",
-    "script": "D:\\workspace-java\\_nas_sync3.py（paramiko exec stdin 管道，NAS 无 sftp/scp subsystem）"
+    "commit": "29ed254",
+    "message": "sync 20260918b: 业主物业费在线缴费+修2个支付bug+四文档G79",
+    "script": "D:\\workspace-java\\_nas_sync4.py（本地tar → paramiko exec stdin 管道，NAS 无 sftp/scp subsystem）"
   }
 }
