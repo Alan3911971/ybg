@@ -29,6 +29,7 @@ public class AlipayService {
     private final GlobalConfigService configService;
     private final OfflineOrderService offlineOrderService;
     private final PropertyBillPaymentService propertyBillPaymentService;
+    private final PropertyTempParkingService tempParkingService;
 
     public boolean enabled() {
         return "1".equals(configService.get("alipay_enabled", "0"));
@@ -114,6 +115,12 @@ public class AlipayService {
                 // 物业账单支付单（PB-前缀）走物业缴费确认，其余走线下订单
                 if (outTradeNo != null && outTradeNo.startsWith("PB")) {
                     propertyBillPaymentService.confirmPaid(outTradeNo, "alipay-notify");
+                } else if (outTradeNo != null && outTradeNo.startsWith("TP")) {
+                    try {
+                        tempParkingService.onPaymentSuccess(outTradeNo, params.get("trade_no"));
+                    } catch (Exception e) {
+                        log.warn("确认临停支付失败: {}", e.getMessage());
+                    }
                 } else {
                     try {
                         offlineOrderService.confirmPaid(outTradeNo, "alipay-notify");

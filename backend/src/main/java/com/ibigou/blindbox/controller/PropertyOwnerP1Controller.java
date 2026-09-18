@@ -17,6 +17,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -257,6 +258,30 @@ public class PropertyOwnerP1Controller {
                                                       @RequestParam Integer durationMinutes) {
         BigDecimal fee = tempParkingService.calculateFee(communityId, durationMinutes);
         return Result.ok(fee);
+    }
+
+    /** 访客临停缴费：plateNo + entryTime + channel=wechat|alipay，返回 paymentNo/amount/qrCode */
+    @PostMapping("/temp-parking/pay")
+    public Result<Map<String, Object>> tempParkingPay(@RequestHeader("X-Owner-Token") String token,
+                                                      @RequestParam String plateNo,
+                                                      @RequestParam String entryTime,
+                                                      @RequestParam String channel) {
+        Long ownerId = validateOwnerToken(token);
+        java.time.LocalDateTime et;
+        try {
+            et = java.time.LocalDateTime.parse(entryTime);
+        } catch (Exception e) {
+            throw new BizException("入场时间格式错误，应为 yyyy-MM-ddTHH:mm:ss");
+        }
+        return Result.ok(tempParkingService.createPayOrder(plateNo.toUpperCase(), et, channel));
+    }
+
+    /** 临停支付单状态（前端轮询） */
+    @GetMapping("/temp-parking/pay-status")
+    public Result<Map<String, Object>> tempParkingPayStatus(@RequestHeader("X-Owner-Token") String token,
+                                                            @RequestParam String paymentNo) {
+        Long ownerId = validateOwnerToken(token);
+        return Result.ok(tempParkingService.queryStatus(paymentNo));
     }
 
     // ======================== 场地预约 ========================

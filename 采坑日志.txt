@@ -939,3 +939,11 @@ G71 | %s | 浏览器/curl访问生产页面被豆包翻译器注入 <script src=
 4. 坑：①mvn 编译失败——parkingFees 接口改返回富化 List<Map> 但方法签名还是 Result<List<PropertyParkingFee>>（编译器报 incompatible types），须同步改签名；②模拟微信V2回调 XML 用 [:-8] 切片会吃掉 CDATA 结尾导致 XML 畸形（The element type "transaction_id" must be terminated）→ 改用显式字段拼 XML；回调必须带 result_code=SUCCESS 否则 handleNotify L393 直接 FAIL；③bu 会话截图 RPC 本次会话损坏（screenshot/list_tabs/CDP 全部超时，get_page_text/js 正常）→ 页面验证改用 DOM 文本，截图交付降级说明
 5. 验证：车位费 fee1（2026-10 200元）全链路：真实微信下单（weixin://wxpay/bizpayurl）→ V2签名回调 SUCCESS → pay-status paid=true → fee paid=200 status=1；后台缴费记录显示「车位费 2026-10 ¥200 已支付 22:34:02」；浏览器 DOM 验证：车位费 tab 已缴/待缴+去缴费、弹窗标题「缴纳车位费」、微信二维码轮询等待支付
 6. 遗留：支付弹窗标题、车位费/物业费共用同一支付单序列（PB前缀）；测试数据：fee1 已缴、fee2（2026-11）待缴、支付单3条（物业费5条历史+车位费2条确认1条待付）；bu 截图 RPC 待会话重置后补车位费截图
+
+【2026-09-18 G83】访客临停缴费闭环（visitor-parking.html + /p1/temp-parking/*）
+1. 盘点发现：visitor-parking.html 调 POST /p1/temp-parking/calculate 但后端是 GET（405，页面从未跑通）；后端临停服务只到 createPayment（记录型假支付单），无真实下单/无回调路由；auto-pay 绑定/解绑存在但无自动扣款逻辑
+2. 后端：PropertyTempParkingService 改显式构造器（@Lazy 注入 WxPay/Alipay 打破循环，@RequiredArgsConstructor 不传 @Lazy 到构造参数，必须显式写）；新增 createPayOrder(plateNo,entryTime,channel)（30分钟免费/5元时/30元日封顶，访客预约有效期内免费；TP+毫秒+4位随机 单号；真实 nativePay/precreate 下单）+ queryStatus；P1 控制器加 POST /temp-parking/pay、GET /temp-parking/pay-status（token 头 X-Owner-Token）；WxPay/Alipay 回调加 TP 前缀路由 → onPaymentSuccess（10% 分账）
+3. 前端：visitor-parking.html 计算改本地估算（原调后端 GET/POST 不匹配），算出金额显示「去缴费」→ 支付弹窗（复用 bills 模式）→ 微信/支付宝 → 二维码 → 2.5s 轮询 pay-status
+4. 坑：①PropertyOwnerP1Controller 新端点返回 Result<Map<...>> 但没 import java.util.Map → mvn 找不到符号，补 import；②python urllib POST XML 回调被吃（Content is not allowed in prolog）→ 用 curl --data-binary @file 直发成功；③发现并修复生产 bug：WxPayService 回调读 data.get("transactionId") 但微信 V2 实际字段是 transaction_id，交易号从未落库 → 加 transaction_id 回退（本次修复后 wx_transaction_id 正确入库）；④bu 截图 RPC 本会话仍损坏（同 G82），浏览器演示用 DOM 文本验证
+5. 验证：业主登录 → POST pay（苏L88888，2小时前入场）→ TP17897466338789571 ¥10.00 120min 微信真实下单（weixin://wxpay/bizpayurl）→ curl V2 回调 SUCCESS → 日志「Temp parking payment success splitAmount=1.00」→ pay-status paid=true → DB status=1 split=1.00 wx_transaction_id=WXTP...；浏览器 DOM：计算 ¥10.00 → 去缴费 → 弹窗「临停缴费·苏L88888」→ 微信通道 → 二维码+等待支付轮询，浏览器下单 TP17897467287341571 落库待支付
+6. 遗留：auto-pay 绑定仍无自动扣款调度（车辆出场自动扣费未做，待后续）；临停支付走平台商户号代收（G28 待拍板）

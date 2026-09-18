@@ -10,6 +10,7 @@ import com.ibigou.blindbox.repository.PropertyCompanyRepository;
 import com.ibigou.blindbox.repository.PropertyTempParkingPaymentRepository;
 import com.ibigou.blindbox.repository.PropertyVehicleLogRepository;
 import com.ibigou.blindbox.repository.PropertyVisitorVehicleRepository;
+import org.springframework.context.annotation.Lazy;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -19,13 +20,15 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
+import java.util.Random;
 
 /**
  * 物业临时停车费计算与缴费服务。
  */
 @Service
-@RequiredArgsConstructor
 @Transactional
 @Slf4j
 public class PropertyTempParkingService {
@@ -35,6 +38,27 @@ public class PropertyTempParkingService {
     private final PropertyVisitorVehicleRepository visitorVehicleRepository;
     private final PropertyAutoPayBindingRepository autoPayBindingRepository;
     private final PropertyCompanyRepository companyRepository;
+    private final WxPayService wxPayService;
+    private final AlipayService alipayService;
+    private final GlobalConfigService configService;
+
+    public PropertyTempParkingService(PropertyVehicleLogRepository vehicleLogRepository,
+                                      PropertyTempParkingPaymentRepository tempParkingPaymentRepository,
+                                      PropertyVisitorVehicleRepository visitorVehicleRepository,
+                                      PropertyAutoPayBindingRepository autoPayBindingRepository,
+                                      PropertyCompanyRepository companyRepository,
+                                      @Lazy WxPayService wxPayService,
+                                      @Lazy AlipayService alipayService,
+                                      GlobalConfigService configService) {
+        this.vehicleLogRepository = vehicleLogRepository;
+        this.tempParkingPaymentRepository = tempParkingPaymentRepository;
+        this.visitorVehicleRepository = visitorVehicleRepository;
+        this.autoPayBindingRepository = autoPayBindingRepository;
+        this.companyRepository = companyRepository;
+        this.wxPayService = wxPayService;
+        this.alipayService = alipayService;
+        this.configService = configService;
+    }
 
     /** 免费时长（分钟） */
     private static final int FREE_MINUTES = 30;
@@ -77,6 +101,80 @@ public class PropertyTempParkingService {
         }
 
         return fee.setScale(2, RoundingMode.HALF_UP);
+    }
+
+    /**
+     * 访客临停缴费（无通行记录版）：按 入场时间→当前 计算时长与费用，创建 TP- 支付单并真实下单，返回二维码。
+     */
+    @Transactional
+    public Map<String, Object> createPayOrder(String plateNo, LocalDateTime entryTime, String channel) {
+        if (!"wechat".equals(channel) && !"alipay".equals(channel)) {
+            throw new BizException("不支持的支付方式");
+        }
+        long durationMinutes = Duration.between(entryTime, LocalDateTime.now()).toMinutes();
+        if (durationMinutes < 0) {
+            durationMinutes = 0;
+        }
+        Optional<PropertyVisitorVehicle> visitorOpt = visitorVehicleRepository
+                .findByPlateNoAndStatusAndExpireTimeAfter(plateNo, 1, LocalDateTime.now());
+        boolean visitorFree = visitorOpt.isPresent();
+        BigDecimal fee = visitorFree ? BigDecimal.ZERO : calculateFee(0L, (int) durationMinutes);
+        if (fee.signum() <= 0) {
+            throw new BizException("当前停车时长在免费时段内，无需缴费");
+        }
+
+        String paymentNo = "TP" + System.currentTimeMillis() + (1000 + new Random().nextInt(9000));
+        PropertyTempParkingPayment payment = new PropertyTempParkingPayment();
+        payment.setPaymentNo(paymentNo);
+        payment.setVehicleLogId(0L);
+        payment.setPlateNo(plateNo);
+        payment.setCommunityId(0L);
+        payment.setDurationMin((int) durationMinutes);
+        payment.setFeeAmount(fee);
+        payment.setPaidAmount(fee);
+        payment.setPayChannel(channel);
+        payment.setPayTime(LocalDateTime.now());
+        payment.setStatus(0);
+        tempParkingPaymentRepository.save(payment);
+
+        String notifyUrl = configService.get("IBIGOU_DOMAIN", "https://ybgtc.com");
+        String desc = "临停缴费-" + plateNo;
+        Map<String, Object> result = new HashMap<>();
+        result.put("paymentNo", paymentNo);
+        result.put("amount", fee);
+        result.put("plateNo", plateNo);
+        result.put("durationMin", (int) durationMinutes);
+        result.put("status", 0);
+        if ("wechat".equals(channel)) {
+            String qrCode = wxPayService.nativePay(paymentNo, fee, desc, notifyUrl + "/api/pay/wx/notify");
+            if (qrCode == null) {
+                throw new BizException("微信支付下单失败，请稍后重试");
+            }
+            result.put("qrCode", qrCode);
+        } else {
+            String qrCode = alipayService.precreate(paymentNo, fee, desc, notifyUrl + "/api/pay/alipay/notify");
+            if (qrCode == null) {
+                throw new BizException("支付宝支付下单失败，请稍后重试");
+            }
+            result.put("qrCode", qrCode);
+        }
+        log.info("临停支付单创建: paymentNo={}, plateNo={}, minutes={}, fee={}, channel={}",
+                paymentNo, plateNo, durationMinutes, fee, channel);
+        return result;
+    }
+
+    /**
+     * 查询临停支付单状态（前端轮询）。
+     */
+    public Map<String, Object> queryStatus(String paymentNo) {
+        PropertyTempParkingPayment payment = tempParkingPaymentRepository.findByPaymentNo(paymentNo)
+                .orElseThrow(() -> new BizException("支付单不存在"));
+        Map<String, Object> m = new HashMap<>();
+        m.put("paymentNo", paymentNo);
+        m.put("status", payment.getStatus());
+        m.put("paid", payment.getStatus() != null && payment.getStatus() == 1);
+        m.put("amount", payment.getPaidAmount());
+        return m;
     }
 
     /**

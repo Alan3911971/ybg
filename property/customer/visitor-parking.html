@@ -146,6 +146,23 @@ select.input{appearance:none;-webkit-appearance:none;background-image:url("data:
 /* Animations */
 @keyframes fadeInUp{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:translateY(0)}}
 @keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+/* Pay sheet (temp parking) */
+.pay-mask{position:fixed;inset:0;background:rgba(15,23,42,.55);z-index:120;backdrop-filter:blur(2px);}
+.pay-sheet{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);width:88%;max-width:360px;background:var(--surface);border-radius:20px;z-index:130;box-shadow:0 24px 60px rgba(15,23,42,.3);overflow:hidden;}
+.pay-head{display:flex;align-items:center;gap:8px;padding:18px 20px 12px;}
+.pay-title{font-size:16px;font-weight:800;flex:1;}
+.pay-amount{font-size:20px;font-weight:800;color:var(--pri);}
+.pay-close{width:30px;height:30px;border:none;border-radius:50%;background:var(--pri-bg);color:var(--pri);font-size:14px;cursor:pointer;}
+.pay-channels{display:flex;flex-direction:column;gap:10px;padding:6px 20px 20px;}
+.pay-channel{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border:1px solid #eef2f7;border-radius:14px;background:#fff;font-size:14px;font-weight:600;cursor:pointer;}
+.ch-ic{display:inline-block;width:34px;height:34px;line-height:34px;border-radius:10px;font-size:16px;text-align:center;margin-right:10px;}
+.ch-arrow{color:var(--text-3);}
+.pay-qr{padding:10px 20px 20px;text-align:center;}
+.qr-box{width:220px;height:220px;margin:6px auto;padding:8px;border:1px solid #eef2f7;border-radius:14px;display:flex;align-items:center;justify-content:center;background:#fff;}
+.qr-box img{width:100%;height:100%;}
+.qr-tip{font-size:14px;font-weight:700;margin-top:4px;}
+.qr-sub{font-size:12px;color:var(--text-3);margin-top:4px;}
+.pay-status{font-size:13px;font-weight:700;color:var(--pri);margin:10px 0;}
 </style>
 </head>
 <body>
@@ -197,6 +214,7 @@ select.input{appearance:none;-webkit-appearance:none;background-image:url("data:
     <div class="calc-result" id="calcResult">
       <div class="label">预估临停费用</div>
       <div class="amount"><span class="sym">¥</span><span id="calcAmt">0.00</span></div>
+      <button id="btnPayTemp" class="btn btn-md btn-primary btn-block" style="margin-top:14px;display:none">去缴费</button>
     </div>
   </div>
 
@@ -205,6 +223,25 @@ select.input{appearance:none;-webkit-appearance:none;background-image:url("data:
   <div id="resList"></div>
 </div>
 
+<div class="pay-mask" id="payMask" style="display:none"></div>
+<div class="pay-sheet" id="paySheet" style="display:none">
+  <div class="pay-head">
+    <span class="pay-title" id="payTitle">临停缴费</span>
+    <span class="pay-amount" id="payAmount">¥0.00</span>
+    <button class="pay-close" onclick="closePay()">✕</button>
+  </div>
+  <div class="pay-channels" id="payChannels">
+    <button class="pay-channel" onclick="startPay('wechat')"><span><span class="ch-ic">💚</span>微信支付</span><span class="ch-arrow">›</span></button>
+    <button class="pay-channel" onclick="startPay('alipay')"><span><span class="ch-ic">💙</span>支付宝</span><span class="ch-arrow">›</span></button>
+  </div>
+  <div class="pay-qr" id="payQr" style="display:none">
+    <div class="qr-box"><img id="payQrImg" alt="支付二维码"></div>
+    <div class="qr-tip" id="payQrTip">请使用微信扫一扫完成付款</div>
+    <div class="qr-sub">支付成功后将自动确认，请勿关闭页面</div>
+    <div class="pay-status" id="payStatusText">等待支付...</div>
+    <button class="btn btn-secondary btn-md" onclick="closePay()">稍后支付</button>
+  </div>
+</div>
 <!-- Bottom Sheet Confirm Dialog -->
 <div class="mask" id="confirmMask">
   <div class="dialog">
@@ -301,42 +338,83 @@ $("btnSubmit").addEventListener("click",async function(){
   $("btnSubmit").disabled=false;$("btnSubmit").textContent="提交登记";
 });
 
-// Temp parking fee calculator
-$("btnCalc").addEventListener("click",async function(){
+// Temp parking fee calculator (本地估算，金额以支付下单为准)
+function estFee(minutes){
+  const FREE=30,HOUR=5,CAP=30;
+  if(minutes<=FREE)return 0;
+  const billable=minutes-FREE;
+  const hours=Math.ceil(billable/60);
+  let fee=hours*HOUR;
+  if(minutes>1440){const days=Math.ceil(minutes/1440);const cap=days*CAP;if(fee>cap)fee=cap;}
+  else if(fee>CAP)fee=CAP;
+  return fee;
+}
+$("btnCalc").addEventListener("click",function(){
   const plate=($("calcPlate").value||"").trim().toUpperCase();
   const entryTime=$("calcEntry").value;
   if(!plate){toast("请输入车牌号码","warning");$("calcPlate").focus();return}
   if(!entryTime){toast("请选择入场时间","warning");return}
-  $("btnCalc").disabled=true;$("btnCalc").textContent="计算中...";
-  try{
-    const r=await post("/p1/temp-parking/calculate",{plateNo:plate,entryTime:entryTime});
-    if(r.code===0&&r.data!=null){
-      const amt=Number(r.data.amount||r.data.fee||r.data.totalFee||r.data||0).toFixed(2);
-      $("calcAmt").textContent=amt;
-      $("calcResult").style.display="block";
-    }else{
-      toast(r.msg||"计算失败，请稍后重试","warning");
-      // Fallback: simple calculation
-      const entry=new Date(entryTime).getTime();
-      const now=Date.now();
-      const mins=Math.max(1,Math.round((now-entry)/60000));
-      const hours=Math.max(0,(mins-30)/60);
-      const fee=hours>0?(Math.ceil(hours)*2).toFixed(2):"0.00";
-      $("calcAmt").textContent=fee;
-      $("calcResult").style.display="block";
-    }
-  }catch(e){
-    // Fallback
-    const entry=new Date(entryTime).getTime();
-    const now=Date.now();
-    const mins=Math.max(1,Math.round((now-entry)/60000));
-    const hours=Math.max(0,(mins-30)/60);
-    const fee=hours>0?(Math.ceil(hours)*2).toFixed(2):"0.00";
-    $("calcAmt").textContent=fee;
-    $("calcResult").style.display="block";
-  }
-  $("btnCalc").disabled=false;$("btnCalc").textContent="计算预估费用";
+  const entry=new Date(entryTime).getTime();
+  const now=Date.now();
+  if(entry>now){toast("入场时间不能晚于当前时间","warning");return}
+  const mins=Math.max(0,Math.round((now-entry)/60000));
+  const fee=estFee(mins);
+  $("calcAmt").textContent=fee.toFixed(2);
+  $("calcResult").style.display="block";
+  const btn=$("btnPayTemp");
+  if(fee<=0){btn.style.display="none";toast("当前停车时长在免费时段（30分钟）内","success");}
+  else{btn.style.display="block";btn.dataset.plate=plate;btn.dataset.entry=entryTime;}
 });
+
+// ======================== 临停在线缴费 ========================
+let _payTimer=null,_payPaymentNo=null,_payCtx=null;
+window.payTempParking=function(){
+  const btn=$("btnPayTemp");
+  const plate=btn.dataset.plate||"";
+  const entry=btn.dataset.entry||"";
+  if(!plate||!entry){toast("请先计算费用","warning");return}
+  _payPaymentNo=null;
+  $("payTitle").textContent="临停缴费·"+plate;
+  $("payAmount").textContent="¥"+$("calcAmt").textContent;
+  if(_payTimer){clearInterval(_payTimer);_payTimer=null}
+  $("payChannels").style.display="flex";
+  $("payQr").style.display="none";
+  $("payMask").style.display="block";
+  $("paySheet").style.display="block";
+  _payCtx={plate:plate,entry:entry};
+};
+window.closePay=function(){
+  $("payMask").style.display="none";
+  $("paySheet").style.display="none";
+  if(_payTimer){clearInterval(_payTimer);_payTimer=null}
+};
+window.startPay=async function(channel){
+  if(!_payCtx)return;
+  $("payStatusText").textContent="正在下单...";
+  const q="plateNo="+encodeURIComponent(_payCtx.plate)+"&entryTime="+encodeURIComponent(_payCtx.entry)+"&channel="+channel;
+  const r=await req("/p1/temp-parking/pay?"+q,"POST",{});
+  if(r.code!==0){toast(r.msg||"下单失败","danger");closePay();return}
+  _payPaymentNo=r.data.paymentNo;
+  $("payAmount").textContent="¥"+Number(r.data.amount||0).toFixed(2);
+  const qrData=r.data.qrCode||"";
+  $("payQrImg").src="https://api.qrserver.com/v1/create-qr-code/?size=240x240&data="+encodeURIComponent(qrData);
+  $("payQrTip").textContent=channel==="wechat"?"请使用微信扫一扫完成付款":"请使用支付宝扫一扫完成付款";
+  $("payChannels").style.display="none";
+  $("payQr").style.display="block";
+  $("payStatusText").textContent="等待支付，成功后自动确认...";
+  _payTimer=setInterval(pollPayStatus,2500);
+};
+async function pollPayStatus(){
+  if(!_payPaymentNo)return;
+  const r=await get("/p1/temp-parking/pay-status?paymentNo="+encodeURIComponent(_payPaymentNo));
+  if(r.code===0&&r.data&&r.data.paid){
+    if(_payTimer){clearInterval(_payTimer);_payTimer=null}
+    $("payStatusText").textContent="✅ 缴费成功";
+    toast("临停缴费成功","success");
+    setTimeout(function(){closePay();$("btnPayTemp").style.display="none";$("calcPlate").value="";},900);
+  }
+}
+$("btnPayTemp").addEventListener("click",function(){payTempParking()});
 
 // Status badge
 const resStatusMap={"active":{cls:"active",text:"有效"},"expired":{cls:"expired",text:"已过期"},"cancelled":{cls:"cancelled",text:"已取消"}};

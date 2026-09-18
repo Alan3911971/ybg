@@ -37,6 +37,7 @@ public class WxPayService {
     private final MemberService memberService;
     private final OfflineOrderService offlineOrderService;
     private final PropertyBillPaymentService propertyBillPaymentService;
+    private final PropertyTempParkingService tempParkingService;
 
     private static final String UNIFIED_ORDER_URL = "https://api.mch.weixin.qq.com/pay/unifiedorder";
     private static final String ORDER_QUERY_URL = "https://api.mch.weixin.qq.com/pay/orderquery";
@@ -394,10 +395,15 @@ public class WxPayService {
             }
             String outTradeNo = data.get("out_trade_no");
             String transactionId = data.get("transactionId");
+            if (transactionId == null || transactionId.isBlank()) {
+                transactionId = data.get("transaction_id");
+            }
             log.info("微信V2回调成功，订单={}, 微信订单号={}", outTradeNo, transactionId);
             // 根据订单号前缀判断订单类型
             if (outTradeNo != null && outTradeNo.startsWith("PB")) {
                 propertyBillPaymentService.confirmPaid(outTradeNo, "wechat");
+            } else if (outTradeNo != null && outTradeNo.startsWith("TP")) {
+                tempParkingService.onPaymentSuccess(outTradeNo, transactionId);
             } else if (outTradeNo != null && outTradeNo.startsWith("OFF-")) {
                 offlineOrderService.confirmPaid(outTradeNo, "wechat");
             } else {
