@@ -146,6 +146,7 @@ tr:hover td{background:var(--pri-bg);}
         <button class="tab-btn active" data-tab="bills">账单列表</button>
         <button class="tab-btn" data-tab="parking">车位费</button>
         <button class="tab-btn" data-tab="vehicleLogs">通行日志</button>
+        <button class="tab-btn" data-tab="payments">缴费记录</button>
       </div>
 
       <!-- Tab: Bills -->
@@ -215,6 +216,34 @@ tr:hover td{background:var(--pri-bg);}
           </div>
         </div>
       </div>
+
+      <!-- Tab: Payments -->
+      <div class="tab-panel" id="tab-payments">
+        <div class="card">
+          <div class="sec"><span class="ic">💰</span>缴费记录查询</div>
+          <div class="filter-bar">
+            <select class="select" id="payCompanyId"><option value="">全部物业公司</option></select>
+            <select class="select" id="payStatus">
+              <option value="">全部状态</option>
+              <option value="0">待支付</option>
+              <option value="1">已支付</option>
+              <option value="2">已关闭</option>
+            </select>
+            <input class="input" id="payKeyword" placeholder="业主名/房间号/单号">
+            <button class="btn-sm btn-primary" id="btnPaySearch">查询</button>
+            <button class="btn-sm btn-primary" id="btnPayRefresh">刷新</button>
+          </div>
+        </div>
+        <div class="card">
+          <div class="sec"><span class="ic">💰</span>缴费流水</div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>支付单号</th><th>业主</th><th>房间</th><th>账单周期</th><th>金额</th><th>渠道</th><th>状态</th><th>支付时间</th></tr></thead>
+              <tbody id="payTable"><tr><td colspan="8" class="empty">加载中...</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 </div>
@@ -260,7 +289,7 @@ tr:hover td{background:var(--pri-bg);}
     .then(function(res){
       if (res.code === 0 && res.data) {
         companiesData = res.data;
-        var sels = [document.getElementById('companyId'), document.getElementById('parkingCompanyId')];
+        var sels = [document.getElementById('companyId'), document.getElementById('parkingCompanyId'), document.getElementById('payCompanyId')];
         sels.forEach(function(sel){
           res.data.forEach(function(c){
             var opt = document.createElement('option');
@@ -463,6 +492,51 @@ tr:hover td{background:var(--pri-bg);}
 
   document.getElementById('btnVehicleSearch').onclick = loadVehicleLogs;
   document.getElementById('btnVehicleRefresh').onclick = function(){ document.getElementById('vehicleCommunityId').value = ''; document.getElementById('vehicleLogTable').innerHTML = '<tr><td colspan="7" class="empty">请选择小区后查询</td></tr>'; };
+
+  // --- Payments (缴费记录对账) ---
+  function payStatusBadge(ps){
+    var map = {'0':'<span class="badge gray">待支付</span>','1':'<span class="badge green">已支付</span>','2':'<span class="badge gray">已关闭</span>'};
+    return map[String(ps)] || '<span class="badge gray">' + (ps||'--') + '</span>';
+  }
+  function loadPayments(){
+    var params = [];
+    var cid = document.getElementById('payCompanyId').value;
+    var st = document.getElementById('payStatus').value;
+    var kw = document.getElementById('payKeyword').value.trim();
+    if (cid) params.push('companyId=' + encodeURIComponent(cid));
+    if (st !== '') params.push('status=' + encodeURIComponent(st));
+    if (kw) params.push('keyword=' + encodeURIComponent(kw));
+    var url = '/api/property/admin/payments' + (params.length ? '?' + params.join('&') : '');
+    fetch(url, { headers: { 'X-Property-Token': token } })
+      .then(function(r){ return r.json(); })
+      .then(function(res){
+        var tbody = document.getElementById('payTable');
+        var list = (res.data && res.data.content) ? res.data.content : res.data;
+        if (res.code !== 0 || !list || list.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="8" class="empty">暂无数据</td></tr>';
+          return;
+        }
+        var html = '';
+        list.forEach(function(pm){
+          var ch = pm.channel === 'wechat' ? '微信' : (pm.channel === 'alipay' ? '支付宝' : (pm.channel || '--'));
+          var pt = pm.payTime ? String(pm.payTime).replace('T', ' ').slice(0, 19) : '--';
+          html += '<tr>' +
+            '<td>' + (pm.paymentNo || '--') + '</td>' +
+            '<td>' + (pm.ownerName || pm.ownerId || '--') + '</td>' +
+            '<td>' + (pm.roomNo || '--') + '</td>' +
+            '<td>' + (pm.billPeriod || '--') + '</td>' +
+            '<td>¥' + Number(pm.amount || 0).toFixed(2) + '</td>' +
+            '<td>' + ch + '</td>' +
+            '<td>' + payStatusBadge(pm.status) + '</td>' +
+            '<td>' + pt + '</td></tr>';
+        });
+        tbody.innerHTML = html;
+      })
+      .catch(function(){ document.getElementById('payTable').innerHTML = '<tr><td colspan="8" class="empty">加载失败</td></tr>'; });
+  }
+  document.getElementById('btnPaySearch').onclick = loadPayments;
+  document.getElementById('btnPayRefresh').onclick = function(){ document.getElementById('payCompanyId').value=''; document.getElementById('payStatus').value=''; document.getElementById('payKeyword').value=''; loadPayments(); };
+  loadPayments();
 })();
 </script>
 </body>

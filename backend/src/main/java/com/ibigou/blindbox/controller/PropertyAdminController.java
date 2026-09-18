@@ -61,6 +61,7 @@ public class PropertyAdminController {
     private final PropertyDeviceAlertRepository deviceAlertRepository;
     private final PropertyBuildingRepository buildingRepository;
     private final PropertyRoomRepository roomRepository;
+    private final PropertyPaymentRepository paymentRepository;
 
     private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 
@@ -298,6 +299,64 @@ public class PropertyAdminController {
         }
         return Result.ok(billRepository.findAll(pageable));
     }
+
+    // ---------------- 缴费记录（对账） ----------------
+
+    @GetMapping("/payments")
+    public Result<?> payments(@RequestHeader("X-Property-Token") String token,
+                              @RequestParam(required = false) Long companyId,
+                              @RequestParam(required = false) Integer status,
+                              @RequestParam(required = false) String keyword,
+                              @RequestParam(defaultValue = "0") int page,
+                              @RequestParam(defaultValue = "20") int size) {
+        validateToken(token);
+        org.springframework.data.domain.Pageable pageable = org.springframework.data.domain.PageRequest.of(page, size);
+        org.springframework.data.domain.Page<PropertyPayment> p;
+        if (companyId != null && status != null) {
+            p = paymentRepository.findByCompanyIdAndStatus(companyId, status, pageable);
+        } else if (companyId != null) {
+            p = paymentRepository.findByCompanyId(companyId, pageable);
+        } else if (status != null) {
+            p = paymentRepository.findByStatus(status, pageable);
+        } else {
+            p = paymentRepository.findAll(pageable);
+        }
+        List<Map<String, Object>> items = p.getContent().stream().map(pm -> {
+            Map<String, Object> m = new LinkedHashMap<>();
+            m.put("paymentNo", pm.getPaymentNo());
+            m.put("ownerId", pm.getOwnerId());
+            m.put("roomId", pm.getRoomId());
+            m.put("billId", pm.getBillId());
+            m.put("billNo", pm.getBillNo());
+            m.put("amount", pm.getAmount());
+            m.put("channel", pm.getChannel());
+            m.put("status", pm.getStatus());
+            m.put("payTime", pm.getPayTime());
+            m.put("createTime", pm.getCreateTime());
+            ownerRepository.findById(pm.getOwnerId()).ifPresent(o -> m.put("ownerName", o.getOwnerName()));
+            roomRepository.findById(pm.getRoomId()).ifPresent(r -> m.put("roomNo", r.getRoomNo()));
+            billRepository.findById(pm.getBillId()).ifPresent(b -> m.put("billPeriod", b.getBillPeriod()));
+            return m;
+        }).collect(Collectors.toList());
+        if (keyword != null && !keyword.isBlank()) {
+            String kw = keyword.trim();
+            items = items.stream().filter(m -> {
+                String ownerName = String.valueOf(m.getOrDefault("ownerName", ""));
+                String roomNo = String.valueOf(m.getOrDefault("roomNo", ""));
+                String billNo = String.valueOf(m.getOrDefault("billNo", ""));
+                String paymentNo = String.valueOf(m.getOrDefault("paymentNo", ""));
+                return ownerName.contains(kw) || roomNo.contains(kw) || billNo.contains(kw) || paymentNo.contains(kw);
+            }).collect(Collectors.toList());
+        }
+        Map<String, Object> result = new LinkedHashMap<>();
+        result.put("content", items);
+        result.put("totalElements", p.getTotalElements());
+        result.put("totalPages", p.getTotalPages());
+        result.put("number", p.getNumber());
+        result.put("size", p.getSize());
+        return Result.ok(result);
+    }
+
 
     // ---------------- 小区管理 ----------------
 

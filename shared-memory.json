@@ -796,7 +796,7 @@
     }
   ],
   "project_20260918": "需求1/2/3完成；家庭成员扫码绑定闭环；后台窄屏防变形修复",
-  "payment_20260918": "业主在线缴纳物业费闭环（bills.html去缴费→真实微信/支付宝二维码→回调确认账单已缴）；新表 property_payment；修2个支付bug：配置键名驼峰/下划线不匹配（补3条别名键）、WxPayService XML字段 mchId→mch_id；演示业主13851918986/123456；演示截图 _demo_0918/",
+  "payment_20260918": "业主在线缴纳物业费闭环（已上线）+物业后台缴费记录对账视图（G80）：admin/bills.html 第4tab 缴费记录，GET /api/property/admin/payments?companyId/status/keyword 富化业主/房间/周期；property_payment 表5条测试数据；修2个支付bug（配置键名、mch_id）；演示业主13851918986/123456；截图 _demo_0918/{bills_list,pay_qr,admin_payments,admin_payments_paid}.png",
   "toolchain": {
     "python": "Python 3 + paramiko（pip install paramiko），所有 SSH/部署/SFTP 脚本依赖",
     "jdk": "D:\\devtools\\jdk（Temurin 17.0.20.1）",
@@ -812,15 +812,15 @@
     "qrcodejs_inline": "D:\\workspace-java\\_qrcodejs_inline.js（19928B 公共副本，从 dashboard.html 提取）"
   },
   "github_backup_20260918": {
-    "commit": "d9d4765926449c08ca9fb50d227e4633b2a2cacb",
+    "commit": "8a08272ad196c7025a73d348a101867bbf43fbf2",
     "files": 483,
     "scope": "backend + property + customer + 四文档 + api.js/choose.html",
     "script": "D:\\workspace-java\\_push_gh_full.py（用法：$env:GH_PAT=<token>; python _push_gh_full.py）",
     "note": "含业主物业费缴费+支付bug修复；token 见 _addpit53.py；旧 _push_gh.py 勿用"
   },
   "nas_backup_20260918": {
-    "commit": "29ed254",
-    "message": "sync 20260918b: 业主物业费在线缴费+修2个支付bug+四文档G79",
+    "commit": "2070828",
+    "message": "sync 20260918b(final): 业主物业费在线缴费+修2个支付bug+四文档G79",
     "script": "D:\\workspace-java\\_nas_sync4.py（本地tar → paramiko exec stdin 管道，NAS 无 sftp/scp subsystem）"
   }
 }

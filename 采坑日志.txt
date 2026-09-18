@@ -915,3 +915,19 @@ G71 | %s | 浏览器/curl访问生产页面被豆包翻译器注入 <script src=
 7. 坑：paramiko exec_command 启动 nohup/setsid 后台进程时 stdout 管道不关闭导致 read 超时（偶发）→ 启动步骤 try/except 容错，以进程轮询为准
 8. 验证：bill 1 微信150元全链路（真实下单 weixin://wxpay/bizpayurl → 模拟V2签名回调 return SUCCESS → 账单 paid=150 status=1）；支付宝分支真实预下单返回 qr.alipay.com；演示业主 13851918986/123456（密码已复位）；页面演示截图 _demo_0918/{bills_list,pay_qr}.png
 9. 遗留：物业费收款走平台商户号（微信1440071102/支付宝），线下结算给物业；G28「物业独立收款码/独立商户」待用户拍板
+
+【2026-09-18 G80】物业后台「缴费记录」对账视图
+1. 功能：admin/bills.html 新增第4个 tab「缴费记录」——按物业公司/状态(待支付/已支付/已关闭)/关键词(业主名/房间号/单号)筛选缴费流水；新接口 GET /api/property/admin/payments?companyId=&status=&keyword=&page=&size=，返回 property_payment 分页并富化 ownerName/roomNo/billPeriod（owner/room/bill 三个 repository findById 补字段）
+2. 后端：PropertyPaymentRepository 新增 findByCompanyId/findByCompanyIdAndStatus/findByStatus 三个分页方法；PropertyAdminController 注入 paymentRepository 并新增 /payments endpoint（插在「小区管理」小节前）
+3. 坑：脚本非幂等——第一次运行已插入 Page/Pageable import 后，原串不再匹配导致 re-run 断言失败 → 改幂等守卫（if not in s 才替换）；文件 CRLF 时锚点必须用 
+ 拼接（NL 自适应）
+4. 验证：生产接口返回5条测试缴费（微信150已确认 status=1 pay_time 2026-09-18 17:12:38 富化 测试业主/101/2026-09）；status=1 过滤精确1条；关键词按业主名/房间号过滤生效；bu 浏览器演示截图 _demo_0918/admin_payments{,_paid}.png
+5. 遗留：缴费记录分页大小默认20，关键词过滤作用于当前页（内存过滤，未下推 SQL）；G28 独立商户待拍板
+
+【2026-09-18 G80】物业后台「缴费记录」对账视图
+1. 功能：admin/bills.html 新增第4个 tab「缴费记录」——按物业公司/状态(待支付/已支付/已关闭)/关键词(业主名/房间号/单号)筛选缴费流水；新接口 GET /api/property/admin/payments?companyId=&status=&keyword=&page=&size=，返回 property_payment 分页并富化 ownerName/roomNo/billPeriod（owner/room/bill 三个 repository findById 补字段）
+2. 后端：PropertyPaymentRepository 新增 findByCompanyId/findByCompanyIdAndStatus/findByStatus 三个分页方法；PropertyAdminController 注入 paymentRepository 并新增 /payments endpoint（插在「小区管理」小节前）
+3. 坑：脚本非幂等——第一次运行已插入 Page/Pageable import 后，原串不再匹配导致 re-run 断言失败 → 改幂等守卫（if not in s 才替换）；文件 CRLF 时锚点必须用 
+ 拼接（NL 自适应）
+4. 验证：生产接口返回5条测试缴费（微信150已确认 status=1 pay_time 2026-09-18 17:12:38 富化 测试业主/101/2026-09）；status=1 过滤精确1条；关键词按业主名/房间号过滤生效；bu 浏览器演示截图 _demo_0918/admin_payments{,_paid}.png
+5. 遗留：缴费记录分页大小默认20，关键词过滤作用于当前页（内存过滤，未下推 SQL）；G28 独立商户待拍板
