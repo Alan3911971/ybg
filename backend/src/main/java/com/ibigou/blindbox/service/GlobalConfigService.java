@@ -67,11 +67,12 @@ public class GlobalConfigService {
             }
         } else if (java.util.Set.of(
                 "free_trial_days", "monthly_price", "renew_gift_switch", "renew_gift_months",
-                "wx_pay_mch_id", "wx_pay_app_id", "wx_pay_api_key",
+                "wx_pay_mchId", "wx_pay_appId", "wx_pay_api_key",
                 "wx_pay_enabled", "wx_pay_api_v3_key", "wx_pay_cert_path", "wx_pay_cert_serial",
                 "cross_store_return_percent", "test_pay_confirm_enabled",
-                "identity_qr_secret", "coupon_valid_days", "wx_pay_pub_key_id", "wx_pay_pub_key_path",
-                "customer_sms_login_required").contains(key)) {
+                "identity_qr_secret", "coupon_valid_days", "wx_pay_pub_keyId", "wx_pay_pub_key_path",
+                "customer_sms_login_required", "wx_pay_app_secret",
+                "xcx_appId", "xcx_app_secret").contains(key)) {
             if ("wx_pay_enabled".equals(key) && !"0".equals(value) && !"1".equals(value)) {
                 throw new BizException("微信支付开关只能为 0 或 1");
             }
@@ -107,6 +108,10 @@ public class GlobalConfigService {
                     c.setConfigKey(key);
                     return c;
                 });
+        // 新增键时补 update_time（列 NOT NULL，无数据库默认值）
+        if (cfg.getUpdateTime() == null) {
+            cfg.setUpdateTime(java.time.LocalDateTime.now());
+        }
         cfg.setConfigValue(cryptoService.isSensitive(key) ? cryptoService.encrypt(value) : value);
         cfg.setRemark(remark);
         configRepository.save(cfg);

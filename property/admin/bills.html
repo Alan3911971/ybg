@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#4f46e5">
+<title>账单管理 · 物业后台 · 宜必购</title>
+<link rel="icon" href="data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='80' font-size='90'%3E%F0%9F%8F%A2%3C/text%3E%3C/svg%3E">
+<style>
+:root{--pri:#4f46e5;--pri-hover:#4338ca;--pri-light:#818cf8;--pri-bg:#eef2ff;--pri-grad:linear-gradient(135deg,#4f46e5 0%,#7c3aed 100%);--gold:#f59e0b;--gold-bg:#fffbeb;--success:#10b981;--success-bg:#ecfdf5;--danger:#ef4444;--danger-bg:#fef2f2;--warning:#f59e0b;--warning-bg:#fffbeb;--dark:#0f172a;--dark-2:#1e293b;--text:#1e293b;--text-2:#64748b;--text-3:#94a3b8;--bg:#f8fafc;--surface:#ffffff;--border:#e2e8f0;--divider:#f1f5f9;--shadow-sm:0 1px 2px rgba(0,0,0,.04);--shadow-md:0 4px 6px -1px rgba(0,0,0,.05),0 2px 4px -2px rgba(0,0,0,.05);--shadow-lg:0 10px 15px -3px rgba(0,0,0,.06),0 4px 6px -4px rgba(0,0,0,.04);--shadow-card:0 1px 3px rgba(0,0,0,.04),0 8px 24px rgba(0,0,0,.04);--r-sm:8px;--r-md:12px;--r-lg:16px;--r-xl:20px;--sidebar-w:272px;--ease:cubic-bezier(.4,0,.2,1);}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+html,body{font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei","Helvetica Neue",Arial,sans-serif;color:var(--text);background:var(--bg);-webkit-font-smoothing:antialiased;height:100%;}
+a{color:inherit;text-decoration:none;}input,select,button{font-size:14px;font-family:inherit;}
+.layout{display:flex;min-height:100vh;}
+.sidebar{width:var(--sidebar-w);background:linear-gradient(180deg,#0f172a 0%,#1e293b 100%);display:flex;flex-direction:column;position:fixed;top:0;left:0;bottom:0;z-index:40;transition:transform .25s var(--ease);}
+.sidebar .brand{padding:24px 20px;display:flex;align-items:center;gap:12px;border-bottom:1px solid rgba(255,255,255,.08);}
+.sidebar .brand .logo{width:40px;height:40px;border-radius:var(--r-md);background:var(--pri-grad);color:#fff;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;box-shadow:0 4px 12px rgba(79,70,229,.4);}
+.sidebar .brand h1{font-size:16px;font-weight:700;line-height:1.3;color:#fff;}
+.sidebar nav{flex:1;overflow-y:auto;padding:16px 12px;}
+.sidebar nav .nav-section{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.8px;color:rgba(255,255,255,.3);padding:16px 12px 8px;margin-top:4px;}
+.sidebar nav a{height:44px;padding:0 16px;border-radius:10px;font-size:14px;color:rgba(255,255,255,.55);font-weight:500;transition:all .2s;margin-bottom:2px;display:flex;align-items:center;gap:12px;border-left:none;}
+.sidebar nav a:hover{color:rgba(255,255,255,.9);background:rgba(255,255,255,.06);}
+.sidebar nav a.active{color:#fff;background:rgba(79,70,229,.15);font-weight:600;border-left:3px solid #818cf8;border-radius:0 10px 10px 0;}
+.sidebar nav a .icon{font-size:16px;width:22px;text-align:center;flex-shrink:0;}
+.sidebar .logout-area{padding:16px 12px;border-top:1px solid rgba(255,255,255,.08);}
+.sidebar .logout-area a{color:var(--danger);justify-content:center;border-left:none;}
+.sidebar .logout-area a:hover{background:rgba(239,68,68,.1);}
+.main{margin-left:var(--sidebar-w);flex:1;min-height:100vh;}
+.topbar{background:var(--surface);border-bottom:1px solid var(--border);padding:16px 28px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:30;box-shadow:var(--shadow-sm);}
+.page-header h2{font-size:28px;font-weight:800;letter-spacing:-.5px;line-height:1.2;}
+.page-header .sub{font-size:14px;color:var(--text-2);margin-top:6px;}
+.topbar .page-title{font-size:28px;font-weight:800;color:var(--text);letter-spacing:-.5px;line-height:1.2;}
+.topbar .menu-toggle{display:none;background:none;border:none;font-size:22px;cursor:pointer;padding:4px 8px;color:var(--text-2);}
+.main{margin-left:var(--sidebar-w);flex:1;padding:32px 40px;max-width:1280px;margin:0 auto;animation:fadeInUp .4s var(--ease);}
+@keyframes fadeInUp{from{opacity:0;transform:translateY(12px);}to{opacity:1;transform:translateY(0);}}
+.sidebar-overlay{display:none;position:fixed;inset:0;background:rgba(15,23,42,.5);backdrop-filter:blur(4px);z-index:35;}
+@media(max-width:768px){.sidebar{transform:translateX(-100%);}.sidebar.open{transform:translateX(0);}.sidebar-overlay.show{display:block;}.main{margin-left:0;}.topbar .menu-toggle{display:block;}}
+.card{background:var(--surface);border-radius:var(--r-lg);padding:24px;margin-bottom:20px;box-shadow:var(--shadow-card);border:none;}
+.sec{display:flex;align-items:center;gap:10px;font-weight:700;margin:0 0 16px;font-size:16px;color:var(--text);}
+.sec .ic{width:32px;height:32px;border-radius:var(--r-sm);background:var(--pri-bg);color:var(--pri);display:inline-flex;align-items:center;justify-content:center;font-size:16px;flex:0 0 32px;}
+.input,.select{height:42px;padding:0 16px;border:1.5px solid var(--border);border-radius:var(--r-sm);font-size:14px;color:var(--text);background:var(--surface);transition:border-color .2s,box-shadow .2s;-webkit-appearance:none;appearance:none;outline:none;}
+.input:focus,.select:focus{border-color:var(--pri);box-shadow:0 0 0 3px rgba(79,70,229,.1);}
+.tabs{display:flex;gap:4px;margin-bottom:20px;border-bottom:2px solid var(--divider);}
+.tab-btn{padding:12px 20px;font-size:14px;font-weight:500;color:var(--text-2);background:none;border:none;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;transition:color .15s,border-color .15s;}
+.tab-btn:hover{color:var(--pri);}
+.tab-btn.active{color:var(--pri);border-bottom-color:var(--pri);font-weight:600;}
+.tab-panel{display:none;}.tab-panel.active{display:block;}
+.filter-bar{display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;align-items:center;}
+.filter-bar .select{min-width:150px;}.filter-bar .input{min-width:140px;}
+.table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;border-radius:var(--r-lg);border:1px solid var(--border);box-shadow:var(--shadow-sm);}
+table{width:100%;border-collapse:collapse;font-size:13px;min-width:800px;}
+th{text-align:left;padding:14px 20px;background:var(--bg);color:var(--text-2);font-weight:600;font-size:12px;text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--border);white-space:nowrap;}
+td{padding:16px 20px;border-bottom:1px solid var(--divider);color:var(--text);white-space:nowrap;}
+tr:nth-child(even) td{background:#fafbfd;}
+tr:hover td{background:var(--pri-bg);}
+.badge{display:inline-flex;align-items:center;padding:4px 12px;border-radius:999px;font-size:12px;font-weight:600;}
+.badge.green{background:var(--success-bg);color:var(--success);}
+.badge.yellow{background:var(--warning-bg);color:var(--warning);}
+.badge.red{background:var(--danger-bg);color:var(--danger);}
+.badge.blue{background:rgba(79,70,229,.1);color:#4f46e5;}
+.badge.purple{background:rgba(124,58,237,.1);color:#7c3aed;}
+.badge.gray{background:var(--divider);color:var(--text-2);}
+.empty{padding:32px 20px;text-align:center;color:var(--text-3);font-size:13px;}
+.toast-container{position:fixed;top:20px;right:20px;z-index:200;display:flex;flex-direction:column;gap:8px;}
+.toast{padding:12px 20px;border-radius:var(--r-sm);color:#fff;font-size:14px;font-weight:500;box-shadow:var(--shadow-lg);animation:toastIn .3s var(--ease);min-width:200px;}
+.toast.success{background:var(--success);}.toast.error{background:var(--danger);}.toast.info{background:var(--pri);}
+@keyframes toastIn{from{opacity:0;transform:translateX(20px);}to{opacity:1;transform:translateX(0);}}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:none;font-weight:600;cursor:pointer;transition:all .2s cubic-bezier(.4,0,.2,1);letter-spacing:.2px;white-space:nowrap;}
+.btn-xs{height:28px;padding:0 10px;font-size:12px;border-radius:6px;}
+.btn-sm{height:36px;padding:0 16px;font-size:13px;border-radius:8px;}
+.btn-md{height:44px;padding:0 24px;font-size:14px;border-radius:10px;}
+.btn-lg{height:52px;padding:0 32px;font-size:16px;border-radius:12px;}
+.btn-block{width:100%;}
+.btn-icon{width:44px;height:44px;padding:0;border-radius:12px;}
+.btn-primary{background:linear-gradient(135deg,#4f46e5 0%,#7c3aed 100%);color:#fff;box-shadow:0 2px 8px rgba(79,70,229,.3);}
+.btn-secondary{background:var(--surface);color:var(--text);border:1.5px solid var(--border);}
+.btn-soft{background:var(--pri-bg);color:var(--pri);}
+.btn-ghost{background:transparent;color:var(--pri);}
+.btn-success{background:linear-gradient(135deg,#10b981,#059669);color:#fff;box-shadow:0 2px 8px rgba(16,185,129,.3);}
+.btn-danger{background:linear-gradient(135deg,#ef4444,#dc2626);color:#fff;box-shadow:0 2px 8px rgba(239,68,68,.3);}
+.btn-warning{background:linear-gradient(135deg,#f59e0b,#d97706);color:#fff;box-shadow:0 2px 8px rgba(245,158,11,.3);}
+.btn:hover{transform:translateY(-1px);filter:brightness(1.05);}
+.btn:active{transform:scale(.97);filter:brightness(.95);}
+.btn:focus-visible{outline:2px solid var(--pri);outline-offset:2px;}
+.btn[disabled]{opacity:.45;cursor:not-allowed;transform:none!important;filter:none!important;}
+.btn.loading{pointer-events:none;position:relative;color:transparent!important;}
+.btn.loading::after{content:"";position:absolute;width:18px;height:18px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:btn-spin .6s linear infinite;}
+@keyframes btn-spin{to{transform:rotate(360deg);}}
+.row-actions{display:flex;gap:6px;}
+
+/* ===== 窄屏防变形（统一注入）===== */
+@media(max-width:900px){
+  .sidebar{transform:translateX(-100%);}
+  .sidebar.open{transform:translateX(0);}
+  .sidebar-overlay.show{display:block;}
+  .main,.main-content{margin-left:0 !important;padding:20px 14px !important;min-width:0 !important;max-width:100% !important;}
+  .topbar .menu-toggle{display:block !important;}
+  .card{overflow-x:auto;-webkit-overflow-scrolling:touch;min-width:0 !important;}
+  .topbar{padding:14px 14px;}
+  .tabs{min-width:0 !important;}
+}
+@media(max-width:480px){
+  .main{padding:14px 10px !important;}
+  .card{padding:16px 12px;}
+  .sec{font-size:14px;}
+  .page-title{font-size:22px !important;}
+}
+</style>
+</head>
+<body>
+<div class="toast-container" id="toastContainer"></div>
+
+<div class="layout">
+  <div class="sidebar" id="sidebar">
+    <div class="brand"><div class="logo">🏢</div><h1>物业后台<br><span style="font-size:11px;color:rgba(255,255,255,.4);font-weight:400;">宜必购</span></h1></div>
+    <nav>
+      <div class="nav-section">概览</div>
+      <a href="dashboard.html"><span class="icon">📊</span>工作台</a>
+      <a href="index.html"><span class="icon">🏠</span>首页看板</a>
+      <div class="nav-section">业务管理</div>
+      <a href="owners.html"><span class="icon">👥</span>业主管理</a>
+      <a href="buildings.html"><span class="icon">🏢</span>楼栋房间</a>
+      <a href="bills.html" class="active"><span class="icon">🧾</span>账单管理</a>
+      <a href="splits.html"><span class="icon">💰</span>分账流水</a>
+      <a href="merchant-bindings.html"><span class="icon">🔗</span>商家绑定</a>
+      <a href="activity-audit.html"><span class="icon">✅</span>活动审核</a>
+      <a href="facilities.html"><span class="icon">🏟️</span>场地预约</a>
+      <div class="nav-section">安防通行</div>
+      <a href="access.html"><span class="icon">🚪</span>门禁管理</a>
+      <a href="vehicles.html"><span class="icon">🚗</span>车辆管理</a>
+      <a href="devices.html"><span class="icon">📡</span>IoT设备</a>
+    </nav>
+    <div class="logout-area"><a href="#" id="logoutBtn"><span class="icon">🚪</span>退出登录</a></div>
+  </div>
+  <div class="sidebar-overlay" id="overlay"></div>
+
+  <div class="main">
+    <div class="topbar">
+      <button class="menu-toggle" id="menuToggle">☰</button>
+      <div class="page-title">账单管理</div>
+      <div></div>
+    </div>
+    <div class="content">
+      <!-- Tabs -->
+      <div class="tabs">
+        <button class="tab-btn active" data-tab="bills">账单列表</button>
+        <button class="tab-btn" data-tab="parking">车位费</button>
+        <button class="tab-btn" data-tab="vehicleLogs">通行日志</button>
+      </div>
+
+      <!-- Tab: Bills -->
+      <div class="tab-panel active" id="tab-bills">
+        <div class="card">
+          <div class="sec"><span class="ic">🔍</span>筛选条件</div>
+          <div class="filter-bar">
+            <select class="select" id="companyId"><option value="">全部物业公司</option></select>
+            <input class="input" id="period" type="month" placeholder="账期">
+            <button class="btn-md btn-primary" id="btnFilter">查询</button>
+            <button class="btn-sm btn-primary" id="btnRefresh">刷新</button>
+          </div>
+        </div>
+        <div class="card">
+          <div class="sec">
+            <span class="ic">🧾</span>账单列表
+            <span style="flex:1;"></span>
+            <button class="btn-sm btn-success" id="btnGenerate">📄 生成账单</button>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>账单编号</th><th>业主</th><th>类型</th><th>周期</th><th>应缴</th><th>已抵扣</th><th>待缴</th><th>状态</th><th>到期日</th></tr></thead>
+              <tbody id="billTable"><tr><td colspan="9" class="empty">加载中...</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab: Parking Fees -->
+      <div class="tab-panel" id="tab-parking">
+        <div class="card">
+          <div class="sec"><span class="ic">🅿️</span>车位费查询</div>
+          <div class="filter-bar">
+            <select class="select" id="parkingCompanyId"><option value="">全部物业公司</option></select>
+            <button class="btn-sm btn-primary" id="btnParkingSearch">查询</button>
+            <button class="btn-sm btn-primary" id="btnParkingRefresh">刷新</button>
+          </div>
+        </div>
+        <div class="card">
+          <div class="sec"><span class="ic">🅿️</span>车位费记录</div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>ID</th><th>车位号</th><th>业主</th><th>车牌号</th><th>费用</th><th>周期</th><th>状态</th><th>到期日</th></tr></thead>
+              <tbody id="parkingTable"><tr><td colspan="8" class="empty">请选择物业公司后查询</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab: Vehicle Logs -->
+      <div class="tab-panel" id="tab-vehicleLogs">
+        <div class="card">
+          <div class="sec"><span class="ic">🚗</span>通行日志查询</div>
+          <div class="filter-bar">
+            <select class="select" id="vehicleCommunityId"><option value="">全部小区</option></select>
+            <button class="btn-sm btn-primary" id="btnVehicleSearch">查询</button>
+            <button class="btn-sm btn-primary" id="btnVehicleRefresh">刷新</button>
+          </div>
+        </div>
+        <div class="card">
+          <div class="sec"><span class="ic">🚗</span>通行记录</div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>ID</th><th>车牌号</th><th>通行方向</th><th>通道</th><th>通行时间</th><th>类型</th><th>备注</th></tr></thead>
+              <tbody id="vehicleLogTable"><tr><td colspan="7" class="empty">请选择小区后查询</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+(function(){
+  var token = localStorage.getItem('property_admin_token');
+  if (!token) { location.href = 'login.html'; return; }
+
+  // --- Toast ---
+  function showToast(msg, type) {
+    type = type || 'info';
+    var c = document.getElementById('toastContainer');
+    var t = document.createElement('div');
+    t.className = 'toast ' + type;
+    t.textContent = msg;
+    c.appendChild(t);
+    setTimeout(function(){ t.style.opacity = '0'; t.style.transition = 'opacity .3s'; setTimeout(function(){ c.removeChild(t); }, 300); }, 3000);
+  }
+
+  // --- Sidebar ---
+  var sidebar = document.getElementById('sidebar');
+  var overlay = document.getElementById('overlay');
+  document.getElementById('menuToggle').onclick = function(){ sidebar.classList.add('open'); overlay.classList.add('show'); };
+  overlay.onclick = function(){ sidebar.classList.remove('open'); overlay.classList.remove('show'); };
+  document.getElementById('logoutBtn').onclick = function(e){ e.preventDefault(); localStorage.removeItem('property_admin_token'); location.href = 'login.html'; };
+
+  // --- Tabs ---
+  var tabBtns = document.querySelectorAll('.tab-btn');
+  var tabPanels = document.querySelectorAll('.tab-panel');
+  tabBtns.forEach(function(btn){
+    btn.onclick = function(){
+      tabBtns.forEach(function(b){ b.classList.remove('active'); });
+      tabPanels.forEach(function(p){ p.classList.remove('active'); });
+      btn.classList.add('active');
+      document.getElementById('tab-' + btn.getAttribute('data-tab')).classList.add('active');
+    };
+  });
+
+  // --- Load Companies ---
+  var companiesData = [];
+  fetch('/api/property/admin/companies', { headers: { 'X-Property-Token': token } })
+    .then(function(r){ return r.json(); })
+    .then(function(res){
+      if (res.code === 0 && res.data) {
+        companiesData = res.data;
+        var sels = [document.getElementById('companyId'), document.getElementById('parkingCompanyId')];
+        sels.forEach(function(sel){
+          res.data.forEach(function(c){
+            var opt = document.createElement('option');
+            opt.value = c.companyId;
+            opt.textContent = c.companyName;
+            sel.appendChild(opt);
+          });
+        });
+      }
+    })
+    .catch(function(){});
+
+  // --- Bill Status Badge ---
+  function statusBadge(s){
+    var map = {
+      'pending': '<span class="badge gray">待缴</span>',
+      'partial': '<span class="badge yellow">部分抵扣</span>',
+      'settled': '<span class="badge green">已结清</span>',
+      'overdue': '<span class="badge red">已逾期</span>'
+    };
+    return map[s] || '<span class="badge gray">' + (s||'--') + '</span>';
+  }
+
+  // --- Bills ---
+  function loadBills(){
+    var params = [];
+    var cid = document.getElementById('companyId').value;
+    var period = document.getElementById('period').value;
+    if (cid) params.push('companyId=' + encodeURIComponent(cid));
+    if (period) params.push('period=' + encodeURIComponent(period));
+    var url = '/api/property/admin/bills' + (params.length ? '?' + params.join('&') : '');
+
+    fetch(url, { headers: { 'X-Property-Token': token } })
+      .then(function(r){ return r.json(); })
+      .then(function(res){
+        var tbody = document.getElementById('billTable');
+        var list = (res.data && res.data.content) ? res.data.content : res.data;
+        if (res.code !== 0 || !list || list.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="9" class="empty">暂无数据</td></tr>';
+          return;
+        }
+        var html = '';
+        list.forEach(function(b){
+          var remaining = Number(b.amount || 0) - Number(b.deducted || 0) - Number(b.paid || 0);
+          html += '<tr>' +
+            '<td>' + (b.billNo || b.billId) + '</td>' +
+            '<td>' + (b.ownerId || '--') + '</td>' +
+            '<td>' + (b.billType === 1 ? '物业费' : '其他') + '</td>' +
+            '<td>' + (b.billPeriod || '--') + '</td>' +
+            '<td>¥' + Number(b.amount || 0).toFixed(2) + '</td>' +
+            '<td>¥' + Number(b.deducted || 0).toFixed(2) + '</td>' +
+            '<td>¥' + remaining.toFixed(2) + '</td>' +
+            '<td>' + statusBadge(b.status) + '</td>' +
+            '<td>' + (b.dueDate || '--') + '</td></tr>';
+        });
+        tbody.innerHTML = html;
+      })
+      .catch(function(){ document.getElementById('billTable').innerHTML = '<tr><td colspan="9" class="empty">加载失败</td></tr>'; });
+  }
+
+  // --- Generate Bills ---
+  document.getElementById('btnGenerate').onclick = function(){
+    var cid = document.getElementById('companyId').value;
+    if (!cid) { showToast('请先选择物业公司', 'error'); return; }
+    if (!confirm('确认为所选物业公司生成账单？')) return;
+
+    this.disabled = true;
+    this.textContent = '生成中...';
+    var btn = this;
+
+    fetch('/api/property/admin/bills/generate', {
+      method: 'POST',
+      headers: { 'X-Property-Token': token, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ companyId: cid })
+    })
+    .then(function(r){ return r.json(); })
+    .then(function(res){
+      btn.disabled = false;
+      btn.textContent = '📄 生成账单';
+      if (res.code === 0) {
+        showToast(res.msg || '账单生成成功', 'success');
+        loadBills();
+      } else {
+        showToast(res.msg || '生成失败', 'error');
+      }
+    })
+    .catch(function(){
+      btn.disabled = false;
+      btn.textContent = '📄 生成账单';
+      showToast('生成请求失败', 'error');
+    });
+  };
+
+  document.getElementById('btnFilter').onclick = loadBills;
+  document.getElementById('btnRefresh').onclick = function(){ document.getElementById('companyId').value = ''; document.getElementById('period').value = ''; loadBills(); };
+  loadBills();
+
+  // --- Parking Fees ---
+  function parkingStatusBadge(s) {
+    var map = {
+      'active': '<span class="badge green">正常</span>',
+      'expired': '<span class="badge red">已过期</span>',
+      'pending': '<span class="badge yellow">待续费</span>'
+    };
+    return map[s] || '<span class="badge gray">' + (s||'--') + '</span>';
+  }
+
+  function loadParkingFees() {
+    var cid = document.getElementById('parkingCompanyId').value;
+    if (!cid) {
+      document.getElementById('parkingTable').innerHTML = '<tr><td colspan="8" class="empty">请选择物业公司后查询</td></tr>';
+      return;
+    }
+    var url = '/api/property/admin/parking-fees?companyId=' + encodeURIComponent(cid);
+
+    fetch(url, { headers: { 'X-Property-Token': token } })
+      .then(function(r){ return r.json(); })
+      .then(function(res){
+        var tbody = document.getElementById('parkingTable');
+        if (res.code !== 0 || !res.data || res.data.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="8" class="empty">暂无车位费记录</td></tr>';
+          return;
+        }
+        var html = '';
+        res.data.forEach(function(p){
+          html += '<tr>' +
+            '<td>' + (p.id || '--') + '</td>' +
+            '<td>' + (p.parking_no || p.slot_no || '--') + '</td>' +
+            '<td>' + (p.owner_name || '--') + '</td>' +
+            '<td>' + (p.plate_no || '--') + '</td>' +
+            '<td>¥' + Number(p.fee || p.amount || 0).toFixed(2) + '</td>' +
+            '<td>' + (p.period || '--') + '</td>' +
+            '<td>' + parkingStatusBadge(p.status) + '</td>' +
+            '<td>' + (p.expire_date || p.end_date || '--') + '</td></tr>';
+        });
+        tbody.innerHTML = html;
+      })
+      .catch(function(){ document.getElementById('parkingTable').innerHTML = '<tr><td colspan="8" class="empty">加载失败</td></tr>'; });
+  }
+
+  document.getElementById('btnParkingSearch').onclick = loadParkingFees;
+  document.getElementById('btnParkingRefresh').onclick = function(){ document.getElementById('parkingCompanyId').value = ''; document.getElementById('parkingTable').innerHTML = '<tr><td colspan="8" class="empty">请选择物业公司后查询</td></tr>'; };
+
+  // --- Vehicle Logs ---
+  function loadVehicleLogs() {
+    var commId = document.getElementById('vehicleCommunityId').value;
+    if (!commId) {
+      document.getElementById('vehicleLogTable').innerHTML = '<tr><td colspan="7" class="empty">请选择小区后查询</td></tr>';
+      return;
+    }
+    var url = '/api/property/admin/vehicle-logs?communityId=' + encodeURIComponent(commId);
+
+    fetch(url, { headers: { 'X-Property-Token': token } })
+      .then(function(r){ return r.json(); })
+      .then(function(res){
+        var tbody = document.getElementById('vehicleLogTable');
+        if (res.code !== 0 || !res.data || res.data.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="7" class="empty">暂无通行记录</td></tr>';
+          return;
+        }
+        var html = '';
+        res.data.forEach(function(v){
+          var dirBadge = (v.direction === 'in' || v.direction === '进')
+            ? '<span class="badge green">进入</span>'
+            : '<span class="badge blue">离开</span>';
+          html += '<tr>' +
+            '<td>' + (v.id || '--') + '</td>' +
+            '<td>' + (v.plate_no || '--') + '</td>' +
+            '<td>' + dirBadge + '</td>' +
+            '<td>' + (v.channel || v.gate || '--') + '</td>' +
+            '<td>' + (v.pass_time || v.created_at || '--') + '</td>' +
+            '<td>' + (v.type || v.vehicle_type || '--') + '</td>' +
+            '<td>' + (v.remark || '--') + '</td></tr>';
+        });
+        tbody.innerHTML = html;
+      })
+      .catch(function(){ document.getElementById('vehicleLogTable').innerHTML = '<tr><td colspan="7" class="empty">加载失败</td></tr>'; });
+  }
+
+  // Populate community dropdown from companies (reuse as communities)
+  function populateCommunities() {
+    var sel = document.getElementById('vehicleCommunityId');
+    if (companiesData.length > 0) {
+      companiesData.forEach(function(c){
+        var opt = document.createElement('option');
+        opt.value = c.companyId;
+        opt.textContent = c.companyName;
+        sel.appendChild(opt);
+      });
+    }
+  }
+  // Wait for companies to load then populate
+  var commCheck = setInterval(function(){
+    if (companiesData.length > 0) {
+      populateCommunities();
+      clearInterval(commCheck);
+    }
+  }, 200);
+  setTimeout(function(){ clearInterval(commCheck); }, 5000);
+
+  document.getElementById('btnVehicleSearch').onclick = loadVehicleLogs;
+  document.getElementById('btnVehicleRefresh').onclick = function(){ document.getElementById('vehicleCommunityId').value = ''; document.getElementById('vehicleLogTable').innerHTML = '<tr><td colspan="7" class="empty">请选择小区后查询</td></tr>'; };
+})();
+</script>
+</body>
+</html>

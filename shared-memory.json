@@ -1,13 +1,13 @@
 {
   "project": "宜必购盲盒系统 (ybgtc.com)",
-  "last_updated": "2026-09-14 01:30",
+  "last_updated": "2026-09-18",
   "note": "打印预览弹窗内容位置修复+完整闭环",
   "environment": {
     "code_root": "D:\\workspace-java\\ybg-master",
     "backend_root": "D:\\workspace-java\\ybg-master\\backend",
     "java_package": "com.ibigou.blindbox",
     "h5_root": "D:\\workspace-java\\ybg-master\\backend\\src\\main\\resources\\static\\h5",
-    "drive_mapping": "subst Z: => D:\\（用户已建，Z盘NAS未恢复）",
+    "drive_mapping": "Z盘已删除（2026-09），不再使用；唯一工作路径 D:\\workspace-java\\ybg-master",
     "jdk": {
       "可用JDK": "D:\\devtools\\jdk（Temurin 17.0.20.1，完整）",
       "坏JDK": "C:\\tools\\jdk-17.0.12+7（缺lib/modules，java/javap无法启动，PATH靠前会踩坑）",
@@ -19,7 +19,10 @@
       "共享记忆": "D:\\workspace-java\\ybg-master\\shared-memory.json",
       "知识图谱": "D:\\workspace-java\\ybg-master\\知识图谱.md"
     },
-    "restore_dir": "D:\\workspace-java\\ybg-master\\_restore（生产jar + 解压产物 + 反编译脚本）"
+    "restore_dir": "D:\\workspace-java\\ybg-master\\_restore（生产jar + 解压产物 + 反编译脚本）",
+    "work_root": "D:\\workspace-java\\ybg-master",
+    "scripts_root": "D:\\workspace-java（_*.py 部署/验证/推送脚本）",
+    "maven_repo": "D:\\workspace-java\\m2repo"
   },
   "production_server": {
     "host": "121.229.160.2",
@@ -729,5 +732,82 @@
     ]
   },
   "github_token": "ghp_CpBA...（已脱敏，完整token见本地环境变量）",
-  "amap_key_configured": true
+  "amap_key_configured": true,
+  "entries": [
+    {
+      "date": "2026-09-17",
+      "topic": "商家APP蓝牙打印-确认打印误上线调试流程",
+      "summary": "生产 merchant/index.html 的 _handleConfirmPrint（确认打印按钮）执行的是调试流程：一次点击连打4个任务（HELLO/LINE/QR/店名）+弹调试窗，是'点一次出长纸'根因。已改为单次 AndroidPrinter.printQR；删除全部 printText 调试调用。修复替换函数时误删 </script> 导致脚本失效的问题（open=8/close=7→8/8）。生产已更新（备份 index.html.bak_20260917），本地 backend\\src\\main\resources\\static\\h5\\merchant\\index.html 已同步。",
+      "tags": [
+        "完成汇报",
+        "蓝牙打印",
+        "LPAPI",
+        "merchant",
+        "已部署"
+      ]
+    },
+    {
+      "date": "2026-09-18",
+      "type": "完成汇报",
+      "project": "ibigou",
+      "content": "物业系统生产部署完成：34张property表(snake_case)重建、后端jar含/api/property/*已上线、前端h5/property/31文件已上传+nginx直放规则、物业后台admin/Admin@2026登录可用、业主注册/登录链路验证通过。修复：audit_log.ref_id缺列、Hibernate DDL驼峰列名不匹配、create_time无默认值58条ALTER、login.html缺Content-Type与参数名不符。",
+      "tags": [
+        "完成汇报",
+        "物业系统",
+        "待hermes"
+      ]
+    },
+    {
+      "date": "2026-09-18",
+      "type": "完成汇报",
+      "project": "ibigou",
+      "content": "物业系统业务数据初始化完成：公司/小区/楼栋/房间/业主绑定/商家绑定/场地。修复 P1 控制器 TOKEN_STORE 不共享 bug（登录过期）。预约闭环验证通过（创建RV1789696544124BD5D）。业主端预约页、后台首页均实测正常。",
+      "tags": [
+        "完成汇报",
+        "物业系统",
+        "待hermes"
+      ]
+    },
+    {
+      "date": "2026-09-18",
+      "type": "完成汇报",
+      "project": "ibigou",
+      "content": "业主绑定家庭成员扫码绑定全链路闭环上线：①family.html 二维码卡（内联 qrcodejs，IIFE 注入位置修复：原被注释/误插 addMember 回调，现插脚本末尾，window.__qrIifeRan 验证执行）②family-bind.html 落地页（qr-info 加载业主信息+姓名/11位手机号/关系表单）③bind-by-qr 后端接口（手机号正则 1\\d{10}、重复拦截、必须已存在业主）④lookup 支持家庭成员（isFamily/relation/ownerId）⑤顾客端 index.html 家庭成员显示「业主的家庭」入口卡。生产实测：二维码渲染 YES、扫码绑定李小红 13900003333 成功、lookup 返回 isFamily=true、成员列表3人。生产文件已更新，无需重启jar（本次仅前端+已部署后端）。",
+      "tags": [
+        "完成汇报",
+        "物业系统",
+        "家庭成员",
+        "扫码绑定",
+        "待hermes"
+      ]
+    },
+    {
+      "date": "2026-09-18",
+      "type": "完成汇报",
+      "project": "ibigou",
+      "content": "物业后台窄屏防变形修复完成：根因=flex item(.main/.main-content)被表格min-content撑开致横向溢出；修复=19页统一注入@900px响应式（sidebar收起、main min-width:0、card overflow-x:auto），buildings.html 用 .main-content 类名已覆盖。bu 375px iframe 实测 8 页全部 scrollWidth<=innerWidth 无溢出（bills/dashboard/owners/access/buildings/merchant-bindings/splits/facilities）。19页已上传生产。",
+      "tags": [
+        "完成汇报",
+        "物业系统",
+        "页面变形",
+        "响应式",
+        "已部署"
+      ]
+    }
+  ],
+  "project_20260918": "需求1/2/3完成；家庭成员扫码绑定闭环；后台窄屏防变形修复",
+  "toolchain": {
+    "python": "Python 3 + paramiko（pip install paramiko），所有 SSH/部署/SFTP 脚本依赖",
+    "jdk": "D:\\devtools\\jdk（Temurin 17.0.20.1）",
+    "maven": "Maven 3.9，打包命令：cd D:\\workspace-java\\ybg-master\\backend; mvn clean package -DskipTests -Dmaven.repo.local=D:\\workspace-java\\m2repo",
+    "ssh_keys": {
+      "production": "C:\\Users\\Administrator\\.ssh\\ybg_key（root@121.229.160.2:5366）",
+      "nas": "C:\\Users\\Administrator\\.ssh\\id_ed25519（Alan@192.168.31.228 免密）"
+    },
+    "specify_cli": "C:\\Users\\Administrator\\.local\\bin\\specify.exe（Spec Kit，见规矩文档 G14）",
+    "browser_test": "computer_use_tool plane=bu（seed_browser_use），登录态存 localStorage",
+    "github_push_script": "D:\\workspace-java\\_push_gh.py（Git Data API，github.com 443 直连不通，git 命令不可用）",
+    "deploy_scripts": "D:\\workspace-java\\_deploy_family*.py（SFTP 传 jar+重启）、_upload_admin_all.py（批量传前端）、_verify_*.py（接口验证）",
+    "qrcodejs_inline": "D:\\workspace-java\\_qrcodejs_inline.js（19928B 公共副本，从 dashboard.html 提取）"
+  }
 }

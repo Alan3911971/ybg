@@ -206,6 +206,10 @@
       <div><label>证书序列号 wx_pay_cert_serial</label><input id="gWxCertSerial" class="input"></div>
       <div><label>测试确认开关 test_pay_confirm_enabled（0/1）</label><input id="gTestConfirm" class="input" type="number" min="0" max="1"></div>
     </div>
+    <div class="row">
+      <div><label>公众号AppSecret wx_pay_app_secret（JSAPI微信内支付/网页授权/JSSDK）</label><input id="gWxAppSecret" class="input" placeholder=""></div>
+      <div style="align-self:center;font-size:12px;color:#888;">公众号 AppID 与微信支付 AppID 一致（wx_pay_app_id），仅需填 AppSecret</div>
+    </div>
     <button class="btn btn--block" id="btnSaveWx" style="margin-top:12px;">保存微信支付参数</button>
   </div>
   <div class="card">
@@ -222,6 +226,14 @@
       <div><label>网关地址 alipay_gateway_url</label><input id="gAlipayGateway" class="input"></div>
     </div>
     <button class="btn btn--block" id="btnSaveAlipay" style="margin-top:12px;">保存支付宝参数</button>
+  </div>
+  <div class="card">
+    <div class="sec"><span class="ic">🧩</span>平台小程序参数（预留，后续小程序支付/订阅消息用）</div>
+    <div class="row">
+      <div><label>小程序AppID xcx_app_id</label><input id="gXcxAppId" class="input"></div>
+      <div><label>小程序AppSecret xcx_app_secret</label><input id="gXcxAppSecret" class="input"></div>
+    </div>
+    <button class="btn btn--block" id="btnSaveXcx" style="margin-top:12px;">保存小程序参数</button>
   </div>
   <div class="card">
     <div class="sec"><span class="ic">💳</span>客户支付模式（全局）</div>
@@ -417,13 +429,19 @@ async function loadConfig(){
   $("gRate").value = map["balance_deduct_rate"] != null ? map["balance_deduct_rate"] : "";
   $("gSwitch").value = map["ibigou_channel_switch"] != null ? map["ibigou_channel_switch"] : "";
   $("gWxEnabled").value = map["wx_pay_enabled"] != null ? map["wx_pay_enabled"] : "";
-  $("gWxMch").value = map["wx_pay_mch_id"] || "";
-  $("gWxAppid").value = map["wx_pay_app_id"] || "";
+  // 脱敏键不回填明文（留空=不修改）
+  if (map["wx_pay_mch_id"]) $("gWxMch").placeholder = "已配置（留空则不修改）";
+  else $("gWxMch").value = "";
+  if (map["wx_pay_app_id"]) $("gWxAppid").placeholder = "已配置（留空则不修改）";
+  else $("gWxAppid").value = "";
   // BUG-002：密钥类不回填明文（仅提示已配置；留空=保存时不修改）
   if (map["wx_pay_api_key"]) $("gWxApiKey").placeholder = "已配置（留空则不修改）";
   if (map["wx_pay_api_v3_key"]) $("gWxV3Key").placeholder = "已配置（留空则不修改）";
   if (map["wx_pay_cert_path"]) $("gWxCertPath").placeholder = "已配置（留空则不修改）";
   if (map["wx_pay_cert_serial"]) $("gWxCertSerial").placeholder = "已配置（留空则不修改）";
+  if (map["wx_pay_app_secret"]) $("gWxAppSecret").placeholder = "已配置（留空则不修改）";
+  if (map["xcx_app_id"]) $("gXcxAppId").value = map["xcx_app_id"];
+  if (map["xcx_app_secret"]) $("gXcxAppSecret").placeholder = "已配置（留空则不修改）";
   $("gTestConfirm").value = map["test_pay_confirm_enabled"] != null ? map["test_pay_confirm_enabled"] : "";
   // 支付宝配置
   $("gAlipayEnabled").value = map["alipay_enabled"] != null ? map["alipay_enabled"] : "";
@@ -448,10 +466,11 @@ $("btnSaveWx").onclick = async function(){
     ["wx_pay_enabled", $("gWxEnabled").value], ["wx_pay_mch_id", $("gWxMch").value],
     ["wx_pay_app_id", $("gWxAppid").value], ["wx_pay_api_key", $("gWxApiKey").value],
     ["wx_pay_api_v3_key", $("gWxV3Key").value], ["wx_pay_cert_path", $("gWxCertPath").value],
-    ["wx_pay_cert_serial", $("gWxCertSerial").value], ["test_pay_confirm_enabled", $("gTestConfirm").value]
+    ["wx_pay_cert_serial", $("gWxCertSerial").value], ["test_pay_confirm_enabled", $("gTestConfirm").value],
+    ["wx_pay_app_secret", $("gWxAppSecret").value]
   ];
   let ok = true, msg = "";
-  const secretKeys = ["wx_pay_api_key", "wx_pay_api_v3_key", "wx_pay_cert_path", "wx_pay_cert_serial"];
+  const secretKeys = ["wx_pay_mch_id", "wx_pay_app_id", "wx_pay_api_key", "wx_pay_api_v3_key", "wx_pay_cert_path", "wx_pay_cert_serial", "wx_pay_app_secret"];
   for (const pair of pairs) {
     // BUG-002：密钥留空=不修改（不回填明文、不覆盖成空）
     if (secretKeys.includes(pair[0]) && (!pair[1] || !pair[1].trim())) continue;
@@ -476,6 +495,18 @@ $("btnSaveAlipay").onclick = async function(){
   }
   toast(ok ? "支付宝支付参数已保存" : ("保存失败: " + msg), ok ? "success" : "danger");
   loadConfig();
+};
+$("btnSaveXcx").onclick = async function(){
+  const pairs = [["xcx_app_id", $("gXcxAppId").value], ["xcx_app_secret", $("gXcxAppSecret").value]];
+  let ok = true, msg = "";
+  const secretKeys = ["xcx_app_secret"];
+  for (const pair of pairs) {
+    if (secretKeys.includes(pair[0]) && (!pair[1] || !pair[1].trim())) continue;
+    const r = await api(A + "/config/update", { key: pair[0], value: pair[1] || "" });
+    if (r.code !== 0) { ok = false; msg = r.msg || "保存失败"; break; }
+  }
+  if (ok) { toast("小程序参数已保存", "success"); loadConfig(); }
+  else toast(msg, "danger");
 };
 $("btnSavePayMode").onclick = async function(){
   const r = await api(A + "/config/update", { key: "customer_pay_mode", value: $("gCustomerPayMode").value || "0" });

@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover">
+<meta name="theme-color" content="#4f46e5">
+<title>账单 · 我的物业</title>
+<link rel="icon" href="data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='80' font-size='90'%3E🏠%3C/text%3E%3C/svg%3E">
+<style>
+:root {
+  --pri: #4f46e5; --pri-hover: #4338ca; --pri-light: #818cf8; --pri-bg: #eef2ff; --pri-grad: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+  --gold: #f59e0b; --gold-bg: #fffbeb;
+  --success: #10b981; --success-bg: #ecfdf5;
+  --danger: #ef4444; --danger-bg: #fef2f2;
+  --text: #1e293b; --text-2: #64748b; --text-3: #94a3b8;
+  --bg: #f8fafc; --surface: #ffffff; --border: #e2e8f0; --divider: #f1f5f9;
+  --shadow-card: 0 2px 12px rgba(0,0,0,.04);
+  --shadow-float: 0 8px 30px rgba(0,0,0,.08);
+  --r-md: 14px; --r-lg: 20px; --r-xl: 24px; --r-full: 999px;
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --ease: cubic-bezier(.4,0,.2,1);
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+html,body{font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","SF Pro Display","Helvetica Neue",sans-serif;color:var(--text);background:var(--bg);-webkit-font-smoothing:antialiased;font-size:15px;}
+body{min-height:100vh;}
+a{color:inherit;text-decoration:none;}
+button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit;}
+
+@keyframes fadeInUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+
+.app-shell{max-width:480px;margin:0 auto;min-height:100vh;background:var(--bg);position:relative;}
+
+.hero{background:var(--pri-grad);color:#fff;padding:48px 20px 28px;position:relative;overflow:hidden;}
+.hero::before{content:"";position:absolute;top:-60px;right:-40px;width:200px;height:200px;background:rgba(255,255,255,.08);border-radius:50%;}
+.hero::after{content:"";position:absolute;bottom:-30px;left:-20px;width:120px;height:120px;background:rgba(255,255,255,.06);border-radius:50%;}
+.hero h1{font-size:22px;font-weight:800;position:relative;z-index:1;letter-spacing:-.3px;}
+.hero .sub{font-size:13px;opacity:.85;margin-top:6px;position:relative;z-index:1;font-weight:500;}
+
+.content{padding:20px 20px calc(80px + var(--safe-bottom));}
+
+/* Segment Tabs */
+.seg{display:flex;background:var(--bg);border-radius:var(--r-full);padding:4px;margin-bottom:16px;box-shadow:inset 0 1px 3px rgba(0,0,0,.06);}
+.seg button{flex:1;padding:10px 4px;font-size:13px;color:var(--text-2);border-radius:var(--r-full);cursor:pointer;font-weight:600;transition:all .25s var(--ease);}
+.seg button.active{background:var(--surface);color:var(--pri);box-shadow:0 2px 8px rgba(0,0,0,.08);}
+
+/* Bill Card */
+.bill-card{background:var(--surface);border-radius:var(--r-lg);margin-bottom:16px;overflow:hidden;box-shadow:var(--shadow-card);transition:all .25s var(--ease);animation:fadeInUp .4s var(--ease) both;}
+.bill-card .bill-main{padding:20px;cursor:pointer;}
+.bill-card .bill-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
+.bill-card .bill-no{font-size:12px;color:var(--text-3);font-weight:500;}
+.bill-card .bill-badge{display:inline-block;padding:4px 12px;border-radius:var(--r-full);font-size:11px;font-weight:700;}
+.bill-card .bill-badge.unpaid{background:var(--danger-bg);color:var(--danger);}
+.bill-card .bill-badge.paid{background:var(--success-bg);color:var(--success);}
+.bill-card .bill-badge.partial{background:var(--gold-bg);color:var(--gold);}
+.bill-card .bill-badge.overdue{background:var(--danger-bg);color:var(--danger);}
+.bill-card .bill-period{font-size:13px;color:var(--text-2);margin-bottom:10px;font-weight:500;}
+.bill-card .bill-amount{display:flex;align-items:flex-end;gap:4px;}
+.bill-card .bill-amount .sym{font-size:16px;color:var(--text-2);padding-bottom:4px;font-weight:600;}
+.bill-card .bill-amount .num{font-size:32px;font-weight:800;color:var(--pri);line-height:1;letter-spacing:-1px;}
+.bill-card .bill-row{display:flex;gap:16px;margin-top:10px;font-size:12px;}
+.bill-card .bill-row .item{display:flex;align-items:center;gap:4px;font-weight:500;}
+.bill-card .bill-row .green{color:var(--success);font-weight:700;}
+.bill-card .bill-row .red{color:var(--danger);font-weight:700;}
+.bill-card .bill-footer{display:flex;align-items:center;justify-content:space-between;margin-top:12px;font-size:11px;color:var(--text-3);font-weight:500;}
+.bill-card .expand-icon{transition:transform .25s var(--ease);font-size:12px;color:var(--text-3);}
+.bill-card.expanded .expand-icon{transform:rotate(180deg);}
+
+/* Expanded Detail */
+.bill-detail{display:none;padding:0 20px 20px;border-top:1px solid var(--divider);background:var(--bg);}
+.bill-card.expanded .bill-detail{display:block;}
+.bill-detail .detail-title{font-size:13px;font-weight:700;color:var(--text-2);margin:14px 0 8px;text-transform:uppercase;letter-spacing:.5px;}
+.detail-item{display:flex;align-items:center;justify-content:space-between;padding:8px 0;font-size:13px;border-bottom:1px solid var(--divider);}
+.detail-item:last-child{border-bottom:none;}
+.detail-item .d-label{color:var(--text-2);font-weight:500;}
+.detail-item .d-value{font-weight:700;}
+.detail-item .d-value.green{color:var(--success);}
+.detail-item .d-value.red{color:var(--danger);}
+.detail-loading{text-align:center;padding:20px;font-size:12px;color:var(--text-3);}
+
+/* Deduct Logs Table */
+.log-table{width:100%;border-collapse:collapse;font-size:12px;}
+.log-table th{text-align:left;padding:12px 10px;background:var(--bg);color:var(--text-2);font-weight:700;border-bottom:1px solid var(--border);white-space:nowrap;font-size:11px;text-transform:uppercase;letter-spacing:.3px;}
+.log-table td{padding:12px 10px;border-bottom:1px solid var(--divider);color:var(--text);}
+.log-table tr:last-child td{border-bottom:none;}
+.log-table .amt{font-weight:800;color:var(--danger);}
+
+/* Parking Fee Table */
+.fee-table{width:100%;border-collapse:collapse;font-size:12px;}
+.fee-table th{text-align:left;padding:12px 10px;background:var(--bg);color:var(--text-2);font-weight:700;border-bottom:1px solid var(--border);white-space:nowrap;font-size:11px;text-transform:uppercase;letter-spacing:.3px;}
+.fee-table td{padding:12px 10px;border-bottom:1px solid var(--divider);color:var(--text);}
+.fee-table tr:last-child td{border-bottom:none;}
+.fee-table .amt{font-weight:800;color:var(--gold);}
+
+.card{background:var(--surface);border-radius:var(--r-lg);padding:8px 12px;box-shadow:var(--shadow-card);overflow-x:auto;animation:fadeInUp .4s var(--ease) both;}
+
+.empty{text-align:center;padding:40px 16px;color:var(--text-3);font-size:13px;}
+.empty .emoji{font-size:40px;display:block;margin-bottom:10px;}
+
+.nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:480px;z-index:100;background:rgba(255,255,255,.85);backdrop-filter:blur(20px) saturate(180%);-webkit-backdrop-filter:blur(20px) saturate(180%);border-top:.5px solid rgba(0,0,0,.06);display:flex;padding-bottom:var(--safe-bottom);}
+.nav .tab{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;color:var(--text-3);font-size:10px;padding:8px 0;font-weight:500;transition:color .2s;}
+.nav .tab .ic{font-size:22px;line-height:1;}
+.nav .tab.active{color:var(--pri);font-weight:700;}
+.nav .tab.active::after{content:"";width:4px;height:4px;border-radius:50%;background:var(--pri);margin-top:2px;}
+.nav .tab.active .ic{transform:translateY(-2px);}
+
+.toast-host{position:fixed;top:16px;left:50%;transform:translateX(-50%);z-index:200;display:flex;flex-direction:column;align-items:center;gap:8px;pointer-events:none;width:100%;max-width:480px;padding:0 16px;}
+.toast{background:rgba(30,41,59,.92);backdrop-filter:blur(10px);color:#fff;padding:10px 20px;border-radius:var(--r-full);font-size:13px;font-weight:600;max-width:90%;text-align:center;opacity:0;transform:translateY(-12px);transition:all .3s var(--ease);box-shadow:var(--shadow-float);}
+.toast.show{opacity:1;transform:translateY(0);}
+.toast.success{background:rgba(16,185,129,.92);}
+.toast.warning{background:rgba(245,158,11,.92);}
+.toast.danger{background:rgba(239,68,68,.92);}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:none;font-weight:600;cursor:pointer;transition:all .2s cubic-bezier(.4,0,.2,1);letter-spacing:.2px;white-space:nowrap;}
+.btn-xs{height:28px;padding:0 10px;font-size:12px;border-radius:6px;}
+.btn-sm{height:36px;padding:0 16px;font-size:13px;border-radius:8px;}
+.btn-md{height:44px;padding:0 24px;font-size:14px;border-radius:10px;}
+.btn-lg{height:52px;padding:0 32px;font-size:16px;border-radius:12px;}
+.btn-xl{height:60px;padding:0 40px;font-size:18px;border-radius:14px;}
+.btn-block{width:100%;}
+.btn-icon{width:44px;height:44px;padding:0;border-radius:12px;}
+.btn-primary{background:linear-gradient(135deg,#4f46e5 0%,#7c3aed 100%);color:#fff;box-shadow:0 4px 14px rgba(79,70,229,.3);}
+.btn-secondary{background:var(--surface);color:var(--text);border:1.5px solid var(--border);}
+.btn-soft{background:var(--pri-bg);color:var(--pri);}
+.btn-ghost{background:transparent;color:var(--pri);}
+.btn-success{background:linear-gradient(135deg,#10b981,#059669);color:#fff;box-shadow:0 4px 14px rgba(16,185,129,.3);}
+.btn-danger{background:linear-gradient(135deg,#ef4444,#dc2626);color:#fff;box-shadow:0 4px 14px rgba(239,68,68,.3);}
+.btn-warning{background:linear-gradient(135deg,#f59e0b,#d97706);color:#fff;box-shadow:0 4px 14px rgba(245,158,11,.3);}
+.btn:hover{transform:translateY(-1px);filter:brightness(1.05);}
+.btn:active{transform:scale(.97);filter:brightness(.95);}
+.btn:focus-visible{outline:2px solid var(--pri);outline-offset:2px;}
+.btn[disabled]{opacity:.45;cursor:not-allowed;transform:none!important;filter:none!important;}
+.btn.loading{pointer-events:none;position:relative;color:transparent!important;}
+.btn.loading::after{content:"";position:absolute;width:18px;height:18px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:btn-spin .6s linear infinite;}
+@keyframes btn-spin{to{transform:rotate(360deg);}}
+.fab{position:fixed;bottom:calc(88px + var(--safe-bottom));right:20px;width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,#4f46e5,#7c3aed);color:#fff;display:flex;align-items:center;justify-content:center;font-size:24px;box-shadow:0 6px 20px rgba(79,70,229,.4);z-index:40;border:none;cursor:pointer;transition:transform .15s;}
+.fab:active{transform:scale(.9);}
+.btn-cta{width:100%;height:56px;font-size:17px;font-weight:700;border-radius:16px;letter-spacing:.3px;}
+</style>
+</head>
+<body>
+<div class="app-shell">
+<div class="hero">
+  <h1>📋 我的账单</h1>
+  <div class="sub">物业费、车位费账单明细与抵扣记录</div>
+</div>
+
+<div class="content">
+  <div class="seg" id="billTabs">
+    <button class="active" data-tab="property">物业费</button>
+    <button data-tab="parking">车位费</button>
+    <button data-tab="deduct">抵扣日志</button>
+  </div>
+  <div id="billList"></div>
+</div>
+
+<div class="toast-host" id="toastHost"></div>
+
+<nav class="nav">
+  <div class="tab" data-go="index.html"><span class="ic">🏠</span><span>首页</span></div>
+  <div class="tab" data-go="access.html"><span class="ic">🚪</span><span>门禁</span></div>
+  <div class="tab active" data-go="bills.html"><span class="ic">📋</span><span>账单</span></div>
+  <div class="tab" data-go="bind.html"><span class="ic">👤</span><span>我的</span></div>
+</nav>
+</div>
+
+<script>
+const $=id=>document.getElementById(id);
+const API="/api/property/owner";
+function toast(m,t){const h=$("toastHost");if(!h)return;const e=document.createElement("div");e.className="toast "+(t||"");e.textContent=m;h.appendChild(e);requestAnimationFrame(()=>e.classList.add("show"));setTimeout(()=>{e.classList.remove("show");setTimeout(()=>e.remove(),220)},2400)}
+
+const tk=localStorage.getItem("property_owner_token");
+if(!tk){location.href="login.html"}
+
+async function req(path,method,body){
+  const p=new URLSearchParams();
+  if(body)Object.keys(body).forEach(k=>{const v=body[k];if(v!=null&&v!=="")p.append(k,v)});
+  const h={};const token=localStorage.getItem("property_owner_token");
+  if(token)h["X-Owner-Token"]=token;
+  if(token)h["Authorization"]="Bearer "+token;
+  const o={method:method||"GET",headers:h};
+  if(method==="POST"||method==="PUT"||method==="DELETE"){h["Content-Type"]="application/x-www-form-urlencoded";o.body=p.toString()}
+  try{
+    const r=await fetch(API+path,o).then(r=>r.json());
+    if(r.code===401){localStorage.removeItem("property_owner_token");toast("登录已过期，请重新登录","warning");setTimeout(()=>{location.href="login.html"},1500)}
+    return r;
+  }catch(e){return{code:-1,msg:e.message}}
+}
+const get=p=>req(p,"GET");
+
+function emptyBox(emoji,text){return '<div class="empty"><span class="emoji">'+emoji+'</span>'+text+'</div>'}
+function fmtDate(s){return s?s.slice(0,10):""}
+function fmtTime(s){return s?s.replace("T"," ").slice(0,16):""}
+
+let curTab="property";
+
+// Check URL params for initial tab
+(function(){
+  const params=new URLSearchParams(location.search);
+  const t=params.get("tab");
+  if(t&&["property","parking","deduct"].indexOf(t)>=0){
+    curTab=t;
+    document.querySelectorAll("#billTabs button").forEach(x=>{
+      x.classList.toggle("active",x.dataset.tab===t);
+    });
+  }
+})();
+
+// Tab switch
+document.querySelectorAll("#billTabs button").forEach(b=>{
+  b.addEventListener("click",()=>{
+    document.querySelectorAll("#billTabs button").forEach(x=>x.classList.remove("active"));
+    b.classList.add("active");
+    curTab=b.dataset.tab;
+    loadCurrentTab();
+  });
+});
+
+// Status badge
+function billBadge(status){
+  const map={
+    "unpaid":{cls:"unpaid",text:"待缴费"},
+    "paid":{cls:"paid",text:"已缴清"},
+    "partial":{cls:"partial",text:"部分抵扣"},
+    "overdue":{cls:"overdue",text:"已逾期"},
+    "0":{cls:"unpaid",text:"待缴费"},
+    "1":{cls:"paid",text:"已缴清"},
+    "2":{cls:"partial",text:"部分抵扣"},
+    "3":{cls:"overdue",text:"已逾期"}
+  };
+  const s=map[status]||map[String(status)]||{cls:"unpaid",text:String(status||"未知")};
+  return '<span class="bill-badge '+s.cls+'">'+s.text+'</span>';
+}
+
+function renderBillCard(b){
+  const amount=Number(b.amount||0).toFixed(2);
+  const deducted=Number(b.deductedAmount||b.deducted||0).toFixed(2);
+  const remaining=Number(b.remainingAmount||b.remaining||0).toFixed(2);
+  const period=(b.periodStart||b.startDate||"")+" ~ "+(b.periodEnd||b.endDate||"");
+  const dueDate=fmtDate(b.dueDate||b.deadline);
+
+  return '<div class="bill-card" data-id="'+b.id+'" onclick="toggleBill(this,'+b.id+')">'
+    +'<div class="bill-main">'
+    +'<div class="bill-header">'
+    +'<span class="bill-no">'+(b.billNo||b.id||"--")+'</span>'
+    +billBadge(b.status)
+    +'</div>'
+    +'<div class="bill-period">📅 '+(period!==" ~ "?period:"--")+'</div>'
+    +'<div class="bill-amount"><span class="sym">¥</span><span class="num">'+amount+'</span></div>'
+    +'<div class="bill-row">'
+    +'<span class="item">已抵扣 <span class="green">¥'+deducted+'</span></span>'
+    +'<span class="item">待补缴 <span class="red">¥'+remaining+'</span></span>'
+    +'</div>'
+    +'<div class="bill-footer">'
+    +'<span>到期日：'+(dueDate||"--")+'</span>'
+    +'<span class="expand-icon">▼ 详情</span>'
+    +'</div>'
+    +'</div>'
+    +'<div class="bill-detail" id="detail-'+b.id+'"><div class="detail-loading">点击加载详情...</div></div>'
+    +'</div>';
+}
+
+// Toggle bill expand — fetches detail from GET /api/property/owner/bills/{id}
+window.toggleBill=function(el,id){
+  const wasExpanded=el.classList.contains("expanded");
+  // Close all others
+  document.querySelectorAll(".bill-card.expanded").forEach(c=>{
+    if(c!==el)c.classList.remove("expanded");
+  });
+  el.classList.toggle("expanded");
+  if(!wasExpanded&&id){
+    loadBillDetail(id);
+  }
+};
+
+async function loadBillDetail(id){
+  const container=$("detail-"+id);
+  if(!container)return;
+  container.innerHTML='<div class="detail-loading">加载中...</div>';
+  try{
+    const r=await get("/bills/"+id);
+    if(r.code===0&&r.data){
+      const d=r.data;
+      const deductions=d.deductions||d.deductionDetails||[];
+      let html='<div class="detail-title">账单信息</div>';
+      html+='<div class="detail-item"><span class="d-label">账单编号</span><span class="d-value">'+(d.billNo||d.id||"--")+'</span></div>';
+      html+='<div class="detail-item"><span class="d-label">账单金额</span><span class="d-value">¥'+(Number(d.amount||0).toFixed(2))+'</span></div>';
+      html+='<div class="detail-item"><span class="d-label">已抵扣</span><span class="d-value green">¥'+(Number(d.deductedAmount||d.deducted||0).toFixed(2))+'</span></div>';
+      html+='<div class="detail-item"><span class="d-label">待补缴</span><span class="d-value red">¥'+(Number(d.remainingAmount||d.remaining||0).toFixed(2))+'</span></div>';
+      html+='<div class="detail-item"><span class="d-label">到期日</span><span class="d-value">'+(fmtDate(d.dueDate||d.deadline)||"--")+'</span></div>';
+      if(d.companyName){
+        html+='<div class="detail-item"><span class="d-label">物业公司</span><span class="d-value">'+d.companyName+'</span></div>';
+      }
+      if(deductions.length){
+        html+='<div class="detail-title">抵扣明细</div>';
+        deductions.forEach(function(dd){
+          html+='<div class="detail-item">'
+            +'<span class="d-label">'+(dd.source||dd.type||"抵扣")+' · '+fmtTime(dd.deductTime||dd.createTime)+'</span>'
+            +'<span class="d-value green">-¥'+(Number(dd.amount||0).toFixed(2))+'</span>'
+            +'</div>';
+        });
+      }else{
+        html+='<div class="detail-title">暂无抵扣记录</div>';
+      }
+      container.innerHTML=html;
+    }else{
+      container.innerHTML='<div class="detail-loading">加载失败：'+(r.msg||"未知错误")+'</div>';
+    }
+  }catch(e){
+    container.innerHTML='<div class="detail-loading">网络异常</div>';
+  }
+}
+
+// Load deduct logs — GET /api/property/owner/deduct-logs
+async function loadDeductLogs(){
+  $("billList").innerHTML='<div style="text-align:center;padding:20px;color:var(--text-3);font-size:13px;">加载中...</div>';
+  const r=await get("/deduct-logs");
+  if(r.code===0&&r.data&&r.data.length){
+    const list=r.data;
+    let html='<div class="card"><table class="log-table"><thead><tr>'
+      +'<th>时间</th><th>说明</th><th>来源</th><th>金额</th>'
+      +'</tr></thead><tbody>';
+    list.forEach(function(c){
+      html+='<tr>'
+        +'<td>'+fmtTime(c.createTime||c.deductTime)+'</td>'
+        +'<td>'+(c.remark||c.description||"扣款")+'</td>'
+        +'<td>'+(c.source||c.companyName||"--")+'</td>'
+        +'<td class="amt">-¥'+(Number(c.amount||0).toFixed(2))+'</td>'
+        +'</tr>';
+    });
+    html+='</tbody></table></div>';
+    $("billList").innerHTML=html;
+  }else{
+    $("billList").innerHTML=emptyBox("📋","暂无抵扣日志");
+  }
+}
+
+// Load parking fees — GET /api/property/owner/parking-fees
+async function loadParkingFees(){
+  $("billList").innerHTML='<div style="text-align:center;padding:20px;color:var(--text-3);font-size:13px;">加载中...</div>';
+  const r=await get("/parking-fees");
+  if(r.code===0&&r.data&&r.data.length){
+    const list=r.data;
+    let html='<div class="card"><table class="fee-table"><thead><tr>'
+      +'<th>车牌</th><th>周期</th><th>状态</th><th>金额</th>'
+      +'</tr></thead><tbody>';
+    list.forEach(function(f){
+      html+='<tr>'
+        +'<td>'+(f.plateNumber||f.plate||"--")+'</td>'
+        +'<td>'+(f.period||fmtDate(f.createTime))+'</td>'
+        +'<td>'+(f.status||"--")+'</td>'
+        +'<td class="amt">¥'+(Number(f.amount||0).toFixed(2))+'</td>'
+        +'</tr>';
+    });
+    html+='</tbody></table></div>';
+    $("billList").innerHTML=html;
+  }else{
+    $("billList").innerHTML=emptyBox("🅿️","暂无车位费账单");
+  }
+}
+
+// Load property bills — GET /api/property/owner/bills
+async function loadPropertyBills(){
+  $("billList").innerHTML='<div style="text-align:center;padding:20px;color:var(--text-3);font-size:13px;">加载中...</div>';
+  const r=await get("/bills");
+  if(r.code===0&&r.data&&r.data.length){
+    $("billList").innerHTML=r.data.map(renderBillCard).join("");
+  }else{
+    $("billList").innerHTML=emptyBox("📋","暂无物业费账单");
+  }
+}
+
+function loadCurrentTab(){
+  if(curTab==="property"){
+    loadPropertyBills();
+  }else if(curTab==="parking"){
+    loadParkingFees();
+  }else if(curTab==="deduct"){
+    loadDeductLogs();
+  }
+}
+
+// Nav
+document.querySelectorAll(".nav .tab").forEach(el=>el.addEventListener("click",()=>{
+  const h=el.dataset.go;if(h)location.href=h;
+}));
+
+loadCurrentTab();
+</script>
+</body>
+</html>

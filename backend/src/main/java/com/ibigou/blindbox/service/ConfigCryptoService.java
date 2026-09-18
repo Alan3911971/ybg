@@ -21,7 +21,8 @@ public class ConfigCryptoService {
 
     /** 需要加密存储的敏感 key */
     public static final Set<String> SENSITIVE_KEYS = Set.of(
-            "wx_pay_api_key", "wx_pay_api_v3_key", "identity_qr_secret");
+            "wx_pay_api_key", "wx_pay_api_v3_key", "identity_qr_secret",
+            "wx_pay_app_secret", "xcx_app_secret");
 
     private static final String PREFIX = "enc:";
 

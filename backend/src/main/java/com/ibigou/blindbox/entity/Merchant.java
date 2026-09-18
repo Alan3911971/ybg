@@ -113,6 +113,22 @@ public class Merchant {
     @Column(length = 32)
     private String industry;
 
+    /** 物业分账：是否参与 0否 1是 */
+    @Column(nullable = false)
+    private Integer isSplitEnabled;
+
+    /** 物业分账：分账比例(%) */
+    @Column(precision = 5, scale = 2)
+    private java.math.BigDecimal splitRatio;
+
+    /** 物业分账：微信子商户号 */
+    @Column(length = 64)
+    private String wxSubMchId;
+
+    /** 物业分账：开通状态 0未申请 1审核中 2已通过 3已驳回 */
+    @Column(nullable = false)
+    private Integer splitAuditStatus;
+
     @Column(nullable = false, updatable = false)
     private LocalDateTime createTime;
 

@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover">
+<meta name="theme-color" content="#4f46e5">
+<title>家庭成员绑定 · 我的物业</title>
+<link rel="icon" href="data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='80' font-size='90'%3E🏠%3C/text%3E%3C/svg%3E">
+<style>
+:root{--pri:#4f46e5;--pri-grad:linear-gradient(135deg,#4f46e5,#7c3aed);--pri-bg:#eef2ff;--text:#1e293b;--text-2:#64748b;--text-3:#94a3b8;--bg:#f8fafc;--surface:#fff;--border:#e2e8f0;--shadow-card:0 2px 12px rgba(0,0,0,.04);--r-md:14px;--r-lg:20px;--r-full:999px;--safe-bottom:env(safe-area-inset-bottom,0px);}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+html,body{font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","PingFang SC","Microsoft YaHei",sans-serif;color:var(--text);background:var(--bg);-webkit-font-smoothing:antialiased;font-size:15px;}
+body{min-height:100vh;max-width:480px;margin:0 auto;padding-bottom:calc(24px + var(--safe-bottom));}
+a{color:inherit;text-decoration:none;}
+button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit;}
+.hero{background:var(--pri-grad);color:#fff;padding:40px 20px 30px;position:relative;overflow:hidden;border-radius:0 0 var(--r-lg) var(--r-lg);}
+.hero::before{content:"";position:absolute;top:-60px;right:-40px;width:180px;height:180px;background:rgba(255,255,255,.12);border-radius:50%;}
+.hero::after{content:"";position:absolute;bottom:-30px;left:-20px;width:120px;height:120px;background:rgba(255,255,255,.08);border-radius:50%;}
+.hero h1{font-size:22px;font-weight:700;position:relative;z-index:1;letter-spacing:-.3px;}
+.hero .sub{font-size:13px;opacity:.85;margin-top:6px;position:relative;z-index:1;font-weight:400;}
+.wrap{padding:0 16px;}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);padding:18px 16px;margin-top:16px;box-shadow:var(--shadow-card);}
+.card-title{font-size:15px;font-weight:700;color:var(--text);}
+.owner-box{display:flex;align-items:center;gap:12px;margin-top:12px;padding:12px;background:var(--pri-bg);border-radius:var(--r-md);}
+.owner-avatar{width:46px;height:46px;border-radius:50%;background:var(--pri-grad);color:#fff;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;}
+.owner-name{font-size:15px;font-weight:700;}
+.owner-meta{font-size:12px;color:var(--text-2);margin-top:3px;line-height:1.5;}
+.form-group{margin-top:14px;}
+.form-group label{display:block;font-size:13px;color:var(--text-2);margin-bottom:6px;font-weight:600;}
+.input{width:100%;height:50px;padding:0 16px;border:none;border-radius:var(--r-md);background:#f8fafc;font-size:15px;color:var(--text);transition:all .2s ease;outline:none;}
+.input:focus{background:#fff;box-shadow:0 0 0 2px var(--pri),0 4px 12px rgba(79,70,229,.15);}
+.input::placeholder{color:var(--text-3);}
+select.input{appearance:none;-webkit-appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%2394a3b8' fill='none' stroke-width='1.5'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 16px center;}
+.btn{display:inline-flex;align-items:center;justify-content:center;border-radius:var(--r-md);font-weight:600;transition:all .2s ease;}
+.btn-block{width:100%;}
+.btn-md{height:50px;font-size:15px;}
+.btn-primary{background:var(--pri-grad);color:#fff;box-shadow:0 6px 16px rgba(79,70,229,.28);}
+.btn-primary:active{transform:scale(.97);}
+.btn:disabled{opacity:.6;cursor:not-allowed;}
+.hint{font-size:12px;color:var(--text-3);text-align:center;margin-top:14px;line-height:1.6;}
+.toast-host{position:fixed;top:calc(20px + env(safe-area-inset-top,0px));left:0;right:0;z-index:999;display:flex;flex-direction:column;align-items:center;gap:8px;pointer-events:none;}
+.toast{background:rgba(30,41,59,.92);color:#fff;font-size:13px;padding:10px 18px;border-radius:var(--r-full);opacity:0;transform:translateY(-8px);transition:all .25s ease;max-width:80%;text-align:center;}
+.toast.show{opacity:1;transform:translateY(0);}
+.toast.success{background:rgba(16,185,129,.95);}
+.toast.danger{background:rgba(239,68,68,.95);}
+.toast.warning{background:rgba(245,158,11,.95);}
+.success-box{text-align:center;padding:20px 10px;}
+.success-box .big{font-size:46px;}
+.success-box .t1{font-size:17px;font-weight:700;margin-top:12px;}
+.success-box .t2{font-size:13px;color:var(--text-2);margin-top:8px;line-height:1.7;}
+</style>
+</head>
+<body>
+<div class="hero">
+  <h1>🏠 家庭成员绑定</h1>
+  <div class="sub">扫码绑定 · 填写手机号确认</div>
+</div>
+
+<div class="wrap">
+  <!-- 加载中 -->
+  <div class="card" id="loadingCard">
+    <div style="text-align:center;padding:20px;color:var(--text-3);font-size:13px;">加载业主信息中...</div>
+  </div>
+
+  <!-- 表单 -->
+  <div class="card" id="formCard" style="display:none;">
+    <div class="card-title">确认绑定</div>
+    <div class="owner-box">
+      <div class="owner-avatar" id="ownerAvatar">🏠</div>
+      <div>
+        <div class="owner-name" id="ownerName">--</div>
+        <div class="owner-meta" id="ownerMeta">--</div>
+      </div>
+    </div>
+    <div class="form-group">
+      <label>您的姓名</label>
+      <input id="memberName" class="input" type="text" placeholder="请输入您的姓名">
+    </div>
+    <div class="form-group">
+      <label>您的手机号</label>
+      <input id="memberPhone" class="input" type="tel" placeholder="用于确认绑定身份" maxlength="11">
+    </div>
+    <div class="form-group">
+      <label>与业主关系</label>
+      <select id="relation" class="input">
+        <option value="">请选择</option>
+        <option value="配偶">配偶</option>
+        <option value="父亲">父亲</option>
+        <option value="母亲">母亲</option>
+        <option value="子女">子女</option>
+        <option value="兄弟姐妹">兄弟姐妹</option>
+        <option value="其他">其他</option>
+      </select>
+    </div>
+    <button id="btnBind" class="btn btn-md btn-primary btn-block" style="margin-top:18px;">确认绑定</button>
+    <div class="hint">绑定成功后，您可以用自己的手机号登录<br>与业主共享账单、门禁等物业服务</div>
+  </div>
+
+  <!-- 成功 -->
+  <div class="card" id="okCard" style="display:none;">
+    <div class="success-box">
+      <div class="big">✅</div>
+      <div class="t1">绑定成功</div>
+      <div class="t2" id="okText">您已成为家庭成员，可共享物业服务</div>
+    </div>
+  </div>
+</div>
+
+<div class="toast-host" id="toastHost"></div>
+
+<script>
+const $=id=>document.getElementById(id);
+function toast(m,t){const h=$("toastHost");if(!h)return;const e=document.createElement("div");e.className="toast "+(t||"");e.textContent=m;h.appendChild(e);requestAnimationFrame(()=>e.classList.add("show"));setTimeout(()=>{e.classList.remove("show");setTimeout(()=>e.remove(),220)},2400)}
+
+const params=new URLSearchParams(location.search);
+const ownerId=params.get("ownerId");
+if(!ownerId){document.body.innerHTML='<div style="text-align:center;padding:60px 20px;color:var(--text-3);font-size:14px;">链接无效，请重新扫码</div>';}
+
+// 加载业主信息
+fetch("/api/property/owner/family/qr-info?ownerId="+encodeURIComponent(ownerId)).then(r=>r.json()).then(res=>{
+  if(res.code!==0||!res.data){
+    $("loadingCard").innerHTML='<div style="text-align:center;padding:20px;color:var(--text-3);font-size:13px;">业主信息不存在或链接已失效</div>';
+    return;
+  }
+  var d=res.data;
+  $("loadingCard").style.display="none";
+  $("formCard").style.display="block";
+  $("ownerName").textContent=d.ownerName||"业主";
+  var meta=[];
+  if(d.companyName)meta.push(d.companyName);
+  if(d.roomNo)meta.push(d.roomNo+"室");
+  if(meta.length)$("ownerMeta").textContent=meta.join(" · ");
+}).catch(function(){
+  $("loadingCard").innerHTML='<div style="text-align:center;padding:20px;color:var(--text-3);font-size:13px;">网络异常，请重试</div>';
+});
+
+// 提交绑定
+$("btnBind").addEventListener("click",function(){
+  var name=($("memberName").value||"").trim();
+  var phone=($("memberPhone").value||"").trim();
+  var relation=$("relation").value;
+  if(!name){toast("请输入您的姓名","warning");return}
+  if(!/^1\d{10}$/.test(phone)){toast("请填写正确的11位手机号","warning");return}
+  if(!relation){toast("请选择与业主关系","warning");return}
+  var btn=$("btnBind");
+  btn.disabled=true;btn.textContent="提交中...";
+  var p=new URLSearchParams();
+  p.append("ownerId",ownerId);
+  p.append("memberName",name);
+  p.append("memberPhone",phone);
+  p.append("relation",relation);
+  fetch("/api/property/owner/family/bind-by-qr",{method:"POST",headers:{"Content-Type":"application/x-www-form-urlencoded"},body:p.toString()})
+    .then(r=>r.json()).then(res=>{
+      if(res.code===0){
+        $("formCard").style.display="none";
+        $("okCard").style.display="block";
+        $("okText").textContent="您（"+name+"）已绑定为业主家庭成员，可用手机号 "+phone+" 登录共享物业服务";
+      }else{
+        btn.disabled=false;btn.textContent="确认绑定";
+        toast(res.msg||"绑定失败","danger");
+      }
+    }).catch(function(){
+      btn.disabled=false;btn.textContent="确认绑定";
+      toast("网络异常，请重试","danger");
+    });
+});
+</script>
+</body>
+</html>

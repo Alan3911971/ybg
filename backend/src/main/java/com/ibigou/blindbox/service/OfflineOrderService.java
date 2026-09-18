@@ -6,6 +6,7 @@ import com.ibigou.blindbox.entity.UserCoupon;
 import com.ibigou.blindbox.enums.VerifyType;
 import com.ibigou.blindbox.repository.OfflineOrderRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -20,6 +21,7 @@ import java.util.UUID;
  * <p>流程 C1：抽奖后选择本店自营下单，支付成功触发本次抽奖批次闭环。</p>
  */
 @Service
+@Slf4j
 @RequiredArgsConstructor
 public class OfflineOrderService {
 
@@ -33,6 +35,7 @@ public class OfflineOrderService {
     private final AuditLogService auditLogService;
     private final AnnounceService announceService;
     private final UserMessageService userMessageService;
+    private final PropertySplitTriggerService propertySplitTriggerService;
 
     /**
      * 线下自营下单（V1.5 全自动：余额抵扣四重 min 由系统计算，用户/商家不手输）。
@@ -312,6 +315,23 @@ public class OfflineOrderService {
         order.setUpdateTime(LocalDateTime.now());
         OfflineOrder saved = orderRepository.save(order);
         announceOrder(order.getMerchantNo(), saved, "order_auto", false);
+
+        // 双模式分账触发：同时尝试商家→物业 和 平台→物业两种模式
+        try {
+            propertySplitTriggerService.onMerchantOrderPaid(
+                    saved.getOfflineOrderNo(), saved.getOrderAmount(),
+                    saved.getMerchantNo(), saved.getUserPhone());
+        } catch (Exception e) {
+            log.warn("商家→物业分账触发异常(不影响主流程): orderNo={}, err={}", saved.getOfflineOrderNo(), e.getMessage());
+        }
+        try {
+            propertySplitTriggerService.onPlatformOrderPaid(
+                    saved.getOfflineOrderNo(), saved.getOrderAmount(),
+                    saved.getMerchantNo(), saved.getUserPhone());
+        } catch (Exception e) {
+            log.warn("平台→物业分账触发异常(不影响主流程): orderNo={}, err={}", saved.getOfflineOrderNo(), e.getMessage());
+        }
+
         return saved;
     }
 

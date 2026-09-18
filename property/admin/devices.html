@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#4f46e5">
+<title>IoT设备与告警 · 物业后台 · 宜必购物业</title>
+<link rel="icon" href="data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='80' font-size='90'%3E%F0%9F%8F%A2%3C/text%3E%3C/svg%3E">
+<style>
+  :root{
+    --pri:#4f46e5;--pri-grad:linear-gradient(135deg,#4f46e5 0%,#7c3aed 100%);
+    --success:#10b981;--danger:#ef4444;--warning:#f59e0b;
+    --dark:#0f172a;--text:#1e293b;--text-2:#64748b;--text-3:#94a3b8;
+    --bg:#f8fafc;--surface:#ffffff;--border:#e2e8f0;--divider:#f1f5f9;
+    --shadow-card:0 1px 3px rgba(0,0,0,.04),0 8px 24px rgba(0,0,0,.04);
+    --r-sm:8px;--r-md:12px;--r-lg:16px;--sidebar-w:272px;--ease:cubic-bezier(.4,0,.2,1);
+  }
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+  html,body{font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif;color:var(--text);background:var(--bg);-webkit-font-smoothing:antialiased;height:100%;}
+  a{color:inherit;text-decoration:none;} input,select,button{font-size:16px;font-family:inherit;}
+  @keyframes fadeInUp{from{opacity:0;transform:translateY(16px);}to{opacity:1;transform:translateY(0);}}
+  .layout{display:flex;min-height:100vh;}
+  .sidebar{width:var(--sidebar-w);background:linear-gradient(180deg,#0f172a 0%,#1e293b 100%);display:flex;flex-direction:column;position:fixed;top:0;left:0;bottom:0;z-index:40;transition:transform .25s ease;}
+  .sidebar .brand{padding:24px 20px;display:flex;align-items:center;gap:12px;border-bottom:1px solid rgba(255,255,255,.08);}
+  .sidebar .brand .logo{width:40px;height:40px;border-radius:var(--r-md);background:var(--pri-grad);color:#fff;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;font-weight:700;}
+  .sidebar .brand h1{font-size:16px;font-weight:700;line-height:1.3;color:#fff;}
+  .sidebar .brand h1 span{font-size:11px;color:rgba(255,255,255,.5);font-weight:400;display:block;margin-top:2px;}
+  .sidebar nav{flex:1;overflow-y:auto;padding:16px 12px;}
+  .nav-section{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:rgba(255,255,255,.35);padding:16px 12px 6px;margin-top:4px;}
+  .nav-section:first-child{margin-top:0;padding-top:8px;}
+  .sidebar nav a{height:44px;padding:0 16px;border-radius:10px;font-size:14px;color:rgba(255,255,255,.55);font-weight:500;transition:all .2s;margin-bottom:2px;display:flex;align-items:center;gap:12px;}
+  .sidebar nav a:hover{color:rgba(255,255,255,.9);background:rgba(255,255,255,.06);}
+  .sidebar nav a.active{color:#fff;background:rgba(79,70,229,.15);font-weight:600;border-left:3px solid #818cf8;border-radius:0 10px 10px 0;}
+  .sidebar nav a .icon{font-size:16px;width:22px;text-align:center;flex-shrink:0;}
+  .sidebar .logout-area{padding:16px 12px;border-top:1px solid rgba(255,255,255,.08);}
+  .sidebar .logout-area a{color:rgba(255,255,255,.5);justify-content:center;border-radius:var(--r-sm);padding:11px 14px;}
+  .sidebar .logout-area a:hover{color:var(--danger);background:rgba(239,68,68,.1);}
+  .main{margin-left:var(--sidebar-w);flex:1;padding:32px 40px;max-width:1200px;margin:0 auto;animation:fadeInUp .5s ease both;}
+  .topbar{background:var(--surface);border-bottom:1px solid var(--border);padding:14px 28px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:30;backdrop-filter:blur(12px);background:rgba(255,255,255,.85);}
+  .topbar .page-title{font-size:28px;font-weight:800;color:var(--text);letter-spacing:-.5px;line-height:1.2;}
+  .topbar .menu-toggle{display:none;background:none;border:none;font-size:22px;cursor:pointer;padding:4px 8px;color:var(--text-2);}
+  .sidebar-overlay{display:none;position:fixed;inset:0;background:rgba(15,23,42,.6);z-index:35;}
+  @media(max-width:768px){.sidebar{transform:translateX(-100%);}.sidebar.open{transform:translateX(0);}.sidebar-overlay.show{display:block;}.main{margin-left:0;padding:20px 16px;}.topbar .menu-toggle{display:block;}}
+  .card{background:var(--surface);border-radius:var(--r-lg);padding:24px;margin-bottom:20px;box-shadow:var(--shadow-card);}
+  .sec{display:flex;align-items:center;gap:10px;font-weight:700;margin:0 0 16px;font-size:15px;}
+  .sec .ic{width:32px;height:32px;border-radius:var(--r-sm);background:linear-gradient(135deg,rgba(79,70,229,.1),rgba(124,58,237,.1));color:var(--pri);display:inline-flex;align-items:center;justify-content:center;font-size:15px;flex:0 0 32px;}
+  .input,.select{height:44px;padding:0 14px;border:1.5px solid var(--border);border-radius:var(--r-sm);font-size:14px;color:var(--text);background:#fff;transition:border-color .2s,box-shadow .2s;-webkit-appearance:none;appearance:none;}
+  .input:focus,.select:focus{outline:none;border-color:var(--pri);box-shadow:0 0 0 3px rgba(79,70,229,.12);}
+  .filter-bar{display:flex;gap:12px;margin-bottom:16px;flex-wrap:wrap;align-items:center;}
+  .table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;border-radius:var(--r-md);border:1px solid var(--border);}
+  table{width:100%;border-collapse:collapse;font-size:13px;min-width:750px;}
+  th{text-align:left;padding:12px 16px;background:var(--bg);color:var(--text-2);font-weight:700;font-size:11px;text-transform:uppercase;letter-spacing:.06em;border-bottom:1px solid var(--border);white-space:nowrap;}
+  td{padding:12px 16px;border-bottom:1px solid var(--divider);color:var(--text);white-space:nowrap;}
+  tr:nth-child(even) td{background:var(--bg);} tr:hover td{background:rgba(79,70,229,.04);}
+  .badge{display:inline-block;padding:4px 12px;border-radius:999px;font-size:11px;font-weight:600;}
+  .badge.green{background:rgba(16,185,129,.1);color:#059669;} .badge.blue{background:rgba(79,70,229,.08);color:#4f46e5;}
+  .badge.orange{background:rgba(245,158,11,.1);color:#d97706;} .badge.red{background:rgba(239,68,68,.1);color:#dc2626;}
+  .badge.gray{background:rgba(100,116,139,.1);color:#64748b;}
+  .empty{padding:32px 16px;text-align:center;color:var(--text-3);font-size:13px;}
+  .toast-host{position:fixed;top:20px;right:20px;z-index:99;display:flex;flex-direction:column;gap:10px;pointer-events:none;}
+  .toast{padding:12px 20px;border-radius:var(--r-sm);background:var(--dark);color:#fff;font-size:14px;font-weight:500;opacity:0;transform:translateX(40px);transition:all .25s ease;box-shadow:0 8px 24px rgba(0,0,0,.15);}
+  .toast.show{opacity:1;transform:translateX(0);} .toast.success{background:var(--success);} .toast.danger{background:var(--danger);}
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:none;font-weight:600;cursor:pointer;transition:all .2s;white-space:nowrap;}
+  .btn-xs{height:28px;padding:0 10px;font-size:12px;border-radius:6px;} .btn-sm{height:36px;padding:0 16px;font-size:13px;border-radius:8px;}
+  .btn-md{height:44px;padding:0 24px;font-size:14px;border-radius:10px;}
+  .btn-primary{background:linear-gradient(135deg,#4f46e5,#7c3aed);color:#fff;box-shadow:0 2px 8px rgba(79,70,229,.3);}
+  .btn-secondary{background:var(--surface);color:var(--text);border:1.5px solid var(--border);}
+  .btn-success{background:linear-gradient(135deg,#10b981,#059669);color:#fff;} .btn-danger{background:linear-gradient(135deg,#ef4444,#dc2626);color:#fff;}
+  .btn-warning{background:linear-gradient(135deg,#f59e0b,#d97706);color:#fff;}
+  .btn:hover{transform:translateY(-1px);filter:brightness(1.05);} .btn:active{transform:scale(.97);}
+  .row-actions{display:flex;gap:6px;}
+  .tabs{display:flex;gap:0;border-bottom:2px solid var(--border);margin-bottom:20px;}
+  .tab-btn{padding:12px 24px;font-size:14px;font-weight:600;color:var(--text-2);background:none;border:none;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;transition:color .2s,border-color .2s;}
+  .tab-btn:hover{color:var(--pri);} .tab-btn.active{color:var(--pri);border-bottom-color:var(--pri);}
+  .tab-panel{display:none;} .tab-panel.active{display:block;animation:fadeInUp .35s var(--ease) both;}
+  .stats-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:16px;margin-bottom:20px;}
+  .stat-card{background:var(--surface);border-radius:var(--r-md);padding:20px;box-shadow:var(--shadow-card);text-align:center;}
+  .stat-card .num{font-size:32px;font-weight:800;letter-spacing:-1px;margin-bottom:4px;}
+  .stat-card .label{font-size:13px;color:var(--text-2);font-weight:500;}
+  .stat-card.danger .num{color:var(--danger);} .stat-card.warning .num{color:var(--warning);}
+  .stat-card.primary .num{color:var(--pri);}
+  .modal-overlay{display:none;position:fixed;inset:0;background:rgba(15,23,42,.5);z-index:50;backdrop-filter:blur(4px);align-items:center;justify-content:center;}
+  .modal-overlay.show{display:flex;}
+  .modal{background:var(--surface);border-radius:var(--r-lg);padding:28px;width:90%;max-width:520px;box-shadow:0 20px 60px rgba(0,0,0,.15);animation:fadeInUp .3s var(--ease) both;}
+  .modal h3{font-size:18px;font-weight:700;margin-bottom:20px;}
+  .modal .fg{margin-bottom:16px;} .modal .fg label{display:block;font-size:13px;font-weight:600;color:var(--text-2);margin-bottom:6px;}
+  .modal .fg .input,.modal .fg .select{width:100%;}
+  .modal .ma{display:flex;gap:10px;justify-content:flex-end;margin-top:24px;}
+  .toggle{position:relative;display:inline-block;width:44px;height:24px;}
+  .toggle input{opacity:0;width:0;height:0;} .toggle .sl{position:absolute;cursor:pointer;inset:0;background:#cbd5e1;border-radius:24px;transition:.3s;}
+  .toggle .sl:before{content:"";position:absolute;height:18px;width:18px;left:3px;bottom:3px;background:#fff;border-radius:50%;transition:.3s;}
+  .toggle input:checked+.sl{background:var(--pri);} .toggle input:checked+.sl:before{transform:translateX(20px);}
+
+/* ===== 窄屏防变形（统一注入）===== */
+@media(max-width:900px){
+  .sidebar{transform:translateX(-100%);}
+  .sidebar.open{transform:translateX(0);}
+  .sidebar-overlay.show{display:block;}
+  .main,.main-content{margin-left:0 !important;padding:20px 14px !important;min-width:0 !important;max-width:100% !important;}
+  .topbar .menu-toggle{display:block !important;}
+  .card{overflow-x:auto;-webkit-overflow-scrolling:touch;min-width:0 !important;}
+  .topbar{padding:14px 14px;}
+  .tabs{min-width:0 !important;}
+}
+@media(max-width:480px){
+  .main{padding:14px 10px !important;}
+  .card{padding:16px 12px;}
+  .sec{font-size:14px;}
+  .page-title{font-size:22px !important;}
+}
+</style>
+</head>
+<body>
+<div class="toast-host" id="toastHost"></div>
+<div class="layout">
+  <div class="sidebar" id="sidebar">
+    <div class="brand"><div class="logo">🏢</div><h1>宜必购物业<span>Property Admin</span></h1></div>
+    <nav>
+      <div class="nav-section">概览</div>
+      <a href="dashboard.html"><span class="icon">📊</span>工作台</a>
+      <a href="index.html"><span class="icon">🏠</span>首页看板</a>
+      <div class="nav-section">业务管理</div>
+      <a href="owners.html"><span class="icon">👥</span>业主管理</a>
+      <a href="buildings.html"><span class="icon">🏢</span>楼栋房间</a>
+      <a href="bills.html"><span class="icon">🧾</span>账单管理</a>
+      <a href="splits.html"><span class="icon">💰</span>分账流水</a>
+      <a href="merchant-bindings.html"><span class="icon">🔗</span>商家绑定</a>
+      <a href="activity-audit.html"><span class="icon">✅</span>活动审核</a>
+      <a href="facilities.html"><span class="icon">🏟️</span>场地预约</a>
+      <div class="nav-section">安防通行</div>
+      <a href="access.html"><span class="icon">🚪</span>门禁管理</a>
+      <a href="vehicles.html"><span class="icon">🚗</span>车辆管理</a>
+      <a href="devices.html" class="active"><span class="icon">📡</span>IoT设备</a>
+    </nav>
+    <div class="logout-area"><a href="#" id="logoutBtn"><span class="icon">🚪</span>退出登录</a></div>
+  </div>
+  <div class="sidebar-overlay" id="overlay"></div>
+  <div class="main">
+    <div class="topbar"><button class="menu-toggle" id="menuToggle">☰</button><div class="page-title">IoT设备与告警</div><div></div></div>
+    <div class="content">
+      <div class="stats-row">
+        <div class="stat-card danger"><div class="num" id="sUnacked">-</div><div class="label">未确认告警</div></div>
+        <div class="stat-card warning"><div class="num" id="sToday">-</div><div class="label">今日告警</div></div>
+        <div class="stat-card primary"><div class="num" id="sCritical">-</div><div class="label">严重告警</div></div>
+      </div>
+      <div class="tabs">
+        <button class="tab-btn active" data-tab="devices">设备列表</button>
+        <button class="tab-btn" data-tab="alerts">告警记录</button>
+        <button class="tab-btn" data-tab="rules">告警规则</button>
+      </div>
+
+      <!-- ===== Devices Tab ===== -->
+      <div class="tab-panel active" id="tab-devices">
+        <div class="card">
+          <div class="sec"><span class="ic">📡</span>设备管理<span style="flex:1"></span><button class="btn-sm btn-primary" id="btnAddDev">+ 添加设备</button></div>
+          <div class="filter-bar">
+            <select class="select" id="devCompSel"><option value="">选择物业公司</option></select>
+            <button class="btn-sm btn-primary" id="btnLoadDev">查询</button>
+          </div>
+          <div class="table-wrap"><table><thead><tr><th>设备编号</th><th>名称</th><th>类型</th><th>位置</th><th>品牌</th><th>IP</th><th>状态</th><th>最后心跳</th><th>操作</th></tr></thead><tbody id="devTbody"><tr><td colspan="9" class="empty">请选择物业公司后查询</td></tr></tbody></table></div>
+        </div>
+      </div>
+
+      <!-- ===== Alerts Tab ===== -->
+      <div class="tab-panel" id="tab-alerts">
+        <div class="card">
+          <div class="sec"><span class="ic">🔔</span>告警记录</div>
+          <div class="filter-bar">
+            <select class="select" id="alertCompSel"><option value="">选择物业公司</option></select>
+            <select class="select" id="alertAckF"><option value="">全部状态</option><option value="0">未确认</option><option value="1">已确认</option><option value="2">已处理</option></select>
+            <input class="input" type="date" id="alertDF" title="开始日期">
+            <span style="color:var(--text-3);line-height:44px">至</span>
+            <input class="input" type="date" id="alertDT" title="结束日期">
+            <button class="btn-sm btn-primary" id="btnLoadAlerts">查询</button>
+          </div>
+          <div class="table-wrap"><table><thead><tr><th>ID</th><th>设备ID</th><th>告警类型</th><th>级别</th><th>消息</th><th>工单</th><th>状态</th><th>时间</th><th>操作</th></tr></thead><tbody id="alertTbody"><tr><td colspan="9" class="empty">请选择物业公司后查询</td></tr></tbody></table></div>
+        </div>
+      </div>
+
+      <!-- ===== Rules Tab ===== -->
+      <div class="tab-panel" id="tab-rules">
+        <div class="card">
+          <div class="sec"><span class="ic">⚙️</span>告警规则<span style="flex:1"></span><button class="btn-sm btn-primary" id="btnAddRule">+ 新建规则</button></div>
+          <div class="filter-bar">
+            <select class="select" id="ruleCompSel"><option value="">选择物业公司</option></select>
+            <button class="btn-sm btn-primary" id="btnLoadRules">查询</button>
+          </div>
+          <div class="table-wrap"><table><thead><tr><th>ID</th><th>规则名称</th><th>设备类型</th><th>告警类型</th><th>阈值</th><th>窗口</th><th>静默</th><th>自动工单</th><th>状态</th><th>操作</th></tr></thead><tbody id="ruleTbody"><tr><td colspan="10" class="empty">请选择物业公司后查询</td></tr></tbody></table></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Add Device Modal -->
+<div class="modal-overlay" id="addDevModal">
+  <div class="modal">
+    <h3>添加设备</h3>
+    <div class="fg"><label>物业公司ID</label><input class="input" id="mDevComp" type="number" placeholder="公司ID"></div>
+    <div class="fg"><label>小区ID</label><input class="input" id="mDevComm" type="number" placeholder="小区ID"></div>
+    <div class="fg"><label>设备编号</label><input class="input" id="mDevNo" placeholder="如 DEV-DOOR-001"></div>
+    <div class="fg"><label>设备名称</label><input class="input" id="mDevName" placeholder="如 1号楼大门"></div>
+    <div class="fg"><label>设备类型</label><select class="select" id="mDevType"><option value="door">门禁</option><option value="gate">道闸</option><option value="elevator">电梯</option><option value="fire">消防</option><option value="camera">摄像头</option></select></div>
+    <div class="fg"><label>安装位置</label><input class="input" id="mDevLoc" placeholder="可选"></div>
+    <div class="fg"><label>品牌</label><select class="select" id="mDevBrand"><option value="">无</option><option value="hikvision">海康威视</option><option value="dahua">大华</option><option value="uniview">宇视</option></select></div>
+    <div class="fg"><label>IP地址</label><input class="input" id="mDevIp" placeholder="可选"></div>
+    <div class="ma"><button class="btn-sm btn-secondary" onclick="closeModal('addDevModal')">取消</button><button class="btn-sm btn-primary" id="btnSubmitDev">确认添加</button></div>
+  </div>
+</div>
+
+<!-- Add Rule Modal -->
+<div class="modal-overlay" id="addRuleModal">
+  <div class="modal">
+    <h3>新建告警规则</h3>
+    <div class="fg"><label>物业公司ID</label><input class="input" id="mRuleComp" type="number" placeholder="公司ID"></div>
+    <div class="fg"><label>规则名称</label><input class="input" id="mRuleName" placeholder="如 门禁离线告警"></div>
+    <div class="fg"><label>告警类型</label><select class="select" id="mRuleAT"><option value="offline">离线</option><option value="fault">故障</option><option value="tamper">防拆</option><option value="overtemp">过温</option><option value="custom">自定义</option></select></div>
+    <div class="fg"><label>适用设备类型</label><select class="select" id="mRuleDT"><option value="">全部</option><option value="door">门禁</option><option value="gate">道闸</option><option value="elevator">电梯</option><option value="fire">消防</option><option value="camera">摄像头</option></select></div>
+    <div class="fg"><label>触发阈值(次)</label><input class="input" id="mRuleTh" type="number" value="1"></div>
+    <div class="fg"><label>时间窗口(分钟)</label><input class="input" id="mRuleWin" type="number" value="5"></div>
+    <div class="fg"><label>静默期(分钟)</label><input class="input" id="mRuleSil" type="number" value="30"></div>
+    <div class="fg"><label>自动创建工单</label><select class="select" id="mRuleAW"><option value="1">是</option><option value="0">否</option></select></div>
+    <div class="ma"><button class="btn-sm btn-secondary" onclick="closeModal('addRuleModal')">取消</button><button class="btn-sm btn-primary" id="btnSubmitRule">确认创建</button></div>
+  </div>
+</div>
+
+<script>
+(function(){
+  var token = localStorage.getItem('property_admin_token');
+  if (!token) { location.href = 'login.html'; return; }
+
+  var sidebar = document.getElementById('sidebar'), overlay = document.getElementById('overlay');
+  document.getElementById('menuToggle').onclick = function(){ sidebar.classList.add('open'); overlay.classList.add('show'); };
+  overlay.onclick = function(){ sidebar.classList.remove('open'); overlay.classList.remove('show'); };
+  document.getElementById('logoutBtn').onclick = function(e){ e.preventDefault(); localStorage.removeItem('property_admin_token'); location.href = 'login.html'; };
+
+  function showToast(msg, type){ var h=document.getElementById('toastHost'),e=document.createElement('div'); e.className='toast '+(type||''); e.textContent=msg; h.appendChild(e); requestAnimationFrame(function(){e.classList.add('show');}); setTimeout(function(){e.classList.remove('show');setTimeout(function(){e.remove();},200);},2500); }
+  function api(url,opts){ opts=opts||{}; opts.headers=opts.headers||{}; opts.headers['X-Property-Token']=token; return fetch(url,opts).then(function(r){return r.json();}); }
+  function closeModal(id){ document.getElementById(id).classList.remove('show'); }
+  function openModal(id){ document.getElementById(id).classList.add('show'); }
+  function fmtTime(t){ return t ? t.replace('T',' ').substring(0,19) : '--'; }
+
+  var typeMap={'door':'门禁','gate':'道闸','elevator':'电梯','fire':'消防','camera':'摄像头'};
+  var alertMap={'offline':'离线','fault':'故障','tamper':'防拆','overtemp':'过温','custom':'自定义'};
+  function statusB(s){ return s===1?'<span class="badge green">在线</span>':s===0?'<span class="badge red">离线</span>':s===2?'<span class="badge orange">故障</span>':'<span class="badge gray">未知</span>'; }
+  function levelB(l){ return l===3?'<span class="badge red">严重</span>':l===2?'<span class="badge orange">警告</span>':'<span class="badge blue">信息</span>'; }
+  function ackB(s){ return s===0?'<span class="badge red">未确认</span>':s===1?'<span class="badge orange">已确认</span>':s===2?'<span class="badge green">已处理</span>':'<span class="badge gray">--</span>'; }
+
+  // Tabs
+  document.querySelectorAll('.tab-btn').forEach(function(b){ b.onclick=function(){ document.querySelectorAll('.tab-btn').forEach(function(x){x.classList.remove('active');}); document.querySelectorAll('.tab-panel').forEach(function(x){x.classList.remove('active');}); this.classList.add('active'); document.getElementById('tab-'+this.getAttribute('data-tab')).classList.add('active'); }; });
+
+  // Load companies
+  function loadCompanies(){
+    api('/api/property/admin/companies').then(function(res){
+      if(res.code!==0||!res.data) return;
+      ['devCompSel','alertCompSel','ruleCompSel'].forEach(function(sid){
+        var sel=document.getElementById(sid);
+        res.data.forEach(function(c){ var o=document.createElement('option'); o.value=c.companyId; o.textContent=c.companyName; sel.appendChild(o); });
+      });
+    }).catch(function(){});
+  }
+  loadCompanies();
+
+  // Stats
+  function loadStats(cid){
+    if(!cid) return;
+    api('/api/property/admin/alerts/stats?companyId='+cid).then(function(res){
+      if(res.code!==0||!res.data) return;
+      document.getElementById('sUnacked').textContent=res.data.unackedCount||0;
+      document.getElementById('sToday').textContent=res.data.todayCount||0;
+      document.getElementById('sCritical').textContent=res.data.criticalCount||0;
+    }).catch(function(){});
+  }
+
+  // === DEVICES ===
+  function loadDevices(){
+    var cid=document.getElementById('devCompSel').value;
+    if(!cid){showToast('请先选择物业公司','danger');return;}
+    loadStats(cid);
+    api('/api/property/admin/devices?companyId='+cid).then(function(res){
+      var tb=document.getElementById('devTbody');
+      if(res.code!==0||!res.data||!res.data.length){tb.innerHTML='<tr><td colspan="9" class="empty">暂无设备</td></tr>';return;}
+      var h='';
+      res.data.forEach(function(d){
+        h+='<tr><td>'+(d.deviceNo||'--')+'</td><td>'+(d.deviceName||'--')+'</td><td>'+(typeMap[d.deviceType]||d.deviceType||'--')+'</td><td>'+(d.location||'--')+'</td><td>'+(d.brand||'--')+'</td><td>'+(d.ipAddress||'--')+'</td><td>'+statusB(d.status)+'</td><td>'+fmtTime(d.lastHeartbeat)+'</td><td class="row-actions"><button class="btn-xs btn-secondary" onclick="editDevStatus('+d.id+')">改状态</button></td></tr>';
+      });
+      tb.innerHTML=h;
+    }).catch(function(){document.getElementById('devTbody').innerHTML='<tr><td colspan="9" class="empty">加载失败</td></tr>';});
+  }
+  document.getElementById('btnLoadDev').onclick=loadDevices;
+  document.getElementById('btnAddDev').onclick=function(){openModal('addDevModal');};
+  document.getElementById('btnSubmitDev').onclick=function(){
+    var p=new URLSearchParams();
+    p.append('companyId',document.getElementById('mDevComp').value);
+    p.append('communityId',document.getElementById('mDevComm').value);
+    p.append('deviceNo',document.getElementById('mDevNo').value);
+    p.append('deviceName',document.getElementById('mDevName').value);
+    p.append('deviceType',document.getElementById('mDevType').value);
+    var loc=document.getElementById('mDevLoc').value; if(loc) p.append('location',loc);
+    var br=document.getElementById('mDevBrand').value; if(br) p.append('brand',br);
+    var ip=document.getElementById('mDevIp').value; if(ip) p.append('ipAddress',ip);
+    api('/api/property/admin/devices?'+p.toString(),{method:'POST'}).then(function(res){
+      if(res.code===0){showToast('设备添加成功','success');closeModal('addDevModal');loadDevices();}
+      else showToast(res.msg||'添加失败','danger');
+    }).catch(function(){showToast('请求失败','danger');});
+  };
+  window.editDevStatus=function(id){
+    var ns=prompt('输入新状态 (1=在线, 0=离线, 2=故障):');
+    if(ns===null) return;
+    api('/api/property/admin/devices/'+id+'?status='+ns,{method:'PUT'}).then(function(res){
+      if(res.code===0){showToast('状态已更新','success');loadDevices();}
+      else showToast(res.msg||'更新失败','danger');
+    }).catch(function(){showToast('请求失败','danger');});
+  };
+
+  // === ALERTS ===
+  function loadAlerts(){
+    var cid=document.getElementById('alertCompSel').value;
+    if(!cid){showToast('请先选择物业公司','danger');return;}
+    loadStats(cid);
+    var params='companyId='+cid;
+    var ack=document.getElementById('alertAckF').value; if(ack!=='') params+='&ackStatus='+ack;
+    var df=document.getElementById('alertDF').value; if(df) params+='&startDate='+df;
+    var dt=document.getElementById('alertDT').value; if(dt) params+='&endDate='+dt;
+    api('/api/property/admin/alerts?'+params).then(function(res){
+      var tb=document.getElementById('alertTbody');
+      if(res.code!==0||!res.data||!res.data.length){tb.innerHTML='<tr><td colspan="9" class="empty">暂无告警</td></tr>';return;}
+      var h='';
+      res.data.forEach(function(a){
+        var acts='';
+        if(a.ackStatus===0) acts='<button class="btn-xs btn-warning" onclick="ackAlert('+a.id+')">确认</button>';
+        else if(a.ackStatus===1) acts='<button class="btn-xs btn-success" onclick="resolveAlert('+a.id+')">处理</button>';
+        else acts='<span class="badge green">已完成</span>';
+        h+='<tr><td>'+a.id+'</td><td>'+a.deviceId+'</td><td>'+(alertMap[a.alertType]||a.alertType)+'</td><td>'+levelB(a.level)+'</td><td title="'+(a.message||'')+'">'+((a.message||'').substring(0,30))+'</td><td>'+(a.workorderId?'#'+a.workorderId:'--')+'</td><td>'+ackB(a.ackStatus)+'</td><td>'+fmtTime(a.createTime)+'</td><td class="row-actions">'+acts+'</td></tr>';
+      });
+      tb.innerHTML=h;
+    }).catch(function(){document.getElementById('alertTbody').innerHTML='<tr><td colspan="9" class="empty">加载失败</td></tr>';});
+  }
+  document.getElementById('btnLoadAlerts').onclick=loadAlerts;
+  window.ackAlert=function(id){
+    api('/api/property/admin/alerts/'+id+'/ack',{method:'POST'}).then(function(res){
+      if(res.code===0){showToast('已确认','success');loadAlerts();}
+      else showToast(res.msg||'操作失败','danger');
+    }).catch(function(){showToast('请求失败','danger');});
+  };
+  window.resolveAlert=function(id){
+    api('/api/property/admin/alerts/'+id+'/resolve',{method:'POST'}).then(function(res){
+      if(res.code===0){showToast('已处理','success');loadAlerts();}
+      else showToast(res.msg||'操作失败','danger');
+    }).catch(function(){showToast('请求失败','danger');});
+  };
+
+  // === RULES ===
+  function loadRules(){
+    var cid=document.getElementById('ruleCompSel').value;
+    if(!cid){showToast('请先选择物业公司','danger');return;}
+    api('/api/property/admin/alert-rules?companyId='+cid).then(function(res){
+      var tb=document.getElementById('ruleTbody');
+      if(res.code!==0||!res.data||!res.data.length){tb.innerHTML='<tr><td colspan="10" class="empty">暂无规则</td></tr>';return;}
+      var h='';
+      res.data.forEach(function(r){
+        h+='<tr><td>'+r.id+'</td><td>'+(r.name||'--')+'</td><td>'+(typeMap[r.deviceType]||'全部')+'</td><td>'+(alertMap[r.alertType]||r.alertType)+'</td><td>'+r.threshold+'</td><td>'+r.windowMinutes+'</td><td>'+r.silenceMinutes+'</td><td>'+(r.autoWorkorder===1?'<span class="badge green">是</span>':'<span class="badge gray">否</span>')+'</td><td>'+(r.status===1?'<span class="badge green">启用</span>':'<span class="badge gray">停用</span>')+'</td><td class="row-actions"><button class="btn-xs btn-secondary" onclick="toggleRule('+r.id+','+(r.status===1?0:1)+')">'+(r.status===1?'停用':'启用')+'</button></td></tr>';
+      });
+      tb.innerHTML=h;
+    }).catch(function(){document.getElementById('ruleTbody').innerHTML='<tr><td colspan="10" class="empty">加载失败</td></tr>';});
+  }
+  document.getElementById('btnLoadRules').onclick=loadRules;
+  document.getElementById('btnAddRule').onclick=function(){openModal('addRuleModal');};
+  document.getElementById('btnSubmitRule').onclick=function(){
+    var p=new URLSearchParams();
+    p.append('companyId',document.getElementById('mRuleComp').value);
+    p.append('name',document.getElementById('mRuleName').value);
+    p.append('alertType',document.getElementById('mRuleAT').value);
+    var dt=document.getElementById('mRuleDT').value; if(dt) p.append('deviceType',dt);
+    p.append('threshold',document.getElementById('mRuleTh').value);
+    p.append('windowMinutes',document.getElementById('mRuleWin').value);
+    p.append('silenceMinutes',document.getElementById('mRuleSil').value);
+    p.append('autoWorkorder',document.getElementById('mRuleAW').value);
+    api('/api/property/admin/alert-rules?'+p.toString(),{method:'POST'}).then(function(res){
+      if(res.code===0){showToast('规则创建成功','success');closeModal('addRuleModal');loadRules();}
+      else showToast(res.msg||'创建失败','danger');
+    }).catch(function(){showToast('请求失败','danger');});
+  };
+  window.toggleRule=function(id,st){
+    api('/api/property/admin/alert-rules/'+id+'?status='+st,{method:'PUT'}).then(function(res){
+      if(res.code===0){showToast('状态已更新','success');loadRules();}
+      else showToast(res.msg||'更新失败','danger');
+    }).catch(function(){showToast('请求失败','danger');});
+  };
+
+})();
+</script>
+</body>
+</html>

@@ -8,11 +8,11 @@ import java.time.LocalDateTime;
 
 /**
  * 会员按商家钱包余额（lc_member_wallet）
- * 主键：(member_id, store_id) 联合唯一
+ * 主键：(memberId, storeId) 联合唯一
  */
 @Entity
 @Table(name = "lc_member_wallet",
-    uniqueConstraints = @UniqueConstraint(columnNames = {"member_id", "store_id"}))
+    uniqueConstraints = @UniqueConstraint(columnNames = {"memberId", "storeId"}))
 @Getter
 @Setter
 public class MemberWallet {

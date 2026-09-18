@@ -17,7 +17,7 @@ import java.util.Map;
 
 /**
  * 支付宝支付服务（扫码支付模式）。
- * <p>配置（平台后台，脱敏）：alipay_enabled（0=测试mock，1=真实）、alipay_app_id、
+ * <p>配置（平台后台，脱敏）：alipay_enabled（0=测试mock，1=真实）、alipay_appId、
  * alipay_merchant_private_key、alipay_public_key、alipay_gateway_url、alipay_notify_url。</p>
  * <p>真实支付宝需商户号+应用私钥+公网回调；测试环境用 mock（alipay_enabled=0）。</p>
  */
@@ -33,11 +33,11 @@ public class AlipayService {
         return "1".equals(configService.get("alipay_enabled", "0"));
     }
 
-    /** WAP 支付下单：返回自动提交的 form HTML（拉起支付宝收银台）；未配置/关闭返回 null */
+    /** WAP 支付下单：返回自动提交的 form HTML（拉起支付宝收银台）；未配置/关闭抛出异常 */
     public String wapPay(String outTradeNo, BigDecimal amountYuan, String subject, String notifyUrl, String returnUrl) {
         if (!enabled()) {
-            log.info("支付宝支付未开启(测试mock)，订单 {}", outTradeNo);
-            return null;
+            log.warn("支付宝支付未开启，无法发起WAP支付，订单 {}", outTradeNo);
+            throw new BizException("支付宝支付未配置");
         }
         AlipayClient client = buildClient();
         AlipayTradeWapPayRequest request = new AlipayTradeWapPayRequest();
@@ -64,11 +64,11 @@ public class AlipayService {
         }
     }
 
-    /** 扫码下单：返回 qr_code（用户扫码付款）；未配置/关闭返回 null（测试走确认接口） */
+    /** 扫码下单：返回 qr_code（用户扫码付款）；未配置/关闭抛出异常 */
     public String precreate(String outTradeNo, BigDecimal amountYuan, String subject, String notifyUrl) {
         if (!enabled()) {
-            log.info("支付宝支付未开启(测试mock)，订单 {}", outTradeNo);
-            return null;
+            log.warn("支付宝支付未开启，无法发起扫码支付，订单 {}", outTradeNo);
+            throw new BizException("支付宝支付未配置");
         }
         AlipayClient client = buildClient();
         AlipayTradePrecreateRequest request = new AlipayTradePrecreateRequest();
@@ -125,7 +125,7 @@ public class AlipayService {
     }
 
     private AlipayClient buildClient() {
-        String appId = configService.get("alipay_app_id", "");
+        String appId = configService.get("alipay_appId", "");
         String privateKey = configService.get("alipay_merchant_private_key", "");
         String publicKey = configService.get("alipay_public_key", "");
         String gatewayUrl = configService.get("alipay_gateway_url", "https://openapi.alipay.com/gateway.do");

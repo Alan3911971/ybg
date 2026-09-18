@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#4f46e5">
+<title>场地预约 · 物业后台 · 宜必购物业</title>
+<link rel="icon" href="data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='80' font-size='90'%3E%F0%9F%8F%A2%3C/text%3E%3C/svg%3E">
+<style>
+  :root{
+    --pri:#4f46e5; --pri-grad:linear-gradient(135deg,#4f46e5 0%,#7c3aed 100%);
+    --success:#10b981; --danger:#ef4444; --warning:#f59e0b;
+    --dark:#0f172a; --text:#1e293b; --text-2:#64748b; --text-3:#94a3b8;
+    --bg:#f8fafc; --surface:#ffffff; --border:#e2e8f0; --divider:#f1f5f9;
+    --shadow-card:0 1px 3px rgba(0,0,0,.04),0 8px 24px rgba(0,0,0,.04);
+    --r-sm:8px; --r-md:12px; --r-lg:16px; --r-xl:20px; --sidebar-w:272px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+  html,body{font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei","Helvetica Neue",Arial,sans-serif;color:var(--text);background:var(--bg);-webkit-font-smoothing:antialiased;height:100%;}
+  a{color:inherit;text-decoration:none;}
+  input,select,button,textarea{font-size:16px;font-family:inherit;}
+
+  @keyframes fadeInUp{from{opacity:0;transform:translateY(16px);}to{opacity:1;transform:translateY(0);}}
+
+  .layout{display:flex;min-height:100vh;}
+  .sidebar{width:var(--sidebar-w);background:linear-gradient(180deg,#0f172a 0%,#1e293b 100%);display:flex;flex-direction:column;position:fixed;top:0;left:0;bottom:0;z-index:40;transition:transform .25s ease;}
+  .sidebar .brand{padding:24px 20px;display:flex;align-items:center;gap:12px;border-bottom:1px solid rgba(255,255,255,.08);}
+  .sidebar .brand .logo{width:40px;height:40px;border-radius:var(--r-md);background:var(--pri-grad);color:#fff;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;font-weight:700;}
+  .sidebar .brand h1{font-size:16px;font-weight:700;line-height:1.3;color:#fff;}
+  .sidebar .brand h1 span{font-size:11px;color:rgba(255,255,255,.5);font-weight:400;display:block;margin-top:2px;}
+  .sidebar nav{flex:1;overflow-y:auto;padding:16px 12px;}
+  .nav-section{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:rgba(255,255,255,.35);padding:16px 12px 6px;margin-top:4px;}
+  .nav-section:first-child{margin-top:0;padding-top:8px;}
+  .sidebar nav a{height:44px;padding:0 16px;border-radius:10px;font-size:14px;color:rgba(255,255,255,.55);font-weight:500;transition:all .2s;margin-bottom:2px;display:flex;align-items:center;gap:12px;border-left:none;}
+  .sidebar nav a:hover{color:rgba(255,255,255,.9);background:rgba(255,255,255,.06);}
+  .sidebar nav a.active{color:#fff;background:rgba(79,70,229,.15);font-weight:600;border-left:3px solid #818cf8;border-radius:0 10px 10px 0;}
+  .sidebar nav a .icon{font-size:16px;width:22px;text-align:center;flex-shrink:0;}
+  .sidebar .logout-area{padding:16px 12px;border-top:1px solid rgba(255,255,255,.08);}
+  .sidebar .logout-area a{color:rgba(255,255,255,.5);justify-content:center;border-radius:var(--r-sm);padding:11px 14px;border-left:none;}
+  .sidebar .logout-area a:hover{color:var(--danger);background:rgba(239,68,68,.1);}
+
+  .main{margin-left:var(--sidebar-w);flex:1;min-height:100vh;}
+  .topbar{background:var(--surface);border-bottom:1px solid var(--border);padding:14px 28px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:30;backdrop-filter:blur(12px);background:rgba(255,255,255,.85);}
+  .topbar .page-title{font-size:28px;font-weight:800;color:var(--text);letter-spacing:-.5px;line-height:1.2;}
+  .topbar .menu-toggle{display:none;background:none;border:none;font-size:22px;cursor:pointer;padding:4px 8px;color:var(--text-2);}
+  .main{margin-left:var(--sidebar-w);flex:1;padding:32px 40px;max-width:1200px;margin:0 auto;animation:fadeInUp .5s ease both;}
+  .sidebar-overlay{display:none;position:fixed;inset:0;background:rgba(15,23,42,.6);z-index:35;backdrop-filter:blur(2px);}
+
+  @media(max-width:768px){
+    .sidebar{transform:translateX(-100%);}
+    .sidebar.open{transform:translateX(0);}
+    .sidebar-overlay.show{display:block;}
+    .main{margin-left:0;}
+    .topbar .menu-toggle{display:block;}
+  }
+
+  .card{background:var(--surface);border-radius:var(--r-lg);padding:24px;margin-bottom:20px;box-shadow:var(--shadow-card);border:none;}
+  .sec{display:flex;align-items:center;gap:10px;font-weight:700;margin:0 0 16px;font-size:15px;color:var(--text);}
+  .sec .ic{width:32px;height:32px;border-radius:var(--r-sm);background:linear-gradient(135deg,rgba(79,70,229,.1) 0%,rgba(124,58,237,.1) 100%);color:var(--pri);display:inline-flex;align-items:center;justify-content:center;font-size:15px;flex:0 0 32px;}
+
+  .input,.select,textarea.input{height:44px;padding:0 14px;border:1.5px solid var(--border);border-radius:var(--r-sm);font-size:14px;color:var(--text);background:#fff;transition:border-color .2s,box-shadow .2s;-webkit-appearance:none;appearance:none;width:100%;}
+  textarea.input{height:auto;min-height:80px;padding:12px 14px;resize:vertical;}
+  .input:focus,.select:focus,textarea.input:focus{outline:none;border-color:var(--pri);box-shadow:0 0 0 3px rgba(79,70,229,.12);}
+
+  .filter-bar{display:flex;gap:12px;margin-bottom:16px;flex-wrap:wrap;align-items:center;}
+  .filter-bar .select{min-width:160px;width:auto;}
+  .filter-bar .input{min-width:150px;width:auto;}
+
+  .table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;border-radius:var(--r-md);}
+  table{width:100%;border-collapse:collapse;font-size:13px;min-width:700px;}
+  th{text-align:left;padding:12px 16px;background:var(--bg);color:var(--text-2);font-weight:700;font-size:11px;text-transform:uppercase;letter-spacing:.06em;border-bottom:1px solid var(--border);white-space:nowrap;}
+  td{padding:12px 16px;border-bottom:1px solid var(--divider);color:var(--text);white-space:nowrap;}
+  tr:nth-child(even) td{background:var(--bg);}
+  tr:hover td{background:rgba(79,70,229,.04);}
+  .badge{display:inline-block;padding:4px 12px;border-radius:999px;font-size:11px;font-weight:600;letter-spacing:.02em;}
+  .badge.green{background:rgba(16,185,129,.1);color:#059669;}
+  .badge.blue{background:rgba(79,70,229,.08);color:#4f46e5;}
+  .badge.orange{background:rgba(245,158,11,.1);color:#d97706;}
+  .badge.red{background:rgba(239,68,68,.1);color:#dc2626;}
+  .badge.gray{background:rgba(100,116,139,.1);color:#64748b;}
+  .empty{padding:32px 16px;text-align:center;color:var(--text-3);font-size:13px;}
+
+  .toast-host{position:fixed;top:20px;right:20px;z-index:99;display:flex;flex-direction:column;gap:10px;pointer-events:none;}
+  .toast{padding:12px 20px;border-radius:var(--r-sm);background:var(--dark);color:#fff;font-size:14px;font-weight:500;opacity:0;transform:translateX(40px);transition:opacity .25s ease,transform .25s ease;box-shadow:0 8px 24px rgba(0,0,0,.15);}
+  .toast.show{opacity:1;transform:translateX(0);}
+  .toast.success{background:var(--success);} .toast.danger{background:var(--danger);}
+
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:none;font-weight:600;cursor:pointer;transition:all .2s cubic-bezier(.4,0,.2,1);letter-spacing:.2px;white-space:nowrap;}
+  .btn-xs{height:28px;padding:0 10px;font-size:12px;border-radius:6px;}
+  .btn-sm{height:36px;padding:0 16px;font-size:13px;border-radius:8px;}
+  .btn-md{height:44px;padding:0 24px;font-size:14px;border-radius:10px;}
+  .btn-primary{background:linear-gradient(135deg,#4f46e5 0%,#7c3aed 100%);color:#fff;box-shadow:0 2px 8px rgba(79,70,229,.3);}
+  .btn-success{background:linear-gradient(135deg,#10b981,#059669);color:#fff;box-shadow:0 2px 8px rgba(16,185,129,.3);}
+  .btn-danger{background:linear-gradient(135deg,#ef4444,#dc2626);color:#fff;box-shadow:0 2px 8px rgba(239,68,68,.3);}
+  .btn-warning{background:linear-gradient(135deg,#f59e0b,#d97706);color:#fff;box-shadow:0 2px 8px rgba(245,158,11,.3);}
+  .btn-secondary{background:var(--surface);color:var(--text);border:1.5px solid var(--border);}
+  .btn:hover{transform:translateY(-1px);filter:brightness(1.05);}
+  .btn:active{transform:scale(.97);filter:brightness(.95);}
+  .btn[disabled]{opacity:.45;cursor:not-allowed;transform:none!important;filter:none!important;}
+  .row-actions{display:flex;gap:6px;}
+
+  /* Tabs */
+  .tabs{display:flex;gap:0;margin-bottom:24px;border-bottom:2px solid var(--border);}
+  .tab-btn{padding:12px 24px;font-size:14px;font-weight:600;color:var(--text-2);background:none;border:none;cursor:pointer;border-bottom:3px solid transparent;margin-bottom:-2px;transition:all .2s;}
+  .tab-btn.active{color:var(--pri);border-bottom-color:var(--pri);}
+  .tab-btn:hover{color:var(--text);}
+  .tab-panel{display:none;}
+  .tab-panel.active{display:block;animation:fadeInUp .3s ease;}
+
+  /* Modal */
+  .modal-mask{position:fixed;inset:0;background:rgba(15,23,42,.5);z-index:80;display:none;align-items:center;justify-content:center;backdrop-filter:blur(4px);}
+  .modal-mask.show{display:flex;}
+  .modal{background:var(--surface);border-radius:var(--r-lg);padding:28px;width:520px;max-width:90vw;max-height:85vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.15);animation:fadeInUp .3s ease;}
+  .modal h3{font-size:18px;font-weight:700;margin-bottom:20px;}
+  .form-row{margin-bottom:14px;}
+  .form-row label{display:block;font-size:13px;font-weight:600;color:var(--text-2);margin-bottom:6px;}
+  .form-row .input,.form-row .select,.form-row textarea.input{width:100%;}
+  .modal-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:20px;}
+
+/* ===== 窄屏防变形（统一注入）===== */
+@media(max-width:900px){
+  .sidebar{transform:translateX(-100%);}
+  .sidebar.open{transform:translateX(0);}
+  .sidebar-overlay.show{display:block;}
+  .main,.main-content{margin-left:0 !important;padding:20px 14px !important;min-width:0 !important;max-width:100% !important;}
+  .topbar .menu-toggle{display:block !important;}
+  .card{overflow-x:auto;-webkit-overflow-scrolling:touch;min-width:0 !important;}
+  .topbar{padding:14px 14px;}
+  .tabs{min-width:0 !important;}
+}
+@media(max-width:480px){
+  .main{padding:14px 10px !important;}
+  .card{padding:16px 12px;}
+  .sec{font-size:14px;}
+  .page-title{font-size:22px !important;}
+}
+</style>
+</head>
+<body>
+<div class="toast-host" id="toastHost"></div>
+<div class="layout">
+  <div class="sidebar" id="sidebar">
+    <div class="brand"><div class="logo">🏢</div><h1>宜必购物业<span>Property Admin</span></h1></div>
+    <nav>
+      <div class="nav-section">概览</div>
+      <a href="dashboard.html"><span class="icon">📊</span>工作台</a>
+      <a href="index.html"><span class="icon">🏠</span>首页看板</a>
+      <div class="nav-section">业务管理</div>
+      <a href="owners.html"><span class="icon">👥</span>业主管理</a>
+      <a href="buildings.html"><span class="icon">🏢</span>楼栋房间</a>
+      <a href="bills.html"><span class="icon">🧾</span>账单管理</a>
+      <a href="splits.html"><span class="icon">💰</span>分账流水</a>
+      <a href="merchant-bindings.html"><span class="icon">🔗</span>商家绑定</a>
+      <a href="activity-audit.html"><span class="icon">✅</span>活动审核</a>
+      <a href="facilities.html" class="active"><span class="icon">🏟️</span>场地预约</a>
+      <div class="nav-section">安防通行</div>
+      <a href="access.html"><span class="icon">🚪</span>门禁管理</a>
+      <a href="vehicles.html"><span class="icon">🚗</span>车辆管理</a>
+      <a href="devices.html"><span class="icon">📡</span>IoT设备</a>
+    </nav>
+    <div class="logout-area"><a href="#" id="logoutBtn"><span class="icon">🚪</span>退出登录</a></div>
+  </div>
+  <div class="sidebar-overlay" id="overlay"></div>
+
+  <div class="main">
+    <div class="topbar">
+      <button class="menu-toggle" id="menuToggle">☰</button>
+      <div class="page-title">场地预约管理</div>
+    </div>
+
+    <!-- Tabs -->
+    <div class="tabs">
+      <button class="tab-btn active" data-tab="facility">场地管理</button>
+      <button class="tab-btn" data-tab="reservation">预约记录</button>
+    </div>
+
+    <!-- Tab: 场地管理 -->
+    <div id="tab-facility" class="tab-panel active">
+      <div class="card">
+        <div class="sec"><span class="ic">🏟️</span>场地列表</div>
+        <div class="filter-bar">
+          <button class="btn btn-md btn-primary" onclick="openFacilityModal()">+ 新增场地</button>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>ID</th><th>名称</th><th>位置</th><th>容纳</th><th>单价/时</th><th>开放时间</th><th>状态</th><th>操作</th></tr></thead>
+            <tbody id="facilityBody"><tr><td colspan="8" class="empty">加载中...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tab: 预约记录 -->
+    <div id="tab-reservation" class="tab-panel">
+      <div class="card">
+        <div class="sec"><span class="ic">📋</span>预约记录</div>
+        <div class="filter-bar">
+          <select class="select" id="filterStatus">
+            <option value="">全部状态</option>
+            <option value="0">待确认</option>
+            <option value="1">已确认</option>
+            <option value="2">已签到</option>
+            <option value="3">已取消</option>
+            <option value="4">已完成</option>
+          </select>
+          <button class="btn btn-md btn-primary" onclick="loadReservations()">查询</button>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>编号</th><th>场地</th><th>日期</th><th>时段</th><th>费用</th><th>支付</th><th>状态</th><th>备注</th><th>操作</th></tr></thead>
+            <tbody id="reservationBody"><tr><td colspan="9" class="empty">加载中...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Facility Modal -->
+<div class="modal-mask" id="facilityModal">
+  <div class="modal">
+    <h3 id="facilityModalTitle">新增场地</h3>
+    <input type="hidden" id="fId">
+    <div class="form-row"><label>场地名称 *</label><input class="input" id="fName" placeholder="如：A栋会议室"></div>
+    <div class="form-row"><label>描述</label><textarea class="input" id="fDesc" placeholder="场地描述"></textarea></div>
+    <div class="form-row"><label>位置</label><input class="input" id="fLocation" placeholder="如：A栋3楼"></div>
+    <div class="form-row"><label>容纳人数</label><input class="input" id="fCapacity" type="number" placeholder="0"></div>
+    <div class="form-row"><label>每小时费用 (元)</label><input class="input" id="fPrice" type="number" step="0.01" placeholder="0.00"></div>
+    <div class="form-row"><label>开放开始时间</label><input class="input" id="fOpenTime" type="time" value="08:00"></div>
+    <div class="form-row"><label>开放结束时间</label><input class="input" id="fCloseTime" type="time" value="22:00"></div>
+    <div class="modal-actions">
+      <button class="btn btn-md btn-secondary" onclick="closeFacilityModal()">取消</button>
+      <button class="btn btn-md btn-primary" onclick="saveFacility()">保存</button>
+    </div>
+  </div>
+</div>
+
+<script>
+var token = localStorage.getItem('property_admin_token');
+if (!token) { location.href = 'login.html'; }
+document.getElementById('logoutBtn').onclick = function(e){ e.preventDefault(); localStorage.removeItem('property_admin_token'); location.href = 'login.html'; };
+
+// Sidebar toggle
+document.getElementById('menuToggle').onclick = function(){ document.getElementById('sidebar').classList.toggle('open'); document.getElementById('overlay').classList.toggle('show'); };
+document.getElementById('overlay').onclick = function(){ document.getElementById('sidebar').classList.remove('open'); this.classList.remove('show'); };
+
+// Tabs
+document.querySelectorAll('.tab-btn').forEach(function(btn){
+  btn.onclick = function(){
+    document.querySelectorAll('.tab-btn').forEach(function(b){ b.classList.remove('active'); });
+    document.querySelectorAll('.tab-panel').forEach(function(p){ p.classList.remove('active'); });
+    btn.classList.add('active');
+    document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
+    if (btn.dataset.tab === 'reservation') loadReservations();
+  };
+});
+
+function toast(m, t) {
+  var h = document.getElementById('toastHost');
+  var e = document.createElement('div');
+  e.className = 'toast ' + (t || '');
+  e.textContent = m;
+  h.appendChild(e);
+  requestAnimationFrame(function(){ e.classList.add('show'); });
+  setTimeout(function(){ e.classList.remove('show'); setTimeout(function(){ e.remove(); }, 220); }, 2400);
+}
+
+var companyId = 1; // default; adjust as needed
+
+// ========== Facilities ==========
+function loadFacilities() {
+  fetch('/api/property/admin/facilities?companyId=' + companyId, { headers: { 'X-Property-Token': token } })
+    .then(function(r){ return r.json(); })
+    .then(function(res){
+      var list = res.data || [];
+      var tbody = document.getElementById('facilityBody');
+      if (!list.length) { tbody.innerHTML = '<tr><td colspan="8" class="empty">暂无场地，请点击新增</td></tr>'; return; }
+      var html = '';
+      list.forEach(function(f){
+        var statusBadge = f.status === 1
+          ? '<span class="badge green">启用</span>'
+          : '<span class="badge gray">停用</span>';
+        html += '<tr>'
+          + '<td>' + f.id + '</td>'
+          + '<td>' + esc(f.name) + '</td>'
+          + '<td>' + esc(f.location || '-') + '</td>'
+          + '<td>' + (f.capacity || 0) + '</td>'
+          + '<td>¥' + (f.price || 0) + '</td>'
+          + '<td>' + (f.openTime || '').substring(0,5) + ' ~ ' + (f.closeTime || '').substring(0,5) + '</td>'
+          + '<td>' + statusBadge + '</td>'
+          + '<td><div class="row-actions">'
+          + '<button class="btn btn-xs btn-secondary" onclick="editFacility(' + f.id + ')">编辑</button>'
+          + '<button class="btn btn-xs btn-warning" onclick="toggleFacilityStatus(' + f.id + ')">' + (f.status === 1 ? '停用' : '启用') + '</button>'
+          + '</div></td></tr>';
+      });
+      tbody.innerHTML = html;
+    })
+    .catch(function(e){ toast('加载失败: ' + e.message, 'danger'); });
+}
+
+function openFacilityModal(id) {
+  document.getElementById('fId').value = '';
+  document.getElementById('fName').value = '';
+  document.getElementById('fDesc').value = '';
+  document.getElementById('fLocation').value = '';
+  document.getElementById('fCapacity').value = '';
+  document.getElementById('fPrice').value = '';
+  document.getElementById('fOpenTime').value = '08:00';
+  document.getElementById('fCloseTime').value = '22:00';
+  document.getElementById('facilityModalTitle').textContent = '新增场地';
+  document.getElementById('facilityModal').classList.add('show');
+}
+
+function closeFacilityModal() {
+  document.getElementById('facilityModal').classList.remove('show');
+}
+
+function editFacility(id) {
+  fetch('/api/property/admin/facilities?companyId=' + companyId, { headers: { 'X-Property-Token': token } })
+    .then(function(r){ return r.json(); })
+    .then(function(res){
+      var f = (res.data || []).find(function(x){ return x.id === id; });
+      if (!f) { toast('场地不存在', 'danger'); return; }
+      document.getElementById('fId').value = f.id;
+      document.getElementById('fName').value = f.name || '';
+      document.getElementById('fDesc').value = f.description || '';
+      document.getElementById('fLocation').value = f.location || '';
+      document.getElementById('fCapacity').value = f.capacity || '';
+      document.getElementById('fPrice').value = f.price || '';
+      document.getElementById('fOpenTime').value = (f.openTime || '08:00').substring(0,5);
+      document.getElementById('fCloseTime').value = (f.closeTime || '22:00').substring(0,5);
+      document.getElementById('facilityModalTitle').textContent = '编辑场地';
+      document.getElementById('facilityModal').classList.add('show');
+    });
+}
+
+function saveFacility() {
+  var id = document.getElementById('fId').value;
+  var params = new URLSearchParams();
+  params.append('companyId', companyId);
+  params.append('name', document.getElementById('fName').value);
+  params.append('description', document.getElementById('fDesc').value);
+  params.append('location', document.getElementById('fLocation').value);
+  params.append('capacity', document.getElementById('fCapacity').value || 0);
+  params.append('price', document.getElementById('fPrice').value || 0);
+  params.append('openTime', document.getElementById('fOpenTime').value);
+  params.append('closeTime', document.getElementById('fCloseTime').value);
+
+  var url, method;
+  if (id) {
+    url = '/api/property/admin/facilities/' + id;
+    method = 'PUT';
+  } else {
+    url = '/api/property/admin/facilities';
+    method = 'POST';
+  }
+  fetch(url + '?' + params.toString(), { method: method, headers: { 'X-Property-Token': token } })
+    .then(function(r){ return r.json(); })
+    .then(function(res){
+      if (res.code !== 0) { toast(res.msg || '保存失败', 'danger'); return; }
+      toast(id ? '更新成功' : '创建成功', 'success');
+      closeFacilityModal();
+      loadFacilities();
+    })
+    .catch(function(e){ toast('保存失败: ' + e.message, 'danger'); });
+}
+
+function toggleFacilityStatus(id) {
+  fetch('/api/property/admin/facilities/' + id + '/status', { method: 'PUT', headers: { 'X-Property-Token': token } })
+    .then(function(r){ return r.json(); })
+    .then(function(res){
+      if (res.code !== 0) { toast(res.msg || '操作失败', 'danger'); return; }
+      toast('状态已切换', 'success');
+      loadFacilities();
+    })
+    .catch(function(e){ toast('操作失败: ' + e.message, 'danger'); });
+}
+
+// ========== Reservations ==========
+var facilityMap = {};
+function loadReservations() {
+  // Load facility map first
+  fetch('/api/property/admin/facilities?companyId=' + companyId, { headers: { 'X-Property-Token': token } })
+    .then(function(r){ return r.json(); })
+    .then(function(res){
+      facilityMap = {};
+      (res.data || []).forEach(function(f){ facilityMap[f.id] = f.name; });
+    })
+    .then(function(){
+      var statusFilter = document.getElementById('filterStatus').value;
+      var url = '/api/property/admin/reservations?companyId=' + companyId;
+      if (statusFilter !== '') url += '&statuses=' + statusFilter;
+      return fetch(url, { headers: { 'X-Property-Token': token } });
+    })
+    .then(function(r){ return r.json(); })
+    .then(function(res){
+      var list = res.data || [];
+      var tbody = document.getElementById('reservationBody');
+      if (!list.length) { tbody.innerHTML = '<tr><td colspan="9" class="empty">暂无预约记录</td></tr>'; return; }
+      var html = '';
+      list.forEach(function(r){
+        var statusMap = {0:'待确认',1:'已确认',2:'已签到',3:'已取消',4:'已完成'};
+        var payMap = {0:'未付',1:'已付',2:'已退'};
+        var statusClass = {0:'orange',1:'blue',2:'green',3:'gray',4:'green'};
+        var payClass = {0:'orange',1:'green',2:'red'};
+        var actions = '';
+        if (r.status === 0) actions += '<button class="btn btn-xs btn-success" onclick="confirmRsv(' + r.id + ')">确认</button>';
+        if (r.status === 1) actions += '<button class="btn btn-xs btn-primary" onclick="checkInRsv(' + r.id + ')">签到</button>';
+        if (r.status === 2) actions += '<button class="btn btn-xs btn-success" onclick="completeRsv(' + r.id + ')">完成</button>';
+        html += '<tr>'
+          + '<td>' + esc(r.reservationNo) + '</td>'
+          + '<td>' + esc(facilityMap[r.facilityId] || r.facilityId) + '</td>'
+          + '<td>' + (r.reserveDate || '') + '</td>'
+          + '<td>' + (r.startTime || '').substring(0,5) + '~' + (r.endTime || '').substring(0,5) + '</td>'
+          + '<td>¥' + (r.amount || 0) + '</td>'
+          + '<td><span class="badge ' + (payClass[r.payStatus]||'gray') + '">' + (payMap[r.payStatus]||'-') + '</span></td>'
+          + '<td><span class="badge ' + (statusClass[r.status]||'gray') + '">' + (statusMap[r.status]||'-') + '</span></td>'
+          + '<td>' + esc(r.remark || r.cancelReason || '-') + '</td>'
+          + '<td><div class="row-actions">' + actions + '</div></td></tr>';
+      });
+      tbody.innerHTML = html;
+    })
+    .catch(function(e){ toast('加载失败: ' + e.message, 'danger'); });
+}
+
+function confirmRsv(id) {
+  fetch('/api/property/admin/reservations/' + id + '/confirm', { method: 'POST', headers: { 'X-Property-Token': token } })
+    .then(function(r){ return r.json(); })
+    .then(function(res){ if(res.code!==0){toast(res.msg,'danger');return;} toast('已确认','success'); loadReservations(); })
+    .catch(function(e){ toast('操作失败','danger'); });
+}
+function checkInRsv(id) {
+  fetch('/api/property/admin/reservations/' + id + '/check-in', { method: 'POST', headers: { 'X-Property-Token': token } })
+    .then(function(r){ return r.json(); })
+    .then(function(res){ if(res.code!==0){toast(res.msg,'danger');return;} toast('已签到','success'); loadReservations(); })
+    .catch(function(e){ toast('操作失败','danger'); });
+}
+function completeRsv(id) {
+  fetch('/api/property/admin/reservations/' + id + '/complete', { method: 'POST', headers: { 'X-Property-Token': token } })
+    .then(function(r){ return r.json(); })
+    .then(function(res){ if(res.code!==0){toast(res.msg,'danger');return;} toast('已完成','success'); loadReservations(); })
+    .catch(function(e){ toast('操作失败','danger'); });
+}
+
+function esc(s) { if(!s) return ''; var d=document.createElement('div'); d.textContent=s; return d.innerHTML; }
+
+// Init
+loadFacilities();
+</script>
+</body>
+</html>

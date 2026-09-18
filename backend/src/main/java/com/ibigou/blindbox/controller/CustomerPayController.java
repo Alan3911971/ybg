@@ -38,12 +38,13 @@ public class CustomerPayController {
      * 创建支付订单。
      * 如果商家 pay_mode=0（静态码），返回商家收款码图片URL。
      * 如果商家 pay_mode=1（API支付），调用微信/支付宝下单，返回支付二维码。
-     * scene 参数：wechat 时 mweb=H5拉起（返回 mwebUrl）、native/空=二维码；alipay 时 wap=拉起（返回 wapForm）、空=二维码。
+     * scene 参数：wechat 时 mweb=H5拉起（返回 mwebUrl）、jsapi=微信内拉起（返回 jsapi 参数）、native/空=二维码；alipay 时 wap=拉起（返回 wapForm）、空=二维码。
      */
     @PostMapping("/create")
     public Result<Map<String, Object>> createPay(@RequestParam String orderNo,
                                                   @RequestParam String payType,
-                                                  @RequestParam(required = false) String scene) {
+                                                  @RequestParam(required = false) String scene,
+                                                  @RequestParam(required = false) String openid) {
         OfflineOrder order = orderRepository.findById(orderNo)
                 .orElseThrow(() -> new com.ibigou.blindbox.common.BizException("订单不存在"));
         Merchant merchant = merchantRepository.findById(order.getMerchantNo())
@@ -88,7 +89,22 @@ public class CustomerPayController {
             String qrCode = null;
             boolean realPay = false;
             if ("wechat".equals(payType)) {
-                if ("mweb".equals(scene)) {
+                if ("jsapi".equals(scene)) {
+                    // 公众号内JSAPI支付：返回 wx.chooseWXPay 参数（需openid）
+                    try {
+                        Map<String, String> jsapi = wxPayService.jsapiPay(orderNo, order.getPayAmount(),
+                                "宜必购订单-" + orderNo, notifyUrl + "/api/pay/wx/notify", openid);
+                        result.put("jsapi", jsapi);
+                        result.put("realPay", jsapi != null);
+                    } catch (Exception e) {
+                        log.warn("JSAPI支付下单失败，降级Native二维码: {}", e.getMessage());
+                        qrCode = wxPayService.nativePay(orderNo, order.getPayAmount(),
+                                "宜必购订单-" + orderNo, notifyUrl + "/api/pay/wx/notify");
+                        result.put("qrCode", qrCode);
+                        result.put("realPay", qrCode != null);
+                        result.put("fallbackNative", true);
+                    }
+                } else if ("mweb".equals(scene)) {
                     // H5支付：直接拉起微信收银台；未开通则自动降级Native动态二维码
                     try {
                         String mwebUrl = wxPayService.h5Pay(orderNo, order.getPayAmount(),

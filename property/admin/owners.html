@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>业主管理 - 宜必购物业</title>
+<style>
+:root{--pri:#4f46e5;--pri-hover:#4338ca;--pri-light:#818cf8;--pri-bg:#eef2ff;--pri-grad:linear-gradient(135deg,#4f46e5 0%,#7c3aed 100%);--gold:#f59e0b;--gold-bg:#fffbeb;--success:#10b981;--success-bg:#ecfdf5;--danger:#ef4444;--danger-bg:#fef2f2;--warning:#f59e0b;--warning-bg:#fffbeb;--dark:#0f172a;--dark-2:#1e293b;--text:#1e293b;--text-2:#64748b;--text-3:#94a3b8;--bg:#f8fafc;--surface:#ffffff;--border:#e2e8f0;--divider:#f1f5f9;--shadow-sm:0 1px 2px rgba(0,0,0,.04);--shadow-md:0 4px 6px -1px rgba(0,0,0,.05),0 2px 4px -2px rgba(0,0,0,.05);--shadow-lg:0 10px 15px -3px rgba(0,0,0,.06),0 4px 6px -4px rgba(0,0,0,.04);--shadow-card:0 1px 3px rgba(0,0,0,.04),0 8px 24px rgba(0,0,0,.04);--r-sm:8px;--r-md:12px;--r-lg:16px;--r-xl:20px;--sidebar-w:272px;--ease:cubic-bezier(.4,0,.2,1);}
+
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,'Noto Sans SC',sans-serif;background:var(--bg);color:var(--text);line-height:1.6;-webkit-font-smoothing:antialiased;}
+
+/* Sidebar */
+.sidebar{position:fixed;top:0;left:0;width:var(--sidebar-w);height:100vh;background:linear-gradient(180deg,#0f172a 0%,#1e293b 100%);display:flex;flex-direction:column;z-index:100;transition:transform .3s var(--ease);}
+.sidebar-brand{padding:24px 20px;display:flex;align-items:center;gap:12px;border-bottom:1px solid rgba(255,255,255,.08);}
+.sidebar-logo{width:40px;height:40px;border-radius:var(--r-sm);background:var(--pri-grad);display:flex;align-items:center;justify-content:center;font-size:20px;color:#fff;font-weight:700;flex-shrink:0;}
+.sidebar-title{color:#fff;font-size:16px;font-weight:700;letter-spacing:.5px;}
+.sidebar-nav{flex:1;overflow-y:auto;padding:16px 0;}
+.nav-section{padding:12px 20px 6px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:1px;color:rgba(255,255,255,.35);}
+.nav-link{height:44px;padding:0 16px;border-radius:10px;font-size:14px;color:rgba(255,255,255,.55);font-weight:500;transition:all .2s;margin-bottom:2px;display:flex;align-items:center;gap:12px;border-left:none;text-decoration:none;}
+.nav-link:hover{color:rgba(255,255,255,.9);background:rgba(255,255,255,.06);}
+.nav-link.active{color:#fff;background:rgba(79,70,229,.15);font-weight:600;border-left:3px solid #818cf8;border-radius:0 10px 10px 0;}
+.nav-link-icon{width:20px;text-align:center;font-size:16px;flex-shrink:0;}
+.sidebar-footer{padding:16px 20px;border-top:1px solid rgba(255,255,255,.08);}
+.sidebar-footer .nav-link{color:var(--danger);margin:0;padding:10px 0;border-left:none;}
+.sidebar-footer .nav-link:hover{background:transparent;color:#f87171;}
+
+/* Overlay */
+.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:90;backdrop-filter:blur(2px);}
+.overlay.show{display:block;}
+
+/* Main Content */
+.main{margin-left:var(--sidebar-w);min-height:100vh;padding:32px 40px;}
+.page-header{margin-bottom:32px;}
+.page-title{font-size:28px;font-weight:800;color:var(--text);letter-spacing:-.5px;}
+.page-subtitle{font-size:14px;color:var(--text-2);margin-top:4px;}
+
+/* Mobile Toggle */
+.menu-toggle{display:none;position:fixed;top:16px;left:16px;z-index:110;width:40px;height:40px;border-radius:var(--r-sm);background:var(--surface);border:1px solid var(--border);box-shadow:var(--shadow-md);cursor:pointer;align-items:center;justify-content:center;font-size:20px;color:var(--text);}
+
+/* Tabs */
+.tabs{display:flex;gap:4px;background:var(--surface);padding:6px;border-radius:var(--r-lg);box-shadow:var(--shadow-sm);border:1px solid var(--border);margin-bottom:24px;width:fit-content;}
+.tab-btn{padding:10px 24px;border:none;background:transparent;border-radius:var(--r-sm);font-size:14px;font-weight:600;color:var(--text-2);cursor:pointer;transition:all .2s var(--ease);}
+.tab-btn:hover{color:var(--text);background:var(--bg);}
+.tab-btn.active{background:var(--pri-grad);color:#fff;box-shadow:var(--shadow-md);}
+.tab-panel{display:none;}
+.tab-panel.active{display:block;}
+
+/* Cards */
+.card{background:var(--surface);border-radius:var(--r-lg);box-shadow:var(--shadow-card);border:none;padding:24px;margin-bottom:24px;}
+
+/* Search Bar */
+.search-bar{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:24px;}
+.search-input{flex:1;min-width:200px;padding:10px 16px;border:1.5px solid var(--border);border-radius:var(--r-sm);font-size:14px;color:var(--text);background:var(--surface);transition:all .2s var(--ease);outline:none;}
+.search-input:focus{border-color:var(--pri);box-shadow:0 0 0 3px rgba(79,70,229,.1);}
+.search-input::placeholder{color:var(--text-3);}
+
+/* Buttons */
+.btn--success:hover{background:#059669;}
+.btn--danger:hover{background:#dc2626;}
+
+/* Tables */
+.table-container{border-radius:var(--r-lg);overflow:hidden;border:1px solid var(--border);background:var(--surface);}
+.table-wrap{overflow-x:auto;}
+table{width:100%;border-collapse:collapse;min-width:600px;}
+thead{background:var(--bg);}
+th{padding:14px 20px;text-align:left;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--text-2);border-bottom:1px solid var(--border);}
+td{padding:16px 20px;font-size:14px;color:var(--text);border-bottom:1px solid var(--divider);}
+tbody tr:last-child td{border-bottom:none;}
+tbody tr:nth-child(even){background:#fafbfd;}
+tbody tr:hover{background:var(--pri-bg);}
+.empty{text-align:center;padding:48px 20px;color:var(--text-3);font-size:14px;}
+
+/* Badges */
+.badge{display:inline-flex;align-items:center;padding:4px 12px;border-radius:999px;font-size:12px;font-weight:600;line-height:1.4;}
+.badge.green{background:var(--success-bg);color:var(--success);}
+.badge.red{background:var(--danger-bg);color:var(--danger);}
+.badge.yellow{background:var(--warning-bg);color:var(--warning);}
+.badge.gray{background:var(--bg);color:var(--text-3);}
+
+/* Modal */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(15,23,42,.4);backdrop-filter:blur(4px);z-index:200;align-items:center;justify-content:center;}
+.modal-overlay.show{display:flex;}
+.modal{background:var(--surface);border-radius:var(--r-xl);box-shadow:var(--shadow-lg);width:90%;max-width:640px;max-height:85vh;display:flex;flex-direction:column;animation:modalIn .25s var(--ease);}
+@keyframes modalIn{from{opacity:0;transform:scale(.95) translateY(10px);}to{opacity:1;transform:scale(1) translateY(0);}}
+.modal-header{display:flex;align-items:center;justify-content:space-between;padding:20px 24px;border-bottom:1px solid var(--divider);}
+.modal-title{font-size:18px;font-weight:700;color:var(--text);}
+.modal-close{width:32px;height:32px;border:none;background:var(--bg);border-radius:var(--r-sm);cursor:pointer;font-size:18px;color:var(--text-2);display:flex;align-items:center;justify-content:center;transition:all .2s var(--ease);}
+.modal-close:hover{background:var(--danger-bg);color:var(--danger);}
+.modal-body{padding:24px;overflow-y:auto;flex:1;}
+
+/* Toast */
+.toast-container{position:fixed;top:24px;right:24px;z-index:300;display:flex;flex-direction:column;gap:8px;}
+.toast{padding:14px 20px;border-radius:var(--r-sm);font-size:14px;font-weight:500;color:#fff;box-shadow:var(--shadow-lg);animation:toastIn .3s var(--ease);min-width:200px;}
+.toast.success{background:var(--success);}
+.toast.error{background:var(--danger);}
+.toast.info{background:var(--pri);}
+.toast.warning{background:var(--warning);}
+@keyframes toastIn{from{opacity:0;transform:translateX(40px);}to{opacity:1;transform:translateX(0);}}
+
+/* Responsive */
+@media(max-width:1024px){
+  .sidebar{transform:translateX(-100%);}
+  .sidebar.open{transform:translateX(0);}
+  .main{margin-left:0;padding:24px 20px;padding-top:64px;}
+  .menu-toggle{display:flex;}
+}
+@media(max-width:640px){
+  .tabs{width:100%;overflow-x:auto;}
+  .tab-btn{white-space:nowrap;padding:8px 16px;font-size:13px;}
+  .search-bar{flex-direction:column;align-items:stretch;}
+  .page-title{font-size:22px;}
+}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:none;font-weight:600;cursor:pointer;transition:all .2s cubic-bezier(.4,0,.2,1);letter-spacing:.2px;white-space:nowrap;}
+.btn-xs{height:28px;padding:0 10px;font-size:12px;border-radius:6px;}
+.btn-sm{height:36px;padding:0 16px;font-size:13px;border-radius:8px;}
+.btn-md{height:44px;padding:0 24px;font-size:14px;border-radius:10px;}
+.btn-lg{height:52px;padding:0 32px;font-size:16px;border-radius:12px;}
+.btn-block{width:100%;}
+.btn-icon{width:44px;height:44px;padding:0;border-radius:12px;}
+.btn-primary{background:linear-gradient(135deg,#4f46e5 0%,#7c3aed 100%);color:#fff;box-shadow:0 2px 8px rgba(79,70,229,.3);}
+.btn-secondary{background:var(--surface);color:var(--text);border:1.5px solid var(--border);}
+.btn-soft{background:var(--pri-bg);color:var(--pri);}
+.btn-ghost{background:transparent;color:var(--pri);}
+.btn-success{background:linear-gradient(135deg,#10b981,#059669);color:#fff;box-shadow:0 2px 8px rgba(16,185,129,.3);}
+.btn-danger{background:linear-gradient(135deg,#ef4444,#dc2626);color:#fff;box-shadow:0 2px 8px rgba(239,68,68,.3);}
+.btn-warning{background:linear-gradient(135deg,#f59e0b,#d97706);color:#fff;box-shadow:0 2px 8px rgba(245,158,11,.3);}
+.btn:hover{transform:translateY(-1px);filter:brightness(1.05);}
+.btn:active{transform:scale(.97);filter:brightness(.95);}
+.btn:focus-visible{outline:2px solid var(--pri);outline-offset:2px;}
+.btn[disabled]{opacity:.45;cursor:not-allowed;transform:none!important;filter:none!important;}
+.btn.loading{pointer-events:none;position:relative;color:transparent!important;}
+.btn.loading::after{content:"";position:absolute;width:18px;height:18px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:btn-spin .6s linear infinite;}
+@keyframes btn-spin{to{transform:rotate(360deg);}}
+.row-actions{display:flex;gap:6px;}
+
+/* ===== 窄屏防变形（统一注入）===== */
+@media(max-width:900px){
+  .sidebar{transform:translateX(-100%);}
+  .sidebar.open{transform:translateX(0);}
+  .sidebar-overlay.show{display:block;}
+  .main,.main-content{margin-left:0 !important;padding:20px 14px !important;min-width:0 !important;max-width:100% !important;}
+  .topbar .menu-toggle{display:block !important;}
+  .card{overflow-x:auto;-webkit-overflow-scrolling:touch;min-width:0 !important;}
+  .topbar{padding:14px 14px;}
+  .tabs{min-width:0 !important;}
+}
+@media(max-width:480px){
+  .main{padding:14px 10px !important;}
+  .card{padding:16px 12px;}
+  .sec{font-size:14px;}
+  .page-title{font-size:22px !important;}
+}
+</style>
+</head>
+<body>
+
+<!-- Mobile Menu Toggle -->
+<button class="menu-toggle" id="menuToggle">☰</button>
+
+<!-- Overlay -->
+<div class="overlay" id="overlay"></div>
+
+<!-- Sidebar -->
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-brand">
+    <div class="sidebar-logo">宜</div>
+    <span class="sidebar-title">宜必购物业</span>
+  </div>
+  <nav class="sidebar-nav">
+    <div class="nav-section">概览</div>
+    <a href="dashboard.html" class="nav-link"><span class="nav-link-icon">📊</span>工作台</a>
+    <a href="index.html" class="nav-link"><span class="nav-link-icon">🏠</span>首页看板</a>
+
+    <div class="nav-section">业务管理</div>
+    <a href="owners.html" class="nav-link active"><span class="nav-link-icon">👥</span>业主管理</a>
+      <a href="buildings.html" class="nav-link"><span class="nav-link-icon">🏢</span>楼栋房间</a>
+    <a href="bills.html" class="nav-link"><span class="nav-link-icon">🧾</span>账单管理</a>
+    <a href="splits.html" class="nav-link"><span class="nav-link-icon">💰</span>分账流水</a>
+    <a href="merchant-bindings.html" class="nav-link"><span class="nav-link-icon">🔗</span>商家绑定</a>
+    <a href="activity-audit.html" class="nav-link"><span class="nav-link-icon">✅</span>活动审核</a>
+    <a href="facilities.html" class="nav-link"><span class="nav-link-icon">🏟️</span>场地预约</a>
+
+    <div class="nav-section">安防通行</div>
+    <a href="access.html" class="nav-link"><span class="nav-link-icon">🚪</span>门禁管理</a>
+    <a href="vehicles.html" class="nav-link"><span class="nav-link-icon">🚗</span>车辆管理</a>
+    <a href="devices.html" class="nav-link"><span class="nav-link-icon">📡</span>IoT设备</a>
+  </nav>
+  <div class="sidebar-footer">
+    <a href="#" class="nav-link" id="logoutBtn"><span class="nav-link-icon">🚪</span>退出登录</a>
+  </div>
+</aside>
+
+<!-- Main Content -->
+<main class="main">
+  <div class="page-header">
+    <h1 class="page-title">业主管理</h1>
+    <p class="page-subtitle">管理社区业主信息、绑定审核与抵扣记录</p>
+  </div>
+
+  <!-- Tabs -->
+  <div class="tabs">
+    <button class="tab-btn active" data-tab="owners">业主列表</button>
+    <button class="tab-btn" data-tab="bindRequests">绑定审核</button>
+    <button class="tab-btn" data-tab="deductLogs">抵扣日志</button>
+  </div>
+
+  <!-- Tab: Owners -->
+  <div class="tab-panel active" id="tab-owners">
+    <div class="card">
+      <div class="search-bar">
+        <input type="text" class="search-input" id="keyword" placeholder="搜索业主姓名、手机号或编号...">
+        <button class="btn-md btn-primary" id="btnSearch">🔍 搜索</button>
+        <button class="btn-md btn-secondary" id="btnRefresh">↻ 刷新</button>
+      </div>
+      <div class="table-container">
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>业主编号</th>
+                <th>姓名</th>
+                <th>手机号</th>
+                <th>余额</th>
+                <th>房产数</th>
+                <th>状态</th>
+                <th>操作</th>
+              </tr>
+            </thead>
+            <tbody id="ownerTable">
+              <tr><td colspan="7" class="empty">加载中...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tab: Bind Requests -->
+  <div class="tab-panel" id="tab-bindRequests">
+    <div class="card">
+      <div class="search-bar">
+        <button class="btn-md btn-secondary" id="btnBindRefresh">↻ 刷新列表</button>
+      </div>
+      <div class="table-container">
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>业主姓名</th>
+                <th>手机号</th>
+                <th>申请时间</th>
+                <th>备注</th>
+                <th>状态</th>
+                <th>操作</th>
+              </tr>
+            </thead>
+            <tbody id="bindTable">
+              <tr><td colspan="7" class="empty">点击加载绑定申请</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tab: Deduct Logs -->
+  <div class="tab-panel" id="tab-deductLogs">
+    <div class="card">
+      <div class="search-bar">
+        <input type="text" class="search-input" id="deductOwnerId" placeholder="输入业主ID查询抵扣记录...">
+        <button class="btn-md btn-primary" id="btnDeductSearch">🔍 查询</button>
+        <button class="btn-md btn-secondary" id="btnDeductRefresh">↻ 重置</button>
+      </div>
+      <div class="table-container">
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>业主</th>
+                <th>账单号</th>
+                <th>金额</th>
+                <th>来源</th>
+                <th>备注</th>
+                <th>时间</th>
+              </tr>
+            </thead>
+            <tbody id="deductTable">
+              <tr><td colspan="7" class="empty">请输入业主ID后查询</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<!-- Family Modal -->
+<div class="modal-overlay" id="familyModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 class="modal-title" id="familyModalTitle">家庭成员</h3>
+      <button class="modal-close" id="familyModalClose">✕</button>
+    </div>
+    <div class="modal-body" id="familyModalBody">
+      <div class="empty">加载中...</div>
+    </div>
+  </div>
+</div>
+
+<!-- Toast Container -->
+<div class="toast-container" id="toastContainer"></div>
+
+<script>
+(function(){
+    var token = localStorage.getItem('property_admin_token');
+    if (!token) { location.href = 'login.html'; return; }
+  
+    // --- Toast ---
+    function showToast(msg, type) {
+      type = type || 'info';
+      var c = document.getElementById('toastContainer');
+      var t = document.createElement('div');
+      t.className = 'toast ' + type;
+      t.textContent = msg;
+      c.appendChild(t);
+      setTimeout(function(){ t.style.opacity = '0'; t.style.transition = 'opacity .3s'; setTimeout(function(){ c.removeChild(t); }, 300); }, 3000);
+    }
+  
+    // --- Sidebar ---
+    var sidebar = document.getElementById('sidebar');
+    var overlay = document.getElementById('overlay');
+    document.getElementById('menuToggle').onclick = function(){ sidebar.classList.add('open'); overlay.classList.add('show'); };
+    overlay.onclick = function(){ sidebar.classList.remove('open'); overlay.classList.remove('show'); };
+    document.getElementById('logoutBtn').onclick = function(e){ e.preventDefault(); localStorage.removeItem('property_admin_token'); location.href = 'login.html'; };
+  
+    // --- Tabs ---
+    var tabBtns = document.querySelectorAll('.tab-btn');
+    var tabPanels = document.querySelectorAll('.tab-panel');
+    tabBtns.forEach(function(btn){
+      btn.onclick = function(){
+        tabBtns.forEach(function(b){ b.classList.remove('active'); });
+        tabPanels.forEach(function(p){ p.classList.remove('active'); });
+        btn.classList.add('active');
+        document.getElementById('tab-' + btn.getAttribute('data-tab')).classList.add('active');
+        if (btn.getAttribute('data-tab') === 'bindRequests') loadBindRequests();
+      };
+    });
+  
+    // --- Family Modal ---
+    var familyModal = document.getElementById('familyModal');
+    document.getElementById('familyModalClose').onclick = function(){ familyModal.classList.remove('show'); };
+    familyModal.onclick = function(e){ if (e.target === familyModal) familyModal.classList.remove('show'); };
+  
+    function showFamilyModal(ownerId, ownerName) {
+      document.getElementById('familyModalTitle').textContent = '家庭成员 - ' + (ownerName || ownerId);
+      document.getElementById('familyModalBody').innerHTML = '<div class="empty">加载中...</div>';
+      familyModal.classList.add('show');
+  
+      fetch('/api/property/admin/owners/' + ownerId + '/family', { headers: { 'X-Property-Token': token } })
+        .then(function(r){ return r.json(); })
+        .then(function(res){
+          var body = document.getElementById('familyModalBody');
+          if (res.code !== 0 || !res.data || res.data.length === 0) {
+            body.innerHTML = '<div class="empty">暂无家庭成员</div>';
+            return;
+          }
+          var html = '<div class="table-wrap"><table><thead><tr><th>姓名</th><th>关系</th><th>手机号</th><th>身份证号</th></tr></thead><tbody>';
+          res.data.forEach(function(f){
+            html += '<tr><td>' + (f.name||'--') + '</td><td>' + (f.relation||'--') + '</td><td>' + (f.phone||'--') + '</td><td>' + (f.id_card||'--') + '</td></tr>';
+          });
+          html += '</tbody></table></div>';
+          body.innerHTML = html;
+        })
+        .catch(function(){ document.getElementById('familyModalBody').innerHTML = '<div class="empty">加载失败</div>'; });
+    }
+  
+    // --- Owners ---
+    function loadOwners(keyword){
+      var url = '/api/property/admin/owners';
+      if (keyword) url += '?keyword=' + encodeURIComponent(keyword);
+      fetch(url, { headers: { 'X-Property-Token': token } })
+        .then(function(r){ return r.json(); })
+        .then(function(res){
+          var tbody = document.getElementById('ownerTable');
+          if (res.code !== 0 || !res.data || res.data.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="7" class="empty">暂无数据</td></tr>';
+            return;
+          }
+          var html = '';
+          res.data.forEach(function(o){
+            var statusBadge = o.status === 1 ? '<span class="badge green">正常</span>' : '<span class="badge red">禁用</span>';
+            html += '<tr>' +
+              '<td>' + (o.ownerNo || o.id) + '</td>' +
+              '<td>' + (o.ownerName || '--') + '</td>' +
+              '<td>' + (o.ownerPhone || '--') + '</td>' +
+              '<td>¥' + Number(o.balance || 0).toFixed(2) + '</td>' +
+              '<td>' + ('--') + '</td>' +
+              '<td>' + statusBadge + '</td>' +
+              '<td><button class="btn-sm btn-primary" onclick="window._showFamily(\'' + o.id + '\',\'' + (o.name||'').replace(/'/g,"\\'") + '\')">家庭成员</button></td></tr>';
+          });
+          tbody.innerHTML = html;
+        })
+        .catch(function(){ document.getElementById('ownerTable').innerHTML = '<tr><td colspan="7" class="empty">加载失败</td></tr>'; });
+    }
+  
+    window._showFamily = showFamilyModal;
+  
+    document.getElementById('btnSearch').onclick = function(){ loadOwners(document.getElementById('keyword').value.trim()); };
+    document.getElementById('keyword').addEventListener('keydown', function(e){ if (e.key === 'Enter') loadOwners(this.value.trim()); });
+    document.getElementById('btnRefresh').onclick = function(){ document.getElementById('keyword').value = ''; loadOwners(''); };
+    loadOwners('');
+  
+    // --- Bind Requests ---
+    function bindStatusBadge(s) {
+      var map = {
+        'pending': '<span class="badge yellow">待审核</span>',
+        'approved': '<span class="badge green">已通过</span>',
+        'rejected': '<span class="badge red">已拒绝</span>'
+      };
+      return map[s] || '<span class="badge gray">' + (s||'--') + '</span>';
+    }
+  
+    function loadBindRequests() {
+      fetch('/api/property/admin/bind-requests', { headers: { 'X-Property-Token': token } })
+        .then(function(r){ return r.json(); })
+        .then(function(res){
+          var tbody = document.getElementById('bindTable');
+          if (res.code !== 0 || !res.data || res.data.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="7" class="empty">暂无绑定申请</td></tr>';
+            return;
+          }
+          var html = '';
+          res.data.forEach(function(r){
+            var actions = '';
+            if (r.status === 'pending' || r.audit_status === 'pending' || r.audit_status === 0) {
+              actions = '<button class="btn-sm btn-success" onclick="window._bindAction(\'' + r.id + '\',\'approve\')">通过</button> ' +
+                        '<button class="btn-sm btn-danger" onclick="window._bindAction(\'' + r.id + '\',\'reject\')">拒绝</button>';
+            } else {
+              actions = '--';
+            }
+            html += '<tr>' +
+              '<td>' + (r.id || '--') + '</td>' +
+              '<td>' + (r.owner_name || r.ownerName || '--') + '</td>' +
+              '<td>' + (r.phone || '--') + '</td>' +
+              '<td>' + (r.created_at || r.applyTime || '--') + '</td>' +
+              '<td>' + (r.remark || r.apply_reason || '--') + '</td>' +
+              '<td>' + bindStatusBadge(r.status || r.audit_status) + '</td>' +
+              '<td>' + actions + '</td></tr>';
+          });
+          tbody.innerHTML = html;
+        })
+        .catch(function(){ document.getElementById('bindTable').innerHTML = '<tr><td colspan="7" class="empty">加载失败</td></tr>'; });
+    }
+  
+    window._bindAction = function(id, action) {
+      if (!confirm(action === 'approve' ? '确认通过此绑定申请？' : '确认拒绝此绑定申请？')) return;
+      fetch('/api/property/admin/bind-requests/' + id + '/' + action, {
+        method: 'PUT',
+        headers: { 'X-Property-Token': token, 'Content-Type': 'application/json' }
+      })
+      .then(function(r){ return r.json(); })
+      .then(function(res){
+        if (res.code === 0) {
+          showToast(action === 'approve' ? '已通过' : '已拒绝', 'success');
+          loadBindRequests();
+        } else {
+          showToast(res.msg || '操作失败', 'error');
+        }
+      })
+      .catch(function(){ showToast('操作失败', 'error'); });
+    };
+  
+    document.getElementById('btnBindRefresh').onclick = loadBindRequests;
+  
+    // --- Deduct Logs ---
+    function loadDeductLogs(ownerId) {
+      var params = [];
+      if (ownerId) params.push('ownerId=' + encodeURIComponent(ownerId));
+      var url = '/api/property/admin/deduct-logs' + (params.length ? '?' + params.join('&') : '');
+  
+      fetch(url, { headers: { 'X-Property-Token': token } })
+        .then(function(r){ return r.json(); })
+        .then(function(res){
+          var tbody = document.getElementById('deductTable');
+          if (res.code !== 0 || !res.data || res.data.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="7" class="empty">' + (ownerId ? '暂无抵扣记录' : '请输入业主ID后查询') + '</td></tr>';
+            return;
+          }
+          var html = '';
+          res.data.forEach(function(d){
+            html += '<tr>' +
+              '<td>' + (d.id || '--') + '</td>' +
+              '<td>' + (d.owner_name || d.ownerId || '--') + '</td>' +
+              '<td>' + (d.bill_no || '--') + '</td>' +
+              '<td>¥' + Number(d.amount || d.deduct_amount || 0).toFixed(2) + '</td>' +
+              '<td>' + (d.source || d.type || '--') + '</td>' +
+              '<td>' + (d.remark || d.memo || '--') + '</td>' +
+              '<td>' + (d.created_at || d.deduct_time || '--') + '</td></tr>';
+          });
+          tbody.innerHTML = html;
+        })
+        .catch(function(){ document.getElementById('deductTable').innerHTML = '<tr><td colspan="7" class="empty">加载失败</td></tr>'; });
+    }
+  
+    document.getElementById('btnDeductSearch').onclick = function(){
+      var oid = document.getElementById('deductOwnerId').value.trim();
+      if (!oid) { showToast('请输入业主ID', 'error'); return; }
+      loadDeductLogs(oid);
+    };
+    document.getElementById('deductOwnerId').addEventListener('keydown', function(e){
+      if (e.key === 'Enter') {
+        var oid = this.value.trim();
+        if (oid) loadDeductLogs(oid);
+      }
+    });
+    document.getElementById('btnDeductRefresh').onclick = function(){
+      document.getElementById('deductOwnerId').value = '';
+      document.getElementById('deductTable').innerHTML = '<tr><td colspan="7" class="empty">请输入业主ID后查询</td></tr>';
+    };
+  })();
+</script>
+</body>
+</html>

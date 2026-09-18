@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover">
+<meta name="theme-color" content="#4f46e5">
+<title>场地预约 · 我的物业</title>
+<link rel="icon" href="data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='80' font-size='90'%3E🏠%3C/text%3E%3C/svg%3E">
+<style>
+:root {
+  --pri: #4f46e5;
+  --pri-grad: linear-gradient(135deg, #4f46e5, #7c3aed);
+  --pri-bg: #eef2ff;
+  --text: #1e293b;
+  --text-2: #64748b;
+  --text-3: #94a3b8;
+  --bg: #f8fafc;
+  --surface: #fff;
+  --border: #e2e8f0;
+  --shadow-card: 0 2px 12px rgba(0,0,0,.04);
+  --r-md: 14px;
+  --r-lg: 20px;
+  --r-full: 999px;
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --gold: #f59e0b;
+  --gold-bg: #fffbeb;
+  --success: #10b981;
+  --success-bg: #ecfdf5;
+  --danger: #ef4444;
+  --danger-bg: #fef2f2;
+  --ease: cubic-bezier(.4,0,.2,1);
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+html,body{font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","PingFang SC","Microsoft YaHei",sans-serif;color:var(--text);background:var(--bg);-webkit-font-smoothing:antialiased;font-size:15px;}
+body{min-height:100vh;}
+a{color:inherit;text-decoration:none;}
+button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit;}
+
+@keyframes fadeInUp{from{opacity:0;transform:translateY(16px);}to{opacity:1;transform:translateY(0);}}
+
+.app-shell{max-width:480px;margin:0 auto;min-height:100vh;background:var(--bg);position:relative;}
+.content{padding:20px 20px calc(80px + var(--safe-bottom));}
+
+/* Hero */
+.hero{background:var(--pri-grad);color:#fff;padding:48px 24px 32px;position:relative;overflow:hidden;border-radius:0 0 var(--r-lg) var(--r-lg);}
+.hero::before{content:"";position:absolute;top:-60px;right:-40px;width:200px;height:200px;background:rgba(255,255,255,.08);border-radius:50%;}
+.hero::after{content:"";position:absolute;bottom:-30px;left:-20px;width:120px;height:120px;background:rgba(255,255,255,.06);border-radius:50%;}
+.hero h1{font-size:24px;font-weight:800;position:relative;z-index:1;letter-spacing:-.3px;}
+.hero .sub{font-size:13px;opacity:.85;margin-top:8px;position:relative;z-index:1;font-weight:500;}
+
+/* Tabs */
+.page-tabs{display:flex;gap:0;background:var(--surface);border-radius:var(--r-lg);margin:16px 20px 0;overflow:hidden;box-shadow:var(--shadow-card);}
+.page-tab{flex:1;padding:14px 0;text-align:center;font-size:14px;font-weight:700;color:var(--text-2);transition:all .2s var(--ease);position:relative;}
+.page-tab.active{color:var(--pri);background:var(--pri-bg);}
+
+/* Facility Card */
+.fac-card{background:var(--surface);border-radius:var(--r-lg);margin-bottom:16px;overflow:hidden;box-shadow:var(--shadow-card);border:none;animation:fadeInUp .4s var(--ease) both;}
+.fac-card:nth-child(1){animation-delay:.05s;}
+.fac-card:nth-child(2){animation-delay:.1s;}
+.fac-card:nth-child(3){animation-delay:.15s;}
+.fac-body{padding:20px;}
+.fac-name{font-size:16px;font-weight:700;margin-bottom:6px;}
+.fac-meta{display:flex;gap:12px;flex-wrap:wrap;font-size:12px;color:var(--text-2);margin-bottom:10px;}
+.fac-meta span{display:flex;align-items:center;gap:4px;}
+.fac-desc{font-size:13px;color:var(--text-2);line-height:1.5;margin-bottom:14px;}
+.fac-price{font-size:18px;font-weight:800;color:var(--pri);margin-bottom:14px;}
+.fac-price small{font-size:12px;font-weight:500;color:var(--text-3);}
+.btn-book{width:100%;height:44px;border-radius:var(--r-md);background:var(--pri-grad);color:#fff;font-size:14px;font-weight:700;box-shadow:0 4px 12px rgba(79,70,229,.3);transition:all .2s var(--ease);}
+.btn-book:active{transform:scale(.97);}
+
+/* Booking Panel */
+.booking-panel{display:none;background:var(--surface);border-radius:var(--r-lg);margin-bottom:16px;padding:20px;box-shadow:var(--shadow-card);animation:fadeInUp .3s var(--ease);}
+.booking-panel.show{display:block;}
+.booking-panel h3{font-size:16px;font-weight:700;margin-bottom:16px;display:flex;align-items:center;gap:8px;}
+.form-label{font-size:13px;font-weight:600;color:var(--text-2);margin-bottom:6px;display:block;}
+.form-input{width:100%;height:44px;padding:0 14px;border:1.5px solid var(--border);border-radius:var(--r-md);font-size:14px;color:var(--text);background:#fff;transition:border-color .2s;-webkit-appearance:none;appearance:none;margin-bottom:14px;}
+.form-input:focus{outline:none;border-color:var(--pri);box-shadow:0 0 0 3px rgba(79,70,229,.12);}
+
+/* Time Slots */
+.slot-grid{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px;}
+.slot-chip{padding:8px 14px;border-radius:var(--r-full);font-size:12px;font-weight:600;background:var(--bg);color:var(--text-2);border:1.5px solid var(--border);cursor:pointer;transition:all .2s var(--ease);}
+.slot-chip.selected{background:var(--pri-bg);color:var(--pri);border-color:var(--pri);}
+.slot-chip:active{transform:scale(.95);}
+
+.btn-submit{width:100%;height:48px;border-radius:var(--r-md);background:var(--pri-grad);color:#fff;font-size:15px;font-weight:700;box-shadow:0 4px 12px rgba(79,70,229,.3);transition:all .2s var(--ease);margin-top:6px;}
+.btn-submit:active{transform:scale(.97);}
+.btn-submit[disabled]{opacity:.5;box-shadow:none;}
+
+/* Reservation Card */
+.rsv-card{background:var(--surface);border-radius:var(--r-lg);margin-bottom:12px;padding:18px 20px;box-shadow:var(--shadow-card);animation:fadeInUp .4s var(--ease) both;}
+.rsv-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;}
+.rsv-no{font-size:12px;color:var(--text-3);font-weight:600;}
+.rsv-badge{display:inline-block;padding:4px 12px;border-radius:var(--r-full);font-size:11px;font-weight:700;}
+.rsv-badge.s0{background:var(--gold-bg);color:var(--gold);}
+.rsv-badge.s1{background:var(--pri-bg);color:var(--pri);}
+.rsv-badge.s2{background:var(--success-bg);color:var(--success);}
+.rsv-badge.s3{background:var(--bg);color:var(--text-3);}
+.rsv-badge.s4{background:var(--success-bg);color:var(--success);}
+.rsv-info{font-size:14px;font-weight:600;line-height:1.6;}
+.rsv-time{font-size:13px;color:var(--text-2);margin-top:4px;}
+.rsv-amount{font-size:15px;font-weight:700;color:var(--pri);margin-top:6px;}
+.rsv-actions{margin-top:12px;display:flex;gap:8px;}
+.btn-cancel{height:34px;padding:0 16px;border-radius:var(--r-full);background:var(--danger-bg);color:var(--danger);font-size:12px;font-weight:700;transition:all .2s var(--ease);}
+.btn-cancel:active{transform:scale(.95);}
+
+.empty{text-align:center;padding:32px 16px;color:var(--text-3);font-size:13px;}
+.empty .emoji{font-size:36px;display:block;margin-bottom:8px;}
+
+/* Bottom Nav */
+.bottom-nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:480px;background:rgba(255,255,255,.85);backdrop-filter:blur(20px) saturate(180%);-webkit-backdrop-filter:blur(20px) saturate(180%);border-top:.5px solid rgba(0,0,0,.06);display:flex;justify-content:space-around;align-items:center;padding:8px 0 calc(8px + var(--safe-bottom));z-index:50;}
+.bottom-nav a{display:flex;flex-direction:column;align-items:center;gap:2px;font-size:10px;color:var(--text-3);text-decoration:none;transition:color .2s;}
+.bottom-nav a.active{color:var(--pri);}
+.bottom-nav a.active::after{content:"";width:4px;height:4px;border-radius:50%;background:var(--pri);margin-top:2px;}
+.bottom-nav a .icon{font-size:24px;line-height:1;transition:transform .2s var(--ease);}
+.bottom-nav a.active .icon{transform:scale(1.1);}
+
+/* Toast */
+.toast-host{position:fixed;top:20px;left:50%;transform:translateX(-50%);z-index:99;display:flex;flex-direction:column;gap:10px;pointer-events:none;max-width:400px;width:90%;}
+.toast{padding:12px 20px;border-radius:var(--r-md);background:#0f172a;color:#fff;font-size:14px;font-weight:500;opacity:0;transform:translateY(-20px);transition:all .25s ease;box-shadow:0 8px 24px rgba(0,0,0,.15);text-align:center;}
+.toast.show{opacity:1;transform:translateY(0);}
+.toast.success{background:var(--success);}
+.toast.danger{background:var(--danger);}
+.toast.warning{background:var(--gold);}
+</style>
+</head>
+<body>
+<div class="app-shell">
+  <div class="toast-host" id="toastHost"></div>
+
+  <div class="hero">
+    <h1>🏟️ 场地预约</h1>
+    <div class="sub">查看可用场地，在线预约</div>
+  </div>
+
+  <!-- Page Tabs -->
+  <div class="page-tabs">
+    <div class="page-tab active" data-view="facilities" onclick="switchView('facilities')">场地列表</div>
+    <div class="page-tab" data-view="my-reservations" onclick="switchView('my-reservations')">我的预约</div>
+  </div>
+
+  <div class="content">
+    <!-- Facilities View -->
+    <div id="view-facilities">
+      <div id="facilityList"></div>
+    </div>
+
+    <!-- Booking Panel (hidden by default) -->
+    <div id="bookingPanel" class="booking-panel">
+      <h3>📅 预约 <span id="bookingFacilityName"></span></h3>
+      <input type="hidden" id="bookingFacilityId">
+      <label class="form-label">选择日期</label>
+      <input class="form-input" type="date" id="bookingDate" onchange="loadSlots()">
+      <label class="form-label">选择时段</label>
+      <div class="slot-grid" id="slotGrid"><span style="font-size:13px;color:var(--text-3);">请先选择日期</span></div>
+      <input type="hidden" id="selectedSlotStart">
+      <input type="hidden" id="selectedSlotEnd">
+      <label class="form-label">备注（可选）</label>
+      <input class="form-input" id="bookingRemark" placeholder="如：公司团建活动">
+      <button class="btn-submit" id="btnSubmitBooking" onclick="submitBooking()" disabled>确认预约</button>
+      <button style="width:100%;height:40px;margin-top:8px;font-size:13px;color:var(--text-3);font-weight:600;" onclick="closeBooking()">取消</button>
+    </div>
+
+    <!-- My Reservations View -->
+    <div id="view-my-reservations" style="display:none;">
+      <div id="reservationList"></div>
+    </div>
+  </div>
+
+  <nav class="bottom-nav">
+  <a href="index.html"><span class="icon">🏠</span><span>首页</span></a>
+  <a href="access.html"><span class="icon">🚪</span><span>门禁</span></a>
+  <a href="reservation.html" class="active"><span class="icon">🏟️</span><span>预约</span></a>
+  <a href="bills.html"><span class="icon">📋</span><span>账单</span></a>
+  <a href="bind.html"><span class="icon">👤</span><span>我的</span></a>
+</nav>
+</div>
+
+<script>
+const $=id=>document.getElementById(id);
+const API="/api/property/owner";
+function toast(m,t){const h=$("toastHost");if(!h)return;const e=document.createElement("div");e.className="toast "+(t||"");e.textContent=m;h.appendChild(e);requestAnimationFrame(()=>e.classList.add("show"));setTimeout(()=>{e.classList.remove("show");setTimeout(()=>e.remove(),220)},2400)}
+
+const tk=localStorage.getItem("property_owner_token");
+if(!tk){location.href="login.html"}
+
+async function req(path,method,body){
+  const h={};const token=localStorage.getItem("property_owner_token");
+  if(token)h["X-Owner-Token"]=token;
+  const o={method:method||"GET",headers:h};
+  if(body&&method!=="GET"){
+    // Use URL params for this API pattern
+    const p=new URLSearchParams();
+    Object.keys(body).forEach(k=>{if(body[k]!=null&&body[k]!=="")p.append(k,body[k])});
+    return fetch(API+path+"?"+p.toString(),o).then(r=>r.json());
+  }
+  try{
+    const r=await fetch(API+path,o).then(r=>r.json());
+    if(r.code===401){localStorage.removeItem("property_owner_token");toast("登录已过期","warning");setTimeout(()=>{location.href="login.html"},1500)}
+    return r;
+  }catch(e){return{code:-1,msg:e.message}}
+}
+const get=p=>req(p,"GET");
+const post=(p,b)=>req(p,"POST",b);
+
+const companyId=1; // default company
+
+// ========== View Switching ==========
+function switchView(view){
+  document.querySelectorAll('.page-tab').forEach(t=>t.classList.remove('active'));
+  document.querySelector('[data-view="'+view+'"]').classList.add('active');
+  $('view-facilities').style.display = view==='facilities'?'block':'none';
+  $('view-my-reservations').style.display = view==='my-reservations'?'block':'none';
+  $('bookingPanel').classList.remove('show');
+  if(view==='facilities') loadFacilities();
+  if(view==='my-reservations') loadMyReservations();
+}
+
+// ========== Facilities ==========
+let facilities=[];
+async function loadFacilities(){
+  const r=await get("/p1/facilities?companyId="+companyId);
+  facilities=r.data||[];
+  const el=$('facilityList');
+  if(!facilities.length){el.innerHTML='<div class="empty"><span class="emoji">🏟️</span>暂无可用场地</div>';return;}
+  let html='';
+  facilities.forEach((f,i)=>{
+    html+='<div class="fac-card" style="animation-delay:'+(i*0.05)+'s">'
+      +'<div class="fac-body">'
+      +'<div class="fac-name">'+esc(f.name)+'</div>'
+      +'<div class="fac-meta">'
+      +(f.location?'<span>📍 '+esc(f.location)+'</span>':'')
+      +(f.capacity?'<span>👥 '+f.capacity+'人</span>':'')
+      +'<span>🕐 '+(f.openTime||'').substring(0,5)+'~'+(f.closeTime||'').substring(0,5)+'</span>'
+      +'</div>'
+      +(f.description?'<div class="fac-desc">'+esc(f.description)+'</div>':'')
+      +'<div class="fac-price">¥'+f.price+'<small>/小时</small></div>'
+      +'<button class="btn-book" onclick="openBooking('+f.id+',\''+esc(f.name)+'\')">立即预约</button>'
+      +'</div></div>';
+  });
+  el.innerHTML=html;
+}
+
+// ========== Booking ==========
+function openBooking(facilityId,facilityName){
+  $('bookingFacilityId').value=facilityId;
+  $('bookingFacilityName').textContent=facilityName;
+  $('bookingDate').value='';
+  $('bookingDate').min=new Date().toISOString().split('T')[0];
+  $('slotGrid').innerHTML='<span style="font-size:13px;color:var(--text-3);">请先选择日期</span>';
+  $('selectedSlotStart').value='';
+  $('selectedSlotEnd').value='';
+  $('bookingRemark').value='';
+  $('btnSubmitBooking').disabled=true;
+  $('bookingPanel').classList.add('show');
+  $('bookingPanel').scrollIntoView({behavior:'smooth'});
+}
+
+function closeBooking(){
+  $('bookingPanel').classList.remove('show');
+}
+
+async function loadSlots(){
+  const date=$('bookingDate').value;
+  const facilityId=$('bookingFacilityId').value;
+  if(!date||!facilityId)return;
+  $('slotGrid').innerHTML='<span style="font-size:13px;color:var(--text-3);">加载中...</span>';
+  $('selectedSlotStart').value='';
+  $('selectedSlotEnd').value='';
+  $('btnSubmitBooking').disabled=true;
+  const r=await get("/p1/facilities/"+facilityId+"/slots?date="+date);
+  const slots=r.data||[];
+  if(!slots.length){$('slotGrid').innerHTML='<span style="font-size:13px;color:var(--danger);">该日期无可用时段</span>';return;}
+  let html='';
+  slots.forEach(s=>{
+    const start=s[0].substring(0,5);
+    const end=s[1].substring(0,5);
+    html+='<div class="slot-chip" onclick="selectSlot(this,\''+s[0]+'\',\''+s[1]+'\')">'+start+' ~ '+end+'</div>';
+  });
+  $('slotGrid').innerHTML=html;
+}
+
+function selectSlot(el,start,end){
+  document.querySelectorAll('.slot-chip').forEach(c=>c.classList.remove('selected'));
+  el.classList.add('selected');
+  $('selectedSlotStart').value=start;
+  $('selectedSlotEnd').value=end;
+  $('btnSubmitBooking').disabled=false;
+}
+
+async function submitBooking(){
+  const facilityId=$('bookingFacilityId').value;
+  const date=$('bookingDate').value;
+  const startTime=$('selectedSlotStart').value;
+  const endTime=$('selectedSlotEnd').value;
+  const remark=$('bookingRemark').value;
+  if(!facilityId||!date||!startTime||!endTime){toast('请填写完整信息','warning');return;}
+  $('btnSubmitBooking').disabled=true;
+  $('btnSubmitBooking').textContent='提交中...';
+  const r=await post("/p1/reservations",{companyId:companyId,facilityId:facilityId,date:date,startTime:startTime,endTime:endTime,remark:remark});
+  $('btnSubmitBooking').textContent='确认预约';
+  $('btnSubmitBooking').disabled=false;
+  if(r.code!==0){toast(r.msg||'预约失败','danger');return;}
+  toast('预约成功！等待确认','success');
+  closeBooking();
+  setTimeout(()=>switchView('my-reservations'),800);
+}
+
+// ========== My Reservations ==========
+const statusTextMap={0:'待确认',1:'已确认',2:'已签到',3:'已取消',4:'已完成'};
+async function loadMyReservations(){
+  const r=await get("/p1/reservations");
+  const list=r.data||[];
+  const el=$('reservationList');
+  if(!list.length){el.innerHTML='<div class="empty"><span class="emoji">📋</span>暂无预约记录</div>';return;}
+  let html='';
+  list.forEach((rv,i)=>{
+    const fac=facilities.find(f=>f.id===rv.facilityId);
+    const facName=fac?fac.name:'场地#'+rv.facilityId;
+    const canCancel=rv.status===0||rv.status===1;
+    html+='<div class="rsv-card" style="animation-delay:'+(i*0.05)+'s">'
+      +'<div class="rsv-header">'
+      +'<span class="rsv-no">'+esc(rv.reservationNo)+'</span>'
+      +'<span class="rsv-badge s'+rv.status+'">'+(statusTextMap[rv.status]||'未知')+'</span>'
+      +'</div>'
+      +'<div class="rsv-info">'+esc(facName)+'</div>'
+      +'<div class="rsv-time">📅 '+rv.reserveDate+' 🕐 '+(rv.startTime||'').substring(0,5)+' ~ '+(rv.endTime||'').substring(0,5)+'</div>'
+      +'<div class="rsv-amount">¥'+rv.amount+'</div>'
+      +(rv.remark?'<div style="font-size:12px;color:var(--text-3);margin-top:4px;">💬 '+esc(rv.remark)+'</div>':'')
+      +(rv.cancelReason?'<div style="font-size:12px;color:var(--danger);margin-top:4px;">❌ '+esc(rv.cancelReason)+'</div>':'')
+      +(canCancel?'<div class="rsv-actions"><button class="btn-cancel" onclick="cancelRsv('+rv.id+')">取消预约</button></div>':'')
+      +'</div>';
+  });
+  el.innerHTML=html;
+}
+
+async function cancelRsv(id){
+  if(!confirm('确定要取消此预约吗？'))return;
+  const r=await post("/p1/reservations/"+id+"/cancel",{reason:'用户主动取消'});
+  if(r.code!==0){toast(r.msg||'取消失败','danger');return;}
+  toast('已取消','success');
+  loadMyReservations();
+}
+
+function esc(s){if(!s)return '';const d=document.createElement('div');d.textContent=s;return d.innerHTML;}
+
+// Init
+loadFacilities();
+</script>
+</body>
+</html>

@@ -26,7 +26,7 @@ public class BoxPrizeLimitStat {
     @Column(nullable = false, length = 20)
     private String userPhone;
 
-    /** 关联私有池 id；公共奖品填 public_id */
+    /** 关联私有池 id；公共奖品填 publicId */
     @Column(nullable = false)
     private Long prizeId;
 

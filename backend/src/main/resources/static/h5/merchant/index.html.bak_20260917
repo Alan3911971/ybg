@@ -1,0 +1,3188 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover">
+<meta name="theme-color" content="#2563eb">
+<title>商家后台 · 增强版</title>
+<link rel="icon" href="data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='80' font-size='90'%3E%F0%9F%8F%AA%3C/text%3E%3C/svg%3E">
+<style>
+:root{
+  --c-primary:#2563eb;--c-primary-600:#1d4ed8;--c-primary-100:#dbeafe;
+  --c-text:#1f2330;--c-text-2:#5a6072;--c-text-3:#8a90a2;
+  --c-bg:#f5f7fb;--c-surface:#fff;--c-border:#ececf3;--c-divider:#f0f1f6;
+  --c-grad:linear-gradient(135deg,#2563eb 0%,#3b82f6 100%);
+  --r-sm:8px;--r-md:12px;--r-lg:14px;--r-pill:999px;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+html,body{font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei","Helvetica Neue",Arial,sans-serif;color:var(--c-text);background:var(--c-bg);font-size:14px;-webkit-font-smoothing:antialiased;}
+body{padding-bottom:calc(60px + env(safe-area-inset-bottom));}
+input,select,button,textarea{font-size:14px;font-family:inherit;}
+a{color:inherit;text-decoration:none;}
+button{cursor:pointer;border:none;background:none;color:inherit;}
+
+.top{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;background:var(--c-grad);color:#fff;position:sticky;top:0;z-index:20;}
+.top h1{font-size:17px;font-weight:700;}
+.top .sub{font-size:11px;opacity:.85;margin-top:2px;}
+.top .right{display:flex;gap:8px;align-items:center;}
+.top .icon-btn{font-size:13px;padding:6px 10px;background:rgba(255,255,255,.18);border-radius:var(--r-pill);cursor:pointer;}
+
+.tabs{display:flex;background:#fff;overflow-x:auto;border-bottom:1px solid var(--c-divider);position:sticky;top:62px;z-index:15;padding:0 8px;}
+.tabs::-webkit-scrollbar{height:0;}
+.tab{padding:14px 14px;font-size:14px;white-space:nowrap;cursor:pointer;color:var(--c-text-2);border-bottom:3px solid transparent;font-weight:500;flex-shrink:0;}
+.tab.active{color:var(--c-primary);border-bottom-color:var(--c-primary);font-weight:700;}
+
+.panel{display:none;padding:14px 14px 24px;}
+.panel.active{display:block;}
+
+.card{background:#fff;border:1px solid var(--c-border);border-radius:var(--r-lg);padding:16px;margin-bottom:12px;}
+.sec{display:flex;align-items:center;gap:8px;font-size:14px;font-weight:700;color:var(--c-text);margin-bottom:12px;}
+.sec .ic{width:26px;height:26px;border-radius:8px;background:var(--c-primary-100);color:var(--c-primary);display:inline-flex;align-items:center;justify-content:center;font-size:14px;}
+.desc{font-size:12px;color:var(--c-text-3);margin-bottom:10px;line-height:1.6;}
+
+.kpi-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;}
+.kpi{background:#fff;border:1px solid var(--c-border);border-radius:var(--r-md);padding:14px;}
+.kpi .n{font-size:22px;font-weight:800;color:var(--c-primary);}
+.kpi .l{font-size:11px;color:var(--c-text-3);margin-top:4px;}
+
+.field{margin-bottom:10px;}
+.field label{display:block;font-size:12px;color:var(--c-text-2);margin-bottom:6px;}
+.input,.select{width:100%;height:42px;padding:0 12px;border:1px solid var(--c-border);border-radius:var(--r-md);background:#fff;font-size:14px;color:var(--c-text);transition:border-color .15s;-webkit-appearance:none;appearance:none;}
+.input:focus,.select:focus{outline:none;border-color:var(--c-primary);}
+textarea.input{height:80px;padding:10px 12px;resize:vertical;}
+
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;height:42px;padding:0 16px;border-radius:var(--r-md);font-size:14px;font-weight:600;cursor:pointer;transition:opacity .12s;}
+.btn:active{opacity:.7;}
+.btn--primary{background:var(--c-grad);color:#fff;}
+.btn--soft{background:var(--c-primary-100);color:var(--c-primary);}
+.btn--ghost{background:transparent;color:var(--c-primary);border:1px solid var(--c-primary);}
+.btn--danger{background:#fee;color:#dc2626;border:1px solid #fcc;}
+.btn--block{width:100%;}
+.btn--sm{height:34px;padding:0 12px;font-size:13px;}
+
+.btn-row{display:flex;gap:8px;flex-wrap:wrap;}
+
+.upload{padding:10px;border:1.5px dashed var(--c-border);border-radius:var(--r-md);text-align:center;background:#fafbfd;}
+.upload input[type="file"]{display:none;}
+.upload label{display:block;cursor:pointer;color:var(--c-primary);font-size:13px;font-weight:600;}
+.upload .hint{font-size:11px;color:var(--c-text-3);margin-top:4px;}
+.upload-preview{margin-top:10px;text-align:center;}
+.upload-preview img{max-width:200px;max-height:200px;border:1px solid var(--c-border);border-radius:var(--r-md);}
+
+.table{width:100%;border-collapse:collapse;font-size:12px;}
+.table th,.table td{padding:8px;text-align:left;border-bottom:1px solid var(--c-divider);}
+.table th{background:#fafbfd;color:var(--c-text-2);font-weight:600;font-size:11px;}
+.table td.num{font-weight:700;color:var(--c-primary);text-align:right;}
+.table tr.empty td{text-align:center;color:var(--c-text-3);padding:20px;}
+
+.toast-host{position:fixed;top:18px;left:50%;transform:translateX(-50%);z-index:90;display:flex;flex-direction:column;gap:6px;pointer-events:none;}
+.toast{padding:10px 16px;border-radius:var(--r-md);background:rgba(0,0,0,.84);color:#fff;font-size:13px;opacity:0;transform:translateY(-6px);transition:all .2s;max-width:80vw;}
+.toast.show{opacity:1;transform:none;}
+.toast.success{background:#16a34a;}
+.toast.warning{background:#f59e0b;}
+.toast.danger{background:#dc2626;}
+
+.list-item{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--c-divider);}
+.list-item:last-child{border-bottom:none;}
+.list-item .l{display:flex;align-items:center;gap:8px;}
+.list-item .r{color:var(--c-text-3);font-size:12px;text-align:right;}
+.list-item .em{font-size:20px;}
+.list-item .name{font-weight:600;font-size:13px;}
+.list-item .info{font-size:11px;color:var(--c-text-3);margin-top:2px;}
+
+.footer{position:fixed;bottom:0;left:0;right:0;background:rgba(255,255,255,.96);backdrop-filter:blur(8px);border-top:1px solid var(--c-divider);padding:10px 16px calc(10px + env(safe-area-inset-bottom));z-index:50;display:flex;gap:10px;align-items:center;justify-content:space-between;font-size:12px;color:var(--c-text-3);}
+.footer a{color:var(--c-primary);font-weight:600;}
+
+@media (min-width:768px){body{background:#eceef4;} .tabs{max-width:768px;margin:0 auto;} .panel{max-width:768px;margin:0 auto;}}
+
+.stat-row{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:14px;}
+.stat{background:#fff;border:1px solid var(--c-border);border-radius:var(--r-lg);padding:14px;text-align:center;box-shadow:var(--sh-1);}
+.stat .num{font-size:22px;font-weight:800;color:var(--c-primary);}
+.stat .lab{font-size:12px;color:var(--c-text-3);margin-top:4px;}
+.card{background:#fff;border:1px solid var(--c-border);border-radius:var(--r-lg);padding:16px;margin-bottom:14px;box-shadow:var(--sh-1);}
+.card-title{font-size:15px;font-weight:600;margin-bottom:12px;color:var(--c-text);}
+.filter-row{display:grid;grid-template-columns:1fr 110px;gap:8px;margin-bottom:14px;}
+.chip-row{display:flex;gap:8px;overflow-x:auto;padding-bottom:8px;margin-bottom:14px;}
+.chip-row::-webkit-scrollbar{height:0;}
+.chip{padding:8px 14px;background:#f0f4ff;border-radius:999px;font-size:13px;color:var(--c-text-2);white-space:nowrap;cursor:pointer;}
+.chip.active{background:var(--c-primary);color:#fff;font-weight:600;}
+.input{width:100%;padding:10px 12px;border:1px solid var(--c-border);border-radius:var(--r-md);font-size:14px;background:#fff;color:var(--c-text);}
+.input:focus{outline:none;border-color:var(--c-primary);}
+.empty{color:var(--c-text-3);font-size:13px;padding:14px;text-align:center;}
+
+/* ===== Print Preview Modal ===== */
+.print-preview-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.55);z-index:200;display:none;align-items:center;justify-content:center;}
+.print-preview-overlay.show{display:flex;}
+.print-preview-box{background:#fff;border-radius:16px;width:92vw;max-width:380px;max-height:90vh;overflow-y:auto;padding:20px;box-shadow:0 8px 32px rgba(0,0,0,.2);}
+.print-preview-box h3{font-size:16px;font-weight:700;margin-bottom:14px;text-align:center;}
+.pp-paper{position:relative;background:#f8f8f8;border:2px dashed #ccc;border-radius:8px;margin:0 auto 16px;overflow:hidden;}
+.pp-content{position:absolute;display:flex;flex-direction:column;align-items:center;justify-content:center;}
+.pp-content img{width:120px;height:120px;border-radius:4px;}
+.pp-content .pp-name{font-size:13px;font-weight:700;margin-top:6px;color:#333;text-align:center;max-width:140px;word-break:break-all;}
+.pp-content .pp-sub{font-size:10px;color:#888;margin-top:2px;}
+.pp-controls{margin-bottom:14px;}
+.pp-row{display:flex;align-items:center;gap:8px;margin-bottom:10px;}
+.pp-row label{font-size:12px;color:#666;width:50px;flex-shrink:0;}
+.pp-row input[type="range"]{flex:1;height:6px;-webkit-appearance:none;appearance:none;background:#e0e0e0;border-radius:3px;outline:none;}
+.pp-row input[type="range"]::-webkit-slider-thumb{-webkit-appearance:none;width:20px;height:20px;border-radius:50%;background:var(--c-primary);cursor:pointer;}
+.pp-row .pp-val{font-size:11px;color:#999;width:32px;text-align:right;flex-shrink:0;}
+.pp-size-row{display:flex;gap:8px;margin-bottom:14px;justify-content:center;}
+.pp-size-btn{padding:8px 16px;border-radius:20px;font-size:13px;border:1px solid #ddd;background:#fff;cursor:pointer;color:#555;}
+.pp-size-btn.active{background:var(--c-primary);color:#fff;border-color:var(--c-primary);font-weight:600;}
+.pp-actions{display:flex;gap:10px;}
+.pp-actions .btn{flex:1;}
+
+
+/* ???? */
+.chat-wrap{display:flex;gap:10px;height:calc(100vh - 280px);min-height:380px;}
+.chat-list{flex:0 0 140px;border:1px solid var(--bd,#e5e7eb);border-radius:10px;overflow-y:auto;background:#fafafa;}
+.chat-list .ci{padding:10px 12px;border-bottom:1px solid #eee;cursor:pointer;}
+.chat-list .ci.active{background:#fff;border-left:3px solid #ff5b3e;}
+.chat-list .ci .ph{font-size:13px;font-weight:600;}
+.chat-list .ci .last{font-size:11px;color:#888;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.chat-list .ci .badge{display:inline-block;background:#ff5b3e;color:#fff;font-size:10px;border-radius:9px;padding:0 5px;margin-left:4px;min-width:16px;text-align:center;}
+.chat-empty{text-align:center;color:#aaa;padding:20px 0;font-size:12px;}
+.chat-box{flex:1;display:flex;flex-direction:column;border:1px solid #e5e7eb;border-radius:10px;overflow:hidden;background:#fff;}
+.chat-head{padding:10px 14px;border-bottom:1px solid #eee;font-size:14px;font-weight:600;background:#fafafa;}
+.chat-body{flex:1;overflow-y:auto;padding:12px;display:flex;flex-direction:column;gap:8px;background:#f7f8fb;}
+.chat-body .row{display:flex;align-items:flex-end;gap:6px;}
+.chat-body .row.me{flex-direction:row-reverse;}
+.chat-body .bubble{max-width:76%;padding:8px 12px;border-radius:12px;font-size:13px;line-height:1.5;word-break:break-word;white-space:pre-wrap;}
+.chat-body .row.me .bubble{background:linear-gradient(135deg,#ff5b3e,#ff7150);color:#fff;border-bottom-right-radius:4px;}
+.chat-body .row.them .bubble{background:#fff;border:1px solid #e5e7eb;border-bottom-left-radius:4px;}
+.chat-body .bubble .t{display:block;font-size:10px;margin-top:2px;opacity:.65;}
+.chat-input{display:flex;gap:8px;padding:8px;border-top:1px solid #eee;background:#fff;}
+.chat-input textarea{flex:1;resize:none;border:1px solid #e5e7eb;border-radius:18px;padding:8px 12px;font-size:13px;font-family:inherit;max-height:80px;line-height:1.4;}
+.chat-input textarea:focus{outline:none;border-color:#ff5b3e;}
+@media(max-width:640px){.chat-wrap{flex-direction:column;height:auto;}.chat-list{flex:0 0 auto;max-height:120px;}}
+.member-head{display:flex;gap:10px;flex-wrap:wrap;}
+.member-head .kpi{flex:1;min-width:100px;}
+.avatar{width:42px;height:42px;border-radius:50%;background:linear-gradient(135deg,#ff9a56,#ff6a3d);display:flex;align-items:center;justify-content:center;font-size:20px;margin-right:12px;flex-shrink:0;box-shadow:0 2px 6px rgba(255,106,61,.35);}
+.member-item{align-items:center;padding:12px 14px;border-radius:14px;background:#fff;margin-bottom:8px;box-shadow:0 1px 4px rgba(0,0,0,.04);}
+.member-item .l{flex:1;min-width:0;}
+.member-item .r{text-align:right;}
+.member-item .amt{font-size:15px;font-weight:600;color:#111;}
+.member-item .sub{font-size:11px;color:#9ca3af;margin-top:2px;}
+.member-item .name{font-size:15px;font-weight:600;color:#111;}
+.member-item .info{font-size:11px;color:#6b7280;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.drawer-mask{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:99;display:none;}
+.drawer-mask.show{display:block;}
+.drawer{position:fixed;top:0;right:-100%;width:92%;max-width:460px;height:100%;background:#f5f6f8;z-index:100;transition:right .28s ease;overflow-y:auto;border-radius:18px 0 0 18px;box-shadow:-4px 0 24px rgba(0,0,0,.18);}
+.drawer.show{right:0;}
+.md-tabs{display:flex;gap:6px;margin-bottom:10px;position:sticky;top:0;background:#f5f6f8;padding:6px 0;z-index:5;}
+.md-tab{flex:1;text-align:center;padding:7px 0;border-radius:10px;background:#fff;color:#6b7280;font-size:13px;font-weight:600;cursor:pointer;border:1px solid #e5e7eb;}
+.md-tab.on{background:#ff6a3d;color:#fff;border-color:#ff6a3d;}
+.pref-tag{display:inline-block;padding:3px 10px;margin:3px 4px 3px 0;border-radius:12px;background:#f3f4f6;color:#374151;font-size:12px;cursor:pointer;border:1px solid #e5e7eb;}
+.pref-tag.on{background:#ff6a3d;color:#fff;border-color:#ff6a3d;}
+.tagpick{margin:4px 0 8px;}
+.drawer-head{position:sticky;top:0;background:#fff;padding:14px 16px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #f0f0f0;z-index:2;}
+.drawer-body{padding:14px;}
+.mcard{background:#fff;border-radius:14px;padding:14px;margin-bottom:12px;box-shadow:0 1px 4px rgba(0,0,0,.04);}
+.mcard .mt{font-size:14px;font-weight:600;margin-bottom:10px;}
+.mcard label{font-size:12px;color:#6b7280;display:block;margin:8px 0 4px;}
+.mcard input,.mcard textarea,.mcard select{width:100%;box-sizing:border-box;border:1px solid #e5e7eb;border-radius:10px;padding:9px 10px;font-size:14px;font-family:inherit;background:#fff;}
+.vitem{display:flex;gap:8px;padding:8px 0;border-bottom:1px dashed #f0f0f0;font-size:13px;}
+.vitem:last-child{border-bottom:none;}
+.tag{display:inline-block;padding:2px 8px;border-radius:10px;font-size:11px;background:#eef2ff;color:#4f46e5;}
+.tag.done{background:#ecfdf5;color:#059669;}
+.tag.cancel{background:#fef2f2;color:#dc2626;}
+</style>
+</head>
+<body>
+<div class="top">
+  <div>
+    <h1>🏪 商家后台 · 增强版</h1>
+    <div class="sub" id="topSub">m001 · 加载中…</div>
+  </div>
+  <div class="right">
+    <span class="icon-btn" id="btnBack" title="刷新页面">🔙 V2</span>
+    <span class="icon-btn" id="btnLogout">退出</span>
+  </div>
+</div>
+
+<div class="tabs" id="tabs">
+  <div class="tab active" data-p="p1">📊 概览</div>
+  <div class="tab" data-p="p10">👥 会员</div>
+      <div class="tab" data-p="p9">📦 商品</div>
+  <div class="tab" data-p="p2">📷 收款</div>
+  <div class="tab" data-p="p3">🎫 核销</div>
+  <div class="tab" data-p="p4">🏷️ 奖品</div>
+  <div class="tab" data-p="p5">💸 流水</div>
+  <div class="tab" data-p="p6">📋 订单</div>
+  <div class="tab" data-p="p7">📢 公告</div>
+  <div class="tab" data-p="p8">⚙️ 设置</div>
+</div>
+
+<!-- p1 概览 -->
+<div class="panel active" id="p1">
+  <div class="kpi-row">
+    <div class="kpi"><div class="n" id="kpiOrders">0</div><div class="l">今日订单</div></div>
+    <div class="kpi"><div class="n" id="kpiAmount">¥0</div><div class="l">今日实收</div></div>
+    <div class="kpi"><div class="n" id="kpiSave">¥0</div><div class="l">今日优惠</div></div>
+    <div class="kpi"><div class="n" id="kpiAvg">¥0</div><div class="l">客单价</div></div>
+  </div>
+    <div class="card">
+    <div class="sec"><span class="ic">📜</span>近 5 单</div>
+    <div id="recentOrders"></div>
+  </div>
+</div>
+
+<!-- p2 收款 -->
+<div class="panel" id="p2">
+  <div class="card">
+    <div class="sec"><span class="ic">📷</span>商家收款码（按支付方式上传）</div>
+    <div class="desc">上传各支付方式的收款码（PNG/JPG/WEBP，≤ 3MB）。顾客在结算页点击对应方式后长按识别完成付款。</div>
+    <div id="qrSlots" style="display:flex;flex-direction:column;gap:12px;"></div>
+  </div>
+  <div class="card">
+    <div class="sec"><span class="ic">💸</span>余额抵扣规则</div>
+    <div class="field">
+      <label>余额抵扣百分比（0-100，0=禁止）</label>
+      <input id="dcPercent" class="input" type="number" inputmode="decimal" min="0" max="100" step="1" placeholder="如 80">
+    </div>
+    <div class="field">
+      <label>单日单用户抵扣上限（元）</label>
+      <input id="dcDailyCap" class="input" type="number" inputmode="decimal" min="0" step="0.01" placeholder="如 100">
+    </div>
+    <div class="field">
+      <label>本店抵扣模式</label>
+      <select id="receiveMode" class="select">
+        <option value="A">A · 商家收款码（顾客长按）</option>
+        <option value="B">B · 凭证码（商家扫描核销）</option>
+      </select>
+    </div>
+    <button class="btn btn--primary btn--block" id="btnSaveDc">💾 保存规则</button>
+  </div>
+</div>
+
+<!-- p3 奖品 -->
+<div class="panel" id="p4">
+  <div class="card">
+    <div class="sec"><span class="ic">➕</span>添加奖品</div>
+    <div class="field">
+      <label>奖品池类别</label>
+      <select id="newPrizePool" class="select">
+        <option value="0">🏍️ 本店奖品池（仅本店顾客可抽）</option>
+        <option value="1">🌐 公共奖品池（全平台所有商家客人可获得）</option>
+      </select>
+    </div>
+    <div class="field">
+      <label>奖品名称（可直接输入或选择预设）</label>
+      <input id="newPrizeRemark" class="input" list="prizeNamePresets" placeholder="如 9折优惠券 / 神秘礼品 / 谢谢参与">
+      <datalist id="prizeNamePresets">
+        <option value="9折优惠券">
+        <option value="95折优惠券">
+        <option value="88折优惠券">
+        <option value="5元立减券">
+        <option value="10元立减券">
+        <option value="20元立减券">
+        <option value="满100减20券">
+        <option value="神秘礼品一份">
+        <option value="VIP折扣券">
+        <option value="免单一次">
+        <option value="5元余额">
+        <option value="20元余额">
+        <option value="谢谢参与">
+      </datalist>
+    </div>
+    <div class="field">
+      <label>关联奖品类型</label>
+      <select id="newPrizeType" class="select">
+        <option value="0">普通商品（不关联优惠券/余额，仅展示奖品名称）</option>
+        <option value="1">折扣券 — 顾客消费享 X 折（如90=9折）</option>
+        <option value="2">立减券 — 顾客消费直接减 X 元（如5=减5元）</option>
+        <option value="3">赠送余额 — 顾客账户充入 X 元，可用于消费抵扣</option>
+        <option value="4">本单免单 — 顾客本单消费金额由余额抵扣，数值=免单金额上限（如100=最多免100元）</option>
+      </select>
+    </div>
+    <div class="field" id="prizeValueField" style="display:none;">
+      <label id="prizeValueLabel">优惠数值</label>
+      <input id="newPrizeValue" class="input" type="number" step="0.01" placeholder="请输入数值">
+      <div id="prizeValueHint" style="font-size:12px;color:#8a90a2;margin-top:4px;"></div>
+    </div>
+    <div class="field">
+      <label>权重（越大越容易中）</label>
+      <input id="newPrizeWeight" class="input" type="number" min="0" max="100" value="10" placeholder="如 10">
+    </div>
+    <div class="field" id="expireField" style="display:none;">
+      <label>截止时间（过期自动下架）</label>
+      <input id="newPrizeExpire" class="input" type="datetime-local">
+    </div>
+    <button class="btn btn--primary btn--block" id="btnAddPrize">➕ 添加奖品</button>
+  </div>
+  <div class="card">
+    <div class="sec"><span class="ic">🏍️</span>本店奖品池<span class="sp"></span><button class="btn btn--sm" id="btnRefreshPrizes">刷新</button></div>
+    <div id="prizeListPrivate"></div>
+  </div>
+  <div class="card">
+    <div class="sec"><span class="ic">🌐</span>公共奖品池（全平台所有商家客人可获得）<span class="sp"></span></div>
+    <div id="prizeListPublic"></div>
+  </div>
+  <div class="card">
+    <div class="sec"><span class="ic">📊</span>中奖报表<span class="sp"></span><button class="btn btn--sm" id="btnRefreshPrizeStats">刷新</button></div>
+    <div id="prizeStatsList"><div class="empty">点击刷新加载</div></div>
+    <div class="btn-row" style="margin-top:12px;">
+      <button class="btn btn--ghost" id="btnResetPrize">🔄 恢复默认</button>
+    </div>
+  </div>
+</div>
+
+<!-- p4 订单 -->
+<div class="panel" id="p6">
+  <div class="filter-row"><input id="oSearch" class="input" placeholder="🔍 订单号/手机号/顾客"><select id="oStatus" class="input"><option value="">全部状态</option><option value="paid">已付款</option><option value="pending">待付款</option><option value="refund">退款</option></select></div>
+
+  <div class="card">
+    <div class="sec"><span class="ic">🔍</span>筛选</div>
+    <div class="field">
+      <label>状态</label>
+      <select id="fStatus" class="select">
+        <option value="">全部</option>
+        <option value="paid">已支付</option>
+        <option value="pending">待支付</option>
+        <option value="refund">已退款</option>
+      </select>
+    </div>
+    <div class="field">
+      <label>奖品</label>
+      <select id="fPrize" class="select"><option value="">全部</option></select>
+    </div>
+    <div class="field">
+      <label>关键字（手机号/订单号）</label>
+      <input id="fKw" class="input" placeholder="可空">
+    </div>
+    <div class="btn-row">
+      <button class="btn btn--primary" id="btnFilter">🔍 筛选</button>
+      <button class="btn btn--ghost" id="btnExport">📤 导出 CSV</button>
+    </div>
+  </div>
+  <div class="card">
+    <div class="sec"><span class="ic">📋</span>订单列表</div>
+    <div id="orderTable"></div>
+  </div>
+</div>
+
+<!-- p5 设置 -->
+<div class="panel" id="p8">
+  <div class="card">
+    <div class="sec"><span class="ic">🏪</span>商家信息</div>
+    <div class="field"><label>商家名称</label><input id="shopName" class="input" placeholder="如 鲜果时光·宜必购合作店"></div>
+    <div class="field"><label>联系电话</label><input id="shopPhone" class="input" type="tel" placeholder="如 138xxxx8888"></div>
+    <div class="field"><label>行业分类</label><input id="shopIndustry" class="input" placeholder="如 水果生鲜 / 餐饮美食 / 生活服务"></div>
+    <div class="field"><label>店铺地址</label><input id="shopAddress" class="input" placeholder="如 南京市江宁区竹山路68号万达广场"></div>
+    <div class="field"><label>预约电话</label><input id="shopReservePhone" class="input" type="tel" placeholder="如 138xxxx8888"></div>
+    <div class="field"><label>纬度（选填，用于导航）</label><input id="shopLatitude" class="input" type="number" step="0.000001" placeholder="如 31.9582"></div>
+    <div class="field"><label>经度（选填，用于导航）</label><input id="shopLongitude" class="input" type="number" step="0.000001" placeholder="如 118.8247"></div>
+    <div class="field"><label>退款说明</label><textarea id="refundNote" class="input" placeholder="如 退款需提供订单号和手机号"></textarea></div>
+    <button class="btn btn--primary btn--block" id="btnSaveShop">💾 保存信息</button>
+  </div>
+  <div class="card">
+    <div class="sec"><span class="ic">⚠️</span>危险操作</div>
+    <div class="desc">以下操作不可恢复，请谨慎。</div>
+    <div class="btn-row">
+      <button class="btn btn--danger btn--sm" id="btnClearOrders">🗑 清除订单</button>
+      <button class="btn btn--danger btn--sm" id="btnClearAll">🔥 重置全部</button>
+    </div>
+  </div>
+  <div class="card">
+    <div class="sec"><span class="ic">🔵</span>蓝牙设备（打印机+语音）</div>
+    <div class="desc">连接蓝牙打印机打印二维码。语音播报通过手机蓝牙音箱/耳机播报，无需在此连接。</div>
+    <div class="field">
+      <label>蓝牙打印机状态</label>
+      <div id="btStatus" style="padding:10px 12px;background:#f5f7fb;border-radius:8px;font-size:13px;color:var(--c-text-3);">打印机未连接（语音播报不需要连接打印机）</div>
+    </div>
+    <button class="btn btn--primary btn--block" id="btnBtConnect">🔵 连接蓝牙设备</button>
+    <button class="btn btn--ghost btn--block" id="btnBtTest" style="margin-top:8px;">🔊 测试播报</button>
+    
+    <div id="btSupported" style="display:none;font-size:12px;color:var(--c-success);margin-top:6px;text-align:center;">✅ 支持蓝牙</div>
+    <div id="btUnsupported" style="display:none;font-size:12px;color:var(--c-danger);margin-top:6px;text-align:center;">❌ 当前浏览器不支持蓝牙连接，请使用 Chrome 或 Edge 浏览器（华为/微信/Safari不支持）。二维码可用浏览器打印。</div>
+  </div>
+  <div class="card">
+    <div class="sec"><span class="ic">🖨️</span>二维码生成打印</div>
+    <div class="desc">生成顾客开盲盒二维码，可打印贴在柜台上让顾客扫码开盲盒。</div>
+    <button class="btn btn--primary btn--block" id="btnGenPrintQr">🖨️ 生成打印二维码</button>
+    <div id="printQrWrap" style="display:none;text-align:center;margin-top:16px;">
+      <div id="printQrBox" style="display:inline-block;padding:16px;background:#fff;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,.08);"></div>
+      <div style="font-size:12px;color:var(--c-text-3);margin-top:8px;" id="printQrName"></div>
+      <div id="printQrUrlWrap" style="display:none;margin-top:10px;">
+        <input id="printQrUrl" class="input" style="font-size:12px;color:var(--c-text-2);" readonly>
+        <button class="btn btn--ghost btn--sm" id="btnCopyQrUrl" style="margin-top:6px;">📋 复制地址</button>
+      </div>
+      <div id="qrPrinterStatus" style="margin-top:10px;padding:8px 12px;background:#f5f7fb;border-radius:8px;font-size:12px;color:var(--c-text-3);text-align:center;">蓝牙打印机未连接</div>
+      <button class="btn btn--soft btn--block btn--sm" id="btnQrConnectPrinter" style="margin-top:6px;">🔵 连接蓝牙打印机</button>
+      <div style="display:flex;gap:8px;margin-top:8px;"><button class="btn btn--primary btn--sm" id="btnBtPrintQr" style="flex:1;" onclick="window._handleBtPrint && window._handleBtPrint()">🔵 蓝牙打印</button></div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="sec"><span class="ic">🚪</span>账号</div>
+    <div class="desc">已登录账号：<b id="accountName">--</b></div>
+    <div style="margin:10px 0;padding:10px;border:1px solid var(--c-border);border-radius:10px;background:#f8f9fb;">
+      <div style="font-size:13px;font-weight:600;margin-bottom:6px;">🔊 播报设备</div>
+      <div style="font-size:12px;color:var(--c-text-3);margin-bottom:8px;" id="broadcastStatus">当前设备未设为播报设备</div>
+      <button class="btn btn--primary btn--block btn--sm" id="btnSetBroadcast">🔊 设为本机播报</button>
+      <button class="btn btn--ghost btn--block btn--sm" id="btnClearBroadcast" style="margin-top:6px;display:none;">取消播报设备</button>
+    </div>
+    <button class="btn btn--danger btn--block" id="btnLogout2">🚪 退出登录</button>
+  </div>
+</div>
+
+
+<!-- p3 核销 -->
+<div class="panel" id="p3">
+  <div class="card">
+    <div class="sec"><span class="ic">🎫</span>优惠券手工核销</div>
+    <div class="desc">异常兜底：顾客券码损坏 / 扫码失败时手动核销。</div>
+    <div class="field">
+      <label>券编号 / 兑换码</label>
+      <input id="couponNo" class="input" placeholder="输入或扫码获取券号">
+    </div>
+    <div class="field">
+      <label>顾客手机号（可选）</label>
+      <input id="couponPhone" class="input" type="tel" placeholder="如 138xxxx8888">
+    </div>
+    <button class="btn btn--primary btn--block" id="btnVerifyCoupon">🎯 核销券</button>
+  </div>
+  <div class="card">
+    <div class="sec"><span class="ic">💰</span>余额手工扣减</div>
+    <div class="desc">手动调整顾客余额（异常或补偿用）。</div>
+    <div class="field">
+      <label>顾客手机号</label>
+      <input id="bdPhone" class="input" type="tel" placeholder="如 138xxxx8888">
+    </div>
+    <div class="field">
+      <label>扣减金额（元，正数）</label>
+      <input id="bdAmount" class="input" type="number" min="0.01" step="0.01" placeholder="如 5">
+    </div>
+    <div class="field">
+      <label>原因</label>
+      <input id="bdReason" class="input" placeholder="如 退款冲账">
+    </div>
+    <button class="btn btn--danger btn--block" id="btnBalanceDeduct">💸 确认扣减</button>
+  </div>
+  <div class="card">
+    <div class="sec"><span class="ic">📷</span>扫码核销（jsQR）</div>
+    <div class="desc">调用摄像头扫描顾客的动态券码 / 身份码。</div>
+    <div class="btn-row">
+      <button class="btn btn--soft" id="btnScan">📷 启动扫一扫</button>
+      <button class="btn btn--ghost" id="btnStopScan">🛑 停止</button>
+    </div>
+    <div id="scanResult" class="desc" style="margin-top:10px;font-family:monospace;background:#fbfafd;padding:10px;border-radius:8px;min-height:40px;">尚未启动</div>
+    <video id="scanVideo" autoplay playsinline style="display:none;width:100%;max-width:320px;border-radius:8px;margin-top:10px;"></video>
+    <canvas id="scanCanvas" style="display:none;"></canvas>
+  </div>
+</div>
+
+<!-- p5 流水 -->
+<div class="panel" id="p5">
+  <div class="chip-row"><div class="chip active" data-flow="all">全部</div><div class="chip" data-flow="pay">支付</div><div class="chip" data-flow="refund">退款</div><div class="chip" data-flow="deduct">抵扣</div><div class="chip" data-flow="recharge">充值</div></div>
+
+  <div class="card">
+    <div class="sec"><span class="ic">💸</span>余额流水</div>
+    <div class="desc">顾客充扣 / 中奖赠送 / 退款冲账等流水记录。</div>
+    <div class="field">
+      <label>类型筛选</label>
+      <select id="flowType" class="select">
+        <option value="">全部</option>
+        <option value="recharge">充值</option>
+        <option value="consume">消费扣减</option>
+        <option value="prize">中奖赠送</option>
+        <option value="refund">退款冲账</option>
+        <option value="manual">手工调整</option>
+      </select>
+    </div>
+    <div class="field">
+      <label>顾客手机号（可空）</label>
+      <input id="flowPhone" class="input" type="tel" placeholder="可空">
+    </div>
+    <button class="btn btn--primary btn--block" id="btnFlowQuery">🔍 查询流水</button>
+  </div>
+  <div class="card">
+    <div class="sec"><span class="ic">📊</span>流水记录</div>
+    <div id="flowTable"></div>
+    <div class="btn-row" style="margin-top:10px;">
+      <button class="btn btn--ghost btn--sm" id="btnFlowExport">📤 导出 CSV</button>
+    </div>
+  </div>
+</div>
+
+<!-- p7 公告 -->
+<div class="panel" id="p7">
+  <div class="card">
+    <div class="sec"><span class="ic">📢</span>发布公告 / 语音播报</div>
+    <div class="desc">文字公告会推送给所有顾客 + 调用 TTS 语音播报（商家端播报演示）。</div>
+    <div class="field">
+      <label>公告标题</label>
+      <input id="annTitle" class="input" placeholder="如 今日芒果特价">
+    </div>
+    <div class="field">
+      <label>公告内容</label>
+      <textarea id="annBody" class="input" placeholder="如 今日店内鲜芒果买一送一，欢迎顾客扫码抽奖参与！"></textarea>
+    </div>
+    <div class="field">
+      <label>语音播报（可选）</label>
+      <select id="annTts" class="select">
+        <option value="1">开启（推送给商家端播报）</option>
+        <option value="0">关闭</option>
+      </select>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn--primary" id="btnAnnPublish">📢 发布 + 播报</button>
+      <button class="btn btn--ghost" id="btnAnnPreview">🔊 仅播报预览</button>
+    </div>
+  </div>
+  <div class="card">
+    <div class="sec"><span class="ic">📜</span>历史公告</div>
+    <div id="annHistory"></div>
+  </div>
+</div>
+
+<!-- p10 会员管理 -->
+<div class="panel" id="p10">
+  <div class="kpi-row member-head">
+    <div class="kpi"><div class="n" id="memberCount">0</div><div class="l">会员总数</div></div>
+    <div class="kpi"><div class="n" id="memberTotal">¥0</div><div class="l">累计消费</div></div>
+    <div class="kpi"><div class="n" id="memberSave">¥0</div><div class="l">累计优惠</div></div>
+  </div>
+  <div class="card">
+    <div class="sec"><span class="ic">👥</span>会员列表<span class="sp"></span><button class="btn btn--sm" id="btnRefreshMembers">刷新</button><button class="btn btn--sm" style="margin-left:6px;" onclick="openMemberTypes()">🛡️ 会员类型</button></div>
+    <div id="memberList"></div>
+  </div>
+
+  <!-- 会员类型管理面板 -->
+  <div class="drawer-mask" id="mtMask" onclick="closeMemberTypes()"></div>
+  <div class="drawer" id="mtDrawer">
+    <div class="drawer-head">
+      <div style="font-size:16px;font-weight:700;">🛡️ 会员类型</div>
+      <button class="btn btn--sm" onclick="closeMemberTypes()">✕ 关闭</button>
+    </div>
+    <div class="drawer-body">
+      <div style="display:flex;gap:8px;margin-bottom:10px;">
+        <input id="newTypeName" placeholder="新类型名称，如：钻石会员" style="flex:1;padding:8px 10px;border:1px solid #e5e7eb;border-radius:8px;">
+        <button class="btn btn--primary btn--sm" onclick="addNewMemberType()">➕ 添加</button>
+      </div>
+      <div id="memberTypeList"></div>
+    </div>
+  </div>
+</div>
+
+<!-- p9 goods management -->
+<div class="panel" id="p9">
+  <div class="card">
+    <div class="sec"><span class="ic">➕</span>添加商品</div>
+    <div class="field">
+      <label>商品名称</label>
+      <input id="newGoodsName" class="input" placeholder="如 限量手办">
+    </div>
+    <div class="field">
+      <label>价格（元）</label>
+      <input id="newGoodsPrice" class="input" type="number" step="0.01" placeholder="如 29.90">
+    </div>
+    <div class="field">
+      <label>商品描述</label>
+      <input id="newGoodsDesc" class="input" placeholder="如 限时特价，仅剩10件">
+    </div>
+    <div class="field">
+      <label>商品图片</label>
+      <input id="newGoodsImg" type="file" accept="image/*">
+    </div>
+    <button class="btn btn--primary btn--block" id="btnAddGoods">➕ 添加商品</button>
+  </div>
+  <div class="card">
+    <div class="sec"><span class="ic">📦</span>我的商品<span class="sp"></span><button class="btn btn--sm" id="btnRefreshGoods">刷新</button></div>
+    <div id="goodsList"></div>
+  </div>
+</div>
+
+<div class="panel" id="p10">
+  <div class="card">
+    <div class="sec"><span class="ic">💬</span>??????</div>
+    <div class="desc">?????????????????????????</div>
+    <div class="chat-wrap" id="chatWrap">
+      <div class="chat-list" id="chatList"><div class="chat-empty">????</div></div>
+      <div class="chat-box" id="chatBox">
+        <div class="chat-head" id="chatHead">???????</div>
+        <div class="chat-body" id="chatBody"></div>
+        <div class="chat-input">
+          <textarea id="chatInput" rows="1" placeholder="?????"></textarea>
+          <button class="btn btn--primary" id="btnChatSend">??</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="footer">
+  <span>5 Tab 简洁版 · V2 增强</span>
+  <a href="./index.html">→ 首页（完整功能）</a>
+</div>
+
+<div class="toast-host" id="toastHost"></div>
+<div class="drawer-mask" id="memberMask" onclick="closeMemberDetail()"></div>
+<div class="drawer" id="memberDrawer">
+  <div class="drawer-head">
+    <div style="font-size:16px;font-weight:700;" id="mdPhone">会员详情</div>
+    <button class="btn btn--sm" onclick="closeMemberDetail()">✕ 关闭</button>
+  </div>
+  <div class="drawer-body" id="mdBody"></div>
+    <div class="drawer-mask" id="detailMask" onclick="closeDetail()"></div>
+    <div class="drawer" id="detailDrawer">
+      <div class="drawer-head">
+        <div style="font-size:16px;font-weight:700;" id="detailTitle">明细</div>
+        <button class="btn btn--sm" onclick="closeDetail()">✕ 关闭</button>
+      </div>
+      <div class="drawer-body" id="detailBody"></div>
+    </div>
+</div>
+
+<script src="./api.js"></script>
+<script src="../tts.js"></script>
+<script src="https://cdn.jsdelivr.net/gh/davidshimjs/qrcodejs/qrcode.min.js"></script>
+<script>
+window.onerror = function(msg, url, line, col, err){
+  var m = "JS Error: " + msg + " @ line " + line + ":" + col;
+  if (err && err.stack) m += "\n" + err.stack.split("\n").slice(0,3).join(" | ");
+  console.error(m);
+  return false;
+};
+window.addEventListener("unhandledrejection", function(e){
+  var m = "Promise Error: " + (e.reason && e.reason.message ? e.reason.message : e.reason);
+  if (e.reason && e.reason.stack) m += "\n" + e.reason.stack.split("\n").slice(0,3).join(" | ");
+  console.error(m);
+});
+</script>
+
+<script>
+// Tab/chip/data-go event bindings (sync, before IIFE, for WebView compatibility)
+(function(){
+  var $ = function(id){return document.getElementById(id);};
+  document.querySelectorAll(".chip").forEach(function(c){
+    c.onclick = function(){
+      document.querySelectorAll(".chip").forEach(function(x){ x.classList.remove("active"); });
+      c.classList.add("active");
+    };
+  });
+  document.querySelectorAll(".tab").forEach(function(t){
+    t.addEventListener("click", function(){
+      document.querySelectorAll(".tab").forEach(function(x){ x.classList.remove("active"); });
+      document.querySelectorAll(".panel").forEach(function(x){ x.classList.remove("active"); });
+      t.classList.add("active");
+      var id = "p" + t.dataset.p.slice(1);
+      var p = $(id);
+      if (p) p.classList.add("active");
+    });
+  });
+  document.querySelectorAll("[data-go]").forEach(function(b){
+    b.addEventListener("click", function(){
+      var target = b.getAttribute("data-go");
+      document.querySelectorAll(".tab").forEach(function(x){ x.classList.remove("active"); });
+      document.querySelectorAll(".panel").forEach(function(x){ x.classList.remove("active"); });
+      var tab = document.querySelector('.tab[data-p="' + target + '"]');
+      if (tab) tab.classList.add("active");
+      var p = $(target);
+      if (p) p.classList.add("active");
+    });
+  });
+})();
+</script>
+
+<script>
+try{(async function(){
+  var $ = function(id){return document.getElementById(id);};
+  function toast(msg, type){
+    var host = $("toastHost"); if (!host) return;
+    var t = document.createElement("div");
+    t.className = "toast " + (type || "");
+    t.textContent = msg;
+    host.appendChild(t);
+    requestAnimationFrame(function(){ t.classList.add("show"); });
+    setTimeout(function(){ t.classList.remove("show"); setTimeout(function(){ t.remove(); }, 200); }, 2000);
+  }
+  window.toast = toast;
+
+  async function loadKpi(){
+  try {
+    const orders = await window.IBIGOU_API.merchant.ibigouOrders ? await window.IBIGOU_API.merchant.ibigouOrders() : null;
+    const announce = window.IBIGOU_API && window.IBIGOU_API.merchant && window.IBIGOU_API.merchant.announce ? await window.IBIGOU_API.merchant.announce() : null;
+    if (orders && orders.code === 0 && orders.data) {
+      var ords = orders.data || [];
+      $("kpiOrders").textContent = ords.length;
+      var totalAmt = ords.reduce(function(s,o){ return s + (o.payAmount||0); }, 0);
+      var totalSave = ords.reduce(function(s,o){ return s + (o.deductBalance||0); }, 0);
+      $("kpiAmount").textContent = "¥" + totalAmt.toFixed(2);
+      $("kpiSave").textContent = "¥" + totalSave.toFixed(2);
+      $("kpiAvg").textContent = ords.length > 0 ? "¥" + (totalAmt/ords.length).toFixed(2) : "¥0";
+    }
+    var kp = $("kpiPending"); if (kp) kp.textContent = "—";
+    var km = $("kpiMembers"); if (km) km.textContent = "0";
+    var ann = $("kpiAnnounce");
+    if (ann) {
+      if (announce && announce.data) {
+        ann.className = "";
+        ann.innerHTML = (announce.data || []).slice(0,3).map(function(a){return '<div style="padding:8px 0;border-bottom:1px solid var(--c-divider);font-size:13px;">' + (a.title || a.content || '—') + '</div>';}).join("");
+      } else { ann.textContent = "暂无公告"; }
+    }
+  } catch(e){ var ea = $("kpiAnnounce"); if (ea) ea.textContent = "暂无公告"; }
+}
+$("oSearch") && ($("oSearch").oninput = function(){ filterOrders(); });
+$("oStatus") && ($("oStatus").onchange = function(){ filterOrders(); });
+async function filterOrders(){ /* 占位：调 IBIGOU_API.merchant.orderList 过滤 */ }
+
+  var DEFAULT_PRIZES = [
+    { id:"discount",  name:"9 折优惠券",         emoji:"🎟️", weight:16 },
+    { id:"cash5",     name:"¥5 立减券",          emoji:"💵", weight:14 },
+    { id:"gift",      name:"神秘礼品一份",       emoji:"🎁", weight:14 },
+    { id:"vip",       name:"VIP 折扣券",         emoji:"💎", weight:12 },
+    { id:"fullminus", name:"满 100 减 20 券",    emoji:"✨", weight:10 },
+    { id:"cash10",    name:"¥10 立减券",          emoji:"💸", weight:10 },
+    { id:"giftbag",   name:"购物礼包",           emoji:"🛍️", weight:8  },
+    { id:"bigmoney",  name:"¥20 余额（本店抵扣）", emoji:"💰", weight:6  },
+    { id:"suprise",   name:"惊喜盲盒",           emoji:"📦", weight:5  },
+    { id:"lucky2x",   name:"幸运加倍券",         emoji:"🍀", weight:3  },
+    { id:"freeme",    name:"免单一次",           emoji:"👑", weight:1  },
+    { id:"thanks",    name:"谢谢参与",           emoji:"🙏", weight:2  }
+  ];
+
+  // === api wrapper（同步语义，从内存 cache 读，cache 由 api-mock-server 8766 拉取） ===
+  if (!window.IBIGOU_API) {
+    // 注入 api stub（merchant.html 不引 api.js，先创建）
+    var script = document.createElement("script");
+    script.src = "./api.js";
+    document.head.appendChild(script);
+  }
+  var __cache = {};  // 内存缓存
+  function lsGet(k, def){ try { if (k in __cache) return __cache[k]; var v = localStorage.getItem(k); if (v == null) return def; try { __cache[k] = JSON.parse(v); } catch(e){ __cache[k] = v; } return __cache[k]; } catch(e){ return def; } }
+  function lsSet(k, v){ try { __cache[k] = v; localStorage.setItem(k, JSON.stringify(v)); } catch(e){} }
+  function lsDel(k){ try { delete __cache[k]; localStorage.removeItem(k); } catch(e){} }
+
+  var tk = lsGet("ibigou_merchant_token", null);
+  if (!tk) {
+    // 本地预览模式：自动建测试 token
+    if (location.hostname === "127.0.0.1" || location.hostname === "localhost") {
+      // 本地预览模式：等 api.js 加载 + 调真接口拿商家 token
+      lsSet("ibigou_merchant_token", "");
+    // 确保 api.js 已加载
+      if (!window.IBIGOU_API) {
+        await new Promise(function(resolve){
+          var s2 = document.createElement("script");
+          s2.src = "./api.js";
+          s2.onload = resolve;
+          s2.onerror = resolve;
+          document.head.appendChild(s2);
+        });
+        // 再等一拍确保 IBIGOU_API 初始化
+        for (var i2 = 0; i2 < 20 && !window.IBIGOU_API; i2++) await new Promise(function(r){ setTimeout(r, 50); });
+      }
+      if (window.IBIGOU_API) {
+        try {
+          var lr = await window.IBIGOU_API.merchant.login("888888");
+          if (lr && lr.code === 0 && lr.data && lr.data.token) {
+            lsSet("ibigou_merchant_token", lr.data.token);
+            console.log("[merchant] 自动登录（真后端 token）");
+          } else {
+            lsSet("ibigou_merchant_token", "TEST_TK_" + Date.now());
+            console.log("[merchant] 自动登录（fallback 本地 token）", lr && lr.msg);
+          }
+        } catch(e) {
+          lsSet("ibigou_merchant_token", "TEST_TK_" + Date.now());
+          console.log("[merchant] 自动登录（fallback 本地 token）", e.message);
+        }
+      } else {
+        lsSet("ibigou_merchant_token", "TEST_TK_" + Date.now());
+        console.log("[merchant] 自动登录（fallback 本地 token：api 没加载）");
+      }
+      tk = lsGet("ibigou_merchant_token");
+      // 同步商家 token到 api.js
+      try { window.IBIGOU_API && window.IBIGOU_API.lsSet("ibigou_merchant_token", tk); } catch(e){}
+      // 同步商家 token到 api.js（用于商家端接口）
+      try { window.IBIGOU_API && window.IBIGOU_API.lsSet("ibigou_merchant_token", tk); } catch(e){}
+    } else {
+      location.replace("./login.html");
+      return;
+    }
+  }
+
+  var shop = lsGet("ibigou_shop", { name:"鲜果时光·宜必购合作店", phone:"", refund:"" });
+  $("topSub").textContent = "m001 · " + (shop.name || "未命名商家");
+  $("accountName").textContent = shop.name || "m001";
+
+  // ===== p1 概览 =====
+  function refreshKPI(){
+    var orders = lsGet("ibigou_orders", []);
+    var today = new Date().toDateString();
+    var todayOrders = orders.filter(function(o){ return new Date(o.ts || 0).toDateString() === today; });
+    var totalAmount = todayOrders.reduce(function(s,o){ return s + (o.amount || 0); }, 0);
+    var totalSave = todayOrders.reduce(function(s,o){ return s + (o.save || 0); }, 0);
+    var cnt = todayOrders.length;
+    $("kpiOrders").textContent = cnt;
+    $("kpiAmount").textContent = "¥" + totalAmount.toFixed(2);
+    $("kpiSave").textContent = "¥" + totalSave.toFixed(2);
+    $("kpiAvg").textContent = cnt > 0 ? "¥" + (totalAmount / cnt).toFixed(2) : "¥0";
+
+    var recent = orders.slice(0, 5);
+    var html = "";
+    if (recent.length === 0) {
+      html = '<div class="list-item"><div class="l"><span class="em">📦</span><div><div class="name">暂无订单</div><div class="info">等待顾客下单</div></div></div><div class="r">--</div></div>';
+    } else {
+      recent.forEach(function(o){
+        var t = new Date(o.ts || Date.now());
+        var time = (t.getMonth()+1) + "-" + t.getDate() + " " + t.getHours() + ":" + String(t.getMinutes()).padStart(2,"0");
+        html += '<div class="list-item">'
+          + '<div class="l"><span class="em">'+(o.prizeEmoji||"🎁")+'</span><div><div class="name">'+(o.prizeName||"普通订单")+'</div><div class="info">'+(o.orderNo||"--")+'</div></div></div>'
+          + '<div class="r">¥'+(o.amount||0).toFixed(2)+'<br><span style="font-size:10px;">'+time+'</span></div>'
+          + '</div>';
+      });
+    }
+    $("recentOrders").innerHTML = html;
+  }
+
+  // ===== p10 会员管理 =====
+  function loadMembers(){
+    if (!window.IBIGOU_API || !window.IBIGOU_API.merchant.members) return;
+    window.IBIGOU_API.merchant.members().then(function(r){
+      if (!r || r.code !== 0 || !Array.isArray(r.data)) return;
+      var list = r.data;
+      $("memberCount").textContent = list.length;
+      var total = list.reduce(function(s,m){ return s + (m.totalAmount||0); }, 0);
+      var save = list.reduce(function(s,m){ return s + (m.totalSave||0); }, 0);
+      $("memberTotal").textContent = "¥" + total.toFixed(2);
+      $("memberSave").textContent = "¥" + save.toFixed(2);
+      var html = "";
+      list.forEach(function(m){
+        var phone = m.userPhone || "--";
+        var ph = phone.length >= 7 ? phone.slice(0,3) + "****" + phone.slice(-4) : phone;
+        var ts = "";
+        if (m.lastTs) { var t = new Date(m.lastTs); ts = (t.getMonth()+1) + "-" + t.getDate() + " " + t.getHours() + ":" + String(t.getMinutes()).padStart(2,"0"); }
+        var cnt = m.orderCount || 0;
+        var gtxt = m.gender === "男" ? " 👨" : (m.gender === "女" ? " 👩" : "");
+        var typeCls = m.memberType === "VIP会员" ? "background:#f59e0b;" : (m.memberType === "黑金会员" ? "background:#111;" : "");
+        var typeTag = (m.memberType && m.memberType !== "普通会员") ? ' <span class="tag" style="' + typeCls + '">' + m.memberType + '</span>' : "";
+        html += '<div class="list-item member-item" style="cursor:pointer;" onclick="openMemberDetail(\'' + m.userPhone + '\')">'
+          + '<div class="avatar">' + (m.lastPrizeEmoji || "👤") + '</div>'
+          + '<div class="l"><div class="name">' + (m.name || ph) + gtxt + typeTag + '</div>'
+          + '<div class="info">' + ph + ' · 最近奖品：' + (m.lastPrize || "普通消费") + '</div></div>'
+          + '<div class="r"><div class="amt">¥' + (m.totalAmount||0).toFixed(2) + '</div>'
+          + '<div class="sub">' + cnt + '笔 · ' + (m.totalSave||0).toFixed(2) + '优惠 · ' + ts + '</div></div>'
+          + '</div>';
+      });
+      $("memberList").innerHTML = html || '<div class="list-item"><div class="l"><div class="name">暂无会员</div><div class="info">等待顾客到店消费</div></div></div>';
+    });
+  }
+  refreshKPI();
+  loadMembers();
+  var btnRm = $("btnRefreshMembers");
+  if (btnRm) btnRm.onclick = function(){ loadMembers(); toast("会员数据已刷新"); };
+
+  // ===== 会员详情抽屉（喜好/家人喜好/回访/预约）=====
+  var curMemberPhone = "";
+  function maskPhone(phone){ return phone && phone.length >= 7 ? phone.slice(0,3) + "****" + phone.slice(-4) : (phone || "--"); }
+  function escHtml(s){ return String(s == null ? "" : s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
+  function fmtShortTs(ts){ if (!ts) return ""; var t = new Date(ts); return (t.getMonth()+1) + "-" + t.getDate() + " " + t.getHours() + ":" + String(t.getMinutes()).padStart(2,"0"); }
+  function fmtFullTs(ts){ if (!ts) return ""; var t = new Date(ts); return t.getFullYear() + "-" + (t.getMonth()+1) + "-" + t.getDate() + " " + t.getHours() + ":" + String(t.getMinutes()).padStart(2,"0"); }
+  function closeMemberDetail(){ document.getElementById("memberDrawer").classList.remove("show"); document.getElementById("memberMask").classList.remove("show"); }
+  function openMemberDetail(phone){
+    curMemberPhone = phone;
+    document.getElementById("memberDrawer").classList.add("show");
+    document.getElementById("memberMask").classList.add("show");
+    document.getElementById("mdPhone").textContent = maskPhone(phone);
+    document.getElementById("mdBody").innerHTML = '<div style="text-align:center;padding:40px;color:#9ca3af;">加载中…</div>';
+    window.IBIGOU_API.merchant.memberDetail(phone).then(function(r){
+      if (!r || r.code !== 0) { document.getElementById("mdBody").innerHTML = '<div style="padding:20px;color:#dc2626;">加载失败</div>'; return; }
+      var dta = r.data || {};
+      var prof = dta.profile || {};
+      document.getElementById("mdPhone").textContent = (prof.name || maskPhone(phone)) + ' · ' + maskPhone(phone);
+      var h = '';
+      // 顶部tab
+      h += '<div class="md-tabs">'
+        + '<span class="md-tab on" id="mdTabBtnProfile" onclick="switchMemberTab(\'profile\')">📋 资料</span>'
+        + '<span class="md-tab" id="mdTabBtnAppt" onclick="switchMemberTab(\'appt\')">📅 预约</span>'
+        + '<span class="md-tab" id="mdTabBtnVisit" onclick="switchMemberTab(\'visit\')">📞 回访</span></div>';
+      h += '<div id="mdTabProfile">';
+      // 资料
+      h += '<div class="mcard"><div class="mt">📋 会员资料</div>'
+        + '<label>姓名</label><input id="pfName" placeholder="会员姓名" value="' + escHtml(prof.name || '') + '">'
+        + '<label>性别</label><select id="pfGender"><option value="">未设置</option><option value="男"' + (prof.gender === "男" ? " selected" : "") + '>男</option><option value="女"' + (prof.gender === "女" ? " selected" : "") + '>女</option></select>'
+        + '<label>会员类型</label><select id="pfType"><option value="普通会员"' + (prof.memberType === "普通会员" ? " selected" : "") + '>普通会员</option><option value="VIP会员"' + (prof.memberType === "VIP会员" ? " selected" : "") + '>VIP会员</option><option value="黑金会员"' + (prof.memberType === "黑金会员" ? " selected" : "") + '>黑金会员</option></select>'
+        + '<label>客户喜好</label><textarea id="pfCustomer" rows="2" placeholder="喜欢什么、口味、习惯…">' + escHtml(prof.customerPref) + '</textarea>'
+        + '<div class="tagpick" id="cpTags"></div>'
+        + '<label>家人喜好</label><textarea id="pfFamily" rows="2" placeholder="家人爱好、忌口、生日…">' + escHtml(prof.familyPref) + '</textarea>'
+        + '<div class="tagpick" id="fpTags"></div>'
+        + '<label>生日</label><input id="pfBirthday" placeholder="MM-dd，如 09-20" value="' + escHtml(prof.birthday || '') + '">'
+        + '<label>备注</label><input id="pfRemark" value="' + escHtml(prof.remark) + '">'
+        + (prof.editor ? '<div style="color:#9ca3af;font-size:11px;margin-top:8px;">👤 录入：' + escHtml(prof.editor) + '</div>' : '')
+        + '<button class="btn btn--primary btn--block" style="margin-top:10px;" onclick="saveMemberProfile()">💾 保存资料</button></div>';
+      // 最近订单
+      h += '<div class="mcard"><div class="mt">🧾 最近订单</div>';
+      var oList = dta.orders || [];
+      if (oList.length === 0) h += '<div style="color:#9ca3af;font-size:12px;padding:6px 0;">暂无订单</div>';
+      oList.forEach(function(o){
+        h += '<div class="vitem"><span>🧾</span><div style="flex:1;">' + escHtml(String(o.orderNo||"").slice(0,22)) + '</div><div>¥' + (o.amount||0).toFixed(2) + '</div></div>';
+      });
+      h += '</div>';
+      h += '</div>';
+      h += '<div id="mdTabVisit" style="display:none;">';
+      // 回访
+      h += '<div class="mcard"><div class="mt">📞 回访记录</div>'
+        + '<div style="display:flex;gap:8px;flex-wrap:wrap;">'
+        + '<input id="vContent" placeholder="回访内容" style="flex:1;min-width:120px;">'
+        + '<input id="vResult" placeholder="结果" style="flex:0 0 90px;">'
+        + '<button class="btn btn--sm" onclick="addMemberVisit()">➕ 添加</button></div>'
+        + '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:6px;">'
+        + '<select id="vGiftGoods" style="flex:1;min-width:150px;"><option value="">🎁 附带赠送商品</option></select>'
+        + '<input id="vGiftQty" type="number" value="1" min="1" style="flex:0 0 56px;"></div>'
+        + '<div style="margin-top:8px;">';
+      var vList = dta.visits || [];
+      if (vList.length === 0) h += '<div style="color:#9ca3af;font-size:12px;padding:6px 0;">暂无回访记录</div>';
+      window._visitList = [];
+      vList.forEach(function(v){
+        window._visitList.push(v);
+        var vi = window._visitList.length - 1;
+        h += '<div class="vitem" style="cursor:pointer;" onclick="showVisitDetail(' + vi + ')"><span>📞</span><div style="flex:1;">' + escHtml(v.content) + (v.result ? '<br><span style="color:#6b7280;">结果：' + escHtml(v.result) + '</span>' : "") + '<div style="color:#9ca3af;font-size:11px;margin-top:2px;">📅 ' + fmtFullTs(v.visitTime) + '</div></div></div>';
+      });
+      h += '</div></div>';
+      h += '<div class="mcard"><div class="mt">🎁 礼品赠送</div>'
+        + '<div style="display:flex;gap:8px;flex-wrap:wrap;">'
+        + '<select id="giftGoods" style="flex:1;min-width:150px;"><option value="">请选择商品</option></select>'
+        + '<input id="giftQty" type="number" value="1" min="1" style="flex:0 0 56px;"></div>'
+        + '<input id="giftRemark" placeholder="备注（如：生日礼物）" style="width:100%;margin-top:6px;">'
+        + '<button class="btn btn--primary btn--block" style="margin-top:8px;" onclick="addMemberGift()">🎁 赠送</button>'
+        + '<div style="margin-top:8px;">';
+      var gList = dta.gifts || [];
+      if (gList.length === 0) h += '<div style="color:#9ca3af;font-size:12px;padding:6px 0;">暂无赠送记录</div>';
+      gList.forEach(function(g){
+        var srcTxt = g.source === "visit" ? "回访赠送" : "赠送";
+        h += '<div class="vitem"><span>🎁</span><div style="flex:1;">' + escHtml(g.goodsName) + ' ×' + g.quantity + (g.remark ? '<br><span style="color:#6b7280;">' + escHtml(g.remark) + '</span>' : "") + '<div style="color:#9ca3af;font-size:11px;margin-top:2px;">' + fmtShortTs(g.createTime) + ' · ' + srcTxt + '</div></div></div>';
+      });
+      h += '</div></div>';
+      h += '</div>';
+      h += '<div id="mdTabAppt" style="display:none;">';
+      // 预约
+      h += '<div class="mcard"><div class="mt">📅 预约记录</div>'
+        + '<div style="display:flex;gap:8px;flex-wrap:wrap;">'
+        + '<input id="aTime" type="datetime-local" style="flex:1;min-width:150px;">'
+        + '<input id="aItem" placeholder="服务项目" style="flex:0 0 100px;">'
+        + '<input id="aRemark" placeholder="备注" style="flex:1;min-width:100px;">'
+        + '<select id="aRemind" style="flex:0 0 110px;"><option value="30">提前30分</option><option value="15">提前15分</option><option value="60">提前1小时</option><option value="1440">提前1天</option></select>'
+        + '<button class="btn btn--sm" onclick="addMemberAppointment()">➕ 预约</button></div>'
+        + '<div style="margin-top:8px;">';
+      var aList = dta.appointments || [];
+      if (aList.length === 0) h += '<div style="color:#9ca3af;font-size:12px;padding:6px 0;">暂无预约</div>';
+      window._apptList = [];
+      aList.forEach(function(a){
+        window._apptList.push(a);
+        var ai = window._apptList.length - 1;
+        var st = a.status === 0 ? '<span class="tag">待服务</span>' : (a.status === 1 ? '<span class="tag done">已完成</span>' : '<span class="tag cancel">已取消</span>');
+        var btns = a.status === 0 ? ' <button class="btn btn--sm" onclick="apptStatus(' + a.id + ',1)">完成</button> <button class="btn btn--sm" onclick="apptStatus(' + a.id + ',2)">取消</button>' : '';
+        h += '<div class="vitem" style="cursor:pointer;" onclick="showApptDetail(' + ai + ')"><span>📅</span><div style="flex:1;">' + fmtFullTs(a.apptTime) + (a.serviceItem ? ' · ' + escHtml(a.serviceItem) : "") + (a.remark ? '<br><span style="color:#6b7280;">' + escHtml(a.remark) + '</span>' : "") + '<br>' + st + btns + '<div style="color:#9ca3af;font-size:11px;margin-top:2px;">⏰ 提前' + (a.remindMinutes || 30) + '分钟提醒 · 创建于 ' + fmtShortTs(a.createTime) + '</div></div></div>';
+      });
+      h += '</div></div>';
+      // 礼品赠送
+
+
+      h += '</div>';
+      document.getElementById("mdBody").innerHTML = h;
+    loadGiftGoodsSelect();
+    loadPrefTags();
+    loadMemberTypes();
+    });
+  }
+  function saveMemberProfile(){
+    window.IBIGOU_API.merchant.saveProfile(curMemberPhone, {
+      name: document.getElementById("pfName").value, gender: document.getElementById("pfGender").value,
+      memberType: document.getElementById("pfType").value,
+      customerPref: document.getElementById("pfCustomer").value, familyPref: document.getElementById("pfFamily").value,
+      birthday: document.getElementById("pfBirthday").value, remark: document.getElementById("pfRemark").value
+    }).then(function(r){ if (r && r.code === 0) { toast("资料已保存"); openMemberDetail(curMemberPhone); } else toast("保存失败", "err"); });
+  }
+  function switchMemberTab(tab){
+    document.getElementById("mdTabProfile").style.display = tab === "profile" ? "" : "none";
+    document.getElementById("mdTabAppt").style.display = tab === "appt" ? "" : "none";
+    document.getElementById("mdTabVisit").style.display = tab === "visit" ? "" : "none";
+    document.getElementById("mdTabBtnProfile").classList.toggle("on", tab === "profile");
+    document.getElementById("mdTabBtnAppt").classList.toggle("on", tab === "appt");
+    document.getElementById("mdTabBtnVisit").classList.toggle("on", tab === "visit");
+  }
+  function openMemberTypes(){
+    document.getElementById("mtMask").classList.add("show");
+    document.getElementById("mtDrawer").classList.add("show");
+    loadMemberTypeList();
+  }
+  function closeMemberTypes(){
+    document.getElementById("mtMask").classList.remove("show");
+    document.getElementById("mtDrawer").classList.remove("show");
+    loadMemberTypes();
+  }
+  function loadMemberTypeList(){
+    var el = document.getElementById("memberTypeList"); if (!el) return;
+    window.IBIGOU_API.merchant.memberTypes().then(function(r){
+      if (!r || r.code !== 0) return;
+      var list = r.data || [];
+      var h = list.map(function(t){
+        return '<div class="vitem"><span>🛡️</span><div style="flex:1;">' + escHtml(t.typeName) + '</div>'
+          + '<button class="btn btn--sm" style="color:#dc2626;" onclick="rmMemberType(' + t.id + ')">删除</button></div>';
+      }).join("");
+      el.innerHTML = h || '<div style="color:#9ca3af;font-size:12px;padding:10px 0;">暂无类型，请添加</div>';
+    });
+  }
+  function addNewMemberType(){
+    var inp = document.getElementById("newTypeName");
+    var name = inp.value.trim();
+    if (!name) { toast("请输入类型名称", "err"); return; }
+    window.IBIGOU_API.merchant.addMemberType({ typeName: name }).then(function(r){
+      if (r && r.code === 0) { inp.value = ""; toast("已添加"); loadMemberTypeList(); }
+      else toast((r && r.msg) || "添加失败", "err");
+    });
+  }
+  function rmMemberType(id){
+    if (!confirm("确认删除该类型？")) return;
+    window.IBIGOU_API.merchant.deleteMemberType(id).then(function(r){
+      if (r && r.code === 0) { toast("已删除"); loadMemberTypeList(); }
+      else toast("删除失败", "err");
+    });
+  }
+  function loadMemberTypes(){
+    window.IBIGOU_API.merchant.memberTypes().then(function(r){
+      if (!r || r.code !== 0) return;
+      var sel = document.getElementById("pfType"); if (!sel) return;
+      var cur = sel.value;
+      sel.innerHTML = (r.data || []).map(function(t){
+        return '<option value="' + escHtml(t.typeName) + '">' + escHtml(t.typeName) + '</option>';
+      }).join("");
+      if (cur) sel.value = cur;
+    });
+  }
+  function showApptDetail(idx){
+    var a = window._apptList && window._apptList[idx]; if (!a) return;
+    var st = a.status === 0 ? '待服务' : (a.status === 1 ? '已完成' : '已取消');
+    var rows = [
+      ['📅 预约时间', fmtFullTs(a.apptTime)],
+      ['🧾 服务项目', a.serviceItem || '-'],
+      ['📝 备注', a.remark || '-'],
+      ['📌 状态', st],
+      ['⏰ 提醒设置', '提前' + (a.remindMinutes || 30) + '分钟'],
+      ['🕐 创建于', fmtFullTs(a.createTime)]
+    ];
+    showDetail('📅 预约明细', rows);
+  }
+  function showVisitDetail(idx){
+    var v = window._visitList && window._visitList[idx]; if (!v) return;
+    var gift = v.giftGoodsName ? v.giftGoodsName + (v.giftQuantity > 1 ? ' ×' + v.giftQuantity : '') + (v.giftRemark ? '（' + v.giftRemark + '）' : '') : '';
+    var rows = [
+      ['📝 回访内容', v.content || '-'],
+      ['📌 结果', v.result || '-'],
+      ['📅 回访时间', fmtFullTs(v.visitTime)],
+      ['🎁 附带赠送', gift || '无']
+    ];
+    showDetail('📞 回访明细', rows);
+  }
+  function showDetail(title, rows){
+    document.getElementById('detailTitle').textContent = title;
+    var h = rows.map(function(r){
+      return '<div class="vitem"><span>' + r[0] + '</span><div style="flex:1;text-align:right;color:#111827;font-weight:500;">' + escHtml(r[1]) + '</div></div>';
+    }).join('');
+    document.getElementById('detailBody').innerHTML = h;
+    document.getElementById('detailMask').classList.add('show');
+    document.getElementById('detailDrawer').classList.add('show');
+  }
+  function closeDetail(){
+    document.getElementById('detailMask').classList.remove('show');
+    document.getElementById('detailDrawer').classList.remove('show');
+  }
+  function loadPrefTags(){
+    var tk = lsGet("ibigou_merchant_token", null); if (!tk) return;
+    fetch("/api/merchant/members/prefs", { headers: { "X-Merchant-Token": tk } }).then(function(r){ return r.json(); }).then(function(r){
+      if (r && r.code === 0 && r.data) {
+        renderPrefTags("cpTags", r.data.customerPrefs || [], "pfCustomer");
+        renderPrefTags("fpTags", r.data.familyPrefs || [], "pfFamily");
+      }
+    }).catch(function(){});
+  }
+  function renderPrefTags(containerId, tags, inputId){
+    var el = document.getElementById(containerId); if (!el) return;
+    var inp = document.getElementById(inputId);
+    var cur = inp && inp.value ? inp.value.split(/[，,、;；]+/).map(function(s){ return s.trim(); }).filter(Boolean) : [];
+    var html = tags.map(function(t){
+      var on = cur.indexOf(t) >= 0 ? " on" : "";
+      return '<span class="pref-tag' + on + '" onclick="togglePrefTag(this,\'' + inputId + '\')">' + escHtml(t) + '</span>';
+    }).join("");
+    el.innerHTML = html || '<span style="color:#9ca3af;font-size:11px;">暂无标签，输入后保存即生成</span>';
+  }
+  function togglePrefTag(span, inputId){
+    var inp = document.getElementById(inputId);
+    var tag = span.textContent.trim();
+    var cur = inp.value.split(/[，,、;；]+/).map(function(s){ return s.trim(); }).filter(Boolean);
+    if (cur.indexOf(tag) >= 0) { span.classList.remove("on"); cur = cur.filter(function(x){ return x !== tag; }); }
+    else { span.classList.add("on"); cur.push(tag); }
+    inp.value = cur.join("，");
+  }
+  function loadGiftGoodsSelect(){
+    var sel = document.getElementById("giftGoods"); if (!sel) return;
+    var tk = lsGet("ibigou_merchant_token", null); if (!tk) return;
+    fetch("/api/merchant/config/goods", { headers: { "X-Merchant-Token": tk } }).then(function(r){ return r.json(); }).then(function(r){
+      if (r && r.code === 0 && r.data) {
+        var opts = '<option value="">请选择商品</option>';
+        (r.data || []).forEach(function(g){ if (g.enabled !== 0) opts += '<option value="' + g.goodsId + '">' + escHtml(g.goodsName) + '（¥' + g.price + '）</option>'; });
+        var vsel = document.getElementById("vGiftGoods");
+        if (vsel) vsel.innerHTML = '<option value="">🎁 附带赠送商品</option>' + opts.replace('<option value="">请选择商品</option>', '');
+        sel.innerHTML = opts;
+      }
+    }).catch(function(){});
+  }
+  function addMemberGift(){
+    var sel = document.getElementById("giftGoods");
+    if (!sel || !sel.value) { toast("请选择要赠送的商品", "err"); return; }
+    var name = sel.selectedOptions.length ? sel.selectedOptions[0].text.split("（¥")[0] : "";
+    var qty = parseInt(document.getElementById("giftQty").value, 10) || 1;
+    var remark = document.getElementById("giftRemark").value;
+    window.IBIGOU_API.merchant.addGift(curMemberPhone, { goodsId: sel.value, goodsName: name, quantity: qty, remark: remark }).then(function(r){
+      if (r && r.code === 0) { toast("礼品已赠送"); openMemberDetail(curMemberPhone); } else toast("赠送失败", "err");
+    });
+  }
+  function addMemberVisit(){
+    var vc = document.getElementById("vContent").value;
+    if (!vc) { toast("请填写回访内容", "err"); return; }
+    var vsel = document.getElementById("vGiftGoods");
+    var vname = (vsel && vsel.selectedOptions.length) ? vsel.selectedOptions[0].text.split("（¥")[0] : "";
+    var vqty = parseInt((document.getElementById("vGiftQty") || {}).value || "1", 10) || 1;
+    window.IBIGOU_API.merchant.addVisit(curMemberPhone, {
+      content: vc,
+      result: document.getElementById("vResult").value,
+      giftGoodsId: vsel ? vsel.value : "",
+      giftGoodsName: vsel && vsel.value ? vname : "",
+      giftQuantity: vqty,
+      giftRemark: "回访赠送"
+    }).then(function(r){
+      if (r && r.code === 0) { toast("回访已记录"); openMemberDetail(curMemberPhone); } else toast("添加失败", "err");
+    });
+  }
+  function addMemberAppointment(){
+    var at = document.getElementById("aTime").value;
+    if (!at) { toast("请选择预约时间", "err"); return; }
+    window.IBIGOU_API.merchant.addAppointment(curMemberPhone, {
+      apptTime: at, serviceItem: document.getElementById("aItem").value, remark: document.getElementById("aRemark").value, remindMinutes: parseInt(document.getElementById("aRemind").value, 10)
+    }).then(function(r){ if (r && r.code === 0) { toast("预约已创建"); openMemberDetail(curMemberPhone); } else toast("预约失败", "err"); });
+  }
+  function apptStatus(id, status){
+    window.IBIGOU_API.merchant.updateAppointmentStatus(id, status).then(function(r){
+      if (r && r.code === 0) { toast("已更新"); openMemberDetail(curMemberPhone); } else toast("操作失败", "err");
+    });
+  }
+
+  // ===== 预约提醒（2小时内即将到点 toast）=====
+  function loadApptRemind(){
+    if (!window.IBIGOU_API || !window.IBIGOU_API.merchant.upcomingAppointments) return;
+    window.IBIGOU_API.merchant.upcomingAppointments().then(function(r){
+      if (!r || r.code !== 0 || !Array.isArray(r.data)) return;
+      var now = Date.now();
+      r.data.forEach(function(a){
+        var t = new Date(a.apptTime).getTime();
+        if (t > now && t - now < 2 * 3600 * 1000) {
+          toast("⏰ 预约提醒：" + maskPhone(a.userPhone) + " " + (a.serviceItem || "服务") + " " + fmtShortTs(a.apptTime));
+        }
+      });
+    });
+  }
+  loadApptRemind();
+  // 暴露给 HTML onclick（IIFE内部函数非全局）
+  window.openMemberDetail = openMemberDetail;
+  window.closeMemberDetail = closeMemberDetail;
+  window.saveMemberProfile = saveMemberProfile;
+  window.addMemberVisit = addMemberVisit;
+  window.addMemberAppointment = addMemberAppointment;
+  window.apptStatus = apptStatus;
+  window.addMemberGift = addMemberGift;
+  window.togglePrefTag = togglePrefTag;
+  window.switchMemberTab = switchMemberTab;
+  window.showApptDetail = showApptDetail;
+  window.showVisitDetail = showVisitDetail;
+  window.closeDetail = closeDetail;
+  window.openMemberTypes = openMemberTypes;
+  window.closeMemberTypes = closeMemberTypes;
+  window.addNewMemberType = addNewMemberType;
+  window.rmMemberType = rmMemberType;
+
+  // ===== p2 收款码（4种支付方式）=====
+  var QR_TYPES = [
+    { key: 'wechat', label: '微信', emoji: '💚', color: '#1aad19' },
+    { key: 'alipay', label: '支付宝', emoji: '💙', color: '#1677ff' },
+    { key: 'unionpay', label: '银联/云闪付', emoji: '💜', color: '#e60012' },
+    { key: 'other', label: '其它支付', emoji: '❓', color: '#9095a8' }
+  ];
+  var _merchantData = null;
+
+  async function loadMerchantConfig(){
+    try {
+      var tk = lsGet("ibigou_merchant_token", "");
+      if (!tk) return;
+      var r = await fetch('/api/merchant/config/deduct-config', { headers: { 'X-Merchant-Token': tk } });
+      var d = await r.json();
+      if (d && d.code === 0 && d.data) {
+        _merchantData = d.data;
+        renderQrSlots();
+      }
+      // 加载商家信息到设置页
+      var r2 = await fetch('/api/merchant/config/weights', { headers: { 'X-Merchant-Token': tk } });
+      var d2 = await r2.json();
+      if (d2 && d2.code === 0 && d2.data) {
+        var m = d2.data;
+        if ($("shopIndustry")) $("shopIndustry").value = m.industry || "";
+        if ($("shopAddress")) $("shopAddress").value = m.address || "";
+        if ($("shopReservePhone")) $("shopReservePhone").value = m.reservePhone || "";
+        if ($("shopLatitude")) $("shopLatitude").value = m.latitude || "";
+        if ($("shopLongitude")) $("shopLongitude").value = m.longitude || "";
+        if (m.merchantName && !$("shopName").value) $("shopName").value = m.merchantName;
+      }
+    } catch(e) {}
+  }
+
+  function renderQrSlots(){
+    var host = $('qrSlots');
+    if (!host) { toast('qrSlots element not found', 'danger'); return; }
+    var html = '';
+    QR_TYPES.forEach(function(t){
+      var url = _merchantData ? _merchantData['receiveQrImg' + cap(t.key)] : null;
+      html += '<div style="border:1px solid var(--c-border);border-radius:12px;padding:12px;">'
+        + '<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">'
+        + '<span style="font-size:20px;">' + t.emoji + '</span>'
+        + '<span style="font-weight:700;font-size:14px;">' + t.label + '收款码</span>'
+        + (url ? '<span class="badge green" style="margin-left:auto;">已上传</span>' : '<span class="badge" style="margin-left:auto;">未上传</span>')
+        + '</div>'
+        + (url ? '<div style="text-align:center;margin-bottom:8px;"><img src="' + url + '" style="max-width:140px;max-height:140px;border-radius:8px;border:1px solid var(--c-border);"></div>' : '')
+        + '<div style="display:flex;gap:8px;">'
+        + '<button type="button" class="qr-upload-btn" data-type="' + t.key + '" style="flex:1;text-align:center;padding:8px;border:1px solid ' + t.color + ';border-radius:8px;font-size:13px;font-weight:600;color:' + t.color + ';cursor:pointer;background:transparent;">'
+        + '📷 ' + (url ? '重新上传' : '点击上传')
+        + '</button>'
+        + '<input type="file" accept="image/png,image/jpeg,image/webp" style="display:none;" class="qr-file-input" data-type="' + t.key + '">'
+        + (url ? '<button type="button" class="btn btn--ghost btn--sm" onclick="removeQrCode(' + "'" + t.key + "'" + ')" style="flex:0 0 auto;">🗑</button>' : '')
+        + '</div></div>';
+    });
+    host.innerHTML = html;
+    // Bind upload buttons
+    host.querySelectorAll('.qr-upload-btn').forEach(function(btn){
+      btn.addEventListener('click', function(e){
+        e.preventDefault();
+        e.stopPropagation();
+        var type = btn.getAttribute('data-type');
+        var inp = host.querySelector('.qr-file-input[data-type="' + type + '"]');
+        if (inp) inp.click();
+      });
+    });
+    host.querySelectorAll('.qr-file-input').forEach(function(inp){
+      inp.addEventListener('change', function(e){
+        var f = e.target.files[0]; if (!f) return;
+        if (f.size > 3*1024*1024) { toast("文件超过 3MB", "danger"); return; }
+        var type = inp.getAttribute('data-type');
+        uploadQrCode(type, f);
+      });
+    });
+  }
+
+  function cap(s){ return s.charAt(0).toUpperCase() + s.slice(1); }
+
+  async function uploadQrCode(type, file){
+    var tk = lsGet("ibigou_merchant_token", "");
+    var fd = new FormData();
+    fd.append('file', file);
+    fd.append('type', type);
+    toast('上传中...', 'info');
+    try {
+      var r = await fetch('/api/merchant/config/qr-upload', { method: 'POST', headers: { 'X-Merchant-Token': tk }, body: fd });
+      var d = await r.json();
+      if (d && d.code === 0) {
+        toast('上传成功', 'success');
+        loadMerchantConfig();
+      } else {
+        toast(d.msg || '上传失败', 'danger');
+      }
+    } catch(e) { toast('上传失败：' + e.message, 'danger'); }
+  }
+
+  window.removeQrCode = async function(type){
+    if (!confirm('确认删除' + (QR_TYPES.find(function(t){return t.key===type})||{}).label + '收款码？')) return;
+    var tk = lsGet("ibigou_merchant_token", "");
+    try {
+      var r = await fetch('/api/merchant/config/qr-remove', { method: 'POST', headers: { 'X-Merchant-Token': tk, 'Content-Type': 'application/x-www-form-urlencoded' }, body: 'type=' + type });
+      var d = await r.json();
+      if (d && d.code === 0) { toast('已删除', 'success'); loadMerchantConfig(); }
+      else { toast(d.msg || '删除失败', 'danger'); }
+    } catch(e) { toast('删除失败', 'danger'); }
+  };
+
+  loadMerchantConfig();
+
+  var dc = lsGet("ibigou_deduct_config", { percent: 80, dailyCap: 100, mode: "A" });
+  $("dcPercent").value = dc.percent;
+  $("dcDailyCap").value = dc.dailyCap;
+  $("receiveMode").value = dc.mode;
+  $("btnSaveDc").addEventListener("click", function(){
+    var p = parseFloat($("dcPercent").value || 0);
+    var c = parseFloat($("dcDailyCap").value || 0);
+    var m = $("receiveMode").value;
+    if (p < 0 || p > 100) { toast("百分比必须在 0-100", "warning"); return; }
+    lsSet("ibigou_deduct_config", { percent: p, dailyCap: c, mode: m });
+    toast("已保存", "success");
+  });
+
+  // ===== p4 奖品池 (后端 API) =====
+  var PRIZE_TYPE_NAMES = { 1:"折扣券", 2:"立减券", 3:"普通余额", 4:"团购免单余额" };
+  var PRIZE_TYPE_EMOJI = { 1:"🎟️", 2:"💵", 3:"💰", 4:"👑" };
+  var _backendPrizes = [];
+
+  // 默认奖品配置 (prizeType: 1折扣 2立减 3余额 4免单余额)
+  var DEFAULT_BACKEND_PRIZES = [
+    { prizeType: 1, prizeValue: 90,  weight: 16, remark: "9折优惠券" },
+    { prizeType: 2, prizeValue: 5,   weight: 14, remark: "5元立减券" },
+    { prizeType: 1, prizeValue: 95,  weight: 12, remark: "VIP折扣券(95折)" },
+    { prizeType: 2, prizeValue: 10,  weight: 10, remark: "10元立减券" },
+    { prizeType: 2, prizeValue: 20,  weight: 10, remark: "满100减20券" },
+    { prizeType: 3, prizeValue: 20,  weight: 6,  remark: "20元余额(本店抵扣)" },
+    { prizeType: 2, prizeValue: 15,  weight: 8,  remark: "购物礼包(15元立减)" },
+    { prizeType: 4, prizeValue: 100, weight: 1,  remark: "免单一次(按金额入余额)" },
+    { prizeType: 1, prizeValue: 88,  weight: 5,  remark: "惊喜盲盒(88折)" },
+    { prizeType: 1, prizeValue: 50,  weight: 3,  remark: "幸运加倍券(5折)" },
+    { prizeType: 3, prizeValue: 5,   weight: 8,  remark: "5元余额" },
+    { prizeType: 2, prizeValue: 1,   weight: 7,  remark: "谢谢参与(1元立减)" }
+  ];
+
+  async function loadBackendPrizes(){
+    var tk = lsGet("ibigou_merchant_token", null);
+    if (!tk) { _backendPrizes = []; refreshPrize(); return; }
+    try {
+      var resp = await fetch("/api/merchant/config/prize-pools", { headers: { "X-Merchant-Token": tk } });
+      var r = await resp.json();
+      if (r.code === -1 || r.code === 401) { localStorage.removeItem("ibigou_merchant_token"); toast("登录已过期，请重新登录", "warning"); setTimeout(function(){ location.href = "./login.html"; }, 1500); return; }
+      if (r && r.code === 0 && r.data && r.data.length > 0) {
+        _backendPrizes = r.data;
+      } else {
+        // 后端奖品池为空, 自动写入默认奖品
+        _backendPrizes = [];
+        toast("正在初始化默认奖品池...", "warning");
+        for (var i = 0; i < DEFAULT_BACKEND_PRIZES.length; i++){
+          var p = DEFAULT_BACKEND_PRIZES[i];
+          try {
+            await window.IBIGOU_API.merchant.savePrizePool({
+              prizeType: p.prizeType, prizeValue: p.prizeValue,
+              weight: p.weight, isPutPublic: 0, isSupportIbigou: 0, expireTime: null,
+              limitScope: 1, limitCycle: 1, limitMax: 0, remark: p.remark
+            });
+          } catch(e){ console.warn("init prize failed", p.remark, e); }
+        }
+        // 重新加载
+        var resp2 = await fetch("/api/merchant/config/prize-pools", { headers: { "X-Merchant-Token": tk } });
+        var r2 = await resp2.json();
+        _backendPrizes = (r2 && r2.code === 0 && r2.data) ? r2.data : [];
+        toast("默认奖品池已初始化(" + _backendPrizes.length + "项)", "success");
+      }
+    } catch(e) { _backendPrizes = []; }
+    refreshPrize();
+  }
+
+  function renderPrizeList(containerId, pool, typeNames, typeEmoji){
+    if (!pool || !pool.length) {
+      $(containerId).innerHTML = '<div class="empty">暂无奖品，请添加</div>';
+      return;
+    }
+    var typeNames = PRIZE_TYPE_NAMES;
+    var typeEmoji = PRIZE_TYPE_EMOJI;
+    var html = "";
+    pool.forEach(function(p, i){
+      var pt = p.prizeType || 1;
+      var enabled = p.enabled !== 0;
+      html += '<div class="list-item">'
+        + '<div class="l"><span class="em">'+(typeEmoji[pt]||"🎁")+'</span><div>'
+        + '<div class="name">'+(p.remark||typeNames[pt]||"奖品")+'</div>'
+        + '<div class="info">'+typeNames[pt]+' · 数值'+(p.prizeValue||0)+' · 权重<input type="number" min="0" max="100" step="1" value="'+(p.weight||0)+'" data-id="'+(p.prizeId||'')+'" data-f="weight" class="input" style="width:60px;height:28px;display:inline-block;padding:0 6px;font-size:12px;margin-left:4px;"></div>'
+        + '</div></div>'
+        + '<div class="r">'
+        + '<button class="btn btn--ghost btn--sm" data-toggle-id="'+(p.prizeId||'')+'" data-enabled="'+(enabled?1:0)+'">'+(enabled?'禁用':'启用')+'</button> '
+        + '<button class="btn btn--danger btn--sm" data-del-id="'+(p.prizeId||'')+'">🗑 删除</button>'
+        + '</div></div>';
+    });
+    $(containerId).innerHTML = html;
+  }
+
+  function refreshPrize(){
+    var typeNames = PRIZE_TYPE_NAMES;
+    var typeEmoji = PRIZE_TYPE_EMOJI;
+    var privatePool = (_backendPrizes || []).filter(function(p){ return !p.isPutPublic || p.isPutPublic === 0; });
+    var publicPool = (_backendPrizes || []).filter(function(p){ return p.isPutPublic === 1; });
+    renderPrizeList("prizeListPrivate", privatePool, typeNames, typeEmoji);
+    renderPrizeList("prizeListPublic", publicPool, typeNames, typeEmoji);
+  }
+
+  refreshPrize();
+
+  // 奖品列表事件: 启用/禁用/删除/修改权重
+  $("prizeListPrivate").addEventListener("click", async function(e){
+    var t = e.target;
+    if (t.dataset.delId !== undefined){
+      if (!confirm("确认删除此奖品？")) return;
+      try {
+        var rd = await fetch("/api/merchant/config/prize-pools/" + t.dataset.delId, { method: "DELETE", headers: { "X-Merchant-Token": lsGet("ibigou_merchant_token", "") } });
+        var r = await rd.json();
+        toast(r.code === 0 ? "已删除" : (r.msg||"删除失败"), r.code === 0 ? "success" : "danger");
+        loadBackendPrizes();
+      } catch(e){ toast("删除失败", "danger"); }
+    }
+    if (t.dataset.toggleId !== undefined){
+      var enabled = t.dataset.enabled === "1";
+      try {
+        var aUrl = "/api/merchant/config/prize-pools/" + t.dataset.toggleId + "/" + (enabled ? "disable" : "enable");
+        var rd2 = await fetch(aUrl, { method: "POST", headers: { "X-Merchant-Token": lsGet("ibigou_merchant_token", "") } });
+        var r2 = await rd2.json();
+        toast(r2.code === 0 ? "已更新" : (r2.msg||"失败"), r2.code === 0 ? "success" : "danger");
+        loadBackendPrizes();
+      } catch(e){ toast("操作失败", "danger"); }
+    }
+  });
+
+  // 修改权重 - 失焦时保存
+  $("prizeListPrivate").addEventListener("change", async function(e){
+    var t = e.target;
+    if (t.dataset.f === "weight" && t.dataset.id){
+      var id = t.dataset.id;
+      var w = parseInt(t.value || 0);
+      var p = _backendPrizes.find(function(x){ return String(x.prizeId) === id; });
+      if (!p) return;
+      try {
+        var wb = new URLSearchParams();
+        wb.append("prizeId", p.prizeId); wb.append("prizeType", p.prizeType); wb.append("prizeValue", p.prizeValue);
+        wb.append("weight", w); wb.append("isPutPublic", p.isPutPublic||0); wb.append("isSupportIbigou", p.isSupportIbigou||0);
+        wb.append("limitScope", p.limitScope||1); wb.append("limitCycle", p.limitCycle||1); wb.append("limitMax", p.limitMax||0);
+        wb.append("remark", p.remark||""); wb.append("expireTime", p.expireTime||"");
+        var wbr = await fetch("/api/merchant/config/prize-pools", { method: "POST", headers: { "X-Merchant-Token": lsGet("ibigou_merchant_token", ""), "Content-Type": "application/x-www-form-urlencoded" }, body: wb.toString() });
+        var r = await wbr.json();
+        toast(r.code === 0 ? "权重已保存" : (r.msg||"保存失败"), r.code === 0 ? "success" : "danger");
+      } catch(e){ toast("保存失败", "danger"); }
+    }
+  });
+
+  // 添加奖品
+  $("btnAddPrize").addEventListener("click", async function(){
+    var pt = parseInt($("newPrizeType").value);
+    var pv = pt === 0 ? 0 : parseFloat($("newPrizeValue").value);
+    var w = parseInt($("newPrizeWeight").value || 10);
+    var rm = $("newPrizeRemark").value.trim();
+    if (!rm) { toast("请输入奖品名称", "warning"); return; }
+    if (pt !== 0 && (!pv || pv <= 0)) { toast("请输入优惠数值", "warning"); return; }
+    var realType = pt === 0 ? 1 : pt;
+    var realValue = pt === 0 ? 100 : pv;
+    try {
+      var tk = lsGet("ibigou_merchant_token", "");
+      var body = new URLSearchParams();
+      body.append("prizeType", realType); body.append("prizeValue", realValue); body.append("weight", w);
+      body.append("isPutPublic", parseInt($("newPrizePool").value||0)); body.append("isSupportIbigou", 0);
+      body.append("limitScope", 1); body.append("limitCycle", 1); body.append("limitMax", 0); body.append("remark", rm);
+      var expV = (function(){ var v=$("newPrizeExpire"); return (v&&v.value)?v.value.replace(" ","T"):null; })();
+      if (expV) body.append("expireTime", expV);
+      var resp = await fetch("/api/merchant/config/prize-pools", { method: "POST", headers: { "X-Merchant-Token": tk, "Content-Type": "application/x-www-form-urlencoded" }, body: body.toString() });
+      var r = await resp.json();
+      toast(r.code === 0 ? "奖品已添加" : (r.msg||"添加失败"), r.code === 0 ? "success" : "danger");
+      if (r.code === 0) { $("newPrizeValue").value = ""; $("newPrizeRemark").value = ""; }
+      loadBackendPrizes();
+    } catch(e){ toast("添加失败", "danger"); }
+  });
+
+  // 刷新按钮
+  $("btnRefreshPrizes") && ($("btnRefreshPrizes").onclick = loadBackendPrizes);
+
+  // 恢复默认
+  $("btnResetPrize").addEventListener("click", function(){
+    if (!confirm("恢复默认奖品池？这不会删除已有奖品，只是加载默认参考。")) return;
+    refreshPrize();
+    toast("已刷新", "success");
+  });
+
+  // Pool category selector
+  var poolSel = $("newPrizePool");
+  if (poolSel) poolSel.onchange = function(){
+    var ef = $("expireField");
+    if (ef) ef.style.display = (parseInt(poolSel.value) === 1) ? "block" : "none";
+  };
+  var typeSel = $("newPrizeType");
+  var typeHints = {
+    0: "",
+    1: "输入折扣率：90=9折，85=8.5折，50=5折。顾客消费时按此折扣优惠。",
+    2: "输入减免金额：5=减5元，10=减10元。顾客消费时直接从订单金额中扣除。",
+    3: "输入赠送金额：20=送20元余额。顾客账户自动充入，消费时按抵扣比例使用。",
+    4: "输入免单金额上限：100=本单最多免100元。顾客本单消费金额从余额中全额抵扣，相当于免单。"
+  };
+  var typeLabels = {
+    0: "", 1: "折扣率（如90=9折）", 2: "减免金额（如5=减5元）",
+    3: "赠送金额（如20=送20元）", 4: "免单金额上限（如100=免100元）"
+  };
+  if (typeSel) typeSel.onchange = function(){
+    var v = parseInt(typeSel.value);
+    var pvf = $("prizeValueField");
+    if (pvf) pvf.style.display = (v === 0) ? "none" : "block";
+    var lbl = $("prizeValueLabel");
+    if (lbl) lbl.textContent = typeLabels[v] || "优惠数值";
+    var hint = $("prizeValueHint");
+    if (hint) hint.textContent = typeHints[v] || "";
+  };
+
+  // Public pool list events
+  $("prizeListPublic") && $("prizeListPublic").addEventListener("click", async function(e){
+    var t = e.target;
+    if (t.dataset.delId !== undefined){
+      if (!confirm("\u786e\u8ba4\u5220\u9664\uff1f")) return;
+      try { var rd = await fetch("/api/merchant/config/prize-pools/" + t.dataset.delId, { method: "DELETE", headers: { "X-Merchant-Token": lsGet("ibigou_merchant_token", "") } });
+        var r = await rd.json();
+        toast(r.code === 0 ? "\u5df2\u5220\u9664" : (r.msg||"\u5931\u8d25"), r.code === 0 ? "success" : "danger"); loadBackendPrizes();
+      } catch(e){ toast("\u5931\u8d25", "danger"); }
+    }
+    if (t.dataset.toggleId !== undefined){
+      var en = t.dataset.enabled === "1";
+      try { var aUrl2 = "/api/merchant/config/prize-pools/" + t.dataset.toggleId + "/" + (en ? "disable" : "enable");
+        var rd3 = await fetch(aUrl2, { method: "POST", headers: { "X-Merchant-Token": lsGet("ibigou_merchant_token", "") } });
+        var r2 = await rd3.json();
+        toast(r2.code === 0 ? "\u5df2\u66f4\u65b0" : (r2.msg||"\u5931\u8d25"), r2.code === 0 ? "success" : "danger"); loadBackendPrizes();
+      } catch(e){ toast("\u5931\u8d25", "danger"); }
+    }
+  });
+  $("prizeListPublic") && $("prizeListPublic").addEventListener("change", async function(e){
+    var t = e.target;
+    if (t.dataset.f === "weight" && t.dataset.id){
+      var id = t.dataset.id, w = parseInt(t.value||0);
+      var p = _backendPrizes.find(function(x){ return String(x.prizeId) === id; });
+      if (!p) return;
+      try { var r = await window.IBIGOU_API.merchant.savePrizePool({
+        prizeId: p.prizeId, prizeType: p.prizeType, prizeValue: p.prizeValue,
+        weight: w, isPutPublic: p.isPutPublic||0, isSupportIbigou: p.isSupportIbigou||0,
+        limitScope: p.limitScope||1, limitCycle: p.limitCycle||1, limitMax: p.limitMax||0,
+        remark: p.remark||"", expireTime: p.expireTime||null
+      }); toast(r.code === 0 ? "\u5df2\u4fdd\u5b58" : (r.msg||"\u5931\u8d25"), r.code === 0 ? "success" : "danger");
+      } catch(e){ toast("\u5931\u8d25", "danger"); }
+    }
+  });
+
+  // Prize stats report
+  async function loadPrizeStats(){
+    var tk = lsGet("ibigou_merchant_token", null);
+    if (!tk) { $("prizeStatsList").innerHTML = '<div class="empty">\u8bf7\u5148\u767b\u5f55</div>'; return; }
+    try {
+      var resp = await fetch("/api/merchant/config/prize-stats", { headers: { "X-Merchant-Token": tk } });
+      var r = await resp.json();
+      if (r.code === -1 || r.code === 401) { localStorage.removeItem("ibigou_merchant_token"); toast("\u767b\u5f55\u5df2\u8fc7\u671f\uff0c\u8bf7\u91cd\u65b0\u767b\u5f55", "warning"); setTimeout(function(){ location.href = "./login.html"; }, 1500); return; }
+      if (r && r.code === 0 && r.data) {
+        var stats = r.data;
+        if (!stats.length) { $("prizeStatsList").innerHTML = '<div class="empty">\u6682\u65e0\u8bb0\u5f55</div>'; return; }
+        var pn = {1:"\u672c\u5e97\u5956\u54c1\u6c60",2:"\u516c\u5171\u5956\u54c1\u6c60",3:"\u7f8e\u56e2\u6c60",4:"\u997f\u4e86\u4e48"};
+        var ptn = PRIZE_TYPE_NAMES;
+        var pte = PRIZE_TYPE_EMOJI;
+        var h = "";
+        stats.forEach(function(s){
+          var time = (s.createTime||"").substring(5,16);
+          var phone = (s.userPhone||"").replace(/(\d{3})\d{4}(\d{4})/, "$1****$2");
+          h += '<div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--c-divider);">'
+            + '<div style="width:36px;height:36px;border-radius:10px;background:var(--c-primary-100);color:var(--c-primary);display:flex;align-items:center;justify-content:center;font-size:18px;flex:0 0 36px;">' + (pte[s.prizeType]||"\U0001f3b2") + '</div>'
+            + '<div style="flex:1;min-width:0;">'
+            + '<div style="font-size:14px;font-weight:600;">' + (s.remark||"--") + '</div>'
+            + '<div style="font-size:11px;color:var(--c-text-3);margin-top:2px;">' + phone + " \u00b7 " + (ptn[s.prizeType]||"") + " \u00b7 " + (pn[s.poolType]||"") + '</div>'
+            + '</div>'
+            + '<div style="font-size:11px;color:var(--c-text-3);text-align:right;flex:0 0 auto;">' + time + '</div>'
+            + '</div>';
+        });
+        $("prizeStatsList").innerHTML = h;
+      } else {
+        $("prizeStatsList").innerHTML = '<div class="empty">\u52a0\u8f7d\u5931\u8d25</div>';
+      }
+    } catch(e){ $("prizeStatsList").innerHTML = '<div class="empty">\u52a0\u8f7d\u5931\u8d25</div>'; }
+  }
+  loadPrizeStats();
+  $("btnRefreshPrizeStats") && ($("btnRefreshPrizeStats").onclick = loadPrizeStats);
+
+  // 初始化加载后端奖品
+  loadBackendPrizes();
+
+  // ===== p4 订单 =====
+  function renderPrizeFilter(){
+    var pool = lsGet("ibigou_prize_pool", DEFAULT_PRIZES);
+    var sel = $("fPrize");
+    sel.innerHTML = '<option value="">全部</option>' + pool.map(function(p){ return '<option value="'+(p.id||p.prizeId||'')+'">'+(p.emoji||p.prizeEmoji||"🎁")+' '+(p.name||p.prizeName||p.id||"--")+'</option>'; }).join("");
+  }
+  renderPrizeFilter();
+
+  var _backendOrders = [];
+  async function loadBackendOrders(){
+    if (!window.IBIGOU_API) return [];
+    try {
+      var r = await window.IBIGOU_API.merchant.ibigouOrders();
+      if (r && r.code === 0 && r.data) { _backendOrders = r.data; }
+      else { _backendOrders = []; }
+    } catch(e){ _backendOrders = []; }
+    return _backendOrders;
+  }
+  function renderOrders(){
+    var orders = _backendOrders || [];
+    var st = $("fStatus").value;
+    var pz = $("fPrize").value;
+    var kw = ($("fKw").value || "").toLowerCase();
+    var filtered = orders.filter(function(o){
+      if (st && String(o.orderStatus||0) !== st) return false;
+      if (pz && o.prizeId !== pz) return false;
+      if (kw && !(o.offlineOrderNo||"").toLowerCase().includes(kw) && !(o.userPhone||"").includes(kw)) return false;
+      return true;
+    });
+    var html = '<table class="table"><thead><tr><th>时间</th><th>订单号</th><th>手机号</th><th>金额</th><th>实付</th><th>抵扣</th><th>状态</th></tr></thead><tbody>';
+    if (filtered.length === 0) {
+      html += '<tr class="empty"><td colspan="7">暂无符合条件的订单</td></tr>';
+    } else {
+      filtered.slice(-20).reverse().forEach(function(o){
+        var t = new Date(o.createTime || Date.now());
+        var time = (t.getMonth()+1)+"-"+t.getDate()+" "+t.getHours()+":"+String(t.getMinutes()).padStart(2,"0");
+        var stMap = {0:"待支付",1:"已支付",2:"已退款"};
+        html += '<tr>'
+          + '<td>'+time+'</td>'
+          + '<td>'+(o.offlineOrderNo||"--").slice(-8)+'</td>'
+          + '<td>'+(o.userPhone||"--")+'</td>'
+          + '<td class="num">¥'+(o.orderAmount||0).toFixed(2)+'</td>'
+          + '<td class="num">¥'+(o.payAmount||0).toFixed(2)+'</td>'
+          + '<td class="num">¥'+(o.deductBalance||0).toFixed(2)+'</td>'
+          + '<td>'+(stMap[o.orderStatus]||"--")+'</td>'
+          + '</tr>';
+      });
+    }
+    html += '</tbody></table>';
+    $("orderTable").innerHTML = html;
+    return filtered;
+  }
+  $("btnFilter").addEventListener("click", renderOrders);
+  function renderFlow(){
+    var flow = lsGet("ibigou_balance_flow", []);
+    var host = $("flowTable");
+    if (!host) return;
+    if (!flow || !flow.length) {
+      host.innerHTML = '<div class="empty">暂无流水</div>';
+      return;
+    }
+    var typeMap = { recharge:"充值", consume:"消费扣减", prize:"中奖赠送", refund:"退款冲账", manual:"手工调整" };
+    var typeEmoji = { recharge:"💰", consume:"💸", prize:"🎁", refund:"↩️", manual:"✏️" };
+    var html = '<table class="table"><thead><tr><th>时间</th><th>手机号</th><th>类型</th><th>金额</th><th>说明</th></tr></thead><tbody>';
+    flow.slice(-50).reverse().forEach(function(f){
+      var t = new Date(f.ts || Date.now());
+      var time = (t.getMonth()+1)+"-"+t.getDate()+" "+t.getHours()+":"+String(t.getMinutes()).padStart(2,"0");
+      html += '<tr><td>'+time+'</td><td>'+(f.phone||"--")+'</td><td>'+(typeEmoji[f.type]||"")+' '+(typeMap[f.type]||f.type||"--")+'</td><td class="num">¥'+(f.amount||0).toFixed(2)+'</td><td>'+(f.reason||"--")+'</td></tr>';
+    });
+    html += '</tbody></table>';
+    host.innerHTML = html;
+  }
+  loadBackendOrders().then(function(){ renderOrders(); });
+
+  $("btnExport").addEventListener("click", function(){
+    var orders = lsGet("ibigou_orders", []);
+    if (orders.length === 0) { toast("暂无订单", "warning"); return; }
+    var headers = ["订单号","渠道","奖品ID","奖品名","金额","优惠","实付","状态","时间"];
+    var rows = [headers].concat(orders.map(function(o){
+      var t = new Date(o.ts || Date.now());
+      return [
+        o.orderNo||"", o.channelName||"", o.prizeId||"", o.prizeName||"",
+        o.amount||0, o.save||0, o.pay||(o.amount-o.save), o.status||"paid",
+        t.toISOString()
+      ];
+    }));
+    var csv = rows.map(function(r){
+      return r.map(function(c){ return '"' + String(c).replace(/"/g,'""') + '"'; }).join(",");
+    }).join("\n");
+    var blob = new Blob(["\uFEFF" + csv], { type:"text/csv;charset=utf-8;" });
+    var a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "orders_" + Date.now() + ".csv";
+    a.click();
+    toast("已导出 " + orders.length + " 单", "success");
+  });
+
+  // ===== p5 设置 =====
+  $("shopName").value = shop.name || "";
+  $("shopPhone").value = shop.phone || "";
+  $("refundNote").value = shop.refund || "";
+  $("btnSaveShop").addEventListener("click", async function(){
+    var name = $("shopName").value.trim();
+    var phone = $("shopPhone").value.trim();
+    var industry = $("shopIndustry").value.trim();
+    var address = $("shopAddress").value.trim();
+    var reservePhone = $("shopReservePhone").value.trim();
+    var lat = $("shopLatitude").value.trim();
+    var lng = $("shopLongitude").value.trim();
+    shop.name = name;
+    shop.phone = phone;
+    shop.refund = $("refundNote").value.trim();
+    lsSet("ibigou_shop", shop);
+    $("topSub").textContent = "m001 · " + (name || "未命名商家");
+    // 同步到后端数据库
+    try {
+      var tk = lsGet("ibigou_merchant_token", "");
+      var fd = new FormData();
+      fd.append("merchantName", name);
+      fd.append("address", address);
+      fd.append("reservePhone", reservePhone);
+      fd.append("industry", industry);
+      if (lat) fd.append("latitude", lat);
+      if (lng) fd.append("longitude", lng);
+      var r = await fetch("/api/merchant/config/shop-info", { method: "POST", headers: { "X-Merchant-Token": tk }, body: fd });
+      var d = await r.json();
+      if (d && d.code === 0) {
+        toast("商家信息已保存", "success");
+      } else {
+        toast("保存失败: " + (d.msg || "未知错误"), "danger");
+      }
+    } catch(e) {
+      toast("保存异常: " + e.message, "danger");
+    }
+  });
+
+  $("btnClearOrders").addEventListener("click", function(){
+    if (!confirm("清除所有订单？此操作不可恢复")) return;
+    try { localStorage.removeItem("ibigou_orders"); } catch(e){}
+    refreshKPI();
+    renderOrders();
+    toast("已清除", "success");
+  });
+
+  $("btnClearAll").addEventListener("click", function(){
+    if (!confirm("重置全部数据？此操作不可恢复")) return;
+    try {
+      ["ibigou_orders","ibigou_prize_pool","ibigou_merchant_qr","ibigou_merchant_qr_name","ibigou_merchant_qr_size","ibigou_shop","ibigou_deduct_config","ibigou_balance"].forEach(function(k){
+        localStorage.removeItem(k);
+      });
+    } catch(e){}
+    refreshKPI();
+    loadMerchantConfig();
+    refreshPrize();
+    renderOrders();
+    renderPrizeFilter();
+    toast("已重置全部", "success");
+  });
+
+  // ===== p3 核销 =====
+  $("btnVerifyCoupon").addEventListener("click", function(){
+    var no = ($("couponNo").value || "").trim();
+    var ph = ($("couponPhone").value || "").trim();
+    if (!no) { toast("请输入券编号", "warning"); return; }
+    var orders = lsGet("ibigou_orders", []);
+    var hit = null;
+    for (var i=0; i<orders.length; i++){
+      if ((orders[i].couponId || "") === no) { hit = orders[i]; break; }
+    }
+    if (!hit) { toast("未找到此券（演示版仅识别已有订单）", "warning"); return; }
+    hit.status = "verified";
+    hit.verifyTime = Date.now();
+    lsSet("ibigou_orders", orders);
+    toast("核销成功 · 券号 " + no, "success");
+    if (window.speak) speak("优惠券核销成功，券号 " + no);
+  });
+
+  $("btnBalanceDeduct").addEventListener("click", function(){
+    var ph = ($("bdPhone").value || "").trim();
+    var amt = parseFloat($("bdAmount").value || "0");
+    var reason = ($("bdReason").value || "").trim() || "手工扣减";
+    if (!/^1[3-9]d{9}$/.test(ph)) { toast("请输入正确的手机号", "warning"); return; }
+    if (!(amt > 0)) { toast("金额必须大于 0", "warning"); return; }
+    if (!confirm("确认扣减 " + ph + " 余额 ¥" + amt.toFixed(2) + "？")) return;
+    // 写入流水
+    var flow = lsGet("ibigou_balance_flow", []);
+    flow.push({ ts: Date.now(), phone: ph, type: "manual", amount: -amt, reason: reason, balance: 0 });
+    lsSet("ibigou_balance_flow", flow);
+    toast("已扣减 · 流水记录 " + flow.length + " 条", "success");
+  });
+
+  // 扫码核销
+  var scanStream = null;
+  function stopScan(){
+    if (scanStream) { scanStream.getTracks().forEach(function(t){ t.stop(); }); scanStream = null; }
+    var v = $("scanVideo"); if (v) v.srcObject = null;
+  }
+  $("btnScan").addEventListener("click", function(){
+    var v = $("scanVideo"), res = $("scanResult");
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      res.textContent = "浏览器不支持摄像头（需 HTTPS 或 localhost）";
+      return;
+    }
+    res.textContent = "正在请求摄像头权限…";
+    navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } })
+      .then(function(stream){
+        scanStream = stream;
+        v.srcObject = stream;
+        v.style.display = "block";
+        res.textContent = "扫一扫已启动，请将二维码对准摄像头";
+        // 加载 jsQR（如果有）
+        if (window.jsQR){
+          var canvas = $("scanCanvas"), ctx = canvas.getContext("2d");
+          var tick = function(){
+            if (!scanStream) return;
+            canvas.width = v.videoWidth; canvas.height = v.videoHeight;
+            ctx.drawImage(v, 0, 0);
+            var data = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            var code = window.jsQR(data.data, data.width, data.height);
+            if (code){
+              res.textContent = "✅ 识别成功：" + code.data;
+              stopScan();
+              if (window.speak) speak("扫码成功");
+              return;
+            }
+            requestAnimationFrame(tick);
+          };
+          requestAnimationFrame(tick);
+        }
+      })
+      .catch(function(err){
+        res.textContent = "❌ 摄像头调用失败：" + err.message;
+      });
+  });
+  $("btnStopScan").addEventListener("click", function(){
+    stopScan();
+    $("scanResult").textContent = "已停止";
+    $("scanVideo").style.display = "none";
+  });
+
+  // ===== p5 流水 =====
+  function renderFlow(){
+    var flow = lsGet("ibigou_balance_flow", []);
+    var type = $("flowType").value;
+    var ph = ($("flowPhone").value || "").trim();
+    var filtered = flow.filter(function(f){
+      if (type && f.type !== type) return false;
+      if (ph && f.phone !== ph) return false;
+      return true;
+    });
+    var html = '<table class="table"><thead><tr><th>时间</th><th>手机</th><th>类型</th><th>金额</th><th>原因</th></tr></thead><tbody>';
+    if (filtered.length === 0){
+      html += '<tr class="empty"><td colspan="5">暂无流水</td></tr>';
+    } else {
+      var typeName = { recharge:"充值", consume:"消费", prize:"中奖", refund:"退款", manual:"手工" };
+      filtered.slice(-30).reverse().forEach(function(f){
+        var t = new Date(f.ts || Date.now());
+        var time = (t.getMonth()+1)+"-"+t.getDate()+" "+t.getHours()+":"+String(t.getMinutes()).padStart(2,"0");
+        html += '<tr>'
+          + '<td>'+time+'</td>'
+          + '<td>'+(f.phone||"--")+'</td>'
+          + '<td>'+(typeName[f.type]||f.type)+'</td>'
+          + '<td class="num">¥'+(f.amount||0).toFixed(2)+'</td>'
+          + '<td>'+(f.reason||"--")+'</td>'
+          + '</tr>';
+      });
+    }
+    html += '</tbody></table>';
+    $("flowTable").innerHTML = html;
+    return filtered;
+  }
+  $("btnFlowQuery").addEventListener("click", renderFlow);
+  renderFlow();
+  $("btnFlowExport").addEventListener("click", function(){
+    var flow = lsGet("ibigou_balance_flow", []);
+    if (flow.length === 0) { toast("暂无流水", "warning"); return; }
+    var headers = ["时间","手机号","类型","金额","原因"];
+    var rows = [headers].concat(flow.map(function(f){
+      var t = new Date(f.ts || Date.now());
+      return [t.toISOString(), f.phone||"", f.type||"", f.amount||0, f.reason||""];
+    }));
+    var csv = rows.map(function(r){ return r.map(function(c){ return '"' + String(c).replace(/"/g,'""') + '"'; }).join(","); }).join("\n");
+    var blob = new Blob(["\uFEFF" + csv], { type:"text/csv;charset=utf-8;" });
+    var a = document.createElement("a");
+    a.href = URL.createObjectURL(blob); a.download = "flow_" + Date.now() + ".csv"; a.click();
+    toast("已导出 " + flow.length + " 条", "success");
+  });
+
+  // ===== p7 公告 =====
+  function renderAnn(){
+    var ann = lsGet("ibigou_announcements", []);
+    var html = "";
+    if (ann.length === 0) html = '<div class="desc">暂无公告</div>';
+    ann.slice(-10).reverse().forEach(function(a){
+      var t = new Date(a.ts || Date.now());
+      var time = (t.getMonth()+1)+"-"+t.getDate()+" "+t.getHours()+":"+String(t.getMinutes()).padStart(2,"0");
+      html += '<div class="list-item">'
+        + '<div class="l"><span class="em">📢</span><div><div class="name">'+a.title+'</div><div class="info">'+a.body+'</div></div></div>'
+        + '<div class="r">'+time+'<br><button class="btn btn--ghost btn--sm" data-del="'+a.ts+'">删除</button></div>'
+        + '</div>';
+    });
+    $("annHistory").innerHTML = html;
+  }
+  renderAnn();
+  $("annHistory").addEventListener("click", function(e){
+    var t = e.target;
+    if (t.dataset.del){
+      var ann = lsGet("ibigou_announcements", []);
+      ann = ann.filter(function(a){ return String(a.ts) !== t.dataset.del; });
+      lsSet("ibigou_announcements", ann);
+      renderAnn();
+      toast("已删除", "success");
+    }
+  });
+  function doAnnounce(title, body, withTts){
+    var ann = lsGet("ibigou_announcements", []);
+    ann.push({ ts: Date.now(), title: title, body: body, withTts: withTts });
+    lsSet("ibigou_announcements", ann);
+    renderAnn();
+    if (withTts && window.speak){
+      speak(title + "。" + body);
+    }
+  }
+  $("btnAnnPublish").addEventListener("click", function(){
+    var t = ($("annTitle").value || "").trim();
+    var b = ($("annBody").value || "").trim();
+    var tts = $("annTts").value === "1";
+    if (!t) { toast("请输入标题", "warning"); return; }
+    if (!b) { toast("请输入内容", "warning"); return; }
+    doAnnounce(t, b, tts);
+    $("annTitle").value = ""; $("annBody").value = "";
+    toast("已发布" + (tts?"+ 播报":""), "success");
+  });
+  $("btnAnnPreview").addEventListener("click", function(){
+    var t = ($("annTitle").value || "").trim() || "测试播报";
+    var b = ($("annBody").value || "").trim() || "这是一段测试播报内容";
+    _speakAnnounce(t + "。" + b);
+    toast("已播报", "success");
+  });
+
+  function doLogout(){
+    try { localStorage.removeItem("ibigou_merchant_token"); } catch(e){}
+    try { localStorage.removeItem("ibigou_merchant_no"); } catch(e){}
+    try { localStorage.removeItem("ibigou_shop"); } catch(e){}
+    toast("正在退出...", "info");
+    setTimeout(function(){ window.location.replace("/h5/merchant/login.html?logout=1"); }, 300);
+  }
+  $("btnLogout").addEventListener("click", doLogout);
+  $("btnLogout2").addEventListener("click", doLogout);
+
+  $("btnBack").addEventListener("click", function(){
+    location.href = "/h5/merchant/index.html";
+  });
+
+  $("btnCalc") && $("btnCalc").addEventListener("click", function(){
+    var input = prompt("请输入顾客消费金额（元）：");
+    if (!input) return;
+    var amount = parseFloat(input);
+    if (!(amount > 0)) { toast("金额无效", "warning"); return; }
+    var cfg = lsGet("ibigou_deduct_config", { percent: 80, dailyCap: 100, mode: "A" });
+    var balance = parseFloat(lsGet("ibigou_balance", "0")) || 0;
+    var balanceUsed = 0, save = 0, pay = amount;
+    if (cfg.mode === "A" && cfg.percent > 0 && balance > 0) {
+      balanceUsed = Math.min(balance, amount * cfg.percent / 100, cfg.dailyCap || Infinity);
+      save = balanceUsed;
+      pay = amount - balanceUsed;
+    }
+    alert("试算结果：\n消费金额：¥" + amount.toFixed(2) +
+          "\n余额抵扣：¥" + balanceUsed.toFixed(2) +
+          "\n优惠后实付：¥" + pay.toFixed(2) +
+          "\n剩余余额：¥" + (balance - balanceUsed).toFixed(2));
+  });
+
+
+
+  // ===== boot: 从后端拉数据填充 cache + localStorage =====
+  (async function(){
+    try {
+      if (!window.IBIGOU_API) return;
+      // 商家配置
+      var cfg = await window.IBIGOU_API.merchant.config();
+      if (cfg && cfg.code === 0 && cfg.data) {
+        var d = cfg.data;
+        if (d.shop) lsSet("ibigou_shop", { name: d.shop.name || "", phone: d.shop.phone || "", refund: d.shop.refund || "" });
+        if (d.qrImageData !== undefined) { lsSet("ibigou_merchant_qr", d.qrImageData); lsSet("ibigou_merchant_qr_name", d.qrName || ""); lsSet("ibigou_merchant_qr_size", (d.qrImageData || "").length); }
+        if (d.deductConfig) lsSet("ibigou_deduct_config", d.deductConfig);
+        if (d.prizes && d.prizes.length) lsSet("ibigou_prize_pool", d.prizes);
+        console.log("[merchant] boot: cfg loaded, orders=", d.orders ? d.orders.length : 0);
+      }
+      // merchant info: merchantNo + merchantName (config API does not return these)
+      try {
+        var mi = await window.IBIGOU_API.get('/api/merchant/config/weights');
+        if (mi && mi.code === 0 && mi.data) {
+          if (mi.data.merchantNo) lsSet("ibigou_merchant_no", mi.data.merchantNo);
+          if (mi.data.merchantName) {
+            var existingShop = lsGet("ibigou_shop", null);
+            if (!existingShop || !existingShop.name) lsSet("ibigou_shop", { name: mi.data.merchantName, phone: "", refund: "" });
+          }
+          console.log("[merchant] boot: merchantNo=" + mi.data.merchantNo);
+        }
+      } catch(e) { console.warn("[merchant] boot: weights error", e); }
+      // 订单列表
+      var ords = await window.IBIGOU_API.merchant.ibigouOrders();
+      if (ords && ords.code === 0 && Array.isArray(ords.data)) {
+        lsSet("ibigou_orders", ords.data);
+        console.log("[merchant] boot: orders loaded", ords.data.length);
+      }
+      // 公告
+      var ann = await window.IBIGOU_API.merchant.announceList();
+      if (ann && ann.code === 0 && Array.isArray(ann.data)) lsSet("ibigou_announcements", ann.data);
+      // 消息
+      var msgs = await window.IBIGOU_API.merchant.messages();
+      if (msgs && msgs.code === 0 && Array.isArray(msgs.data)) lsSet("ibigou_messages", msgs.data);
+      // 余额流水: 使用订单数据填充流水
+      var bal = await window.IBIGOU_API.merchant.ibigouOrders();
+      if (bal && bal.code === 0 && Array.isArray(bal.data)) {
+        var flowData = bal.data.map(function(o){
+          return {
+            ts: o.createTime ? new Date(o.createTime).getTime() : Date.now(),
+            phone: o.userPhone || "",
+            type: o.refundStatus > 0 ? "refund" : "consume",
+            amount: o.deductBalance || 0,
+            reason: o.refundStatus > 0 ? "退款冲账" : "消费抵扣",
+            balance: o.payAmount || 0
+          };
+        });
+        lsSet("ibigou_balance_flow", flowData);
+      }
+      // 会员
+      var mem = await window.IBIGOU_API.merchant.memberStatus();
+      if (mem && mem.code === 0) lsSet("ibigou_member_status", mem.data);
+      // 确保订单数据已加载
+      await loadBackendOrders();
+      // 触发 UI重渲染
+      try { refreshKPI && refreshKPI(); } catch(e){}
+      try { renderOrders && renderOrders(); } catch(e){}
+      try { renderFlow && renderFlow(); } catch(e){}
+      try { renderPrizes && renderPrizes(); } catch(e){}
+      try { renderDc && renderDc(); } catch(e){}
+      try { renderAnnouncements && renderAnnouncements(); } catch(e){}
+      console.log("[merchant] boot: done");
+    } catch(e) { console.warn("[merchant] boot error:", e); }
+  })();
+
+  // ===== 实时播报轮询：顾客操作时在商家设备上语音播报 =====
+  var _lastAnnounceId = 0;
+  function startAnnouncePoller(){
+    if (!window.IBIGOU_API) return;
+    var tk = lsGet("ibigou_merchant_token", "");
+    if (!tk) return;
+    // Init: get current max announce ID, 播放最近5分钟内的最新播报
+    var _pendingSpeak = null;
+    var _userInteracted = false;
+    var _audioUnlocked = false;
+    console.log("[播报] startAnnouncePoller 启动, token:", tk ? tk.substring(0,10)+'...' : '无');
+    // 用户第一次交互：解锁音频 + 播放待播报
+    document.addEventListener('click', function once(){
+      _userInteracted = true;
+      document.removeEventListener('click', once);
+      // 音频解锁：播放静音音频绕过浏览器自动播放限制（必须在用户交互时调用）
+      try {
+        var _unlock = new Audio('data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAESsAACJWAAACABAAZGF0YQAAAAA=');
+        _unlock.volume = 0;
+        _unlock.play().then(function(){ _audioUnlocked = true; console.log("[播报] 音频解锁成功"); }).catch(function(){ console.warn("[播报] 音频解锁失败"); });
+      } catch(e){}
+      console.log("[播报] 用户已交互, _pendingSpeak:", _pendingSpeak ? '有' : '无');
+      if (_pendingSpeak) { var t = _pendingSpeak; _pendingSpeak = null; setTimeout(function(){ _speakAnnounce(t); }, 300); }
+    }, { once: true });
+    fetch("/api/merchant/announce/list", { headers: { "X-Merchant-Token": tk } })
+      .then(function(r){ return r.json(); })
+      .then(function(d){
+        console.log("[播报] announce/list 返回:", JSON.stringify(d).substring(0,200));
+        if (d && d.code === 0 && d.data && d.data.length > 0) {
+          var latest = d.data[0];
+          _lastAnnounceId = latest.announceId || 0;
+          console.log("[播报] 最新播报:", latest.announceId, latest.createTime, latest.content ? latest.content.substring(0,30) : '');
+          if (latest.content && latest.createTime) {
+            var t = new Date(latest.createTime).getTime();
+            var diff = Date.now() - t;
+            console.log("[播报] 时间差:", diff, "ms, 5分钟阈值:", 5*60*1000);
+            if (diff < 5 * 60 * 1000) {
+              if (_userInteracted) {
+                console.log("[播报] 用户已交互，直接播放");
+                _speakAnnounce(latest.content);
+              } else {
+                console.log("[播报] 用户未交互，设置_pendingSpeak");
+                _pendingSpeak = latest.content;
+                if (typeof toast === 'function') toast('有新播报，点击页面任意位置播放', 'info');
+              }
+            } else {
+              console.log("[播报] 超过5分钟，不播放");
+            }
+          }
+        } else {
+          console.log("[播报] 无播报数据");
+        }
+        setInterval(pollAnnounce, 5000);
+      })
+      .catch(function(e){ console.log("[播报] announce/list 失败:", e); setInterval(pollAnnounce, 5000); });
+  }
+  var _isBroadcastDevice = true; // default: all devices play
+  async function pollAnnounce(){
+    var tk = lsGet("ibigou_merchant_token", "");
+    if (!tk) return;
+    try {
+      var r = await fetch("/api/merchant/announce/poll?afterId=" + _lastAnnounceId,
+        { headers: { "X-Merchant-Token": tk } });
+      var d = await r.json();
+      if (d && d.code === 0 && d.data) {
+        var isBroadcast = d.data.isBroadcastDevice !== false;
+        _isBroadcastDevice = isBroadcast;
+        updateBroadcastUI(isBroadcast);
+        var events = d.data.events || [];
+        if (isBroadcast && events.length > 0) {
+          events.forEach(function(ann){
+            _lastAnnounceId = Math.max(_lastAnnounceId, ann.announceId || 0);
+            var text = ann.content || "";
+            if (text) {
+              if (_userInteracted) {
+                _speakAnnounce(text);
+              } else {
+                _pendingSpeak = text;
+                if (typeof toast === 'function') toast('有新播报，点击页面任意位置播放', 'info');
+              }
+            }
+          });
+        } else {
+          events.forEach(function(ann){
+            _lastAnnounceId = Math.max(_lastAnnounceId, ann.announceId || 0);
+          });
+        }
+      }
+    } catch(e) {}
+  }
+  function updateBroadcastUI(isBroadcast){
+    var st = $("broadcastStatus");
+    var btnSet = $("btnSetBroadcast");
+    var btnClear = $("btnClearBroadcast");
+    if (isBroadcast) {
+      if (st) st.textContent = "✅ 本机为指定播报设备";
+      if (st) st.style.color = "var(--c-success)";
+      if (btnSet) btnSet.style.display = "none";
+      if (btnClear) btnClear.style.display = "block";
+    } else {
+      if (st) st.textContent = "当前设备未设为播报设备（已指定其他设备）";
+      if (st) st.style.color = "var(--c-text-3)";
+      if (btnSet) btnSet.style.display = "block";
+      if (btnClear) btnClear.style.display = "none";
+    }
+  }
+  $("btnSetBroadcast") && ($("btnSetBroadcast").addEventListener("click", async function(){
+    var tk = lsGet("ibigou_merchant_token", "");
+    try {
+      var r = await fetch("/api/merchant/config/set-broadcast-device", { method: "POST", headers: { "X-Merchant-Token": tk } });
+      var d = await r.json();
+      if (d && d.code === 0) {
+        toast("已设为本机播报", "success");
+        updateBroadcastUI(true);
+        _isBroadcastDevice = true;
+      } else { toast(d.msg || "设置失败", "danger"); }
+    } catch(e) { toast("设置失败", "danger"); }
+  }));
+  $("btnClearBroadcast") && ($("btnClearBroadcast").addEventListener("click", async function(){
+    var tk = lsGet("ibigou_merchant_token", "");
+    try {
+      var r = await fetch("/api/merchant/config/clear-broadcast-device", { method: "POST", headers: { "X-Merchant-Token": tk } });
+      var d = await r.json();
+      if (d && d.code === 0) {
+        toast("已取消播报设备", "success");
+        updateBroadcastUI(false);
+        _isBroadcastDevice = false;
+      } else { toast(d.msg || "取消失败", "danger"); }
+    } catch(e) { toast("取消失败", "danger"); }
+  }));
+  startAnnouncePoller();
+// ===== 蓝牙语音播报 =====
+var _btDevice = null;
+var _btGatt = null;
+var _btChar = null;
+var _printerChar = null; // GATT write characteristic for BLE printer
+var _btSupported = !!navigator.bluetooth || (window.AndroidPrinter && window.AndroidPrinter.isAvailable());
+
+function _updatePrinterStatus(){
+  var qrStatus = $("qrPrinterStatus");
+  var qrConnBtn = $("btnQrConnectPrinter");
+  var btStatus = $("btStatus");
+  // Android native bridge
+  if (window.AndroidPrinter && window.AndroidPrinter.isAvailable()) {
+    if (window.AndroidPrinter.isConnected()) {
+      var name = window.AndroidPrinter.getConnectedDeviceName() || "蓝牙打印机";
+      var html2 = '<span style="color:var(--c-success);">✅ 打印机: ' + name + '</span>';
+      if (qrStatus) qrStatus.innerHTML = html2;
+      if (qrConnBtn) qrConnBtn.style.display = "none";
+      if (btStatus) btStatus.innerHTML = html2;
+    } else {
+      var btOn = window.AndroidPrinter.isBluetoothEnabled ? window.AndroidPrinter.isBluetoothEnabled() : true;
+      if (!btOn) {
+        if (qrStatus) qrStatus.innerHTML = '<span style="color:var(--c-danger);">蓝牙未开启，点这里打开设置</span>';
+        if (btStatus) btStatus.innerHTML = '<span style="color:var(--c-danger);">蓝牙未开启</span>';
+      } else {
+        if (qrStatus) qrStatus.textContent = "蓝牙打印机未连接（点连接选择已配对设备）";
+        if (btStatus) btStatus.textContent = "未连接";
+      }
+      if (qrConnBtn) qrConnBtn.style.display = "block";
+    }
+    return;
+  }
+  if (_printerChar) {
+    var name = (_btDevice && _btDevice.name) ? _btDevice.name : "蓝牙打印机";
+    if (qrStatus) qrStatus.innerHTML = '<span style="color:var(--c-success);">✅ 打印机: ' + name + '</span>';
+    if (qrConnBtn) qrConnBtn.style.display = "none";
+    if (btStatus) btStatus.innerHTML = '<span style="color:var(--c-success);">✅ 打印机: ' + name + '</span>';
+  } else if (_btDevice) {
+    if (qrStatus) qrStatus.innerHTML = '<span style="color:var(--c-text-3);">设备已连接（未发现打印服务）</span>';
+    if (qrConnBtn) qrConnBtn.style.display = "block";
+  } else {
+    if (qrStatus) qrStatus.textContent = "蓝牙打印机未连接";
+    if (qrConnBtn) qrConnBtn.style.display = _btSupported ? "block" : "none";
+  }
+}
+
+window._onBtConnected = function(name){
+  toast("蓝牙打印机已连接: " + (name || ""), "success");
+  _updatePrinterStatus();
+};
+
+function _showBtDevicePicker(devs){
+  return new Promise(function(resolve){
+    var overlay = document.createElement("div");
+    overlay.style.cssText = "position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:9999;display:flex;align-items:center;justify-content:center;";
+    var box = document.createElement("div");
+    box.style.cssText = "background:#fff;border-radius:12px;padding:16px;max-width:320px;width:90%;max-height:60vh;overflow-y:auto;";
+    var title = document.createElement("div");
+    title.style.cssText = "font-size:15px;font-weight:700;margin-bottom:12px;text-align:center;";
+    title.textContent = "选择蓝牙打印机";
+    box.appendChild(title);
+    devs.forEach(function(d){
+      var item = document.createElement("div");
+      item.style.cssText = "padding:12px;border:1px solid #e8e8e8;border-radius:8px;margin-bottom:8px;cursor:pointer;font-size:14px;";
+      item.innerHTML = "🖨 " + (d.name || d.address);
+      item.onclick = function(){
+      overlay.remove();
+        resolve(d);
+      };
+      box.appendChild(item);
+    });
+    var cancel = document.createElement("button");
+    cancel.style.cssText = "width:100%;padding:10px;margin-top:8px;border:1px solid #ddd;border-radius:8px;background:#f5f5f5;font-size:14px;";
+    cancel.textContent = "取消";
+    cancel.onclick = function(){
+      overlay.remove();
+      resolve(null);
+    };
+    box.appendChild(cancel);
+    overlay.appendChild(box);
+    document.body.appendChild(overlay);
+  });
+}
+
+async function _connectBtPrinter(){
+  // Android native bridge - uses native device picker with scanning
+  if (window.AndroidPrinter && window.AndroidPrinter.isAvailable()) {
+    if (window.AndroidPrinter.hasPermission && !window.AndroidPrinter.hasPermission()) {
+      toast("需要蓝牙权限，请点允许", "warning");
+      window.AndroidPrinter.requestPermission();
+      return false;
+    }
+    if (!window.AndroidPrinter.isBluetoothEnabled()) {
+      toast("蓝牙未开启，正在打开设置...", "warning");
+      window.AndroidPrinter.openBluetoothSettings();
+      return false;
+    }
+    // Call native device picker (scans + shows paired)
+    window.AndroidPrinter.showDevicePicker();
+    return false;
+  }
+  if (!_btSupported) {
+    toast("当前浏览器不支持蓝牙，请使用 Chrome 或 Edge", "warning");
+    return false;
+  }
+  var btStatus = $("btStatus");
+  var qrStatus = $("qrPrinterStatus");
+  try {
+    if (btStatus) btStatus.textContent = "正在搜索蓝牙设备...";
+    if (qrStatus) qrStatus.textContent = "正在搜索蓝牙设备...";
+    _btDevice = await navigator.bluetooth.requestDevice({
+      acceptAllDevices: true,
+      optionalServices: ["generic_access",
+        "000018f0-0000-1000-8000-00805f9b34fb",
+        "0000ff00-0000-1000-8000-00805f9b34fb",
+        "49535343-fe7d-4ae5-8fa9-9fafd205e455"]
+    });
+    try { localStorage.setItem("ibigou_bt_device", _btDevice.name || "unknown"); } catch(e){}
+    var server = await _btDevice.gatt.connect();
+    _btGatt = server;
+    var _svcs = ["000018f0-0000-1000-8000-00805f9b34fb","0000ff00-0000-1000-8000-00805f9b34fb","49535343-fe7d-4ae5-8fa9-9fafd205e455"];
+    var _chrs = ["00002af1-0000-1000-8000-00805f9b34fb","0000ff02-0000-1000-8000-00805f9b34fb","49535343-8841-43f4-a8d4-ecbe34729bb3"];
+    for (var si=0; si<_svcs.length && !_printerChar; si++) {
+      try {
+        var svc = await server.getPrimaryService(_svcs[si]);
+        for (var ci=0; ci<_chrs.length && !_printerChar; ci++) {
+          try {
+            var ch = await svc.getCharacteristic(_chrs[ci]);
+            if (ch && (ch.properties.write || ch.properties.writeWithoutResponse)) _printerChar = ch;
+          } catch(e2) {}
+        }
+      } catch(e3) {}
+    }
+    var testBtn = $("btnBtTest");
+    if (_printerChar) {
+      toast("蓝牙打印机已连接", "success");
+    } else {
+      toast("蓝牙设备已连接（未发现打印服务）", "warning");
+    }
+    if (testBtn) testBtn.style.display = "block";
+    _updatePrinterStatus();
+    return !!_printerChar;
+  } catch(e) {
+    if (btStatus) btStatus.textContent = "连接失败: " + (e.message || "请重试");
+    if (qrStatus) qrStatus.textContent = "连接失败: " + (e.message || "请重试");
+    toast("蓝牙连接失败", "danger");
+    _updatePrinterStatus();
+    return false;
+  }
+}
+
+(function(){
+  var btn = $("btnBtConnect");
+  if (!btn) return;
+  var testBtn = $("btnBtTest");
+  var sup = $("btSupported");
+  var unsup = $("btUnsupported");
+
+  if (!_btSupported) {
+    unsup.style.display = "block";
+    btn.disabled = true;
+    btn.textContent = "当前浏览器不支持蓝牙";
+    if (testBtn) testBtn.style.display = "block";
+    _updatePrinterStatus();
+    return;
+  }
+  sup.style.display = "block";
+  if (testBtn) testBtn.style.display = "block";
+  _updatePrinterStatus();
+
+  btn.onclick = async function(){
+    await _connectBtPrinter();
+  };
+
+  var qrConnBtn = $("btnQrConnectPrinter");
+  if (qrConnBtn) {
+    qrConnBtn.onclick = async function(){
+      await _connectBtPrinter();
+    };
+  }
+
+  testBtn.onclick = function(){
+    btSpeak("宜必购盲盒。蓝牙语音播报测试成功。收款时将在此设备播报。");
+  };
+
+  var testPrintBtn = $("btnTestPrint");
+  if (testPrintBtn) testPrintBtn.onclick = async function(){
+    if (!_printerChar) {
+      toast("请先连接蓝牙打印机", "warning");
+      return;
+    }
+    try {
+      await _blePrint(_testPrintText());
+      toast("测试打印成功", "success");
+    } catch(e) {
+      toast("测试打印失败: " + e.message, "danger");
+    }
+  };
+})();
+
+// 蓝牙语音播报函数（APP端优先云端女声MP3，复刻网页端温柔女声；Web端用Web Speech API）
+// 蓝牙语音播报函数（APP端优先 HTML5 Audio 百度女声MP3，Web端用Web Speech API）
+// 统一语音播报：APP优先云端TTS女声MP3(MediaPlayer绕过自动播放)，其次原生TTS，浏览器Audio，最后Web Speech
+var _announcePlaying = false;
+function _speakAnnounce(text){
+  if (!text) return;
+  if (_announcePlaying) { console.log("[播报] 正在播放中，跳过重复:", text.substring(0,20)); return; }
+  _announcePlaying = true;
+  console.log("[播报] 内容:", text);
+  var url = (window.location.origin || "") + "/api/tts?lan=zh&text=" + encodeURIComponent(text) + "&spd=5&source=web";
+  // 方案1：APP原生 speakUrl（云端TTS女声，MediaPlayer播放，不受自动播放限制）
+  try {
+    if (window.AndroidPrinter) {
+      if (window.AndroidPrinter.speakUrl) {
+        window.AndroidPrinter.speakUrl(url);
+        if (typeof toast === "function") toast("APP云端女声播报", "info");
+        console.log("[播报] 使用AndroidPrinter.speakUrl 云端女声");
+        setTimeout(function(){ _announcePlaying = false; }, 15000);
+        return;
+      }
+      if (window.AndroidPrinter.speak) {
+        window.AndroidPrinter.speak(text);
+        if (typeof toast === "function") toast("APP系统语音播报", "info");
+        console.log("[播报] 使用AndroidPrinter.speak 原生TTS");
+        setTimeout(function(){ _announcePlaying = false; }, 15000);
+        return;
+      }
+    }
+  } catch(e) { console.warn("[播报] Android接口失败", e); }
+  // 方案2：HTML5 Audio 云端TTS女声
+  try {
+    if (window._btAudio) { try { window._btAudio.pause(); } catch(e){} window._btAudio = null; }
+    var a = new Audio(url);
+    window._btAudio = a;
+    a.play().then(function(){ if (typeof toast === "function") toast("网页女声播报", "info"); console.log("[播报] 使用Audio云端TTS"); a.onended = function(){ _announcePlaying = false; }; a.onerror = function(){ _announcePlaying = false; }; })
+      .catch(function(err){ console.warn("[播报] Audio失败", err); _announcePlaying = false; if (typeof toast === "function") toast("Audio被拦截,降级系统语音", "warning"); _speakWebSpeech(text); });
+    return;
+  } catch(e) { console.warn("[播报] Audio初始化失败", e); }
+  // 方案3：Web Speech API
+  _speakWebSpeech(text);
+}
+function _speakWebSpeech(text){
+  try {
+    if ("speechSynthesis" in window) {
+      speechSynthesis.cancel();
+      var u = new SpeechSynthesisUtterance(text);
+      u.lang = "zh-CN";
+      u.rate = 1.0;
+      u.onend = function(){ _announcePlaying = false; };
+      u.onerror = function(){ _announcePlaying = false; };
+      speechSynthesis.speak(u);
+      console.log("[播报] 使用Web Speech API");
+    } else {
+      _announcePlaying = false;
+    }
+  } catch(e) { console.warn("[播报] Web Speech失败", e); _announcePlaying = false; }
+}
+
+function btSpeak(text){
+  toast("开始播报测试...", "info");
+  console.log("[btSpeak] 开始播报:", text);
+  console.log("[btSpeak] AndroidPrinter:", !!window.AndroidPrinter);
+  console.log("[btSpeak] speechSynthesis:", "speechSynthesis" in window);
+  _speakAnnounce(text);
+}
+function _btSpeakFallback(text){
+  if ("speechSynthesis" in window) {
+    try {
+      var voice = null;
+      var list = speechSynthesis.getVoices();
+      if (list && list.length) {
+        for (var i = 0; i < list.length; i++) {
+          if (/zh(-|_)CN/i.test(list[i].lang)) { voice = list[i]; break; }
+        }
+        if (!voice) {
+          for (var j = 0; j < list.length; j++) {
+            if (/^zh/i.test(list[j].lang)) { voice = list[j]; break; }
+          }
+        }
+        if (!voice) voice = list[0];
+      }
+      speechSynthesis.cancel();
+      var u = new SpeechSynthesisUtterance(text);
+      u.lang = "zh-CN";
+      if (voice) u.voice = voice;
+      u.rate = 1.2;
+      u.pitch = 0.85;
+      speechSynthesis.speak(u);
+      toast("Web Speech API 播报中", "info");
+      return;
+    } catch(e) {
+      console.warn("Web Speech failed", e);
+    }
+  }
+  if (window.AndroidPrinter && window.AndroidPrinter.isAvailable()) {
+    try {
+      window.AndroidPrinter.speak(text);
+      toast("原生 TTS 播报中", "info");
+    } catch(e) {
+      toast("TTS error: " + e.message, "danger");
+    }
+  } else {
+    toast("无可用语音引擎", "warning");
+  }
+}
+
+// ===== ESC/POS BLE printer helpers =====
+function _utf8(str){var a=[];for(var i=0;i<str.length;i++){var c=str.charCodeAt(i);if(c<128){a.push(c);}else if(c<2048){a.push(192|(c>>6));a.push(128|(c&63));}else{a.push(224|(c>>12));a.push(128|((c>>6)&63));a.push(128|(c&63));}}return a;}
+
+function _testPrintText(){
+  var c=[];
+  c.push(27,64); // ESC @ init
+  c.push(27,97,1); // ESC a 1 center
+  c.push(29,33,16); // GS ! 16 double height+width
+  var t=_utf8("测试打印");for(var i=0;i<t.length;i++)c.push(t[i]);c.push(10);
+  c.push(29,33,0); // GS ! 0 normal
+  c.push(27,100,3); // feed 3
+  c.push(29,86,0); // cut
+  return new Uint8Array(c);
+}
+
+function _escPosQR(url, shopName){
+  var c=[];
+  c.push(27,64); // ESC @ init
+  c.push(27,97,1); // ESC a center
+  // Print shop name in large font (2x2) above QR code
+  if(shopName){
+    c.push(27,33,17); // ESC ! 0x11 = 2x2 double size
+    var n=_utf8(shopName);
+    for(var i=0;i<n.length;i++)c.push(n[i]);
+    c.push(10); // newline
+    c.push(27,33,0); // ESC ! 0x00 = normal size
+  }
+  c.push(29,40,107,3,0,49,49,6); // QR module size 6
+  c.push(29,40,107,3,0,49,50,49); // QR error level M
+  var d=_utf8(url);var dl=d.length+3;
+  c.push(29,40,107,dl&255,(dl>>8)&255,49,51,48);
+  for(var i=0;i<d.length;i++)c.push(d[i]);
+  c.push(29,40,107,3,0,49,52,48); // print QR (m=48=normal)
+  c.push(27,100,2); // feed 2
+  var s=_utf8("宜必购目盲 · 商家店");for(var i=0;i<s.length;i++)c.push(s[i]);c.push(10);
+  c.push(27,100,3); // feed 3
+  c.push(29,86,0); // cut paper
+  return new Uint8Array(c);
+}
+
+async function _blePrint(bytes){
+  if(!_printerChar) throw new Error("打印机未连接");
+  var chunkSize=500;
+  for(var i=0;i<bytes.length;i+=chunkSize){
+    var end=Math.min(i+chunkSize,bytes.length);
+    var chunk=bytes.slice(i,end);
+    if(_printerChar.properties.writeWithoutResponse){await _printerChar.writeValueWithoutResponse(chunk);}
+    else{await _printerChar.writeValueWithResponse(chunk);}
+    await new Promise(function(r){setTimeout(r,80);});
+  }
+}
+
+// ===== 二维码生成打印 =====
+(function(){
+  var btn = $("btnGenPrintQr");
+  if (!btn) return;
+  var wrap = $("printQrWrap");
+  var box = $("printQrBox");
+  var nameEl = $("printQrName");
+  var printBtn = $("btnPrintQr");
+
+  async function ensureQrCode(){
+    if (box.querySelector("img") || box.querySelector("canvas")) return true;
+    var tk = lsGet("ibigou_merchant_token", null);
+    if (!tk) { toast("请先登录", "warning"); return false; }
+    wrap.style.display = "block";
+    box.innerHTML = "";
+    var mno = lsGet("ibigou_merchant_no", "");
+    if (!mno) {
+      try {
+        var _r = await fetch('/api/merchant/config/weights', { headers: { 'X-Merchant-Token': tk } });
+        var _m = await _r.json();
+        if (_m && _m.code === 0 && _m.data && _m.data.merchantNo) { mno = _m.data.merchantNo; lsSet("ibigou_merchant_no", mno); }
+      } catch(e){}
+    }
+    if (!mno) { toast("未获取到商家编号，请重新登录", "danger"); return false; }
+    var qrUrl = location.origin + "/h5/customer/login.html?merchantNo=" + encodeURIComponent(mno);
+    if (typeof QRCode !== "undefined") {
+      new QRCode(box, { text: qrUrl, width: 200, height: 200, correctLevel: QRCode.CorrectLevel.M });
+    } else {
+      var _img = document.createElement("img");
+      _img.src = "https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=" + encodeURIComponent(qrUrl);
+      _img.width = 200; _img.height = 200; _img.style.cssText = "border-radius:8px;";
+      box.appendChild(_img);
+    }
+    var _shop = lsGet("ibigou_shop", {});
+    if (nameEl) nameEl.textContent = (_shop.name || "开盲盒") + " · 宜必购盲盒商家店";
+    return true;
+  }
+  window._ensureQrCode = ensureQrCode;
+
+  btn.onclick = async function(){
+    var tk = lsGet("ibigou_merchant_token", null);
+    if (!tk) { toast("请先登录", "warning"); setTimeout(function(){ location.href = "./login.html"; }, 1000); return; }
+    wrap.style.display = "block";
+    box.innerHTML = "";
+    // 生成顾客登录二维码 - 指向 login.html（登录后跳转 draw.html）
+    var mno = lsGet("ibigou_merchant_no", "");
+    if (!mno) {
+      try {
+        var _resp = await fetch('/api/merchant/config/weights', { headers: { 'X-Merchant-Token': tk } });
+        var mi = await _resp.json();
+        if (mi && mi.code === 0 && mi.data && mi.data.merchantNo) { mno = mi.data.merchantNo; lsSet("ibigou_merchant_no", mno); }
+        else if (mi && mi.code !== 0 && mi.msg && (mi.msg.indexOf("登录") >= 0 || mi.msg.indexOf("登錄") >= 0)) {
+          toast(mi.msg, "danger"); lsSet("ibigou_merchant_token", "");
+          setTimeout(function(){ location.href = "./login.html"; }, 1500); return;
+        }
+      } catch(e2){ console.warn("[QR] fetch weights error", e2); }
+    }
+    if (!mno) { toast("未获取到商家编号，请重新登录", "danger"); setTimeout(function(){ location.href = "./login.html"; }, 1500); return; }
+    var url = location.origin + "/h5/customer/login.html?merchantNo=" + encodeURIComponent(mno);
+    // 用 qrcodejs 生成
+    if (typeof QRCode !== "undefined") {
+      new QRCode(box, { text: url, width: 200, height: 200, correctLevel: QRCode.CorrectLevel.M });
+    } else {
+      var img = document.createElement("img");
+      img.src = "https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=" + encodeURIComponent(url);
+      img.width = 200; img.height = 200;
+      img.style.cssText = "border-radius:8px;";
+      box.appendChild(img);
+    }
+    var shop = lsGet("ibigou_shop", {});
+    nameEl.textContent = (shop.name || "开盲盒") + " · 宜必购盲盒商家店";
+    var urlWrap = $("printQrUrlWrap"); var urlInput = $("printQrUrl"); if (urlWrap) urlWrap.style.display = "block"; if (urlInput) urlInput.value = url;
+    toast("二维码已生成", "success");
+  };
+    // 复制按钮
+    var copyBtn = $("btnCopyQrUrl");
+    if (copyBtn) copyBtn.onclick = function(){
+      var urlInput = $("printQrUrl");
+      if (urlInput && urlInput.value) {
+        urlInput.select();
+        try { document.execCommand("copy"); toast("地址已复制", "success"); } catch(e){ toast("复制失败，请手动复制", "warning"); }
+      }
+    };
+
+  printBtn.onclick = async function(){
+    if (!await ensureQrCode()) return;
+    var shop = lsGet("ibigou_shop", {});
+    // APP端：window.print()在 WebView 不生效，改用蓝牙直打
+    if (window.AndroidPrinter && window.AndroidPrinter.isAvailable && window.AndroidPrinter.isAvailable()) {
+      if (!window.AndroidPrinter.isConnected()) {
+        toast("请先连接蓝牙打印机（点【连接蓝牙设备】）", "warning");
+        return;
+      }
+      var shopName = shop.name || "开盲盒";
+      var qrUrl = $("printQrUrl") ? $("printQrUrl").value : "";
+      if (!qrUrl) {
+        var mno = lsGet("ibigou_merchant_no", "");
+        if (!mno) { toast("未获取到商家编号", "danger"); return; }
+        qrUrl = location.origin + "/h5/customer/login.html?merchantNo=" + encodeURIComponent(mno);
+      }
+      try {
+        var result = JSON.parse(window.AndroidPrinter.printQR(qrUrl, shopName));
+        if (result.code === 0) { toast("打印中，请等待出纸", "success"); }
+        else { toast("打印失败: " + (result.msg || ""), "danger"); }
+      } catch(e) { toast("打印异常: " + e.message, "danger"); }
+      return;
+    }
+    // 浏览器端：iframe print（弹系统打印预览）
+    var img = box.querySelector("img") || box.querySelector("canvas");
+    if (!img) { toast("二维码生成异常，请重试", "danger"); return; }
+    var imgSrc = "";
+    if (img.tagName === "CANVAS") { imgSrc = img.toDataURL("image/png"); }
+    else if (img.tagName === "IMG") { imgSrc = img.src; }
+    if (!imgSrc) { toast("二维码图片获取失败", "danger"); return; }
+    var iframe = document.createElement("iframe");
+    iframe.style.cssText = "position:fixed;right:0;bottom:0;width:0;height:0;border:0;visibility:hidden;";
+    document.body.appendChild(iframe);
+    var doc = iframe.contentWindow.document;
+    doc.open();
+    doc.write("<html><head><title>打印二维码</title>");
+    doc.write("<style>body{margin:0;padding:20px;text-align:center;font-family:sans-serif;}");
+    doc.write("img{width:280px;height:280px;}h2{font-size:18px;margin:10px 0 4px;}p{font-size:13px;color:#666;}");
+    doc.write("</style></head><body>");
+    doc.write("<img src=\"" + imgSrc + "\" />");
+    doc.write("<h2>" + (shop.name || "开盲盒") + "</h2>");
+    doc.write("<p>宜必购盲盒商家店</p>");
+    doc.write("<p>扫码开盲盒 · 宜必购盲盒商家店</p>");
+    doc.write("<\/body><\/html>");
+    doc.close();
+    iframe.onload = function(){
+      try { iframe.contentWindow.focus(); iframe.contentWindow.print(); } catch(e){ console.warn("print failed", e); }
+      setTimeout(function(){ try{ document.body.removeChild(iframe); }catch(e){} }, 2000);
+    };
+    setTimeout(function(){
+      try { iframe.contentWindow.focus(); iframe.contentWindow.print(); } catch(e){ console.warn("print fallback failed", e); }
+      setTimeout(function(){ try{ document.body.removeChild(iframe); }catch(e){} }, 2000);
+    }, 500);
+  };
+  // ===== Print Preview System =====
+  var _ppData = { url: "", shopName: "", imgSrc: "", offsetX: 0, offsetY: 0, scale: 100, paperW: 80, paperH: 60 };
+
+  function _showPrintPreview(qrUrl, shopName, imgSrc) {
+    _ppData.url = qrUrl;
+    _ppData.shopName = shopName;
+    _ppData.imgSrc = imgSrc;
+    _ppData.offsetX = 0; _ppData.offsetY = 0; _ppData.scale = 100;
+    var overlay = $("printPreviewOverlay");
+    var ppImg = $("ppQrImg");
+    var ppName = $("ppShopName");
+    if (ppImg) ppImg.src = imgSrc;
+    if (ppName) ppName.textContent = shopName || "å¼ç®ç";
+    $("ppSliderX").value = 0; $("ppValX").textContent = "0";
+    $("ppSliderY").value = 0; $("ppValY").textContent = "0";
+    $("ppSliderS").value = 100; $("ppValS").textContent = "100%";
+    _updatePreview();
+    overlay.classList.add("show");
+  }
+
+  function _updatePreview() {
+    var paper = $("ppPaper");
+    var content = $("ppContent");
+    var pw = _ppData.paperW * 3.5;
+    var ph = _ppData.paperH * 3.5;
+    paper.style.width = pw + "px";
+    paper.style.height = ph + "px";
+    // 根据纸张规格动态调整内容大小，确保不被遮挡
+    var qrImg = content ? content.querySelector("img") : null;
+    var nameEl = content ? content.querySelector(".pp-name") : null;
+    var subEl = content ? content.querySelector(".pp-sub") : null;
+    if (_ppData.paperW <= 58) {
+      if (qrImg) { qrImg.style.width = "90px"; qrImg.style.height = "90px"; }
+      if (nameEl) { nameEl.style.fontSize = "11px"; nameEl.style.maxWidth = "110px"; }
+      if (subEl) { subEl.style.fontSize = "9px"; }
+    } else {
+      if (qrImg) { qrImg.style.width = "120px"; qrImg.style.height = "120px"; }
+      if (nameEl) { nameEl.style.fontSize = "13px"; nameEl.style.maxWidth = "140px"; }
+      if (subEl) { subEl.style.fontSize = "10px"; }
+    }
+    var cx = (pw / 2) + _ppData.offsetX;
+    var cy = (ph / 2) + _ppData.offsetY;
+    content.style.left = cx + "px";
+    content.style.top = cy + "px";
+    content.style.transform = "translate(-50%,-50%) scale(" + (_ppData.scale / 100) + ")";
+  }
+
+  // Bind events after DOM ready
+  document.addEventListener("DOMContentLoaded", function() {
+    // Paper size buttons
+    document.querySelectorAll(".pp-size-btn").forEach(function(btn) {
+    btn.onclick = function() {
+      document.querySelectorAll(".pp-size-btn").forEach(function(b) { b.classList.remove("active"); });
+      btn.classList.add("active");
+      _ppData.paperW = parseInt(btn.dataset.w);
+      _ppData.paperH = parseInt(btn.dataset.h);
+      _updatePreview();
+    };
+  });
+
+  // Sliders
+  var sx = $("ppSliderX"), sy = $("ppSliderY"), ss = $("ppSliderS");
+  if (sx) sx.oninput = function() { _ppData.offsetX = parseInt(this.value); $("ppValX").textContent = this.value; _updatePreview(); };
+  if (sy) sy.oninput = function() { _ppData.offsetY = parseInt(this.value); $("ppValY").textContent = this.value; _updatePreview(); };
+  if (ss) ss.oninput = function() { _ppData.scale = parseInt(this.value); $("ppValS").textContent = this.value + "%"; _updatePreview(); };
+
+  // Cancel
+  var ppCancel = $("ppCancel");
+  if (ppCancel) ppCancel.onclick = function() { $("printPreviewOverlay").classList.remove("show"); };
+
+  // Confirm print - 使用内联onclick+全局函数_handleConfirmPrint（在页面底部独立script中定义）
+
+  }); // end DOMContentLoaded
+})();
+
+// ==================== 商品管理 ====================
+  var _goods = [];
+  var _editingGoodsId = null;
+
+  async function loadGoods(){
+    var tk = lsGet("ibigou_merchant_token", null);
+    if (!tk) { _goods = []; renderGoods(); return; }
+    try {
+      var resp = await fetch("/api/merchant/config/goods", { headers: { "X-Merchant-Token": tk } });
+      var r = await resp.json();
+      if (r.code === -1 || r.code === 401) { localStorage.removeItem("ibigou_merchant_token"); toast("登录已过期，请重新登录", "warning"); setTimeout(function(){ location.href = "./login.html"; }, 1500); return; }
+      _goods = (r && r.code === 0 && r.data) ? r.data : [];
+    } catch(e) { _goods = []; }
+    renderGoods();
+  }
+
+  function renderGoods(){
+    var c = $("goodsList");
+    if (!_goods.length) { c.innerHTML = '<div class="empty">暂无商品，请添加</div>'; return; }
+    var html = "";
+    _goods.forEach(function(g){
+      var img = g.images ? '<img src="' + g.images + '" style="width:56px;height:56px;object-fit:cover;border-radius:8px;flex-shrink:0;">' : '<div style="width:56px;height:56px;background:#f0f0f0;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;color:#bbb;">无图</div>';
+      var st = g.enabled === 1 ? '<span style="color:#4caf50;font-size:11px;">已上架</span>' : '<span style="color:#999;font-size:11px;">已下架</span>';
+      html += '<div class="list-item">'
+        + '<div class="l" style="gap:10px;">' + img + '<div>'
+        + '<div class="name">' + (g.goodsName||"") + ' ' + st + '</div>'
+        + '<div class="info">¥' + (g.price||0) + (g.description ? ' · ' + g.description : '') + '</div>'
+        + '<div class="info">排序<input type="number" min="0" step="1" value="' + (g.sortOrder||0) + '" data-goods-id="' + g.goodsId + '" data-f="sortOrder" class="input" style="width:50px;height:26px;display:inline-block;padding:0 4px;font-size:12px;margin-left:4px;"></div>'
+        + '</div></div>'
+        + '<div class="r">'
+        + '<button class="btn btn--ghost btn--sm" data-goods-edit="' + g.goodsId + '">编辑</button> '
+        + '<button class="btn btn--ghost btn--sm" data-goods-toggle="' + g.goodsId + '" data-enabled="' + g.enabled + '">' + (g.enabled === 1 ? '下架' : '上架') + '</button> '
+        + '<button class="btn btn--danger btn--sm" data-goods-del="' + g.goodsId + '">删除</button>'
+        + '</div></div>';
+    });
+    c.innerHTML = html;
+  }
+
+  function resetGoodsForm(){
+    $("newGoodsName").value = ""; $("newGoodsPrice").value = ""; $("newGoodsDesc").value = ""; $("newGoodsImg").value = "";
+    _editingGoodsId = null;
+    $("btnAddGoods").textContent = "+ 添加商品";
+  }
+
+  $("btnAddGoods").onclick = async function(){
+    var name = $("newGoodsName").value.trim();
+    var price = $("newGoodsPrice").value;
+    var desc = $("newGoodsDesc").value.trim();
+    var fileInput = $("newGoodsImg");
+    if (!name) { toast("请输入商品名称", "warning"); return; }
+    if (!price) { toast("请输入价格", "warning"); return; }
+    var tk = lsGet("ibigou_merchant_token", "");
+    var images = "";
+    if (fileInput.files && fileInput.files[0]) {
+      try {
+        var fd = new FormData();
+        fd.append("file", fileInput.files[0]);
+        var upResp = await fetch("/api/merchant/config/goods/upload-image", { method: "POST", headers: { "X-Merchant-Token": tk }, body: fd });
+        var upR = await upResp.json();
+        if (upR.code === 0 && upR.data) { images = upR.data; }
+        else { toast("图片上传失败: " + (upR.msg||""), "warning"); }
+      } catch(e) { toast("图片上传失败", "warning"); }
+    }
+    try {
+      var body = new URLSearchParams();
+      body.append("goodsName", name); body.append("price", price);
+      if (desc) body.append("description", desc);
+      if (images) body.append("images", images);
+      if (_editingGoodsId) {
+        var resp = await fetch("/api/merchant/config/goods/" + _editingGoodsId, { method: "POST", headers: { "X-Merchant-Token": tk, "Content-Type": "application/x-www-form-urlencoded" }, body: body.toString() });
+      } else {
+        var resp = await fetch("/api/merchant/config/goods", { method: "POST", headers: { "X-Merchant-Token": tk, "Content-Type": "application/x-www-form-urlencoded" }, body: body.toString() });
+      }
+      var r = await resp.json();
+      if (r.code === 0) {
+        toast(_editingGoodsId ? "商品已更新" : "商品已添加", "success");
+        resetGoodsForm();
+        loadGoods();
+      } else { toast(r.msg || "操作失败", "danger"); }
+    } catch(e) { toast("操作失败", "danger"); }
+  };
+
+  $("btnRefreshGoods").onclick = loadGoods;
+
+  $("goodsList").addEventListener("click", async function(e){
+    var t = e.target;
+    if (t.dataset.goodsDel !== undefined) {
+      if (!confirm("确认删除此商品？")) return;
+      try {
+        var resp = await fetch("/api/merchant/config/goods/" + t.dataset.goodsDel, { method: "DELETE", headers: { "X-Merchant-Token": lsGet("ibigou_merchant_token", "") } });
+        var r = await resp.json();
+        toast(r.code === 0 ? "已删除" : (r.msg||"删除失败"), r.code === 0 ? "success" : "danger");
+        loadGoods();
+      } catch(e) { toast("删除失败", "danger"); }
+    }
+    if (t.dataset.goodsToggle !== undefined) {
+      var enabled = t.dataset.enabled === "1";
+      var url = "/api/merchant/config/goods/" + t.dataset.goodsToggle + "/" + (enabled ? "disable" : "enable");
+      try {
+        var resp = await fetch(url, { method: "POST", headers: { "X-Merchant-Token": lsGet("ibigou_merchant_token", "") } });
+        var r = await resp.json();
+        toast(r.code === 0 ? "已更新" : (r.msg||"操作失败"), r.code === 0 ? "success" : "danger");
+        loadGoods();
+      } catch(e) { toast("操作失败", "danger"); }
+    }
+    if (t.dataset.goodsEdit !== undefined) {
+      var g = _goods.find(function(x){ return String(x.goodsId) === t.dataset.goodsEdit; });
+      if (!g) return;
+      _editingGoodsId = g.goodsId;
+      $("newGoodsName").value = g.goodsName || "";
+      $("newGoodsPrice").value = g.price || "";
+      $("newGoodsDesc").value = g.description || "";
+      $("newGoodsImg").value = "";
+      $("btnAddGoods").textContent = "保存修改";
+      document.querySelector(".tab[data-p=p9]").click();
+      $("newGoodsName").focus();
+    }
+  });
+
+  $("goodsList").addEventListener("change", async function(e){
+    var t = e.target;
+    if (t.dataset.f === "sortOrder" && t.dataset.goodsId) {
+      try {
+        var body = new URLSearchParams();
+        body.append("sortOrder", parseInt(t.value || 0));
+        var resp = await fetch("/api/merchant/config/goods/" + t.dataset.goodsId, { method: "POST", headers: { "X-Merchant-Token": lsGet("ibigou_merchant_token", ""), "Content-Type": "application/x-www-form-urlencoded" }, body: body.toString() });
+        var r = await resp.json();
+        toast(r.code === 0 ? "排序已更新" : (r.msg||"失败"), r.code === 0 ? "success" : "danger");
+        loadGoods();
+      } catch(e) { toast("更新失败", "danger"); }
+    }
+  });
+
+  loadGoods();
+
+})();
+
+}catch(e){console.error("[merchant]", e);}
+
+</script>
+<script>
+/* ?????? */
+(function(){
+  var $=function(id){return document.getElementById(id)};
+  if(!$("chatWrap"))return;
+  var tk=localStorage.getItem("ibigou_merchant_token");
+  var curPhone=null,chatPoll=null;
+  function apiGet(url){return fetch(url,{headers:{"X-Merchant-Token":tk}}).then(function(r){return r.json()})}
+  function apiPost(url,body){var p=new URLSearchParams(body||{});return fetch(url,{method:"POST",headers:{"X-Merchant-Token":tk,"Content-Type":"application/x-www-form-urlencoded"},body:p.toString()}).then(function(r){return r.json()})}
+  function esc(s){return String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")}
+  function fmtTime(s){return s?s.replace("T"," ").slice(11,16):""}
+  // ??????? /chat/sessions ????????????
+  async function loadSessions(){
+    if(!tk){return}
+    try{
+      var r=await apiGet("/api/merchant/chat/sessions");
+      var list=$("chatList");
+      if(!list)return;
+      if(r.code!==0||!Array.isArray(r.data)||!r.data.length){
+        list.innerHTML='<div class="chat-empty">????</div>';
+        return;
+      }
+      // ??????????????????
+      var seen={};var items=[];
+      r.data.forEach(function(m){ if(!seen[m.userPhone]){seen[m.userPhone]=1; items.push(m)} });
+      list.innerHTML=items.map(function(m){
+        var mine=m.fromRole==="merchant";
+        var last=(m.content||"").slice(0,18);
+        return '<div class="ci'+(curPhone===m.userPhone?" active":"")+'" data-phone="'+esc(m.userPhone)+'">'+
+          '<div class="ph">'+esc(m.userPhone)+'</div>'+
+          '<div class="last">'+(mine?"?: ":"")+esc(last)+'</div>'+
+          '</div>';
+      }).join("");
+      // ????
+      list.querySelectorAll(".ci").forEach(function(el){
+        el.addEventListener("click",function(){window.openMerchantChat(el.dataset.phone)});
+      });
+      // ????
+      var ru=await apiGet("/api/merchant/chat/unread-count");
+      if(ru.code===0&&ru.data>0){
+        var head=$("chatHead");if(head)head.textContent="? "+ru.data+" ?????";
+      }
+    }catch(e){}
+  }
+  // ???????????
+  window.openMerchantChat=function(phone){
+    curPhone=phone;
+    if(chatPoll)clearInterval(chatPoll);
+    renderChat();
+    chatPoll=setInterval(renderChat,4000);
+  };
+  async function renderChat(){
+    if(!curPhone||!tk){return}
+    var r=await apiGet("/api/merchant/chat/messages?userPhone="+encodeURIComponent(curPhone));
+    if(r.code!==0||!Array.isArray(r.data)){$("chatBody").innerHTML='<div style="color:#aaa;text-align:center;padding:20px">'+(r.msg||"????")+'</div>';return}
+    var head=$("chatHead");if(head)head.textContent="??? "+curPhone;
+    var html=r.data.map(function(m){
+      var mine=m.fromRole==="merchant";
+      return '<div class="row '+(mine?"me":"them")+'"><div class="bubble">'+esc(m.content)+'<span class="t">'+fmtTime(m.createTime)+'</span></div></div>';
+    }).join("");
+    var box=$("chatBody");box.innerHTML=html;box.scrollTop=box.scrollHeight;
+  }
+  async function sendReply(){
+    if(!curPhone){alert("??????????");return}
+    var el=$("chatInput");var text=el.value.trim();
+    if(!text)return;
+    el.value="";el.style.height="auto";
+    var r=await apiPost("/api/merchant/chat/send",{userPhone:curPhone,content:text});
+    if(r.code!==0){alert(r.msg||"????");return}
+    renderChat();
+  }
+  if($("btnChatSend"))$("btnChatSend").addEventListener("click",sendReply);
+  if($("chatInput")){$("chatInput").addEventListener("input",function(){this.style.height="auto";this.style.height=Math.min(this.scrollHeight,80)+"px"});
+    $("chatInput").addEventListener("keydown",function(e){if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();sendReply()}})}
+  // ????????????????????
+  if($("chatHead")){$("chatHead").textContent="??????????";}
+  loadSessions();
+  var sessPoll=setInterval(loadSessions,8000);
+  window.addEventListener("pagehide",function(){if(chatPoll)clearInterval(chatPoll);if(sessPoll)clearInterval(sessPoll)});
+})();
+</script>
+
+
+<!-- Print Preview Modal -->
+<div class="print-preview-overlay" id="printPreviewOverlay">
+  <div class="print-preview-box">
+    <h3>🖨️ 打印预览</h3>
+    <div class="pp-size-row">
+      <button class="pp-size-btn" data-w="58" data-h="40">58mm 标签</button>
+      <button class="pp-size-btn active" data-w="80" data-h="60">80mm 标签</button>
+    </div>
+    <div class="pp-paper" id="ppPaper">
+      <div class="pp-content" id="ppContent">
+        <img id="ppQrImg" src="" alt="QR">
+        <div class="pp-name" id="ppShopName">商家名称</div>
+        <div class="pp-sub">扫码开盲盒</div>
+      </div>
+    </div>
+    <div class="pp-controls">
+      <div class="pp-row">
+        <label>水平</label>
+        <input type="range" id="ppSliderX" min="-30" max="30" value="0" step="1">
+        <span class="pp-val" id="ppValX">0</span>
+      </div>
+      <div class="pp-row">
+        <label>垂直</label>
+        <input type="range" id="ppSliderY" min="-20" max="20" value="0" step="1">
+        <span class="pp-val" id="ppValY">0</span>
+      </div>
+      <div class="pp-row">
+        <label>缩放</label>
+        <input type="range" id="ppSliderS" min="60" max="140" value="100" step="5">
+        <span class="pp-val" id="ppValS">100%</span>
+      </div>
+    </div>
+    <div class="pp-actions">
+      <button class="btn btn--ghost" id="ppCancel" onclick="document.getElementById('printPreviewOverlay').classList.remove('show')">取消</button>
+      <button class="btn btn--primary" id="ppConfirm" onclick="window._handleConfirmPrint && window._handleConfirmPrint()">确认打印</button>
+    </div>
+  </div>
+</div>
+<script>
+// 独立蓝牙打印处理函数 - 不依赖IIFE
+window._handleBtPrint = async function() {
+  try {
+    // 获取商家编号（去掉可能的双引号，localStorage可能存的是JSON字符串）
+    var mno2 = localStorage.getItem("ibigou_merchant_no") || "";
+    mno2 = mno2.replace(/^["']+|["']+$/g, ""); // 去掉首尾的引号
+    if (!mno2) {
+      alert("未获取到商家编号，请重新登录");
+      return;
+    }
+    var url2 = location.origin + "/h5/customer/login.html?merchantNo=" + encodeURIComponent(mno2);
+    
+    // 获取商家名称
+    var shopName = "开盲盒";
+    try {
+      var shop = JSON.parse(localStorage.getItem("ibigou_shop") || "{}");
+      if (shop && shop.name) shopName = shop.name;
+    } catch(e) {}
+    
+    // 获取二维码图片（增加容错：APP端可能是canvas，toDataURL可能失败）
+    var qrBox = document.getElementById("printQrBox");
+    var imgSrc = "";
+    
+    function getQrSrc() {
+      if (!qrBox) return "";
+      // 优先找img（显示的二维码）
+      var imgEl = qrBox.querySelector("img");
+      if (imgEl && imgEl.src && imgEl.src.length > 10) return imgEl.src;
+      // 再找canvas（隐藏的二维码，转base64）
+      var canvasEl = qrBox.querySelector("canvas");
+      if (canvasEl) {
+        try {
+          var dataUrl = canvasEl.toDataURL("image/png");
+          if (dataUrl && dataUrl.length > 10) return dataUrl;
+        } catch(e) { console.log("canvas toDataURL failed:", e); }
+      }
+      return "";
+    }
+    
+    // 第一次尝试获取
+    imgSrc = getQrSrc();
+    
+    // 如果没获取到，尝试重新生成二维码
+    if (!imgSrc && window._ensureQrCode) {
+      try {
+        await window._ensureQrCode();
+        imgSrc = getQrSrc();
+      } catch(e) { console.log("ensureQrCode failed:", e); }
+    }
+    
+    // 如果还是没获取到，用外部API生成二维码图片
+    if (!imgSrc) {
+      var qrUrl = location.origin + "/h5/customer/login.html?merchantNo=" + encodeURIComponent(mno2);
+      imgSrc = "https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=" + encodeURIComponent(qrUrl);
+    }
+    
+    if (!imgSrc) {
+      alert("请先生成二维码");
+      return;
+    }
+    
+    // 显示预览弹窗
+    var overlay = document.getElementById("printPreviewOverlay");
+    var ppImg = document.getElementById("ppQrImg");
+    var ppName = document.getElementById("ppShopName");
+    var paper = document.getElementById("ppPaper");
+    var content = document.getElementById("ppContent");
+    if (ppImg) ppImg.src = imgSrc;
+    if (ppName) ppName.textContent = shopName;
+    // 设置纸张大小（默认80mm）
+    var pw = 80 * 3.5;
+    var ph = 60 * 3.5;
+    if (paper) { paper.style.width = pw + "px"; paper.style.height = ph + "px"; }
+    // 设置内容位置（居中）
+    if (content) {
+      content.style.left = (pw / 2) + "px";
+      content.style.top = (ph / 2) + "px";
+      content.style.transform = "translate(-50%,-50%) scale(1)";
+    }
+    // 设置图片大小（80mm默认120px）
+    if (ppImg) { ppImg.style.width = "120px"; ppImg.style.height = "120px"; }
+    if (ppName) { ppName.style.fontSize = "13px"; ppName.style.maxWidth = "140px"; }
+    if (overlay) overlay.classList.add("show");
+    // 保存打印数据到window，供确认打印按钮使用
+    window._printData = { url: url2, shopName: shopName, imgSrc: imgSrc };
+  } catch(e) {
+    alert("蓝牙打印出错: " + e.message);
+  }
+};
+
+// 独立确认打印处理函数 - 不依赖IIFE
+window._handleConfirmPrint = async function() {
+  try {
+    // 关闭预览弹窗
+    var overlay = document.getElementById("printPreviewOverlay");
+    if (overlay) overlay.classList.remove("show");
+    
+    // 获取打印数据
+    var data = window._printData || {};
+    var printUrl = data.url || "";
+    var printName = data.shopName || "开盲盒";
+    var printImgSrc = data.imgSrc || "";
+    
+    console.log("[Print] data:", JSON.stringify({url: printUrl, name: printName, imgLen: printImgSrc.length}));
+    
+    if (!printUrl) {
+      alert("未获取到打印数据，请重新生成二维码");
+      return;
+    }
+    
+    // 检查AndroidPrinter接口
+    if (window.AndroidPrinter) {
+      var results = [];
+      
+      // 1. 检查各种状态
+      try { results.push("isAvailable: " + window.AndroidPrinter.isAvailable()); } catch(e) { results.push("isAvailable错误: " + e.message); }
+      try { results.push("isBluetoothEnabled: " + window.AndroidPrinter.isBluetoothEnabled()); } catch(e) { results.push("isBluetoothEnabled错误: " + e.message); }
+      try { results.push("isConnected: " + window.AndroidPrinter.isConnected()); } catch(e) { results.push("isConnected错误: " + e.message); }
+      try { results.push("getConnectedDeviceName: " + window.AndroidPrinter.getConnectedDeviceName()); } catch(e) { results.push("getConnectedDeviceName错误: " + e.message); }
+      
+      // 2. 尝试调用connect（即使已连接）
+      try {
+        var connResult = window.AndroidPrinter.connect();
+        results.push("connect: " + connResult);
+      } catch(e) { results.push("connect错误: " + e.message); }
+      
+      // 3. 连接后再检查状态
+      try { results.push("connect后isConnected: " + window.AndroidPrinter.isConnected()); } catch(e) {}
+      
+      // 4. 用最简单的方式调用printText - 只传纯英文，避免编码问题
+      var textResult = "未调用";
+      try {
+        textResult = window.AndroidPrinter.printText("HELLO TEST 123");
+        results.push("printText(HELLO): " + textResult);
+      } catch(e) { results.push("printText错误: " + e.message); }
+      
+      // 5. 再试一次带换行的
+      try {
+        var r2 = window.AndroidPrinter.printText("LINE1\nLINE2\n\n\n");
+        results.push("printText(LINE): " + r2);
+      } catch(e) { results.push("printText2错误: " + e.message); }
+      
+      // 6. 打印二维码
+      try {
+        var qrResult = window.AndroidPrinter.printQR(printUrl, printName);
+        results.push("printQR: " + qrResult);
+      } catch(e) { results.push("printQR错误: " + e.message); }
+      
+      // 7. 最后再打印一行文字
+      try {
+        window.AndroidPrinter.printText("\n\n" + printName + "\n扫码开盲盒\n\n\n");
+      } catch(e) {}
+      
+      alert("打印调试\nURL: " + printUrl + "\n名称: " + printName + "\n\n" + results.join("\n"));
+      return;
+    }
+    
+    // 检查是否有蓝牙打印函数（IIFE暴露的）
+    if (window._blePrint && typeof window._blePrint === "function") {
+      try {
+        if (window._connectBtPrinter && typeof window._connectBtPrinter === "function") {
+          await window._connectBtPrinter();
+        }
+        if (window._escPosQR && typeof window._escPosQR === "function") {
+          var bytes = window._escPosQR(printUrl, printName);
+          await window._blePrint(bytes);
+          alert("二维码已打印(BLE)");
+          return;
+        }
+      } catch(be) {
+        console.log("[Print] BLE error:", be);
+        alert("打印失败: " + (be.message || ""));
+        return;
+      }
+    }
+    
+    alert("未找到可用的打印接口，请检查APP版本和蓝牙连接");
+    
+  } catch(e) {
+    alert("确认打印出错: " + e.message);
+  }
+};
+</script>
+</body>
+</html>

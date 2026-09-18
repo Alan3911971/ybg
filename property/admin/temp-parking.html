@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#4f46e5">
+<title>临时车缴费 · 物业后台 · 宜必购</title>
+<link rel="icon" href="data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='80' font-size='90'%3E%F0%9F%8F%A2%3C/text%3E%3C/svg%3E">
+<style>
+:root{--pri:#4f46e5;--pri-hover:#4338ca;--pri-light:#818cf8;--pri-bg:#eef2ff;--pri-grad:linear-gradient(135deg,#4f46e5 0%,#7c3aed 100%);--gold:#f59e0b;--gold-bg:#fffbeb;--success:#10b981;--success-bg:#ecfdf5;--danger:#ef4444;--danger-bg:#fef2f2;--warning:#f59e0b;--warning-bg:#fffbeb;--dark:#0f172a;--dark-2:#1e293b;--text:#1e293b;--text-2:#64748b;--text-3:#94a3b8;--bg:#f8fafc;--surface:#ffffff;--border:#e2e8f0;--divider:#f1f5f9;--shadow-sm:0 1px 2px rgba(0,0,0,.04);--shadow-md:0 4px 6px -1px rgba(0,0,0,.05),0 2px 4px -2px rgba(0,0,0,.05);--shadow-lg:0 10px 15px -3px rgba(0,0,0,.06),0 4px 6px -4px rgba(0,0,0,.04);--shadow-card:0 1px 3px rgba(0,0,0,.04),0 8px 24px rgba(0,0,0,.04);--r-sm:8px;--r-md:12px;--r-lg:16px;--r-xl:20px;--sidebar-w:272px;--ease:cubic-bezier(.4,0,.2,1);}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+html,body{font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei","Helvetica Neue",Arial,sans-serif;color:var(--text);background:var(--bg);-webkit-font-smoothing:antialiased;height:100%;}
+a{color:inherit;text-decoration:none;}input,select,button{font-size:14px;font-family:inherit;}
+.layout{display:flex;min-height:100vh;}
+.sidebar{width:var(--sidebar-w);background:linear-gradient(180deg,#0f172a 0%,#1e293b 100%);display:flex;flex-direction:column;position:fixed;top:0;left:0;bottom:0;z-index:40;transition:transform .25s var(--ease);}
+.sidebar .brand{padding:24px 20px;display:flex;align-items:center;gap:12px;border-bottom:1px solid rgba(255,255,255,.08);}
+.sidebar .brand .logo{width:40px;height:40px;border-radius:var(--r-md);background:var(--pri-grad);color:#fff;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;box-shadow:0 4px 12px rgba(79,70,229,.4);}
+.sidebar .brand h1{font-size:16px;font-weight:700;line-height:1.3;color:#fff;}
+.sidebar nav{flex:1;overflow-y:auto;padding:16px 12px;}
+.sidebar nav .nav-section{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.8px;color:rgba(255,255,255,.3);padding:16px 12px 8px;margin-top:4px;}
+.sidebar nav a{height:44px;padding:0 16px;border-radius:10px;font-size:14px;color:rgba(255,255,255,.55);font-weight:500;transition:all .2s;margin-bottom:2px;display:flex;align-items:center;gap:12px;border-left:none;}
+.sidebar nav a:hover{color:rgba(255,255,255,.9);background:rgba(255,255,255,.06);}
+.sidebar nav a.active{color:#fff;background:rgba(79,70,229,.15);font-weight:600;border-left:3px solid #818cf8;border-radius:0 10px 10px 0;}
+.sidebar nav a .icon{font-size:16px;width:22px;text-align:center;flex-shrink:0;}
+.sidebar .logout-area{padding:16px 12px;border-top:1px solid rgba(255,255,255,.08);}
+.sidebar .logout-area a{color:var(--danger);justify-content:center;border-left:none;}
+.sidebar .logout-area a:hover{background:rgba(239,68,68,.1);}
+.main{margin-left:var(--sidebar-w);flex:1;min-height:100vh;}
+.topbar{background:var(--surface);border-bottom:1px solid var(--border);padding:16px 28px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:30;box-shadow:var(--shadow-sm);}
+.page-header h2{font-size:28px;font-weight:800;letter-spacing:-.5px;line-height:1.2;}
+.page-header .sub{font-size:14px;color:var(--text-2);margin-top:6px;}
+.topbar .page-title{font-size:28px;font-weight:800;color:var(--text);letter-spacing:-.5px;line-height:1.2;}
+.topbar .menu-toggle{display:none;background:none;border:none;font-size:22px;cursor:pointer;padding:4px 8px;color:var(--text-2);}
+.main{margin-left:var(--sidebar-w);flex:1;padding:32px 40px;max-width:1280px;margin:0 auto;animation:fadeInUp .4s var(--ease);}
+@keyframes fadeInUp{from{opacity:0;transform:translateY(12px);}to{opacity:1;transform:translateY(0);}}
+.sidebar-overlay{display:none;position:fixed;inset:0;background:rgba(15,23,42,.5);backdrop-filter:blur(4px);z-index:35;}
+@media(max-width:768px){.sidebar{transform:translateX(-100%);}.sidebar.open{transform:translateX(0);}.sidebar-overlay.show{display:block;}.main{margin-left:0;}.topbar .menu-toggle{display:block;}}
+.card{background:var(--surface);border-radius:var(--r-lg);padding:24px;margin-bottom:20px;box-shadow:var(--shadow-card);border:none;}
+.sec{display:flex;align-items:center;gap:10px;font-weight:700;margin:0 0 16px;font-size:16px;color:var(--text);}
+.sec .ic{width:32px;height:32px;border-radius:var(--r-sm);background:var(--pri-bg);color:var(--pri);display:inline-flex;align-items:center;justify-content:center;font-size:16px;flex:0 0 32px;}
+.input,.select{height:42px;padding:0 16px;border:1.5px solid var(--border);border-radius:var(--r-sm);font-size:14px;color:var(--text);background:var(--surface);transition:border-color .2s,box-shadow .2s;-webkit-appearance:none;appearance:none;outline:none;}
+.input:focus,.select:focus{border-color:var(--pri);box-shadow:0 0 0 3px rgba(79,70,229,.1);}
+.filter-bar{display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;align-items:center;}
+.filter-bar .select{min-width:150px;}.filter-bar .input{min-width:140px;}
+.summary-row{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;margin-bottom:28px;}
+@media(max-width:640px){.summary-row{grid-template-columns:1fr;}}
+.summary-item{background:var(--surface);border-radius:var(--r-lg);padding:24px;box-shadow:var(--shadow-card);border:none;text-align:center;position:relative;overflow:hidden;transition:transform .2s var(--ease);}
+.summary-item:hover{transform:translateY(-2px);}
+.summary-item::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:var(--pri-grad);}
+.summary-item.accent::before{background:linear-gradient(135deg,#06b6d4,#0891b2);}
+.summary-item.success::before{background:linear-gradient(135deg,#10b981,#059669);}
+.summary-item .num{font-size:28px;font-weight:800;color:var(--text);margin-bottom:4px;letter-spacing:-.5px;}
+.summary-item .lab{font-size:13px;color:var(--text-2);}
+.table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;border-radius:var(--r-lg);border:1px solid var(--border);box-shadow:var(--shadow-sm);}
+table{width:100%;border-collapse:collapse;font-size:13px;min-width:900px;}
+th{text-align:left;padding:14px 20px;background:var(--bg);color:var(--text-2);font-weight:600;font-size:12px;text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--border);white-space:nowrap;}
+td{padding:16px 20px;border-bottom:1px solid var(--divider);color:var(--text);white-space:nowrap;}
+tr:nth-child(even) td{background:#fafbfd;}
+tr:hover td{background:var(--pri-bg);}
+.badge{display:inline-flex;align-items:center;padding:4px 12px;border-radius:999px;font-size:12px;font-weight:600;}
+.badge.green{background:var(--success-bg);color:var(--success);}
+.badge.yellow{background:var(--warning-bg);color:var(--warning);}
+.badge.red{background:var(--danger-bg);color:var(--danger);}
+.badge.blue{background:rgba(79,70,229,.1);color:#4f46e5;}
+.badge.gray{background:var(--divider);color:var(--text-2);}
+.empty{padding:32px 20px;text-align:center;color:var(--text-3);font-size:13px;}
+.toast-host{position:fixed;top:20px;right:20px;z-index:200;display:flex;flex-direction:column;gap:8px;}
+.toast{padding:12px 20px;border-radius:var(--r-sm);color:#fff;font-size:14px;font-weight:500;box-shadow:var(--shadow-lg);animation:toastIn .3s var(--ease);min-width:200px;}
+.toast.success{background:var(--success);}.toast.danger{background:var(--danger);}
+@keyframes toastIn{from{opacity:0;transform:translateX(20px);}to{opacity:1;transform:translateX(0);}}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:none;font-weight:600;cursor:pointer;transition:all .2s cubic-bezier(.4,0,.2,1);letter-spacing:.2px;white-space:nowrap;}
+.btn-xs{height:28px;padding:0 10px;font-size:12px;border-radius:6px;}
+.btn-sm{height:36px;padding:0 16px;font-size:13px;border-radius:8px;}
+.btn-md{height:44px;padding:0 24px;font-size:14px;border-radius:10px;}
+.btn-lg{height:52px;padding:0 32px;font-size:16px;border-radius:12px;}
+.btn-block{width:100%;}
+.btn-icon{width:44px;height:44px;padding:0;border-radius:12px;}
+.btn-primary{background:linear-gradient(135deg,#4f46e5 0%,#7c3aed 100%);color:#fff;box-shadow:0 2px 8px rgba(79,70,229,.3);}
+.btn-secondary{background:var(--surface);color:var(--text);border:1.5px solid var(--border);}
+.btn-soft{background:var(--pri-bg);color:var(--pri);}
+.btn-ghost{background:transparent;color:var(--pri);}
+.btn-success{background:linear-gradient(135deg,#10b981,#059669);color:#fff;box-shadow:0 2px 8px rgba(16,185,129,.3);}
+.btn-danger{background:linear-gradient(135deg,#ef4444,#dc2626);color:#fff;box-shadow:0 2px 8px rgba(239,68,68,.3);}
+.btn-warning{background:linear-gradient(135deg,#f59e0b,#d97706);color:#fff;box-shadow:0 2px 8px rgba(245,158,11,.3);}
+.btn:hover{transform:translateY(-1px);filter:brightness(1.05);}
+.btn:active{transform:scale(.97);filter:brightness(.95);}
+.btn:focus-visible{outline:2px solid var(--pri);outline-offset:2px;}
+.btn[disabled]{opacity:.45;cursor:not-allowed;transform:none!important;filter:none!important;}
+.btn.loading{pointer-events:none;position:relative;color:transparent!important;}
+.btn.loading::after{content:"";position:absolute;width:18px;height:18px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:btn-spin .6s linear infinite;}
+@keyframes btn-spin{to{transform:rotate(360deg);}}
+.row-actions{display:flex;gap:6px;}
+
+/* ===== 窄屏防变形（统一注入）===== */
+@media(max-width:900px){
+  .sidebar{transform:translateX(-100%);}
+  .sidebar.open{transform:translateX(0);}
+  .sidebar-overlay.show{display:block;}
+  .main,.main-content{margin-left:0 !important;padding:20px 14px !important;min-width:0 !important;max-width:100% !important;}
+  .topbar .menu-toggle{display:block !important;}
+  .card{overflow-x:auto;-webkit-overflow-scrolling:touch;min-width:0 !important;}
+  .topbar{padding:14px 14px;}
+  .tabs{min-width:0 !important;}
+}
+@media(max-width:480px){
+  .main{padding:14px 10px !important;}
+  .card{padding:16px 12px;}
+  .sec{font-size:14px;}
+  .page-title{font-size:22px !important;}
+}
+</style>
+</head>
+<body>
+<div class="toast-host" id="toastHost"></div>
+<div class="layout">
+  <div class="sidebar" id="sidebar">
+    <div class="brand"><div class="logo">🏢</div><h1>宜必购物业</h1></div>
+    <nav>
+      <div class="nav-section">概览</div>
+      <a href="dashboard.html"><span class="icon">📊</span>工作台</a>
+      <a href="index.html"><span class="icon">🏠</span>首页看板</a>
+      <div class="nav-section">业务管理</div>
+      <a href="owners.html"><span class="icon">👥</span>业主管理</a>
+      <a href="buildings.html"><span class="icon">🏢</span>楼栋房间</a>
+      <a href="bills.html"><span class="icon">🧾</span>账单管理</a>
+      <a href="splits.html"><span class="icon">💰</span>分账流水</a>
+      <a href="merchant-bindings.html"><span class="icon">🔗</span>商家绑定</a>
+      <a href="activity-audit.html"><span class="icon">✅</span>活动审核</a>
+      <a href="facilities.html"><span class="icon">🏟️</span>场地预约</a>
+      <div class="nav-section">安防通行</div>
+      <a href="access.html"><span class="icon">🚪</span>门禁管理</a>
+      <a href="vehicles.html" class="active"><span class="icon">🚗</span>车辆管理</a>
+      <a href="devices.html"><span class="icon">📡</span>IoT设备</a>
+    </nav>
+    <div class="logout-area"><a href="#" id="logoutBtn"><span class="icon">🚪</span>退出登录</a></div>
+  </div>
+  <div class="sidebar-overlay" id="overlay"></div>
+  <div class="main">
+    <div class="topbar">
+      <button class="menu-toggle" id="menuToggle">☰</button>
+      <div class="page-title">临时车缴费</div>
+      <div></div>
+    </div>
+    <div class="content">
+      <div class="card">
+        <div class="sec"><span class="ic">🔍</span>筛选条件</div>
+        <div class="filter-bar">
+          <input class="input" type="date" id="dateStart">
+          <span style="color:var(--text-3);line-height:42px;">至</span>
+          <input class="input" type="date" id="dateEnd">
+          <select class="select" id="communityId"><option value="">全部小区</option></select>
+          <button class="btn-md btn-primary" id="btnFilter">查询</button>
+          <button class="btn-sm btn-primary" id="btnRefresh">刷新</button>
+        </div>
+      </div>
+      <div class="summary-row" id="summaryRow">
+        <div class="summary-item"><div class="num" id="sumCount">--</div><div class="lab">缴费笔数</div></div>
+        <div class="summary-item accent"><div class="num" id="sumRevenue">--</div><div class="lab">总收入</div></div>
+        <div class="summary-item success"><div class="num" id="sumSplit">--</div><div class="lab">分账总额</div></div>
+      </div>
+      <div class="card">
+        <div class="sec"><span class="ic">🅿️</span>缴费记录</div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>缴费单号</th><th>车牌号</th><th>停放时长(分钟)</th><th>应收金额</th><th>实付金额</th><th>支付渠道</th><th>分账金额</th><th>支付时间</th><th>状态</th></tr></thead>
+            <tbody id="payTable"><tr><td colspan="9" class="empty">加载中...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+(function(){
+  var token = localStorage.getItem('property_admin_token');
+  if (!token) { location.href = 'login.html'; return; }
+
+  var sidebar = document.getElementById('sidebar');
+  var overlay = document.getElementById('overlay');
+  document.getElementById('menuToggle').onclick = function(){ sidebar.classList.add('open'); overlay.classList.add('show'); };
+  overlay.onclick = function(){ sidebar.classList.remove('open'); overlay.classList.remove('show'); };
+  document.getElementById('logoutBtn').onclick = function(e){ e.preventDefault(); localStorage.removeItem('property_admin_token'); location.href = 'login.html'; };
+
+  function showToast(msg, type){
+    var host = document.getElementById('toastHost');
+    var el = document.createElement('div');
+    el.className = 'toast ' + (type||'');
+    el.textContent = msg;
+    host.appendChild(el);
+    requestAnimationFrame(function(){ el.classList.add('show'); });
+    setTimeout(function(){ el.classList.remove('show'); setTimeout(function(){ el.remove(); }, 200); }, 2500);
+  }
+
+  var statusMap = { 0:'待支付', 1:'已支付', 2:'已退款', 3:'异常' };
+  var statusBadgeMap = { 0:'yellow', 1:'green', 2:'red', 3:'gray' };
+
+  function statusBadge(s){
+    var label = statusMap[s] != null ? statusMap[s] : (s||'--');
+    var cls = statusBadgeMap[s] != null ? statusBadgeMap[s] : 'gray';
+    return '<span class="badge ' + cls + '">' + label + '</span>';
+  }
+
+  // Load communities
+  fetch('/api/property/admin/companies', { headers: { 'X-Property-Token': token } })
+    .then(function(r){ return r.json(); })
+    .then(function(res){
+      if (res.code === 0 && res.data) {
+        var sel = document.getElementById('communityId');
+        res.data.forEach(function(c){
+          var opt = document.createElement('option');
+          opt.value = c.companyId;
+          opt.textContent = c.companyName;
+          sel.appendChild(opt);
+        });
+      }
+    }).catch(function(){});
+
+  function loadPayments(){
+    var params = [];
+    var ds = document.getElementById('dateStart').value;
+    var de = document.getElementById('dateEnd').value;
+    var cid = document.getElementById('communityId').value;
+    if (ds) params.push('start_date=' + encodeURIComponent(ds));
+    if (de) params.push('end_date=' + encodeURIComponent(de));
+    if (cid) params.push('community_id=' + encodeURIComponent(cid));
+    var url = '/api/property/admin/p1/temp-payments' + (params.length ? '?' + params.join('&') : '');
+
+    fetch(url, { headers: { 'X-Property-Token': token } })
+      .then(function(r){ return r.json(); })
+      .then(function(res){
+        var tbody = document.getElementById('payTable');
+        if (res.code !== 0 || !res.data || res.data.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="9" class="empty">暂无数据</td></tr>';
+          document.getElementById('sumCount').textContent = '--';
+          document.getElementById('sumRevenue').textContent = '--';
+          document.getElementById('sumSplit').textContent = '--';
+          return;
+        }
+        var totalCount = 0, totalRevenue = 0, totalSplit = 0;
+        var html = '';
+        res.data.forEach(function(p){
+          totalCount++;
+          totalRevenue += Number(p.paid_amount || 0);
+          totalSplit += Number(p.split_amount || 0);
+          html += '<tr>' +
+            '<td>' + (p.payment_no || p.id) + '</td>' +
+            '<td>' + (p.plate_no || '--') + '</td>' +
+            '<td>' + (p.duration_min != null ? p.duration_min : '--') + '</td>' +
+            '<td>¥' + Number(p.amount || 0).toFixed(2) + '</td>' +
+            '<td>¥' + Number(p.paid_amount || 0).toFixed(2) + '</td>' +
+            '<td>' + (p.pay_channel || '--') + '</td>' +
+            '<td>¥' + Number(p.split_amount || 0).toFixed(2) + '</td>' +
+            '<td>' + (p.paid_at || '--') + '</td>' +
+            '<td>' + statusBadge(p.status) + '</td></tr>';
+        });
+        tbody.innerHTML = html;
+        document.getElementById('sumCount').textContent = totalCount;
+        document.getElementById('sumRevenue').textContent = '¥' + totalRevenue.toFixed(2);
+        document.getElementById('sumSplit').textContent = '¥' + totalSplit.toFixed(2);
+      })
+      .catch(function(){ document.getElementById('payTable').innerHTML = '<tr><td colspan="9" class="empty">加载失败</td></tr>'; });
+  }
+
+  document.getElementById('btnFilter').onclick = loadPayments;
+  document.getElementById('btnRefresh').onclick = function(){
+    document.getElementById('dateStart').value = '';
+    document.getElementById('dateEnd').value = '';
+    document.getElementById('communityId').value = '';
+    loadPayments();
+  };
+  loadPayments();
+})();
+</script>
+</body>
+</html>

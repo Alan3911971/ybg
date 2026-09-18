@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover">
+<meta name="theme-color" content="#4f46e5">
+<title>我的车辆 · 我的物业</title>
+<link rel="icon" href="data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='80' font-size='90'%3E🏠%3C/text%3E%3C/svg%3E">
+<style>
+:root {
+  --pri: #4f46e5; --pri-hover: #4338ca; --pri-light: #818cf8; --pri-bg: #eef2ff; --pri-grad: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+  --gold: #f59e0b; --gold-bg: #fffbeb;
+  --success: #10b981; --success-bg: #ecfdf5;
+  --danger: #ef4444; --danger-bg: #fef2f2;
+  --text: #1e293b; --text-2: #64748b; --text-3: #94a3b8;
+  --bg: #f8fafc; --surface: #ffffff; --border: #e2e8f0; --divider: #f1f5f9;
+  --shadow-card: 0 2px 12px rgba(0,0,0,.04);
+  --shadow-float: 0 8px 30px rgba(0,0,0,.08);
+  --r-md: 14px; --r-lg: 20px; --r-xl: 24px; --r-full: 999px;
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --ease: cubic-bezier(.4,0,.2,1);
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+html,body{font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","PingFang SC","Microsoft YaHei",sans-serif;color:var(--text);background:var(--bg);-webkit-font-smoothing:antialiased;font-size:15px;}
+body{min-height:100vh;}
+a{color:inherit;text-decoration:none;}
+button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit;}
+
+/* Layout */
+.app-shell{max-width:480px;margin:0 auto;min-height:100vh;background:var(--bg);position:relative;}
+.content{padding:20px 20px calc(80px + var(--safe-bottom));}
+
+/* Hero */
+.hero{background:var(--pri-grad);color:#fff;padding:40px 20px 28px;position:relative;overflow:hidden;border-radius:0 0 var(--r-xl) var(--r-xl);}
+.hero::before{content:"";position:absolute;top:-60px;right:-40px;width:200px;height:200px;background:rgba(255,255,255,.08);border-radius:50%;}
+.hero::after{content:"";position:absolute;bottom:-30px;left:-20px;width:120px;height:120px;background:rgba(255,255,255,.06);border-radius:50%;}
+.hero h1{font-size:22px;font-weight:800;position:relative;z-index:1;letter-spacing:-.3px;}
+.hero .sub{font-size:13px;opacity:.85;margin-top:6px;position:relative;z-index:1;font-weight:500;}
+
+/* Section Title */
+.sec-title{font-size:18px;font-weight:700;margin:24px 0 14px;display:flex;align-items:center;gap:8px;color:var(--text);}
+.sec-title .count{font-size:12px;color:var(--text-3);font-weight:500;background:var(--pri-bg);padding:2px 10px;border-radius:var(--r-full);}
+
+/* Inputs */
+.input{width:100%;padding:14px 16px;border:none;border-radius:var(--r-md);background:var(--bg);font-size:15px;color:var(--text);transition:all .2s var(--ease);}
+.input:focus{outline:none;box-shadow:0 0 0 2px var(--pri);background:var(--surface);}
+.input::placeholder{color:var(--text-3);}
+select.input{appearance:none;-webkit-appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%2394a3b8' fill='none' stroke-width='1.5'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 16px center;background-color:var(--bg);}
+
+/* Buttons */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:none;font-weight:600;cursor:pointer;transition:all .2s cubic-bezier(.4,0,.2,1);letter-spacing:.2px;white-space:nowrap;}
+.btn-xs{height:28px;padding:0 10px;font-size:12px;border-radius:6px;}
+.btn-sm{height:36px;padding:0 16px;font-size:13px;border-radius:8px;}
+.btn-md{height:44px;padding:0 24px;font-size:14px;border-radius:10px;}
+.btn-lg{height:52px;padding:0 32px;font-size:16px;border-radius:12px;}
+.btn-xl{height:60px;padding:0 40px;font-size:18px;border-radius:14px;}
+.btn-block{width:100%;}
+.btn-icon{width:44px;height:44px;padding:0;border-radius:12px;}
+.btn-primary{background:linear-gradient(135deg,#4f46e5 0%,#7c3aed 100%);color:#fff;box-shadow:0 4px 14px rgba(79,70,229,.3);}
+.btn-secondary{background:var(--surface);color:var(--text);border:1.5px solid var(--border);}
+.btn-soft{background:var(--pri-bg);color:var(--pri);}
+.btn-ghost{background:transparent;color:var(--pri);}
+.btn-success{background:linear-gradient(135deg,#10b981,#059669);color:#fff;box-shadow:0 4px 14px rgba(16,185,129,.3);}
+.btn-danger{background:linear-gradient(135deg,#ef4444,#dc2626);color:#fff;box-shadow:0 4px 14px rgba(239,68,68,.3);}
+.btn-warning{background:linear-gradient(135deg,#f59e0b,#d97706);color:#fff;box-shadow:0 4px 14px rgba(245,158,11,.3);}
+.btn:hover{transform:translateY(-1px);filter:brightness(1.05);}
+.btn:active{transform:scale(.97);filter:brightness(.95);}
+.btn:focus-visible{outline:2px solid var(--pri);outline-offset:2px;}
+.btn[disabled]{opacity:.45;cursor:not-allowed;transform:none!important;filter:none!important;}
+.btn.loading{pointer-events:none;position:relative;color:transparent!important;}
+.btn.loading::after{content:"";position:absolute;width:18px;height:18px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:btn-spin .6s linear infinite;}
+@keyframes btn-spin{to{transform:rotate(360deg);}}
+/* FAB */
+.fab{position:fixed;bottom:calc(88px + var(--safe-bottom));right:20px;width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,#4f46e5,#7c3aed);color:#fff;display:flex;align-items:center;justify-content:center;font-size:24px;box-shadow:0 6px 20px rgba(79,70,229,.4);z-index:40;border:none;cursor:pointer;transition:transform .15s;}
+.fab:active{transform:scale(.9);}
+/* CTA full-width */
+.btn-cta{width:100%;height:56px;font-size:17px;font-weight:700;border-radius:16px;letter-spacing:.3px;}
+
+/* Vehicle Card */
+.vehicle-card{background:var(--surface);border-radius:var(--r-lg);padding:20px;box-shadow:var(--shadow-card);border:none;margin-bottom:16px;position:relative;overflow:hidden;animation:fadeInUp .4s var(--ease) both;}
+.vehicle-card:nth-child(1){animation-delay:.05s;}
+.vehicle-card:nth-child(2){animation-delay:.1s;}
+.vehicle-card:nth-child(3){animation-delay:.15s;}
+.vehicle-card:nth-child(4){animation-delay:.2s;}
+.vehicle-card:nth-child(5){animation-delay:.25s;}
+.vehicle-card .v-header{display:flex;align-items:center;gap:12px;margin-bottom:14px;}
+.vehicle-card .v-plate{font-size:22px;font-weight:800;color:var(--pri);letter-spacing:.5px;}
+.vehicle-card .v-badge{display:inline-block;padding:4px 12px;border-radius:var(--r-full);font-size:11px;font-weight:700;}
+.vehicle-card .v-badge.active{background:var(--success-bg);color:var(--success);}
+.vehicle-card .v-badge.expired{background:var(--danger-bg);color:var(--danger);}
+.vehicle-card .v-badge.pending{background:var(--gold-bg);color:var(--gold);}
+.vehicle-card .v-info{display:grid;grid-template-columns:1fr 1fr;gap:10px;font-size:13px;color:var(--text-2);padding:12px 0;border-top:1px solid var(--divider);border-bottom:1px solid var(--divider);}
+.vehicle-card .v-info span{display:flex;align-items:center;gap:6px;}
+.vehicle-card .v-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:14px;}
+
+.empty{text-align:center;padding:40px 20px;color:var(--text-3);font-size:14px;line-height:1.6;}
+.empty .emoji{font-size:48px;display:block;margin-bottom:12px;}
+
+/* Floating Add Button */
+.fab{position:fixed;bottom:calc(80px + var(--safe-bottom));right:calc(50% - 220px);width:56px;height:56px;border-radius:50%;background:var(--pri-grad);color:#fff;font-size:28px;display:flex;align-items:center;justify-content:center;box-shadow:0 6px 20px rgba(79,70,229,.4);z-index:90;cursor:pointer;transition:all .2s var(--ease);}
+.fab:active{transform:scale(.9);}
+@media(max-width:480px){.fab{right:20px;}}
+
+/* Modal / Bottom Sheet */
+.mask{position:fixed;inset:0;z-index:150;background:rgba(0,0,0,.4);backdrop-filter:blur(4px);display:none;align-items:flex-end;justify-content:center;}
+.mask.show{display:flex;}
+.sheet{background:var(--surface);border-radius:var(--r-xl) var(--r-xl) 0 0;width:100%;max-width:480px;max-height:85vh;overflow-y:auto;padding:24px 20px calc(24px + var(--safe-bottom));animation:sheetUp .3s var(--ease);}
+@keyframes sheetUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+.sheet .sh-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;}
+.sheet .sh-title{font-size:18px;font-weight:800;color:var(--text);}
+.sheet .sh-close{width:32px;height:32px;border-radius:50%;background:var(--bg);display:flex;align-items:center;justify-content:center;font-size:18px;color:var(--text-3);transition:all .15s;}
+.sheet .sh-close:active{background:var(--border);}
+.form-group{margin-bottom:16px;}
+.form-group label{display:block;font-size:13px;font-weight:600;color:var(--text-2);margin-bottom:8px;}
+.form-row{display:flex;gap:12px;}
+.form-row .form-group{flex:1;}
+
+/* Parking Fee Bills */
+.card{background:var(--surface);border-radius:var(--r-lg);padding:8px 16px;box-shadow:var(--shadow-card);border:none;}
+.fee-item{display:flex;align-items:center;gap:12px;padding:14px 0;border-bottom:1px solid var(--divider);}
+.fee-item:last-child{border-bottom:none;}
+.fee-item .ic{width:36px;height:36px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:800;flex:0 0 36px;background:var(--gold-bg);color:var(--gold);}
+.fee-item .main{flex:1;min-width:0;}
+.fee-item .t{font-size:14px;font-weight:600;color:var(--text);}
+.fee-item .s{font-size:12px;color:var(--text-3);margin-top:2px;}
+.fee-item .amt{font-size:16px;font-weight:800;color:var(--danger);}
+
+/* Bottom Nav */
+.nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:480px;z-index:100;height:calc(60px + var(--safe-bottom));background:rgba(255,255,255,.85);backdrop-filter:blur(20px) saturate(180%);border-top:.5px solid rgba(0,0,0,.06);display:flex;padding-bottom:var(--safe-bottom);}
+.nav .tab{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;color:var(--text-3);font-size:10px;font-weight:500;transition:color .2s;}
+.nav .tab .ic{font-size:22px;transition:transform .2s;}
+.nav .tab.active{color:var(--pri);font-weight:700;}
+.nav .tab.active::after{content:"";width:4px;height:4px;border-radius:50%;background:var(--pri);margin-top:2px;}
+.nav .tab.active .ic{transform:translateY(-2px);}
+
+/* Toast */
+.toast-host{position:fixed;top:16px;left:50%;transform:translateX(-50%);z-index:200;display:flex;flex-direction:column;align-items:center;gap:8px;pointer-events:none;width:100%;max-width:400px;}
+.toast{background:rgba(30,41,59,.92);backdrop-filter:blur(10px);color:#fff;padding:12px 24px;border-radius:var(--r-full);font-size:14px;font-weight:600;max-width:90%;text-align:center;opacity:0;transform:translateY(-12px);transition:all .25s var(--ease);box-shadow:0 4px 20px rgba(0,0,0,.15);}
+.toast.show{opacity:1;transform:translateY(0);}
+.toast.success{background:var(--success);}
+.toast.warning{background:var(--gold);}
+.toast.danger{background:var(--danger);}
+
+/* Animations */
+@keyframes fadeInUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+</style>
+</head>
+<body>
+<div class="app-shell">
+<div class="hero">
+  <h1>🚗 我的车辆</h1>
+  <div class="sub">管理绑定车辆，查看停车费用</div>
+</div>
+
+<div class="content">
+  <div class="sec-title">🚘 车辆列表 <span class="count" id="vehicleCount"></span></div>
+  <div id="vehicleList"></div>
+
+  <div class="sec-title">💰 停车费账单 <span class="count" id="feeHint"></span></div>
+  <div class="card"><div id="feeList"></div></div>
+</div>
+
+<!-- FAB -->
+<div class="fab" id="fabAdd" title="添加车辆">+</div>
+
+<!-- Add/Edit Vehicle Modal -->
+<div class="mask" id="addMask">
+  <div class="sheet">
+    <div class="sh-head"><span class="sh-title" id="sheetTitle">添加车辆</span><button class="sh-close" id="btnCloseAdd">×</button></div>
+    <input type="hidden" id="editVehicleId" value="">
+    <div class="form-group">
+      <label>车牌号</label>
+      <input id="vPlate" class="input" type="text" placeholder="如：京A12345" maxlength="10">
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>颜色</label>
+        <select id="vColor" class="input">
+          <option value="">请选择</option>
+          <option value="白色">白色</option>
+          <option value="黑色">黑色</option>
+          <option value="银色">银色</option>
+          <option value="红色">红色</option>
+          <option value="蓝色">蓝色</option>
+          <option value="灰色">灰色</option>
+          <option value="其他">其他</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>类型</label>
+        <select id="vType" class="input">
+          <option value="">请选择</option>
+          <option value="轿车">轿车</option>
+          <option value="SUV">SUV</option>
+          <option value="新能源">新能源</option>
+          <option value="货车">货车</option>
+          <option value="其他">其他</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-group">
+      <label>关联房屋</label>
+      <select id="vRoom" class="input">
+        <option value="">请选择房屋</option>
+      </select>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>有效期起</label>
+        <input id="vStart" class="input" type="date">
+      </div>
+      <div class="form-group">
+        <label>有效期止</label>
+        <input id="vEnd" class="input" type="date">
+      </div>
+    </div>
+    <button id="btnSaveVehicle" class="btn btn-md btn-primary btn-block" style="margin-top:10px;">确认添加</button>
+  </div>
+</div>
+
+<div class="toast-host" id="toastHost"></div>
+
+<nav class="nav">
+  <div class="tab" data-go="index.html"><span class="ic">🏠</span><span>首页</span></div>
+  <div class="tab" data-go="access.html"><span class="ic">🚪</span><span>门禁</span></div>
+  <div class="tab" data-go="bills.html"><span class="ic">📋</span><span>账单</span></div>
+  <div class="tab" data-go="bind.html"><span class="ic">👤</span><span>我的</span></div>
+</nav>
+</div>
+
+<script>
+const $=id=>document.getElementById(id);
+const API="/api/property/owner";
+function toast(m,t){const h=$("toastHost");if(!h)return;const e=document.createElement("div");e.className="toast "+(t||"");e.textContent=m;h.appendChild(e);requestAnimationFrame(()=>e.classList.add("show"));setTimeout(()=>{e.classList.remove("show");setTimeout(()=>e.remove(),220)},2400)}
+
+const tk=localStorage.getItem("property_owner_token");
+if(!tk){location.href="login.html"}
+
+async function req(path,method,body){
+  const p=new URLSearchParams();
+  if(body)Object.keys(body).forEach(k=>{const v=body[k];if(v!=null&&v!=="")p.append(k,v)});
+  const h={};const token=localStorage.getItem("property_owner_token");
+  if(token)h["X-Owner-Token"]=token;
+  if(token)h["Authorization"]="Bearer "+token;
+  const o={method:method||"GET",headers:h};
+  if(method==="POST"||method==="PUT"||method==="DELETE"){h["Content-Type"]="application/x-www-form-urlencoded";o.body=p.toString()}
+  try{
+    const r=await fetch(API+path,o).then(r=>r.json());
+    if(r.code===401){localStorage.removeItem("property_owner_token");toast("登录已过期，请重新登录","warning");setTimeout(()=>{location.href="login.html"},1500)}
+    return r;
+  }catch(e){return{code:-1,msg:e.message}}
+}
+const get=p=>req(p,"GET");
+const post=(p,b)=>req(p,"POST",b);
+const put=(p,b)=>req(p,"PUT",b);
+const del=p=>req(p,"DELETE");
+
+function emptyBox(emoji,text){return '<div class="empty"><span class="emoji">'+emoji+'</span>'+text+'</div>'}
+function fmtDate(s){return s?s.slice(0,10):""}
+function fmtTime(s){return s?s.replace("T"," ").slice(0,16):""}
+
+// Status badge
+function statusBadge(status){
+  const map={
+    "active":{cls:"active",text:"有效"},
+    "expired":{cls:"expired",text:"已过期"},
+    "pending":{cls:"pending",text:"待审核"},
+    "0":{cls:"active",text:"有效"},
+    "1":{cls:"expired",text:"已过期"},
+    "2":{cls:"pending",text:"待审核"}
+  };
+  const s=map[status]||map[String(status)]||{cls:"pending",text:String(status||"未知")};
+  return '<span class="v-badge '+s.cls+'">'+s.text+'</span>';
+}
+
+// Cache vehicle data for editing
+let _vehicles=[];
+
+// Load vehicles — GET /api/property/owner/vehicles
+async function loadVehicles(){
+  const r=await get("/vehicles");
+  if(r.code===0&&r.data&&r.data.length){
+    _vehicles=r.data;
+    $("vehicleCount").textContent="共 "+_vehicles.length+" 辆";
+    $("vehicleList").innerHTML=_vehicles.map(function(v){
+      return '<div class="vehicle-card">'
+        +'<div class="v-header">'
+        +'<div class="v-plate">'+(v.plateNumber||v.plateNo||v.plate||"--")+'</div>'
+        +statusBadge(v.status)
+        +'</div>'
+        +'<div class="v-info">'
+        +'<span>🎨 '+(v.color||"--")+'</span>'
+        +'<span>🚗 '+(v.type||v.vehicleType||"--")+'</span>'
+        +'<span>🏠 '+(v.roomId||v.room||"--")+'</span>'
+        +'<span>📅 '+fmtDate(v.validFrom||v.startDate)+' ~ '+fmtDate(v.validTo||v.endDate)+'</span>'
+        +'</div>'
+        +'<div class="v-actions">'
+        +'<button class="btn btn-xs btn-ghost" onclick="editVehicle('+v.id+')">编辑</button>'
+        +'<button class="btn btn-xs btn-danger" onclick="deleteVehicle('+v.id+',\''+(v.plateNumber||v.plateNo||v.plate||"").replace(/'/g,"\\'")+'\')">删除</button>'
+        +'</div>'
+        +'</div>';
+    }).join("");
+    // Populate room select from vehicle data
+    const rooms=[...new Set(_vehicles.map(v=>v.roomId||v.room).filter(Boolean))];
+    if(rooms.length){
+      const sel=$("vRoom");
+      // Keep first option
+      while(sel.options.length>1)sel.remove(1);
+      rooms.forEach(rm=>{
+        const opt=document.createElement("option");opt.value=rm;opt.textContent=rm;sel.appendChild(opt);
+      });
+    }
+  }else{
+    _vehicles=[];
+    $("vehicleCount").textContent="";
+    $("vehicleList").innerHTML=emptyBox("🚗","暂无绑定车辆，点击右下角 + 添加");
+  }
+}
+
+// Edit vehicle — populate form and open modal
+window.editVehicle=function(id){
+  const v=_vehicles.find(x=>x.id===id);
+  if(!v){toast("未找到车辆信息","warning");return}
+  $("editVehicleId").value=id;
+  $("sheetTitle").textContent="编辑车辆";
+  $("btnSaveVehicle").textContent="保存修改";
+  $("vPlate").value=v.plateNumber||v.plateNo||v.plate||"";
+  $("vColor").value=v.color||"";
+  $("vType").value=v.type||v.vehicleType||"";
+  $("vRoom").value=v.roomId||v.room||"";
+  $("vStart").value=fmtDate(v.validFrom||v.startDate)||"";
+  $("vEnd").value=fmtDate(v.validTo||v.endDate)||"";
+  $("addMask").classList.add("show");
+};
+
+// Delete vehicle — DELETE /api/property/owner/vehicles/{id}
+window.deleteVehicle=function(id,plate){
+  if(!confirm("确定要删除车辆「"+plate+"」吗？"))return;
+  del("/vehicles/"+id).then(r=>{
+    if(r.code===0){toast("删除成功","success");loadVehicles()}
+    else{toast(r.msg||"删除失败","danger")}
+  }).catch(e=>toast("网络异常","danger"));
+};
+
+// FAB & Modal
+$("fabAdd").addEventListener("click",()=>{
+  // Reset to add mode
+  $("editVehicleId").value="";
+  $("sheetTitle").textContent="添加车辆";
+  $("btnSaveVehicle").textContent="确认添加";
+  $("vPlate").value="";$("vColor").value="";$("vType").value="";$("vRoom").value="";$("vStart").value="";$("vEnd").value="";
+  $("addMask").classList.add("show");
+});
+$("btnCloseAdd").addEventListener("click",()=>{$("addMask").classList.remove("show")});
+$("addMask").addEventListener("click",function(e){if(e.target===$("addMask"))$("addMask").classList.remove("show")});
+
+// Save vehicle (add or edit)
+$("btnSaveVehicle").addEventListener("click",async function(){
+  const plate=($("vPlate").value||"").trim();
+  const color=$("vColor").value;
+  const type=$("vType").value;
+  const room=$("vRoom").value;
+  const start=$("vStart").value;
+  const end=$("vEnd").value;
+  const editId=$("editVehicleId").value;
+  if(!plate){toast("请输入车牌号","warning");$("vPlate").focus();return}
+  if(!type){toast("请选择车辆类型","warning");return}
+  $("btnSaveVehicle").disabled=true;$("btnSaveVehicle").textContent=editId?"保存中...":"添加中...";
+  try{
+    let r;
+    if(editId){
+      // PUT /api/property/owner/vehicles/{id}
+      r=await put("/vehicles/"+editId,{plateNumber:plate,plateNo:plate,color:color,type:type,vehicleType:type,roomId:room,validFrom:start,validTo:end});
+    }else{
+      // POST /api/property/owner/vehicles
+      r=await post("/vehicles",{plateNumber:plate,plateNo:plate,color:color,type:type,vehicleType:type,roomId:room,validFrom:start,validTo:end});
+    }
+    if(r.code===0){
+      toast(editId?"修改成功":"添加成功","success");
+      $("addMask").classList.remove("show");
+      loadVehicles();
+    }else{
+      toast(r.msg||(editId?"修改失败":"添加失败"),"danger");
+    }
+  }catch(e){
+    toast("网络异常："+(e.message||"请稍后再试"),"danger");
+  }
+  $("btnSaveVehicle").disabled=false;$("btnSaveVehicle").textContent=editId?"保存修改":"确认添加";
+});
+
+// Load parking fees — GET /api/property/owner/parking-fees
+async function loadParkingFees(){
+  const r=await get("/parking-fees");
+  if(r.code===0&&r.data&&r.data.length){
+    const list=r.data;
+    $("feeHint").textContent="共 "+list.length+" 条";
+    $("feeList").innerHTML=list.map(function(f){
+      return '<div class="fee-item">'
+        +'<div class="ic">¥</div>'
+        +'<div class="main"><div class="t">'+(f.plateNumber||f.plateNo||f.plate||"停车费")+'</div>'
+        +'<div class="s">'+(f.period||fmtTime(f.createTime))+'</div></div>'
+        +'<div class="amt">¥'+(Number(f.amount||0).toFixed(2))+'</div>'
+        +'</div>';
+    }).join("");
+  }else{
+    $("feeList").innerHTML=emptyBox("💰","暂无停车费账单");
+  }
+}
+
+// Nav
+document.querySelectorAll(".nav .tab").forEach(el=>el.addEventListener("click",()=>{
+  const h=el.dataset.go;if(h)location.href=h;
+}));
+
+loadVehicles();
+loadParkingFees();
+</script>
+</body>
+</html>

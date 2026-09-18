@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover">
+<meta name="theme-color" content="#4f46e5">
+<title>门禁 · 我的物业</title>
+<link rel="icon" href="data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='80' font-size='90'%3E🏠%3C/text%3E%3C/svg%3E">
+<style>
+:root {
+  --pri: #4f46e5; --pri-hover: #4338ca; --pri-light: #818cf8; --pri-bg: #eef2ff; --pri-grad: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+  --gold: #f59e0b; --gold-bg: #fffbeb;
+  --success: #10b981; --success-bg: #ecfdf5;
+  --danger: #ef4444; --danger-bg: #fef2f2;
+  --text: #1e293b; --text-2: #64748b; --text-3: #94a3b8;
+  --bg: #f8fafc; --surface: #ffffff; --border: #e2e8f0; --divider: #f1f5f9;
+  --shadow-card: 0 2px 12px rgba(0,0,0,.04);
+  --shadow-float: 0 8px 30px rgba(0,0,0,.08);
+  --r-md: 14px; --r-lg: 20px; --r-xl: 24px; --r-full: 999px;
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --ease: cubic-bezier(.4,0,.2,1);
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+html,body{font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","SF Pro Display","Helvetica Neue",sans-serif;color:var(--text);background:var(--bg);-webkit-font-smoothing:antialiased;font-size:15px;}
+body{min-height:100vh;}
+a{color:inherit;text-decoration:none;}
+button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit;}
+
+@keyframes fadeInUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+
+.app-shell{max-width:480px;margin:0 auto;min-height:100vh;background:var(--bg);position:relative;}
+
+.hero{background:var(--pri-grad);color:#fff;padding:48px 20px 28px;position:relative;overflow:hidden;}
+.hero::before{content:"";position:absolute;top:-60px;right:-40px;width:200px;height:200px;background:rgba(255,255,255,.08);border-radius:50%;}
+.hero::after{content:"";position:absolute;bottom:-30px;left:-20px;width:120px;height:120px;background:rgba(255,255,255,.06);border-radius:50%;}
+.hero h1{font-size:22px;font-weight:800;position:relative;z-index:1;letter-spacing:-.3px;}
+.hero .sub{font-size:13px;opacity:.85;margin-top:6px;position:relative;z-index:1;font-weight:500;}
+
+.content{padding:20px 20px calc(80px + var(--safe-bottom));}
+
+.input{width:100%;padding:14px 16px;border:none;border-radius:var(--r-md);background:var(--bg);font-size:15px;color:var(--text);transition:all .2s var(--ease);}
+.input:focus{outline:none;box-shadow:0 0 0 2px var(--pri);background:var(--surface);}
+.input::placeholder{color:var(--text-3);}
+
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:none;font-weight:600;cursor:pointer;transition:all .2s cubic-bezier(.4,0,.2,1);letter-spacing:.2px;white-space:nowrap;}
+.btn-xs{height:28px;padding:0 10px;font-size:12px;border-radius:6px;}
+.btn-sm{height:36px;padding:0 16px;font-size:13px;border-radius:8px;}
+.btn-md{height:44px;padding:0 24px;font-size:14px;border-radius:10px;}
+.btn-lg{height:52px;padding:0 32px;font-size:16px;border-radius:12px;}
+.btn-xl{height:60px;padding:0 40px;font-size:18px;border-radius:14px;}
+.btn-block{width:100%;}
+.btn-icon{width:44px;height:44px;padding:0;border-radius:12px;}
+.btn-primary{background:linear-gradient(135deg,#4f46e5 0%,#7c3aed 100%);color:#fff;box-shadow:0 4px 14px rgba(79,70,229,.3);}
+.btn-secondary{background:var(--surface);color:var(--text);border:1.5px solid var(--border);}
+.btn-soft{background:var(--pri-bg);color:var(--pri);}
+.btn-ghost{background:transparent;color:var(--pri);}
+.btn-success{background:linear-gradient(135deg,#10b981,#059669);color:#fff;box-shadow:0 4px 14px rgba(16,185,129,.3);}
+.btn-danger{background:linear-gradient(135deg,#ef4444,#dc2626);color:#fff;box-shadow:0 4px 14px rgba(239,68,68,.3);}
+.btn-warning{background:linear-gradient(135deg,#f59e0b,#d97706);color:#fff;box-shadow:0 4px 14px rgba(245,158,11,.3);}
+.btn:hover{transform:translateY(-1px);filter:brightness(1.05);}
+.btn:active{transform:scale(.97);filter:brightness(.95);}
+.btn:focus-visible{outline:2px solid var(--pri);outline-offset:2px;}
+.btn[disabled]{opacity:.45;cursor:not-allowed;transform:none!important;filter:none!important;}
+.btn.loading{pointer-events:none;position:relative;color:transparent!important;}
+.btn.loading::after{content:"";position:absolute;width:18px;height:18px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:btn-spin .6s linear infinite;}
+@keyframes btn-spin{to{transform:rotate(360deg);}}
+/* FAB */
+.fab{position:fixed;bottom:calc(88px + var(--safe-bottom));right:20px;width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,#4f46e5,#7c3aed);color:#fff;display:flex;align-items:center;justify-content:center;font-size:24px;box-shadow:0 6px 20px rgba(79,70,229,.4);z-index:40;border:none;cursor:pointer;transition:transform .15s;}
+.fab:active{transform:scale(.9);}
+/* CTA full-width */
+.btn-cta{width:100%;height:56px;font-size:17px;font-weight:700;border-radius:16px;letter-spacing:.3px;}
+
+/* QR Code Area */
+.qr-section{background:var(--surface);border-radius:var(--r-lg);padding:24px 20px;margin-bottom:16px;box-shadow:var(--shadow-card);animation:fadeInUp .4s var(--ease) both;}
+.qr-section .sec-label{font-size:16px;font-weight:700;margin-bottom:4px;}
+.qr-section .sec-desc{font-size:12px;color:var(--text-3);margin-bottom:14px;}
+.qr-box{width:220px;height:220px;margin:0 auto 14px;border:2px dashed var(--border);border-radius:var(--r-lg);display:flex;flex-direction:column;align-items:center;justify-content:center;color:var(--text-3);font-size:13px;gap:8px;background:var(--bg);overflow:hidden;position:relative;transition:all .3s var(--ease);}
+.qr-box.has-qr{border:2px solid var(--pri);background:#fff;box-shadow:0 4px 20px rgba(79,70,229,.12);}
+.qr-box img,.qr-box canvas{width:100%;height:100%;object-fit:contain;}
+.qr-box .placeholder-emoji{font-size:48px;}
+.countdown{display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:14px;font-size:13px;color:var(--text-2);}
+.countdown .ring{width:120px;height:4px;background:var(--divider);border-radius:var(--r-full);overflow:hidden;}
+.countdown .ring i{display:block;height:100%;background:var(--pri-grad);width:100%;transform-origin:left;border-radius:var(--r-full);}
+.countdown .timer{font-weight:800;color:var(--pri);min-width:32px;font-size:14px;}
+
+/* Visitor Invite */
+.visitor-section{background:var(--surface);border-radius:var(--r-lg);padding:24px 20px;margin-bottom:16px;box-shadow:var(--shadow-card);animation:fadeInUp .4s var(--ease) .08s both;}
+.visitor-section .sec-title{font-size:16px;font-weight:700;margin-bottom:16px;display:flex;align-items:center;gap:8px;}
+.form-group{margin-bottom:14px;}
+.form-group label{display:block;font-size:13px;color:var(--text-2);margin-bottom:6px;font-weight:600;}
+.form-row{display:flex;gap:10px;}
+.form-row .form-group{flex:1;}
+
+.sec-title{font-size:18px;font-weight:700;margin:24px 0 14px;display:flex;align-items:center;gap:8px;animation:fadeInUp .4s var(--ease) .16s both;}
+.sec-title .count{font-size:12px;color:var(--text-3);font-weight:500;background:var(--bg);padding:2px 10px;border-radius:var(--r-full);}
+
+.card{background:var(--surface);border-radius:var(--r-lg);padding:8px 16px;box-shadow:var(--shadow-card);animation:fadeInUp .4s var(--ease) .2s both;}
+.flow-item{display:flex;align-items:center;gap:12px;padding:14px 0;border-bottom:1px solid var(--divider);}
+.flow-item:last-child{border-bottom:none;}
+.flow-item .ic{width:36px;height:36px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:14px;flex:0 0 36px;background:var(--success-bg);color:var(--success);font-weight:700;}
+.flow-item .main{flex:1;min-width:0;}
+.flow-item .t{font-size:14px;font-weight:600;color:var(--text);}
+.flow-item .s{font-size:12px;color:var(--text-3);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.empty{text-align:center;padding:40px 16px;color:var(--text-3);font-size:13px;}
+.empty .emoji{font-size:40px;display:block;margin-bottom:10px;}
+
+.nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:480px;z-index:100;background:rgba(255,255,255,.85);backdrop-filter:blur(20px) saturate(180%);-webkit-backdrop-filter:blur(20px) saturate(180%);border-top:.5px solid rgba(0,0,0,.06);display:flex;padding-bottom:var(--safe-bottom);}
+.nav .tab{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;color:var(--text-3);font-size:10px;padding:8px 0;font-weight:500;transition:color .2s;}
+.nav .tab .ic{font-size:22px;line-height:1;}
+.nav .tab.active{color:var(--pri);font-weight:700;}
+.nav .tab.active::after{content:"";width:4px;height:4px;border-radius:50%;background:var(--pri);margin-top:2px;}
+.nav .tab.active .ic{transform:translateY(-2px);}
+
+.toast-host{position:fixed;top:16px;left:50%;transform:translateX(-50%);z-index:200;display:flex;flex-direction:column;align-items:center;gap:8px;pointer-events:none;width:100%;max-width:480px;padding:0 16px;}
+.toast{background:rgba(30,41,59,.92);backdrop-filter:blur(10px);color:#fff;padding:10px 20px;border-radius:var(--r-full);font-size:13px;font-weight:600;max-width:90%;text-align:center;opacity:0;transform:translateY(-12px);transition:all .3s var(--ease);box-shadow:var(--shadow-float);}
+.toast.show{opacity:1;transform:translateY(0);}
+.toast.success{background:rgba(16,185,129,.92);}
+.toast.warning{background:rgba(245,158,11,.92);}
+.toast.danger{background:rgba(239,68,68,.92);}
+</style>
+</head>
+<body>
+<div class="app-shell">
+<div class="hero">
+  <h1>🚪 门禁服务</h1>
+  <div class="sub">生成动态开门码，邀请访客通行</div>
+</div>
+
+<div class="content">
+  <!-- QR Code Section -->
+  <div class="qr-section">
+    <div class="sec-label">动态开门码</div>
+    <div class="sec-desc">点击下方按钮生成二维码（60秒有效）</div>
+    <div class="qr-box" id="qrBox">
+      <span class="placeholder-emoji">🔐</span>
+      <span>点击下方按钮生成</span>
+    </div>
+    <div class="countdown" id="countdownArea" style="display:none;">
+      <span class="ring"><i id="qrRing"></i></span>
+      <span class="timer" id="timerText">60s</span>
+    </div>
+    <button id="btnGenQR" class="btn btn-md btn-primary btn-block">生成开门码</button>
+  </div>
+
+  <!-- Visitor Invite -->
+  <div class="visitor-section">
+    <div class="sec-title">👥 邀请访客</div>
+    <div class="form-group">
+      <label>访客姓名</label>
+      <input id="visitorName" class="input" type="text" placeholder="请输入访客姓名">
+    </div>
+    <div class="form-group">
+      <label>访客手机号</label>
+      <input id="visitorPhone" class="input" type="tel" placeholder="请输入访客手机号" maxlength="11">
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>到访日期</label>
+        <input id="visitDate" class="input" type="date">
+      </div>
+      <div class="form-group">
+        <label>有效时长（小时）</label>
+        <input id="visitorHours" class="input" type="number" min="1" max="72" value="4" placeholder="小时数">
+      </div>
+    </div>
+    <button id="btnInvite" class="btn btn-md btn-primary btn-block">发送访客邀请</button>
+  </div>
+
+  <!-- Access Logs -->
+  <div class="sec-title">📋 我的通行记录 <span class="count" id="logHint"></span></div>
+  <div class="card"><div id="accessLogList"></div></div>
+</div>
+
+<div class="toast-host" id="toastHost"></div>
+
+<nav class="nav">
+  <div class="tab" data-go="index.html"><span class="ic">🏠</span><span>首页</span></div>
+  <div class="tab active" data-go="access.html"><span class="ic">🚪</span><span>门禁</span></div>
+  <div class="tab" data-go="bills.html"><span class="ic">📋</span><span>账单</span></div>
+  <div class="tab" data-go="bind.html"><span class="ic">👤</span><span>我的</span></div>
+</nav>
+</div>
+
+<script>
+const $=id=>document.getElementById(id);
+const API="/api/property/owner";
+function toast(m,t){const h=$("toastHost");if(!h)return;const e=document.createElement("div");e.className="toast "+(t||"");e.textContent=m;h.appendChild(e);requestAnimationFrame(()=>e.classList.add("show"));setTimeout(()=>{e.classList.remove("show");setTimeout(()=>e.remove(),220)},2400)}
+
+const tk=localStorage.getItem("property_owner_token");
+if(!tk){location.href="login.html"}
+
+async function req(path,method,body){
+  const p=new URLSearchParams();
+  if(body)Object.keys(body).forEach(k=>{const v=body[k];if(v!=null&&v!=="")p.append(k,v)});
+  const h={};const token=localStorage.getItem("property_owner_token");
+  if(token)h["X-Owner-Token"]=token;
+  if(token)h["Authorization"]="Bearer "+token;
+  const o={method:method||"GET",headers:h};
+  if(method==="POST"||method==="PUT"||method==="DELETE"){h["Content-Type"]="application/x-www-form-urlencoded";o.body=p.toString()}
+  try{
+    const r=await fetch(API+path,o).then(r=>r.json());
+    if(r.code===401){localStorage.removeItem("property_owner_token");toast("登录已过期，请重新登录","warning");setTimeout(()=>{location.href="login.html"},1500)}
+    return r;
+  }catch(e){return{code:-1,msg:e.message}}
+}
+const get=p=>req(p,"GET");
+const post=(p,b)=>req(p,"POST",b);
+
+function emptyBox(emoji,text){return '<div class="empty"><span class="emoji">'+emoji+'</span>'+text+'</div>'}
+function fmtTime(s){return s?s.replace("T"," ").slice(0,16):""}
+
+let _qrTimer=null;
+let _qrSeconds=60;
+
+// Generate QR Code — GET /api/property/owner/access/qrcode
+$("btnGenQR").addEventListener("click",async function(){
+  $("btnGenQR").disabled=true;$("btnGenQR").textContent="生成中...";
+  try{
+    const r=await get("/access/qrcode");
+    if(r.code===0&&r.data){
+      const qrData=r.data.qrCode||r.data.url||r.data.image||r.data;
+      const box=$("qrBox");
+      box.classList.add("has-qr");
+      if(typeof qrData==="string"&&(qrData.startsWith("http")||qrData.startsWith("data:"))){
+        box.innerHTML='<img src="'+qrData+'" alt="开门二维码">';
+      }else{
+        // Show as visual placeholder with data hint
+        box.innerHTML='<div style="font-size:64px;">🔐</div><div style="font-size:12px;color:var(--text-2);margin-top:8px;word-break:break-all;padding:0 10px;">'+String(qrData).substring(0,60)+'</div>';
+      }
+      // Use server-provided expiry if available
+      const expiry=r.data.expireSeconds||r.data.ttl||60;
+      startCountdown(expiry);
+      toast("开门码已生成","success");
+    }else{
+      toast(r.msg||"生成失败","danger");
+    }
+  }catch(e){
+    toast("网络异常："+(e.message||"请稍后再试"),"danger");
+  }
+  $("btnGenQR").disabled=false;$("btnGenQR").textContent="生成开门码";
+});
+
+function startCountdown(seconds){
+  if(_qrTimer)clearInterval(_qrTimer);
+  _qrSeconds=seconds||60;
+  const total=_qrSeconds;
+  $("countdownArea").style.display="flex";
+  $("timerText").textContent=_qrSeconds+"s";
+  $("qrRing").style.transition="none";
+  $("qrRing").style.width="100%";
+  requestAnimationFrame(()=>{
+    $("qrRing").style.transition="width "+total+"s linear";
+    $("qrRing").style.width="0%";
+  });
+  _qrTimer=setInterval(()=>{
+    _qrSeconds--;
+    $("timerText").textContent=_qrSeconds+"s";
+    if(_qrSeconds<=0){
+      clearInterval(_qrTimer);_qrTimer=null;
+      $("qrBox").classList.remove("has-qr");
+      $("qrBox").innerHTML='<span class="placeholder-emoji">⏰</span><span>二维码已过期，请重新生成</span>';
+      toast("开门码已过期","warning");
+    }
+  },1000);
+}
+
+// Visitor Invite — POST /api/property/owner/access/visitor-invite
+$("btnInvite").addEventListener("click",async function(){
+  const name=($("visitorName").value||"").trim();
+  const phone=($("visitorPhone").value||"").trim();
+  const date=($("visitDate").value||"").trim();
+  const hours=($("visitorHours").value||"").trim();
+  if(!name){toast("请输入访客姓名","warning");$("visitorName").focus();return}
+  if(!phone){toast("请输入访客手机号","warning");$("visitorPhone").focus();return}
+  if(!date){toast("请选择到访日期","warning");return}
+  if(!hours||hours<1){toast("请输入有效时长","warning");return}
+  $("btnInvite").disabled=true;$("btnInvite").textContent="发送中...";
+  try{
+    const r=await post("/access/visitor-invite",{visitorName:name,visitorPhone:phone,visitDate:date,hours:hours});
+    if(r.code===0){
+      toast("访客邀请已发送","success");
+      // Show invite code if returned
+      if(r.data&&r.data.inviteCode){
+        toast("邀请码："+r.data.inviteCode,"success");
+      }
+      // Reset form
+      $("visitorName").value="";
+      $("visitorPhone").value="";
+    }else{
+      toast(r.msg||"发送失败","danger");
+    }
+  }catch(e){
+    toast("网络异常："+(e.message||"请稍后再试"),"danger");
+  }
+  $("btnInvite").disabled=false;$("btnInvite").textContent="发送访客邀请";
+});
+
+// Set default visit date to today
+(function(){
+  const today=new Date().toISOString().slice(0,10);
+  $("visitDate").value=today;
+})();
+
+// Load access logs — GET /api/property/owner/access/my-logs
+async function loadAccessLogs(){
+  const r=await get("/access/my-logs");
+  if(r.code===0&&r.data&&r.data.length){
+    const list=r.data;
+    $("logHint").textContent="近 "+list.length+" 条";
+    $("accessLogList").innerHTML=list.map(function(c){
+      const t=fmtTime(c.accessTime||c.createTime);
+      return '<div class="flow-item">'
+        +'<div class="ic">✓</div>'
+        +'<div class="main"><div class="t">'+(c.remark||c.type||"开门通行")+'</div>'
+        +'<div class="s">'+t+(c.roomId?" · "+c.roomId:"")+(c.visitorName?" · 访客："+c.visitorName:"")+'</div></div>'
+        +'</div>';
+    }).join("");
+  }else{
+    $("accessLogList").innerHTML=emptyBox("📋","暂无通行记录");
+  }
+}
+
+// Nav
+document.querySelectorAll(".nav .tab").forEach(el=>el.addEventListener("click",()=>{
+  const h=el.dataset.go;if(h)location.href=h;
+}));
+
+loadAccessLogs();
+</script>
+</body>
+</html>

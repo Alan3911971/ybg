@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover">
+<meta name="theme-color" content="#4f46e5">
+<title>自动扣款 · 我的物业</title>
+<link rel="icon" href="data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='80' font-size='90'%3E🏠%3C/text%3E%3C/svg%3E">
+<style>
+:root{--pri:#4f46e5;--pri-grad:linear-gradient(135deg,#4f46e5,#7c3aed);--pri-bg:#eef2ff;--text:#1e293b;--text-2:#64748b;--text-3:#94a3b8;--bg:#f8fafc;--surface:#fff;--border:#e2e8f0;--shadow-card:0 2px 12px rgba(0,0,0,.04);--r-md:14px;--r-lg:20px;--r-full:999px;--safe-bottom:env(safe-area-inset-bottom,0px);}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+html,body{font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif;color:var(--text);background:var(--bg);-webkit-font-smoothing:antialiased;font-size:15px;}
+body{min-height:100vh;padding-bottom:calc(72px + var(--safe-bottom));}
+a{color:inherit;text-decoration:none;}
+button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit;}
+
+@keyframes fadeInUp{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:translateY(0)}}
+.anim-up{animation:fadeInUp .45s cubic-bezier(.23,1,.32,1) both;}
+.d1{animation-delay:.05s}.d2{animation-delay:.1s}.d3{animation-delay:.15s}.d4{animation-delay:.2s}.d5{animation-delay:.25s}
+
+.hero{background:var(--pri-grad);color:#fff;padding:44px 24px 34px;position:relative;overflow:hidden;border-radius:0 0 var(--r-lg) var(--r-lg);}
+.hero::before{content:"";position:absolute;top:-60px;right:-40px;width:180px;height:180px;background:rgba(255,255,255,.08);border-radius:50%;}
+.hero::after{content:"";position:absolute;bottom:-30px;left:-20px;width:120px;height:120px;background:rgba(255,255,255,.06);border-radius:50%;}
+.hero h1{font-size:22px;font-weight:800;position:relative;z-index:1;letter-spacing:-.3px;}
+.hero .sub{font-size:13px;opacity:.85;margin-top:6px;position:relative;z-index:1;font-weight:500;}
+
+.wrap{max-width:480px;margin:0 auto;padding:0 16px;}
+
+.explain-card{background:var(--surface);border-radius:var(--r-md);padding:20px;margin-top:20px;box-shadow:var(--shadow-card);display:flex;align-items:flex-start;gap:14px;}
+.explain-card .ic{width:44px;height:44px;border-radius:var(--r-md);background:var(--pri-bg);display:flex;align-items:center;justify-content:center;font-size:22px;flex:0 0 44px;}
+.explain-card .txt{flex:1;}
+.explain-card .t{font-size:14px;font-weight:700;margin-bottom:4px;color:var(--text);}
+.explain-card .s{font-size:12px;color:var(--text-2);line-height:1.6;}
+
+.sec-title{font-size:15px;font-weight:700;margin:24px 0 12px;display:flex;align-items:center;gap:6px;color:var(--text);}
+.sec-title .count{font-size:12px;color:var(--text-3);font-weight:400;background:var(--pri-bg);padding:2px 10px;border-radius:var(--r-full);}
+
+.bind-item{display:flex;align-items:center;gap:12px;background:var(--surface);border:none;border-radius:var(--r-md);padding:16px;margin-bottom:16px;box-shadow:var(--shadow-card);}
+.bind-item .ic{width:40px;height:40px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:20px;flex:0 0 40px;}
+.bind-item .ic.company{background:var(--pri-bg);color:var(--pri);}
+.bind-item .main{flex:1;min-width:0;}
+.bind-item .t{font-size:14px;font-weight:700;letter-spacing:.3px;display:flex;align-items:center;gap:6px;}
+.bind-item .s{font-size:11px;color:var(--text-3);margin-top:3px;}
+.bind-item .status-dot{display:inline-block;width:8px;height:8px;border-radius:50%;}
+.bind-item .status-dot.on{background:#22c55e;box-shadow:0 0 6px rgba(34,197,94,.4);}
+.bind-item .status-dot.off{background:var(--text-3);}
+
+
+.add-btn{display:flex;align-items:center;justify-content:center;gap:6px;width:100%;height:50px;border-radius:var(--r-md);border:2px dashed var(--border);background:transparent;color:var(--text-2);font-size:14px;font-weight:600;cursor:pointer;transition:all .2s;margin-bottom:10px;}
+.add-btn:active{border-color:var(--pri);color:var(--pri);background:var(--pri-bg);}
+
+.empty{text-align:center;padding:40px 16px;color:var(--text-3);font-size:13px;}
+.empty .emoji{font-size:40px;display:block;margin-bottom:10px;}
+
+.mask{position:fixed;inset:0;z-index:150;background:rgba(0,0,0,.4);backdrop-filter:blur(4px);display:none;align-items:flex-end;justify-content:center;}
+.mask.show{display:flex;}
+.sheet{background:var(--surface);border-radius:var(--r-lg) var(--r-lg) 0 0;width:100%;max-width:480px;max-height:85vh;overflow-y:auto;padding:28px 24px calc(28px + var(--safe-bottom));animation:slideUp .3s cubic-bezier(.23,1,.32,1);}
+@keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+.sheet .sheet-title{font-size:18px;font-weight:800;margin-bottom:20px;display:flex;align-items:center;justify-content:space-between;color:var(--text);}
+.sheet .sheet-close{font-size:22px;color:var(--text-3);padding:4px;width:32px;height:32px;display:flex;align-items:center;justify-content:center;border-radius:50%;background:var(--bg);transition:background .15s;}
+.sheet .sheet-close:active{background:var(--border);}
+.form-group{margin-bottom:16px;}
+.form-group label{display:block;font-size:13px;font-weight:600;color:var(--text-2);margin-bottom:8px;}
+.input{width:100%;height:50px;padding:0 16px;border:none;border-radius:var(--r-md);background:var(--bg);font-size:15px;color:var(--text);transition:all .2s;outline:none;}
+.input:focus{background:#fff;box-shadow:0 0 0 2px var(--pri),0 0 0 4px rgba(79,70,229,.15);}
+.input::placeholder{color:var(--text-3);}
+.radio-group{display:flex;gap:10px;}
+.radio-item{flex:1;display:flex;align-items:center;justify-content:center;gap:6px;height:50px;border:1px solid var(--border);border-radius:var(--r-md);font-size:14px;font-weight:500;cursor:pointer;transition:all .2s;}
+.radio-item.selected{border-color:var(--pri);background:var(--pri-bg);color:var(--pri);font-weight:600;}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:none;font-weight:600;cursor:pointer;transition:all .2s cubic-bezier(.4,0,.2,1);letter-spacing:.2px;white-space:nowrap;}
+.btn-xs{height:28px;padding:0 10px;font-size:12px;border-radius:6px;}
+.btn-sm{height:36px;padding:0 16px;font-size:13px;border-radius:8px;}
+.btn-md{height:44px;padding:0 24px;font-size:14px;border-radius:10px;}
+.btn-lg{height:52px;padding:0 32px;font-size:16px;border-radius:12px;}
+.btn-xl{height:60px;padding:0 40px;font-size:18px;border-radius:14px;}
+.btn-block{width:100%;}
+.btn-icon{width:44px;height:44px;padding:0;border-radius:12px;}
+.btn-primary{background:linear-gradient(135deg,#4f46e5 0%,#7c3aed 100%);color:#fff;box-shadow:0 4px 14px rgba(79,70,229,.3);}
+.btn-secondary{background:var(--surface);color:var(--text);border:1.5px solid var(--border);}
+.btn-soft{background:var(--pri-bg);color:var(--pri);}
+.btn-ghost{background:transparent;color:var(--pri);}
+.btn-success{background:linear-gradient(135deg,#10b981,#059669);color:#fff;box-shadow:0 4px 14px rgba(16,185,129,.3);}
+.btn-danger{background:linear-gradient(135deg,#ef4444,#dc2626);color:#fff;box-shadow:0 4px 14px rgba(239,68,68,.3);}
+.btn-warning{background:linear-gradient(135deg,#f59e0b,#d97706);color:#fff;box-shadow:0 4px 14px rgba(245,158,11,.3);}
+.btn:hover{transform:translateY(-1px);filter:brightness(1.05);}
+.btn:active{transform:scale(.97);filter:brightness(.95);}
+.btn:focus-visible{outline:2px solid var(--pri);outline-offset:2px;}
+.btn[disabled]{opacity:.45;cursor:not-allowed;transform:none!important;filter:none!important;}
+.btn.loading{pointer-events:none;position:relative;color:transparent!important;}
+.btn.loading::after{content:"";position:absolute;width:18px;height:18px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:btn-spin .6s linear infinite;}
+@keyframes btn-spin{to{transform:rotate(360deg);}}
+/* FAB */
+.fab{position:fixed;bottom:calc(88px + var(--safe-bottom));right:20px;width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,#4f46e5,#7c3aed);color:#fff;display:flex;align-items:center;justify-content:center;font-size:24px;box-shadow:0 6px 20px rgba(79,70,229,.4);z-index:40;border:none;cursor:pointer;transition:transform .15s;}
+.fab:active{transform:scale(.9);}
+/* CTA full-width */
+.btn-cta{width:100%;height:56px;font-size:17px;font-weight:700;border-radius:16px;letter-spacing:.3px;}
+
+.dialog-mask{position:fixed;inset:0;z-index:160;background:rgba(0,0,0,.4);backdrop-filter:blur(4px);display:none;align-items:center;justify-content:center;padding:24px;}
+.dialog-mask.show{display:flex;}
+.dialog{background:var(--surface);border-radius:var(--r-lg);width:100%;max-width:320px;padding:28px 24px;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.15);}
+.dialog .d-title{font-size:17px;font-weight:800;margin-bottom:8px;color:var(--text);}
+.dialog .d-msg{font-size:13px;color:var(--text-2);margin-bottom:22px;line-height:1.6;}
+.dialog .d-btns{display:flex;gap:10px;}
+.dialog .d-btns button{flex:1;height:44px;border-radius:var(--r-md);font-size:14px;font-weight:700;transition:all .15s;}
+.dialog .d-cancel{background:var(--bg);color:var(--text-2);}
+.dialog .d-cancel:active{background:var(--border);}
+.dialog .d-confirm{background:#dc2626;color:#fff;box-shadow:0 4px 12px rgba(220,38,38,.25);}
+.dialog .d-confirm:active{background:#b91c1c;}
+
+.nav{position:fixed;bottom:0;left:0;right:0;z-index:100;height:calc(60px + var(--safe-bottom));background:rgba(255,255,255,.85);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);display:flex;border-top:1px solid rgba(226,232,240,.6);padding-bottom:var(--safe-bottom);}
+.nav .tab{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;color:var(--text-3);font-size:10px;font-weight:500;transition:color .2s;}
+.nav .tab .ic{font-size:22px;transition:transform .2s;}
+.nav .tab.active{color:var(--pri);font-weight:700;}
+.nav .tab.active::after{content:"";width:4px;height:4px;border-radius:50%;background:var(--pri);margin-top:2px;}
+.nav .tab.active .ic{transform:translateY(-2px);}
+
+.toast-host{position:fixed;top:16px;left:0;right:0;z-index:200;display:flex;flex-direction:column;align-items:center;gap:8px;pointer-events:none;}
+.toast{background:rgba(30,41,59,.92);backdrop-filter:blur(10px);color:#fff;padding:10px 20px;border-radius:var(--r-full);font-size:13px;font-weight:500;max-width:90%;text-align:center;opacity:0;transform:translateY(-10px);transition:all .25s cubic-bezier(.23,1,.32,1);}
+.toast.show{opacity:1;transform:translateY(0);}
+.toast.success{background:rgba(34,197,94,.92);}
+.toast.warning{background:rgba(245,158,11,.92);}
+.toast.danger{background:rgba(220,38,38,.92);}
+</style>
+</head>
+<body>
+<div class="hero anim-up">
+  <h1>💳 自动扣款</h1>
+  <div class="sub">绑定物业公司，账单到期自动扣款缴费</div>
+</div>
+
+<div class="wrap">
+  <div class="explain-card anim-up d1">
+    <div class="ic">⚡</div>
+    <div class="txt">
+      <div class="t">什么是自动扣款？</div>
+      <div class="s">开启后，物业费、停车费等账单到期时自动从余额扣款，无需手动操作，避免逾期。</div>
+    </div>
+  </div>
+
+  <div class="sec-title anim-up d2">🔗 已绑定公司 <span class="count" id="bindHint"></span></div>
+  <div id="bindingList" class="anim-up d3"></div>
+
+  <div class="add-btn anim-up d4" id="btnAddBind">+ 开启自动扣款</div>
+</div>
+
+<div class="mask" id="addMask">
+  <div class="sheet">
+    <div class="sheet-title">开启自动扣款 <span class="sheet-close" id="addClose">✕</span></div>
+    <div class="form-group">
+      <label>物业公司ID</label>
+      <input id="fCompanyId" class="input" type="text" placeholder="请输入物业公司ID">
+    </div>
+    <div style="margin-bottom:18px;font-size:12px;color:var(--text-3);line-height:1.6;padding:12px 14px;background:var(--pri-bg);border-radius:var(--r-md);">
+      💡 开启后，该物业公司下的所有账单将在到期日自动从您的账户余额中扣款。
+    </div>
+    <button id="btnBind" class="btn btn-md btn-primary btn-block">确认开启</button>
+  </div>
+</div>
+
+<div class="dialog-mask" id="unbindMask">
+  <div class="dialog">
+    <div class="d-title">确认关闭</div>
+    <div class="d-msg" id="unbindMsg">确定要关闭该公司的自动扣款吗？</div>
+    <div class="d-btns">
+      <button class="d-cancel" id="btnCancelUnbind">取消</button>
+      <button class="d-confirm" id="btnConfirmUnbind">确认关闭</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast-host" id="toastHost"></div>
+
+<nav class="nav">
+  <div class="tab" data-go="/index.html"><span class="ic">🏠</span><span>首页</span></div>
+  <div class="tab" data-go="/access.html"><span class="ic">🚪</span><span>门禁</span></div>
+  <div class="tab" data-go="/bills.html"><span class="ic">📋</span><span>账单</span></div>
+  <div class="tab active" data-go="/bind.html"><span class="ic">👤</span><span>我的</span></div>
+</nav>
+
+<script>
+const $=id=>document.getElementById(id);
+const API="/api/property/owner";
+function toast(m,t){const h=$("toastHost");if(!h)return;const e=document.createElement("div");e.className="toast "+(t||"");e.textContent=m;h.appendChild(e);requestAnimationFrame(()=>e.classList.add("show"));setTimeout(()=>{e.classList.remove("show");setTimeout(()=>e.remove(),220)},2400)}
+
+const tk=localStorage.getItem("property_owner_token");
+if(!tk){location.href="login.html"}
+
+async function req(path,method,body){
+  const h={};const token=localStorage.getItem("property_owner_token");
+  if(token)h["X-Owner-Token"]=token;
+  const o={method:method||"GET",headers:h};
+  if(body&&method!=="GET"){
+    h["Content-Type"]="application/json";
+    o.body=JSON.stringify(body);
+  }
+  try{
+    const r=await fetch(API+path,o).then(r=>r.json());
+    if(r.code===401){localStorage.removeItem("property_owner_token");toast("登录已过期，请重新登录","warning");setTimeout(()=>{location.href="login.html"},1500)}
+    return r;
+  }catch(e){return{code:-1,msg:e.message}}
+}
+const get=p=>req(p,"GET");
+const post=(p,b)=>req(p,"POST",b);
+
+function emptyBox(emoji,text){return '<div class="empty"><span class="emoji">'+emoji+'</span>'+text+'</div>'}
+function fmtTime(s){return s?s.replace("T"," ").slice(0,16):""}
+
+// Render bindings
+function renderBindings(list){
+  if(!list||!list.length){
+    $("bindHint").textContent="";
+    $("bindingList").innerHTML=emptyBox("💳","暂无自动扣款绑定");
+    return;
+  }
+  $("bindHint").textContent="共 "+list.length+" 个";
+  $("bindingList").innerHTML=list.map(function(b){
+    const companyId=b.companyId||b.company_id||"--";
+    const companyName=b.companyName||b.company_name||("公司 #"+companyId);
+    const isActive=b.status==="active"||b.enabled!==false;
+    const statusDot='<span class="status-dot '+(isActive?'on':'off')+'"></span>';
+    return '<div class="bind-item">'
+      +'<div class="ic company">🏢</div>'
+      +'<div class="main"><div class="t">'+statusDot+companyName+'</div>'
+      +'<div class="s">公司ID：'+companyId+' · 绑定时间：'+fmtTime(b.createTime||b.created_at||b.signTime)+'</div></div>'
+      +'<button class="btn btn-xs btn-danger" onclick="confirmUnbind(\''+companyId+'\')">关闭</button>'
+      +'</div>';
+  }).join("");
+}
+
+// Load bindings
+async function loadBindings(){
+  $("bindingList").innerHTML='<div style="text-align:center;padding:20px;color:var(--text-3);font-size:13px;">加载中...</div>';
+  const r=await get("/p1/auto-pay/bindings");
+  if(r.code===0&&r.data){
+    renderBindings(Array.isArray(r.data)?r.data:(r.data.list||[]));
+  }else{
+    renderBindings([]);
+  }
+}
+
+// Add binding sheet
+$("btnAddBind").addEventListener("click",()=>{
+  $("fCompanyId").value="";
+  $("addMask").classList.add("show");
+});
+$("addClose").addEventListener("click",()=>{$("addMask").classList.remove("show")});
+$("addMask").addEventListener("click",function(e){if(e.target===$("addMask"))$("addMask").classList.remove("show")});
+
+$("btnBind").addEventListener("click",async function(){
+  const companyId=($("fCompanyId").value||"").trim();
+  if(!companyId){toast("请输入物业公司ID","warning");$("fCompanyId").focus();return}
+  $("btnBind").disabled=true;$("btnBind").textContent="开启中...";
+  try{
+    const r=await post("/p1/auto-pay/bind",{companyId:companyId});
+    if(r.code===0){
+      toast("自动扣款已开启","success");
+      $("addMask").classList.remove("show");
+      loadBindings();
+    }else{
+      toast(r.msg||"开启失败","danger");
+    }
+  }catch(e){
+    toast("网络异常："+(e.message||"请稍后再试"),"danger");
+  }
+  $("btnBind").disabled=false;$("btnBind").textContent="确认开启";
+});
+
+// Unbind confirm
+let _unbindCompanyId=null;
+window.confirmUnbind=function(companyId){
+  _unbindCompanyId=companyId;
+  $("unbindMsg").textContent="确定要关闭公司「"+companyId+"」的自动扣款吗？关闭后账单需手动缴费。";
+  $("unbindMask").classList.add("show");
+};
+$("btnCancelUnbind").addEventListener("click",()=>{
+  $("unbindMask").classList.remove("show");_unbindCompanyId=null;
+});
+$("btnConfirmUnbind").addEventListener("click",async()=>{
+  if(!_unbindCompanyId)return;
+  $("btnConfirmUnbind").disabled=true;$("btnConfirmUnbind").textContent="关闭中...";
+  try{
+    const r=await post("/p1/auto-pay/unbind",{companyId:_unbindCompanyId});
+    if(r.code===0){
+      toast("已关闭自动扣款","success");
+      loadBindings();
+    }else{
+      toast(r.msg||"关闭失败","danger");
+    }
+  }catch(e){
+    toast("网络异常："+(e.message||"请稍后再试"),"danger");
+  }
+  $("unbindMask").classList.remove("show");_unbindCompanyId=null;
+  $("btnConfirmUnbind").disabled=false;$("btnConfirmUnbind").textContent="确认关闭";
+});
+
+// Nav
+document.querySelectorAll(".nav .tab").forEach(el=>el.addEventListener("click",()=>{
+  const h=el.dataset.go;if(h)location.href=h;
+}));
+
+loadBindings();
+</script>
+</body>
+</html>

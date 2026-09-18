@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#4f46e5">
+<title>物业后台登录 · 宜必购</title>
+<link rel="icon" href="data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='80' font-size='90'%3E%F0%9F%8F%A2%3C/text%3E%3C/svg%3E">
+<style>
+:root {
+  --pri: #4f46e5; --pri-hover: #4338ca; --pri-light: #818cf8; --pri-bg: #eef2ff; --pri-grad: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+  --gold: #f59e0b; --gold-bg: #fffbeb;
+  --success: #10b981; --success-bg: #ecfdf5;
+  --danger: #ef4444; --danger-bg: #fef2f2;
+  --warning: #f59e0b; --warning-bg: #fffbeb;
+  --dark: #0f172a; --dark-2: #1e293b;
+  --text: #1e293b; --text-2: #64748b; --text-3: #94a3b8;
+  --bg: #f8fafc; --surface: #ffffff; --border: #e2e8f0; --divider: #f1f5f9;
+  --shadow-sm: 0 1px 2px rgba(0,0,0,.04);
+  --shadow-md: 0 4px 6px -1px rgba(0,0,0,.05), 0 2px 4px -2px rgba(0,0,0,.05);
+  --shadow-lg: 0 10px 15px -3px rgba(0,0,0,.06), 0 4px 6px -4px rgba(0,0,0,.04);
+  --shadow-card: 0 1px 3px rgba(0,0,0,.04), 0 8px 24px rgba(0,0,0,.04);
+  --r-sm: 8px; --r-md: 12px; --r-lg: 16px; --r-xl: 20px;
+  --ease: cubic-bezier(.4,0,.2,1);
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+html,body{height:100%;}
+body{font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei","Helvetica Neue",Arial,sans-serif;color:var(--text);background:linear-gradient(135deg,#0f172a 0%,#1e1b4b 40%,#312e81 100%);display:flex;align-items:center;justify-content:center;min-height:100vh;padding:24px;position:relative;overflow:hidden;}
+body::before{content:'';position:absolute;top:-50%;left:-50%;width:200%;height:200%;background:radial-gradient(circle at 30% 40%,rgba(79,70,229,.15) 0%,transparent 50%),radial-gradient(circle at 70% 60%,rgba(124,58,237,.1) 0%,transparent 50%);animation:bgFloat 20s ease-in-out infinite alternate;}
+@keyframes bgFloat{from{transform:translate(0,0);}to{transform:translate(-2%,-2%);}}
+
+.card{background:var(--surface);border-radius:var(--r-xl);padding:40px 36px;width:100%;max-width:420px;box-shadow:0 25px 50px -12px rgba(0,0,0,.25);animation:cardIn .5s var(--ease);position:relative;z-index:1;}
+@keyframes cardIn{from{opacity:0;transform:scale(.95) translateY(20px);}to{opacity:1;transform:scale(1) translateY(0);}}
+
+.brand{display:flex;flex-direction:column;align-items:center;margin-bottom:28px;}
+.brand .logo{width:64px;height:64px;border-radius:18px;background:var(--pri-grad);color:#fff;display:flex;align-items:center;justify-content:center;font-size:32px;margin-bottom:14px;box-shadow:0 8px 20px rgba(79,70,229,.4);}
+.brand h1{font-size:22px;font-weight:800;color:var(--text);letter-spacing:-.5px;}
+.brand .sub{font-size:13px;color:var(--text-3);margin-top:6px;}
+
+.err{color:var(--danger);background:var(--danger-bg);border:1px solid rgba(239,68,68,.2);border-radius:var(--r-sm);font-size:13px;padding:10px 14px;margin-bottom:16px;min-height:18px;display:none;animation:shakeIn .3s var(--ease);}
+.err.show{display:block;}
+@keyframes shakeIn{0%,100%{transform:translateX(0);}25%{transform:translateX(-4px);}75%{transform:translateX(4px);}}
+
+.field{margin-bottom:16px;position:relative;}
+.field label{font-size:13px;font-weight:600;color:var(--text);margin-bottom:6px;display:block;}
+.field input{width:100%;padding:12px 16px;border:1.5px solid var(--border);border-radius:var(--r-sm);font-size:15px;color:var(--text);background:var(--surface);transition:border-color .2s,box-shadow .2s;outline:none;}
+.field input:focus{border-color:var(--pri);box-shadow:0 0 0 3px rgba(79,70,229,.1);}
+.field input::placeholder{color:var(--text-3);}
+
+.hint{margin-top:24px;font-size:12px;color:var(--text-3);text-align:center;line-height:1.8;}
+.hint code{background:var(--pri-bg);padding:2px 8px;border-radius:4px;font-size:12px;color:var(--pri);font-weight:600;}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:none;font-weight:600;cursor:pointer;transition:all .2s cubic-bezier(.4,0,.2,1);letter-spacing:.2px;white-space:nowrap;}
+.btn-xs{height:28px;padding:0 10px;font-size:12px;border-radius:6px;}
+.btn-sm{height:36px;padding:0 16px;font-size:13px;border-radius:8px;}
+.btn-md{height:44px;padding:0 24px;font-size:14px;border-radius:10px;}
+.btn-lg{height:52px;padding:0 32px;font-size:16px;border-radius:12px;}
+.btn-block{width:100%;}
+.btn-icon{width:44px;height:44px;padding:0;border-radius:12px;}
+.btn-primary{background:linear-gradient(135deg,#4f46e5 0%,#7c3aed 100%);color:#fff;box-shadow:0 2px 8px rgba(79,70,229,.3);}
+.btn-secondary{background:var(--surface);color:var(--text);border:1.5px solid var(--border);}
+.btn-soft{background:var(--pri-bg);color:var(--pri);}
+.btn-ghost{background:transparent;color:var(--pri);}
+.btn-success{background:linear-gradient(135deg,#10b981,#059669);color:#fff;box-shadow:0 2px 8px rgba(16,185,129,.3);}
+.btn-danger{background:linear-gradient(135deg,#ef4444,#dc2626);color:#fff;box-shadow:0 2px 8px rgba(239,68,68,.3);}
+.btn-warning{background:linear-gradient(135deg,#f59e0b,#d97706);color:#fff;box-shadow:0 2px 8px rgba(245,158,11,.3);}
+.btn:focus-visible{outline:2px solid var(--pri);outline-offset:2px;}
+.btn[disabled]{opacity:.45;cursor:not-allowed;transform:none!important;filter:none!important;}
+.btn.loading{pointer-events:none;position:relative;color:transparent!important;}
+.btn.loading::after{content:"";position:absolute;width:18px;height:18px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:btn-spin .6s linear infinite;}
+@keyframes btn-spin{to{transform:rotate(360deg);}}
+.row-actions{display:flex;gap:6px;}
+
+/* ===== 窄屏防变形（统一注入）===== */
+@media(max-width:900px){
+  .sidebar{transform:translateX(-100%);}
+  .sidebar.open{transform:translateX(0);}
+  .sidebar-overlay.show{display:block;}
+  .main,.main-content{margin-left:0 !important;padding:20px 14px !important;min-width:0 !important;max-width:100% !important;}
+  .topbar .menu-toggle{display:block !important;}
+  .card{overflow-x:auto;-webkit-overflow-scrolling:touch;min-width:0 !important;}
+  .topbar{padding:14px 14px;}
+  .tabs{min-width:0 !important;}
+}
+@media(max-width:480px){
+  .main{padding:14px 10px !important;}
+  .card{padding:16px 12px;}
+  .sec{font-size:14px;}
+  .page-title{font-size:22px !important;}
+}
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="brand"><div class="logo">🏢</div><h1>宜必购物业</h1><div class="sub">业主管理 · 账单分账 · 门禁车辆</div></div>
+  <div class="err" id="err"></div>
+  <div class="field"><label>账号</label><input id="account" placeholder="请输入账号" autocomplete="username"></div>
+  <div class="field"><label>密码</label><input id="pwd" type="password" placeholder="请输入密码" autocomplete="current-password"></div>
+  <button class="btn-lg btn-primary btn-block" id="btnLogin" style="margin-top:8px;">登 录</button>
+  <div class="hint">测试账号：<code>admin</code> / 密码 <code>Admin@2026</code></div>
+</div>
+<script>
+const $ = id => document.getElementById(id);
+$("btnLogin").onclick = async function(){
+  $("err").style.display = "none";
+  const body = new URLSearchParams({ account: $("account").value.trim(), password: $("pwd").value });
+  $("btnLogin").disabled = true;
+  try {
+    const r = await fetch("/api/property/admin/auth/login", { method: "POST", body: body.toString(), headers: {"Content-Type": "application/x-www-form-urlencoded"} }).then(function(r){ return r.json(); });
+    if (r.code === 0) {
+      localStorage.setItem("property_admin_token", r.data);
+      location.href = "index.html";
+    } else {
+      $("err").textContent = r.msg || "登录失败";
+      $("err").style.display = "block";
+    }
+  } catch (e) {
+    $("err").textContent = "网络异常，请稍后再试";
+    $("err").style.display = "block";
+  }
+  finally { $("btnLogin").disabled = false; }
+};
+$("pwd").addEventListener("keydown", function(e){ if (e.key === "Enter") $("btnLogin").onclick(); });
+</script>
+</body>
+</html>

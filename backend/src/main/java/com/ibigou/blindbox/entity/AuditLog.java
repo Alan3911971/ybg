@@ -40,7 +40,7 @@ public class AuditLog {
     @Column(length = 500)
     private String detail;
 
-    /** V1.5：关联 ID（券 coupon_id / 订单号 / 商家号） */
+    /** V1.5：关联 ID（券 couponId / 订单号 / 商家号） */
     @Column(length = 64)
     private String refId;
 

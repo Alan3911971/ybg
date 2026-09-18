@@ -806,3 +806,101 @@
    - img宽高120px，name字号13px
 5. 验证：left=140px, top=105px（正确居中），二维码和商家名称正常显示
 6. 坑：absolute定位的元素必须设置left/top，否则默认在左上角，加上translate后会跑到容器外面
+
+【G67】2026-09-16 DP80S蓝牙打印机打印空白问题完整排查与修复
+1. 现象：DP80S热敏打印机蓝牙连接成功、出纸，但打印内容空白
+2. 排查过程（十余轮）：
+   - 尝试ESC/POS二维码指令、GBK编码、纯ASCII、3种蓝牙连接方式（标准SPP→不安全SPP→反射端口1）→ 均空白
+   - 添加打印机状态查询，发现"打印机无响应;PrintWriter成功;OutputStream发送17字节"→ 确认为蓝牙假连接
+   - 反射端口优先、位图打印测试（ESC * 全黑行）、添加BLE支持 → 均空白或BLE连接失败回退SPP
+   - 关键突破1：fetchUuidsWithSdp获取设备UUID，发现打印机支持两个UUID——00001101（标准SPP）和e5b152ed（自定义）
+   - 关键突破2：自定义UUID优先连接成功！debug显示"连接方式=自定义UUID:e5b152ed-...;可读字节=26;返回=FE 01 00 1A..."→ 打印机有响应但CPCL指令打印还是空白
+   - 根因确认：DP80S是德佟（DETONGER）标签打印机，自定义UUID通道是LPAPI协议，不支持标准ESC/POS直接打印文字
+   - 关键突破3：用标准SPP连接时，printQR方法里的GBK纯文字成功打印出来了！（纸上显示"鲜果时光·宜必购合作店"和"扫码开盲盒"）
+3. 最终结论：
+   - 标准SPP通道（00001101）→ 支持ESC/POS纯文字和位图打印
+   - 自定义UUID通道（e5b152ed）→ LPAPI协议通道，不支持ESC/POS
+   - 必须优先用标准SPP连接
+4. 已验证可行的打印方案：
+   - 连接：标准SPP优先（00001101）
+   - 文字：ESC @(0x1B 0x40)初始化 + GBK编码 + 0x0A换行
+   - 二维码：Canvas绘制位图(280x280) + GS v 0指令(0x1D 0x76 0x30 0x00 xL xH yL yH + 1位/像素数据 MSB优先)
+   - 走纸：ESC d n(0x1B 0x64 n)指令
+5. Broken pipe问题：
+   - 现象：连接成功后打印报"Broken pipe"
+   - 根因：连接成功后发送5个换行符测试走纸，如果失败会触发catch块调用disconnectBt()关闭连接，但btSocket.isConnected()还返回true，导致H5认为已连接但实际输出流已断
+   - 修复：测试走纸放在独立try-catch中，不影响主连接；printText/printQR中添加btOut为null时的重新获取逻辑
+6. 坑：德佟DP80S等标签打印机有双蓝牙通道，自定义UUID通道是LPAPI协议不支持ESC/POS，必须用标准SPP通道；连接成功后的测试写入不能放在主try-catch中，否则失败会断开主连接
+
+【G68】2026-09-16 工具默认工作目录Z:\ybg不存在导致所有命令工具失效
+1. 现象：Bash、computer_use_tool等所有命令执行工具报错"cwd does not exist: Z:\ybg"
+2. 根因：工具的默认工作目录硬编码为Z:\ybg，Z盘是subst映射的NAS盘，重启后映射丢失
+3. 解决：
+   - 执行 subst Z: D:\workspace-java （确保D:\workspace-java\ybg目录存在）
+   - 或者在D:\workspace-java下创建ybg空目录
+4. 坑：subst映射重启后丢失；项目目录是ybg-master但工具需要的是ybg，必须确保D:\workspace-java\ybg存在
+
+G69 | %s | 商家APP蓝牙打印"点一次出一长串纸" | 生产 index.html 的 _handleConfirmPrint（确认打印按钮）执行的是调试流程：一次点击连打 printText(HELLO)+printText(LINE)+printQR+printText(店名) 共4个任务并弹调试窗；且每个任务触发一次LPAPI间隙定位（先空走半张纸），叠加=超长纸+内容重复 | 教训：调试代码不能留在线上的确认打印入口；正式打印必须单任务单commitJob | 修复：_handleConfirmPrint 改为只调一次 AndroidPrinter.printQR；删除全部 printText 调试调用；生产已更新+本地 backend 源码已同步（备份 index.html.bak_20260917）
+G70 | %s | 替换JS函数时误删 </script> | 用Python字符串替换函数体时，old块包含了 '</script>' 而 new块没补，导致生产HTML open=8/close=7 脚本块未闭合，整个末段打印脚本语法错误不执行（_handleBtPrint/_handleConfirmPrint undefined） | 教训：任何对HTML/JS的自动替换，改完必须校验 <script>/</script> 配对平衡（正则count）再上传 | 验证方法：python re.findall('<script[^>]*>') 与 '</script>' 数量必须相等
+G71 | %s | 浏览器/curl访问生产页面被豆包翻译器注入 <script src=/i18n/frontend/translator.js> | 导致 eval 末段脚本报 Unexpected token '<'、script计数混乱（open=9 close=8） | 教训：用浏览器调试线上JS时，注入的翻译器标签会干扰判断；以 curl/生产源文件校验为准 | 判断脚本完整性用 curl 抓原文件数标签配对，别信浏览器DOM
+
+【2026-09-18 G72】物业系统生产部署连环坑
+1. Repository 方法名 findXxx_IdAndYyy 在 Spring Data 解析为嵌套关联报 "No property 'owner' found"，需改 findXxxIdAndYyy（24 repository + 16 业务文件批量改）
+2. PowerShell -replace 大小写不敏感：把测试常量 OWNER_ID 误改成 OWNERId、setCompanyId 误改成 setCOMPANY_ID——批量改 Java 必须用字节级 Python 或显式大小写敏感替换
+3. PowerShell Get-Content/Set-Content 编码损坏：UTF-8 文件按 GBK 读再写回，中文变乱码、@DisplayName 引号丢失（javac 报"未结束的字符串"）——必须用 ReadAllText/WriteAllText(UTF8 no BOM) 或 Python
+4. PATH 里 java（C:\tools\jdk-17.0.12+7）损坏报 "Failed setting boot class path"，实际可用 D:\devtools\jdk\bin\java.exe
+5. SFTP 上传 property 前端间歇性 ENOENT（stat 目录 OK、write 第一个文件失败、手动又成功）——改用 exec + base64 -d 通道稳定上传
+6. nginx 全站 location ^~ / 反代 8085，新目录 /h5/property/ 必须加磁盘直放 location（否则 500）——已加并 reload
+7. Hibernate 6 离线 DDL 默认驼峰列名（ownerId），Spring 运行时用 snake_case（owner_id）查询 → Unknown column。GenDdl 必须 applyPhysicalNamingStrategy(CamelCaseToUnderscoresNamingStrategy) 生成 snake_case DDL
+8. Hibernate 生成 create_time/update_time NOT NULL 无 DEFAULT，实体 insertable=false → 插入报 "doesn't have a default value"，需批量 ALTER MODIFY ... DEFAULT CURRENT_TIMESTAMP(6)（58 条）
+9. 前端 fetch 缺 Content-Type: application/x-www-form-urlencoded → Spring @RequestParam 收不到 body 参数（500 MissingServletRequestParameter）——login 类页面必须带 header
+10. 业主端 login.html 参数名与后端不符（phone→ownerPhone、name→ownerName）——前端与后端 @RequestParam 名必须一致
+11. shell 双引号里 BCrypt hash 的 \$ 被展开导致密码错——SQL 里 $ 要转义 \\$
+
+【2026-09-18 G73】物业系统业务数据初始化+TOKEN_STORE bug
+1. 初始化演示数据：物业公司(宜必购物业)+小区(阳光花园)+2楼栋+4房间+业主13851918986绑定101房+商家M90380836分账5%+2场地(会议室50元/健身中心免费)
+2. 业主 P1 控制器(PropertyOwnerP1Controller)有独立 TOKEN_STORE(ConcurrentHashMap)，登录写入的是 PropertyOwnerController 的 TOKEN_STORE——两个 map 不共享导致 P1 全部接口"登录已过期"。修复：P1 的 TOKEN_STORE 改为 = PropertyOwnerController.TOKEN_STORE（主控制器改 package-private）
+3. admin 侧无此问题（用 property_admin_session 表校验 token）
+4. 预约接口：POST /api/property/owner/p1/reservations?companyId&facilityId&date&startTime&endTime&remark；设施 GET /p1/facilities?companyId、时段 GET /p1/facilities/{id}/slots?date
+
+【2026-09-18 G74】需求1/3 开发采坑
+1. paramiko exec_command 直接跑 curl 会偶发吞输出（HTTP 空body），bash -lc 嵌套管道也不稳——统一用 wget -qO- + 无管道最稳
+2. PowerShell 里 python -c 多行字符串 + bash -lc 嵌套引号必炸——一律写 .py 文件执行
+3. Maven clean 时 jar 被占（残留 python 部署进程）→ 先 Stop-Process 清 python 再 build
+4. 顾客端测试登录：必须先 POST /api/customer/auth/send-code（返回真验证码）再 POST /api/customer/auth/login，直接 login 报"验证码已过期"；测试环境 code 仍用 123456 可通
+5. 假 token 测顾客端会被 /api/customer/wallet 401 踢回登录页（req() 401 时清 token）——要用真实登录 token 测
+
+【2026-09-18 G75】内联 JS 进 HTML 的三大坑
+1. PowerShell Set-Content -Encoding utf8 会写 BOM（EF BB BF）→ 内联 <script> 开头 ﻿ 导致 JS 语法错 → 一律 Python utf-8 写
+2. <script src=echarts> 缺 </script> 时，解析器会把后面所有 <script> 开标签当文本吞掉 → 内联库必须确认前一个 script 标签闭合
+3. qrcodejs CDN 在本机浏览器加载失败（bu 环境），jsdelivr 等 CDN 在服务器 curl 通但浏览器不一定 → 关键库直接内联最稳
+
+【2026-09-18 G76】内联 JS 追加位置坑（家庭成员二维码 IIFE）
+1. 用 s.replace("loadFamily();", js, 1) 给 HTML 注入 IIFE，第一处匹配可能在函数回调内（addMember 成功分支），IIFE 只有点击添加成员才执行 → 页面加载不生成二维码
+2. 若注入文本以 "// ===== 注释 ===== (function(){...})();" 开头，`//` 注释会把同一行代码全部注释掉 → 语法残块，eval 不报错但 IIFE 永不执行
+3. 诊断法：给 IIFE 首行加 window.__qrIifeRan=true 标志，bu.js 读 window.__qrIifeRan 判断是否真执行；DOM script[i].textContent 与本地文件长度对比可发现注入位置错乱
+4. 正确姿势：IIFE 必须插在目标 script 块内、函数回调之外、脚本执行末尾之前（如 loadFamily(); 前），且首行不能有注释前缀
+5. bu 环境 select 原生下拉用 bu.select(ref, value)，bu.click 选项无效
+
+【2026-09-18 G76】内联 JS 追加位置坑（家庭成员二维码 IIFE）
+1. 用 s.replace("loadFamily();", js, 1) 给 HTML 注入 IIFE，第一处匹配可能在函数回调内（addMember 成功分支），IIFE 只有点击添加成员才执行 → 页面加载不生成二维码
+2. 若注入文本以 "// ===== 注释 ===== (function(){...})();" 开头，`//` 注释会把同一行代码全部注释掉 → 语法残块，eval 不报错但 IIFE 永不执行
+3. 诊断法：给 IIFE 首行加 window.__qrIifeRan=true 标志，bu.js 读 window.__qrIifeRan 判断是否真执行；DOM script[i].textContent 与本地文件长度对比可发现注入位置错乱
+4. 正确姿势：IIFE 必须插在目标 script 块内、函数回调之外、脚本执行末尾之前（如 loadFamily(); 前），且首行不能有注释前缀
+5. bu 环境 select 原生下拉用 bu.select(ref, value)，bu.click 选项无效
+
+【2026-09-18 G77】物业后台页面变形/显示不全根因
+1. 现象：手机打开物业后台 bills/buildings 等页"变形、显示不全"
+2. 根因1：后台桌面布局（sidebar+main），768px 断点未触发/触发不完整，窄屏 sidebar 仍占位
+3. 根因2（关键）：.main 是 flex item（flex:1），min-width:auto 默认值导致被内部表格 min-content（~990px）撑开 → 页面 scrollWidth 达 1010px，横向溢出"变形"
+4. 修复：900px 以下统一收起 sidebar + .main,.main-content{min-width:0 !important;max-width:100% !important} + .card{overflow-x:auto}
+5. buildings.html 类名是 .main-content 不是 .main，规则要同时覆盖
+6. 桌面 1555px 实测无溢出（表格 990 < 主区 1280），只有窄屏复现——验证必须用 bu.js 注入 375px iframe 检查 scrollWidth
+
+【2026-09-18 G78】换电脑/新会话环境恢复要点（配合规矩文档 G31）
+1. Z盘已删除：任何 Z:\ybg、Z:\workspace-java、/root/remote-workspace 路径均失效，一律 D:\workspace-java\ybg-master
+2. github.com 443 直连不通：git 命令行不可用，GitHub 推送必须用 Git Data API 脚本 _push_gh.py（blobs→trees→commit→PATCH refs/heads/master force）
+3. 大文件（102MB jar）paramiko exec_command 传 base64 heredoc 必断连（WinError 10054）→ 必须 SFTP put
+4. 重启 jar 直接 java -jar 会因缺 prod profile 用 root 连库被 Flyway 拒绝 → 必须 start.sh（set -a; . .env; exec java -Dspring.profiles.active=prod -Dspring.flyway.enabled=false -jar ibigou.jar），用 setsid 后台化
+5. NAS 同步 scp 不可用（无 scp subsystem）→ ssh stdin 管道 tar 流式传输
+6. bu 测试：JS 返回值含中文 emoji 会 PY_UNICODE_ENCODE_ERROR（用纯 ASCII JS 或 curl 验证）；无 set_viewport；登录态存 localStorage 但重启后失效需重登

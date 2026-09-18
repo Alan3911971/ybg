@@ -1,9 +1,0 @@
-﻿backend/target/
-*.log
-.vscode/
-.idea/
-*.bak
-*.bak.*
-.bak_*/
-_v1_archive/
-deploy/

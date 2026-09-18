@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#4f46e5">
+<title>分账流水 · 物业后台 · 宜必购</title>
+<link rel="icon" href="data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='80' font-size='90'%3E%F0%9F%8F%A2%3C/text%3E%3C/svg%3E">
+<style>
+  :root{
+    --pri:#4f46e5;--pri-grad:linear-gradient(135deg,#4f46e5,#7c3aed);
+    --dark:#0f172a;--text:#1e293b;--text-2:#64748b;--text-3:#94a3b8;
+    --bg:#f8fafc;--surface:#fff;--border:#e2e8f0;--divider:#f1f5f9;
+    --shadow-card:0 1px 3px rgba(0,0,0,.04),0 8px 24px rgba(0,0,0,.04);
+    --r-sm:8px;--r-md:12px;--r-lg:16px;--sidebar-w:272px;
+    --ease:cubic-bezier(.4,0,.2,1);
+  }
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+  html,body{font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei","Helvetica Neue",Arial,sans-serif;color:var(--text);background:var(--bg);-webkit-font-smoothing:antialiased;height:100%;}
+  a{color:inherit;text-decoration:none;}
+  input,select,button{font-size:16px;font-family:inherit;}
+
+  /* Animations */
+  @keyframes fadeInUp{from{opacity:0;transform:translateY(20px);}to{opacity:1;transform:translateY(0);}}
+  @keyframes slideInRight{from{opacity:0;transform:translateX(100%);}to{opacity:1;transform:translateX(0);}}
+
+  .layout{display:flex;min-height:100vh;}
+
+  /* Sidebar */
+  .sidebar{width:var(--sidebar-w);background:linear-gradient(180deg,#0f172a 0%,#1e293b 100%);display:flex;flex-direction:column;position:fixed;top:0;left:0;bottom:0;z-index:40;transition:transform .3s var(--ease);}
+  .sidebar .brand{padding:24px 20px;display:flex;align-items:center;gap:14px;border-bottom:1px solid rgba(255,255,255,.08);}
+  .sidebar .brand .logo{width:42px;height:42px;border-radius:var(--r-md);background:var(--pri-grad);color:#fff;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;box-shadow:0 4px 12px rgba(79,70,229,.4);}
+  .sidebar .brand h1{font-size:16px;font-weight:700;line-height:1.4;color:#fff;}
+  .sidebar .brand h1 span{font-size:11px;color:rgba(255,255,255,.5);font-weight:400;display:block;margin-top:2px;}
+  .sidebar nav{flex:1;overflow-y:auto;padding:16px 12px;}
+  .nav-section{margin-bottom:20px;}
+  .nav-section-title{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:rgba(255,255,255,.35);padding:0 12px;margin-bottom:8px;}
+  .sidebar nav a{height:44px;padding:0 16px;border-radius:10px;font-size:14px;color:rgba(255,255,255,.55);font-weight:500;transition:all .2s;margin-bottom:2px;display:flex;align-items:center;gap:12px;border-left:none;}
+  .sidebar nav a:hover{color:rgba(255,255,255,.9);background:rgba(255,255,255,.06);}
+  .sidebar nav a.active{color:#fff;background:rgba(79,70,229,.15);font-weight:600;border-left:3px solid #818cf8;border-radius:0 10px 10px 0;}
+  .sidebar nav a .icon{font-size:18px;width:24px;text-align:center;flex-shrink:0;}
+  .sidebar .logout-area{padding:16px;border-top:1px solid rgba(255,255,255,.08);}
+  .sidebar .logout-area a{color:rgba(255,255,255,.5);justify-content:center;border-radius:var(--r-md);}
+  .sidebar .logout-area a:hover{background:rgba(239,68,68,.15);color:#ef4444;}
+
+  .main{margin-left:var(--sidebar-w);flex:1;min-height:100vh;}
+  .topbar{background:var(--surface);border-bottom:1px solid var(--border);padding:16px 28px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:30;backdrop-filter:blur(12px);background:rgba(255,255,255,.9);}
+  .page-header h2{font-size:28px;font-weight:800;letter-spacing:-.5px;line-height:1.2;}
+.page-header .sub{font-size:14px;color:var(--text-2);margin-top:6px;}
+.topbar .page-title{font-size:28px;font-weight:800;color:var(--text);letter-spacing:-.5px;line-height:1.2;}
+  .topbar .menu-toggle{display:none;background:none;border:none;font-size:24px;cursor:pointer;padding:4px 8px;color:var(--text-2);}
+  .main{margin-left:var(--sidebar-w);flex:1;padding:32px 40px;max-width:1280px;margin:0 auto;animation:fadeInUp .5s var(--ease);}
+  .sidebar-overlay{display:none;position:fixed;inset:0;background:rgba(15,23,42,.6);z-index:35;backdrop-filter:blur(4px);}
+
+  @media(max-width:768px){
+    .sidebar{transform:translateX(-100%);}
+    .sidebar.open{transform:translateX(0);}
+    .sidebar-overlay.show{display:block;}
+    .main{margin-left:0;}
+    .topbar .menu-toggle{display:block;}
+  }
+
+  /* Cards */
+  .card{background:var(--surface);border-radius:var(--r-lg);padding:24px;margin-bottom:20px;box-shadow:var(--shadow-card);border:none;}
+  .sec{display:flex;align-items:center;gap:10px;font-weight:700;margin:0 0 16px;font-size:15px;color:var(--text);}
+  .sec .ic{width:32px;height:32px;border-radius:var(--r-sm);background:linear-gradient(135deg,rgba(79,70,229,.1) 0%,rgba(124,58,237,.1) 100%);color:var(--pri);display:inline-flex;align-items:center;justify-content:center;font-size:16px;flex:0 0 32px;}
+
+  /* Inputs */
+  .input,.select{height:44px;padding:0 14px;border:1px solid var(--border);border-radius:var(--r-md);font-size:14px;color:var(--text);background:var(--surface);transition:all .2s var(--ease);-webkit-appearance:none;appearance:none;}
+  .input:focus,.select:focus{outline:none;border-color:var(--pri);box-shadow:0 0 0 4px rgba(79,70,229,.1);}
+
+  /* Buttons */
+
+  /* Tabs */
+  .tabs{display:flex;gap:0;margin-bottom:24px;border-bottom:2px solid var(--divider);padding-bottom:0;}
+  .tab-btn{padding:14px 24px;font-size:14px;font-weight:600;color:var(--text-2);background:none;border:none;cursor:pointer;border-bottom:3px solid transparent;margin-bottom:-2px;transition:all .2s var(--ease);}
+  .tab-btn:hover{color:var(--pri);}
+  .tab-btn.active{color:var(--pri);border-bottom-color:var(--pri);}
+  .tab-panel{display:none;}
+  .tab-panel.active{display:block;animation:fadeInUp .4s var(--ease);}
+
+  .filter-bar{display:flex;gap:12px;margin-bottom:16px;flex-wrap:wrap;align-items:center;}
+  .filter-bar .select{min-width:160px;}
+  .filter-bar .input{min-width:160px;}
+
+  /* Tables */
+  .table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;border-radius:var(--r-md);border:1px solid var(--border);}
+  table{width:100%;border-collapse:collapse;font-size:13px;min-width:800px;}
+  th{text-align:left;padding:14px 16px;background:var(--bg);color:var(--text-2);font-weight:700;text-transform:uppercase;font-size:11px;letter-spacing:.5px;border-bottom:1px solid var(--border);white-space:nowrap;}
+  td{padding:14px 16px;border-bottom:1px solid var(--divider);color:var(--text);white-space:nowrap;}
+  tr:nth-child(even) td{background:rgba(248,250,252,.5);}
+  tr:hover td{background:rgba(79,70,229,.04);}
+  tr:last-child td{border-bottom:none;}
+
+  /* Badges */
+  .badge{display:inline-block;padding:4px 12px;border-radius:999px;font-size:11px;font-weight:600;letter-spacing:.3px;}
+  .badge-blue{background:rgba(59,130,246,.1);color:#2563eb;}
+  .badge-purple{background:rgba(124,58,237,.1);color:#7c3aed;}
+  .badge-success{background:rgba(16,185,129,.1);color:#059669;}
+  .badge-warning{background:rgba(245,158,11,.1);color:#d97706;}
+  .badge-danger{background:rgba(239,68,68,.1);color:#dc2626;}
+  .badge-gray{background:rgba(148,163,184,.1);color:var(--text-2);}
+  .empty{padding:40px 16px;text-align:center;color:var(--text-3);font-size:14px;}
+
+  /* Stats */
+  .stat-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;margin-bottom:24px;}
+  .stat-card{background:var(--surface);border-radius:var(--r-lg);padding:24px;box-shadow:var(--shadow-card);border:none;position:relative;overflow:hidden;text-align:center;}
+  .stat-card::before{content:'';position:absolute;top:0;left:0;right:0;height:4px;background:var(--pri-grad);}
+  .stat-card .num{font-size:28px;font-weight:800;color:var(--text);line-height:1.2;margin-bottom:6px;}
+  .stat-card .label{font-size:12px;color:var(--text-3);font-weight:500;text-transform:uppercase;letter-spacing:.5px;}
+
+  /* Modal */
+  .modal-backdrop{position:fixed;inset:0;background:rgba(15,23,42,.5);backdrop-filter:blur(4px);z-index:100;display:none;align-items:center;justify-content:center;}
+  .modal-backdrop.show{display:flex;}
+  .modal{background:var(--surface);border-radius:var(--r-lg);padding:32px;max-width:500px;width:90%;box-shadow:0 25px 50px rgba(0,0,0,.15);animation:fadeInUp .3s var(--ease);}
+
+  /* Toast */
+  .toast-container{position:fixed;top:24px;right:24px;z-index:200;display:flex;flex-direction:column;gap:10px;}
+  .toast{padding:14px 24px;border-radius:var(--r-md);color:#fff;font-size:14px;font-weight:600;box-shadow:0 8px 24px rgba(0,0,0,.15);animation:slideInRight .4s var(--ease);min-width:220px;display:flex;align-items:center;gap:10px;}
+  .toast.success{background:linear-gradient(135deg,#10b981 0%,#059669 100%);}
+  .toast.error{background:linear-gradient(135deg,#ef4444 0%,#dc2626 100%);}
+  .toast.info{background:var(--pri-grad);}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:none;font-weight:600;cursor:pointer;transition:all .2s cubic-bezier(.4,0,.2,1);letter-spacing:.2px;white-space:nowrap;}
+.btn-xs{height:28px;padding:0 10px;font-size:12px;border-radius:6px;}
+.btn-sm{height:36px;padding:0 16px;font-size:13px;border-radius:8px;}
+.btn-md{height:44px;padding:0 24px;font-size:14px;border-radius:10px;}
+.btn-lg{height:52px;padding:0 32px;font-size:16px;border-radius:12px;}
+.btn-block{width:100%;}
+.btn-icon{width:44px;height:44px;padding:0;border-radius:12px;}
+.btn-primary{background:linear-gradient(135deg,#4f46e5 0%,#7c3aed 100%);color:#fff;box-shadow:0 2px 8px rgba(79,70,229,.3);}
+.btn-secondary{background:var(--surface);color:var(--text);border:1.5px solid var(--border);}
+.btn-soft{background:var(--pri-bg);color:var(--pri);}
+.btn-ghost{background:transparent;color:var(--pri);}
+.btn-success{background:linear-gradient(135deg,#10b981,#059669);color:#fff;box-shadow:0 2px 8px rgba(16,185,129,.3);}
+.btn-danger{background:linear-gradient(135deg,#ef4444,#dc2626);color:#fff;box-shadow:0 2px 8px rgba(239,68,68,.3);}
+.btn-warning{background:linear-gradient(135deg,#f59e0b,#d97706);color:#fff;box-shadow:0 2px 8px rgba(245,158,11,.3);}
+.btn:hover{transform:translateY(-1px);filter:brightness(1.05);}
+.btn:active{transform:scale(.97);filter:brightness(.95);}
+.btn:focus-visible{outline:2px solid var(--pri);outline-offset:2px;}
+.btn[disabled]{opacity:.45;cursor:not-allowed;transform:none!important;filter:none!important;}
+.btn.loading{pointer-events:none;position:relative;color:transparent!important;}
+.btn.loading::after{content:"";position:absolute;width:18px;height:18px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:btn-spin .6s linear infinite;}
+@keyframes btn-spin{to{transform:rotate(360deg);}}
+.row-actions{display:flex;gap:6px;}
+
+/* ===== 窄屏防变形（统一注入）===== */
+@media(max-width:900px){
+  .sidebar{transform:translateX(-100%);}
+  .sidebar.open{transform:translateX(0);}
+  .sidebar-overlay.show{display:block;}
+  .main,.main-content{margin-left:0 !important;padding:20px 14px !important;min-width:0 !important;max-width:100% !important;}
+  .topbar .menu-toggle{display:block !important;}
+  .card{overflow-x:auto;-webkit-overflow-scrolling:touch;min-width:0 !important;}
+  .topbar{padding:14px 14px;}
+  .tabs{min-width:0 !important;}
+}
+@media(max-width:480px){
+  .main{padding:14px 10px !important;}
+  .card{padding:16px 12px;}
+  .sec{font-size:14px;}
+  .page-title{font-size:22px !important;}
+}
+</style>
+</head>
+<body>
+<div class="toast-container" id="toastContainer"></div>
+
+<div class="layout">
+  <div class="sidebar" id="sidebar">
+    <div class="brand">
+      <div class="logo">🏢</div>
+      <h1>宜必购物业<span>Property Management</span></h1>
+    </div>
+    <nav>
+      <div class="nav-section">概览</div>
+      <a href="dashboard.html"><span class="icon">📊</span>工作台</a>
+      <a href="index.html"><span class="icon">🏠</span>首页看板</a>
+      <div class="nav-section">业务管理</div>
+      <a href="owners.html"><span class="icon">👥</span>业主管理</a>
+      <a href="buildings.html"><span class="icon">🏢</span>楼栋房间</a>
+      <a href="bills.html"><span class="icon">🧾</span>账单管理</a>
+      <a href="splits.html" class="active"><span class="icon">💰</span>分账流水</a>
+      <a href="merchant-bindings.html"><span class="icon">🔗</span>商家绑定</a>
+      <a href="activity-audit.html"><span class="icon">✅</span>活动审核</a>
+      <a href="facilities.html"><span class="icon">🏟️</span>场地预约</a>
+      <div class="nav-section">安防通行</div>
+      <a href="access.html"><span class="icon">🚪</span>门禁管理</a>
+      <a href="vehicles.html"><span class="icon">🚗</span>车辆管理</a>
+      <a href="devices.html"><span class="icon">📡</span>IoT设备</a>
+    </nav>
+    <div class="logout-area"><a href="#" id="logoutBtn"><span class="icon">🚪</span>退出登录</a></div>
+  </div>
+  <div class="sidebar-overlay" id="overlay"></div>
+
+  <div class="main">
+    <div class="topbar">
+      <button class="menu-toggle" id="menuToggle">☰</button>
+      <div class="page-title">分账流水</div>
+      <div></div>
+    </div>
+    <div class="content">
+      <!-- Summary Stats -->
+      <div class="stat-row" id="statsRow">
+        <div class="stat-card"><div class="num" id="statTotalRecords">-</div><div class="label">总记录数</div></div>
+        <div class="stat-card"><div class="num" id="statTotalAmount">-</div><div class="label">总分账金额</div></div>
+        <div class="stat-card"><div class="num" id="statMerchantSplit" style="color:#2563eb;">-</div><div class="label">商家→物业</div></div>
+        <div class="stat-card"><div class="num" id="statPlatformSplit" style="color:#7c3aed;">-</div><div class="label">平台→物业</div></div>
+      </div>
+
+      <!-- Tabs -->
+      <div class="tabs">
+        <button class="tab-btn active" data-tab="splits">分账记录</button>
+        <button class="tab-btn" data-tab="deductLogs">抵扣日志</button>
+      </div>
+
+      <!-- Tab: Split Records -->
+      <div class="tab-panel active" id="tab-splits">
+        <div class="card">
+          <div class="sec"><span class="ic">💰</span>筛选条件</div>
+          <div class="filter-bar">
+            <select class="select" id="splitCompanyId"><option value="">全部物业公司</option></select>
+            <select class="select" id="splitModeFilter">
+              <option value="">全部分账模式</option>
+              <option value="1">商家→物业</option>
+              <option value="2">平台→物业</option>
+            </select>
+            <button class="btn-sm btn-primary" id="btnSplitFilter">查询</button>
+            <button class="btn-sm btn-secondary" id="btnSplitRefresh">刷新</button>
+          </div>
+        </div>
+        <div class="card">
+          <div class="sec"><span class="ic">💰</span>分账记录列表</div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>订单号</th><th>商家编号</th><th>分账模式</th><th>订单金额</th><th>分账金额</th><th>状态</th><th>时间</th></tr></thead>
+              <tbody id="splitTable"><tr><td colspan="7" class="empty">加载中...</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab: Deduct Logs -->
+      <div class="tab-panel" id="tab-deductLogs">
+        <div class="card">
+          <div class="sec"><span class="ic">📋</span>抵扣日志查询</div>
+          <div class="filter-bar">
+            <input class="input" id="deductOwnerId" placeholder="输入业主ID查询..." style="min-width:220px;">
+            <button class="btn-sm btn-primary" id="btnDeductSearch">查询</button>
+            <button class="btn-sm btn-secondary" id="btnDeductRefresh">刷新</button>
+          </div>
+        </div>
+        <div class="card">
+          <div class="sec"><span class="ic">📋</span>抵扣记录</div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>ID</th><th>业主</th><th>账单号</th><th>抵扣金额</th><th>来源</th><th>备注</th><th>时间</th></tr></thead>
+              <tbody id="deductTable"><tr><td colspan="7" class="empty">请输入业主ID后查询</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+(function(){
+  var token = localStorage.getItem('property_admin_token');
+  if (!token) { location.href = 'login.html'; return; }
+
+  // --- Toast ---
+  function showToast(msg, type) {
+    type = type || 'info';
+    var c = document.getElementById('toastContainer');
+    var t = document.createElement('div');
+    t.className = 'toast ' + type;
+    t.textContent = msg;
+    c.appendChild(t);
+    setTimeout(function(){ t.style.opacity = '0'; t.style.transition = 'opacity .3s'; setTimeout(function(){ c.removeChild(t); }, 300); }, 3000);
+  }
+
+  // --- Sidebar ---
+  var sidebar = document.getElementById('sidebar');
+  var overlay = document.getElementById('overlay');
+  document.getElementById('menuToggle').onclick = function(){ sidebar.classList.add('open'); overlay.classList.add('show'); };
+  overlay.onclick = function(){ sidebar.classList.remove('open'); overlay.classList.remove('show'); };
+  document.getElementById('logoutBtn').onclick = function(e){ e.preventDefault(); localStorage.removeItem('property_admin_token'); location.href = 'login.html'; };
+
+  // --- Tabs ---
+  var tabBtns = document.querySelectorAll('.tab-btn');
+  var tabPanels = document.querySelectorAll('.tab-panel');
+  tabBtns.forEach(function(btn){
+    btn.onclick = function(){
+      tabBtns.forEach(function(b){ b.classList.remove('active'); });
+      tabPanels.forEach(function(p){ p.classList.remove('active'); });
+      btn.classList.add('active');
+      document.getElementById('tab-' + btn.getAttribute('data-tab')).classList.add('active');
+    };
+  });
+
+  // --- Load Companies ---
+  fetch('/api/property/admin/companies', { headers: { 'X-Property-Token': token } })
+    .then(function(r){ return r.json(); })
+    .then(function(res){
+      if (res.code === 0 && res.data) {
+        var sel = document.getElementById('splitCompanyId');
+        res.data.forEach(function(c){
+          var opt = document.createElement('option');
+          opt.value = c.companyId;
+          opt.textContent = c.companyName;
+          sel.appendChild(opt);
+        });
+      }
+    })
+    .catch(function(){});
+
+  // --- Split Mode Badge ---
+  function splitModeBadge(mode){
+    if (mode === 1 || mode === '1') return '<span class="badge badge-blue">商家→物业</span>';
+    if (mode === 2 || mode === '2') return '<span class="badge badge-purple">平台→物业</span>';
+    return '<span class="badge badge-gray">' + (mode || '--') + '</span>';
+  }
+
+  function splitStatusBadge(s){
+    var map = {
+      'success': '<span class="badge badge-success">成功</span>',
+      'pending': '<span class="badge badge-warning">处理中</span>',
+      'failed': '<span class="badge badge-danger">失败</span>'
+    };
+    return map[s] || '<span class="badge badge-gray">' + (s || '--') + '</span>';
+  }
+
+  var lastSplitData = [];
+
+  function loadSplits(){
+    var params = [];
+    var cid = document.getElementById('splitCompanyId').value;
+    var mode = document.getElementById('splitModeFilter').value;
+    if (cid) params.push('companyId=' + encodeURIComponent(cid));
+    if (mode) params.push('splitMode=' + encodeURIComponent(mode));
+    var url = '/api/property/admin/p1/split-records' + (params.length ? '?' + params.join('&') : '');
+
+    fetch(url, { headers: { 'X-Property-Token': token } })
+      .then(function(r){ return r.json(); })
+      .then(function(res){
+        var tbody = document.getElementById('splitTable');
+        if (res.code !== 0 || !res.data || res.data.length === 0) {
+          lastSplitData = [];
+          tbody.innerHTML = '<tr><td colspan="7" class="empty">暂无数据</td></tr>';
+          updateStats([]);
+          return;
+        }
+        lastSplitData = res.data;
+        updateStats(res.data);
+        var html = '';
+        res.data.forEach(function(r){
+          html += '<tr>' +
+            '<td>' + (r.orderNo || '--') + '</td>' +
+            '<td>' + (r.merchantNo || '--') + '</td>' +
+            '<td>' + splitModeBadge(r.splitMode) + '</td>' +
+            '<td>¥' + Number(r.orderAmount || 0).toFixed(2) + '</td>' +
+            '<td>¥' + Number(r.splitAmount || 0).toFixed(2) + '</td>' +
+            '<td>' + splitStatusBadge(r.splitStatus) + '</td>' +
+            '<td>' + (r.createTime || '--') + '</td></tr>';
+        });
+        tbody.innerHTML = html;
+      })
+      .catch(function(){
+        lastSplitData = [];
+        document.getElementById('splitTable').innerHTML = '<tr><td colspan="7" class="empty">加载失败</td></tr>';
+        updateStats([]);
+      });
+  }
+
+  function updateStats(data) {
+    var total = data.length;
+    var totalAmount = 0;
+    var merchantCount = 0;
+    var platformCount = 0;
+    data.forEach(function(d){
+      totalAmount += Number(d.splitAmount || 0);
+      var m = d.splitMode;
+      if (m === 1 || m === '1') merchantCount++;
+      else if (m === 2 || m === '2') platformCount++;
+    });
+    document.getElementById('statTotalRecords').textContent = total;
+    document.getElementById('statTotalAmount').textContent = '¥' + totalAmount.toFixed(2);
+    document.getElementById('statMerchantSplit').textContent = merchantCount;
+    document.getElementById('statPlatformSplit').textContent = platformCount;
+  }
+
+  document.getElementById('btnSplitFilter').onclick = loadSplits;
+  document.getElementById('btnSplitRefresh').onclick = function(){
+    document.getElementById('splitCompanyId').value = '';
+    document.getElementById('splitModeFilter').value = '';
+    loadSplits();
+  };
+  loadSplits();
+
+  // --- Deduct Logs ---
+  function loadDeductLogs(ownerId) {
+    var params = [];
+    if (ownerId) params.push('ownerId=' + encodeURIComponent(ownerId));
+    var url = '/api/property/admin/deduct-logs' + (params.length ? '?' + params.join('&') : '');
+
+    fetch(url, { headers: { 'X-Property-Token': token } })
+      .then(function(r){ return r.json(); })
+      .then(function(res){
+        var tbody = document.getElementById('deductTable');
+        if (res.code !== 0 || !res.data || res.data.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="7" class="empty">' + (ownerId ? '暂无抵扣记录' : '请输入业主ID后查询') + '</td></tr>';
+          return;
+        }
+        var html = '';
+        res.data.forEach(function(d){
+          html += '<tr>' +
+            '<td>' + (d.id || '--') + '</td>' +
+            '<td>' + (d.owner_name || d.ownerId || '--') + '</td>' +
+            '<td>' + (d.bill_no || '--') + '</td>' +
+            '<td>¥' + Number(d.amount || d.deduct_amount || 0).toFixed(2) + '</td>' +
+            '<td>' + (d.source || d.type || '--') + '</td>' +
+            '<td>' + (d.remark || d.memo || '--') + '</td>' +
+            '<td>' + (d.created_at || d.deduct_time || '--') + '</td></tr>';
+        });
+        tbody.innerHTML = html;
+      })
+      .catch(function(){ document.getElementById('deductTable').innerHTML = '<tr><td colspan="7" class="empty">加载失败</td></tr>'; });
+  }
+
+  document.getElementById('btnDeductSearch').onclick = function(){
+    var oid = document.getElementById('deductOwnerId').value.trim();
+    if (!oid) { showToast('请输入业主ID', 'error'); return; }
+    loadDeductLogs(oid);
+  };
+  document.getElementById('deductOwnerId').addEventListener('keydown', function(e){
+    if (e.key === 'Enter') {
+      var oid = this.value.trim();
+      if (oid) loadDeductLogs(oid);
+    }
+  });
+  document.getElementById('btnDeductRefresh').onclick = function(){
+    document.getElementById('deductOwnerId').value = '';
+    document.getElementById('deductTable').innerHTML = '<tr><td colspan="7" class="empty">请输入业主ID后查询</td></tr>';
+  };
+})();
+</script>
+</body>
+</html>

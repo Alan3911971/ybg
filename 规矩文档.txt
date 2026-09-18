@@ -1,6 +1,6 @@
 宜必购（ybg）项目规矩文档
 ========================================
-最后更新：2026-09-12（新增G16完整闭环工作规范）
+最后更新：2026-09-18（G31换电脑环境恢复指南）
 
 【G00 项目与代码位置】
 | 项目 | 仓库 | 本地代码 | 类型 |
@@ -166,3 +166,119 @@
 
 【附录】
 - 测试账号：平台admin/Admin@2026，商家13851918986/123321，顾客13851918986/验证码123456（merchantNo=M90380836）
+
+【G17 蓝牙打印规范（2026-09-16 起强制执行）】
+1. 打印机型号：DP80S（德佟DETONGER 80mm热敏标签打印机），用户自有APP"微打"打印正常
+2. 蓝牙连接优先级：
+   - 必须优先用标准SPP UUID（00001101-0000-1000-8000-00805F9B34FB）连接
+   - 自定义UUID（e5b152ed-...）是LPAPI协议通道，不支持ESC/POS，禁止用于打印
+   - 连接前用fetchUuidsWithSdp获取设备支持的所有UUID，按标准SPP→自定义UUID顺序尝试
+3. 打印指令规范（ESC/POS兼容模式）：
+   - 初始化：ESC @ (0x1B 0x40)
+   - 文字：GBK编码 + 0x0A换行，中文必须用GBK不能用UTF-8
+   - 二维码：Canvas绘制位图(280x280) + GS v 0指令(0x1D 0x76 0x30 0x00)，1位/像素MSB优先
+   - 走纸：ESC d n (0x1B 0x64 n)，打印后走纸6行（约1厘米）
+   - 打印顺序：先文字（店铺名倍宽倍高→副标题→走纸1行）→再二维码位图→最后走纸6行
+4. 连接稳定性：
+   - 连接成功后的测试写入（换行符）必须放在独立try-catch中，失败不能断开主连接
+   - printText/printQR中必须检查btOut为null时重新获取输出流
+   - 禁止在连接成功后立即发送大量数据测试，会导致Broken pipe
+5. AndroidBridge接口必须与H5调用完全匹配：
+   - isAvailable() / isBluetoothEnabled() / isConnected() / getConnectedDeviceName()
+   - hasPermission() / requestPermission() / openBluetoothSettings()
+   - showDevicePicker() / connect() / connectPrinter(mac) / disconnectPrinter()
+   - printText(text) / printQR(url, shopName)
+   - speak(text) / speakUrl(url)
+6. 坑：德佟DP80S等标签打印机有双蓝牙通道，自定义UUID通道是LPAPI协议不支持ESC/POS，必须用标准SPP通道
+
+【G18 工具工作目录规范（2026-09-16 起，2026-09-18 更新：Z盘已删除）】
+1. 所有命令执行工具（Bash、computer_use_tool）的默认工作目录为 D:\workspace-java\ybg-master
+2. Z盘（subst D:\workspace-java）已于 2026-09 删除，不再需要、不再映射，任何 Z:\ 路径均已失效
+3. 项目根目录唯一权威路径：D:\workspace-java\ybg-master（backend\、property\、customer\ 等都在其下）
+4. 辅助脚本放 D:\workspace-java\_*.py（部署/验证/GitHub推送脚本）
+5. 所有文件操作必须用绝对路径 D:\workspace-java\ybg-master\...，禁止相对路径
+6. PowerShell语法：用分号;分隔命令，不要用&&（PowerShell不支持&&作为语句分隔符）
+7. 旧版 AGENTS.md 中的 /root/remote-workspace/ybg-master、Z:\ybg、Z:\workspace-java 路径全部失效
+
+G19 | %s | 前端/脚本文件改动（含HTML/JS字符串替换）后，必须校验标签/结构完整性（如 <script>/</script> 配对平衡）再上传生产；调试代码一律不得留在正式入口（如确认打印按钮），调试功能单独页面/按钮且不影响主流程
+G20 | %s | 修改bug更新服务器后必须实际操作演示给用户看；演示中发现的新bug（如脚本不执行）主动排查解决后再交付
+
+【2026-09-18 G21】物业系统部署完成：数据库 34 表（snake_case）、后端 jar 含 /api/property/*、前端 h5/property/（nginx 磁盘直放）、admin/admin@2026 登录可用
+【2026-09-18 G22】批量改 Java 禁止用 PowerShell Get-Content/Set-Content（编码损坏+大小写不敏感），统一用 Python 脚本字节级处理
+【2026-09-18 G23】新模块部署三步自查：①DDL 命名策略与运行时一致（snake_case）②前端 fetch 带 Content-Type 且参数名与后端 @RequestParam 一致 ③nginx 新目录加磁盘直放 location
+
+【2026-09-18 G24】多 Controller 共用登录态：内存 token store 必须共享（静态引用同一实例），否则不同 Controller 校验各自空 store 报"登录已过期"；DB 会话表方案(property_admin_session)更稳
+【2026-09-18 G25】物业演示数据已初始化：admin/Admin@2026 登录后台；业主 13851918986/test123 已绑定阳光花园1号楼101
+
+【2026-09-18 G26】需求1 楼栋/单元/房间管理+年度批量生成物业费：后端 GET/POST/DELETE /api/property/admin/{communities,buildings,rooms}、POST /rooms/{id}/bind、POST /bills/generate-year（companyId+year+amount+billType，按小区→楼栋→房间遍历生成12个月，RoomId+BillPeriod 去重，未绑定业主也生成）；前端 buildings.html（公司/小区联动→楼栋→房间+绑业主+年度生成按钮），已验证 48 张账单生成成功
+
+【2026-09-18 G27】需求3 业主登录与盲盒顾客端合并：新增 GET /api/property/owner/lookup?phone（免token，返回 isOwner/bound/companyName/roomNo）；顾客端 h5/customer/index.html 登录后自动探测业主身份，绑定成功显示「我的物业」紫色入口卡片（跳 property/customer/index.html），未绑定不显示
+
+【2026-09-18 G28】需求2 物业开盲盒收费（最小闭环）：物业后台工作台顶部新增「开盲盒收款码」卡片——读绑定商家（/api/property/admin/p1/merchant-bindings）生成 choose.html?merchantNo=xxx 二维码（qrcodejs 内联，CDN 在 BU 浏览器不可靠）；顾客扫码进入现有抽盲盒流程，支付进商家、按 customSplitRatio 自动分账给物业。待确认：是否需要物业独立收款码/独立商户。
+
+【2026-09-18 G29】业主绑定家庭成员扫码绑定（需求3延伸）：业主在家庭成员页生成绑定二维码（内联 qrcodejs）→ 家人扫码打开 family-bind.html → 填姓名+11位手机号+关系确认 → POST bind-by-qr 写入 family_member。后端：GET /api/property/owner/family/qr-info?ownerId=（免token）、POST /api/property/owner/family/bind-by-qr（手机号正则+重复拦截）、lookup 支持家庭成员（返回 isFamily/relation/ownerId）。前端：family.html 二维码卡、family-bind.html 落地页、顾客端 index.html 家庭成员显示「业主的家庭」入口卡。已验证全链路：生成二维码→扫码绑定李小红→lookup 返回 isFamily=true。硬性：内联 JS 追加必须插到目标 script 块末尾（loadFamily(); 之前），禁止用 s.replace(loadFamily(),...) 替换第一处匹配（会误插进函数回调被注释/延迟执行）
+
+【2026-09-18 G30】物业后台窄屏防变形规范：后台 19 页统一注入响应式规则——900px 以下侧边栏收起（汉堡菜单）、.main/.main-content 必须 min-width:0 + max-width:100%（防 flex item 被表格 min-content 撑开导致横向溢出/页面变形）、.card overflow-x:auto（表格在卡片内横向滚动）。buildings.html 用 .main-content 类名，与其它页 .main 不同，规则必须同时覆盖。验证法：bu.js 注入 375px iframe 检查 scrollWidth<=innerWidth。
+
+
+【2026-09-18 G31 换电脑环境恢复指南（换电脑/新会话必读）】
+换新电脑或新会话后，先按本指南恢复，即可无缝继续本项目。Z盘已删除，一律使用 D:\workspace-java。
+
+一、本地工作目录（唯一权威路径）
+- 项目根：D:\workspace-java\ybg-master（后端 backend\、物业前端 property\、顾客端 customer\）
+- 四文档：D:\workspace-java\ybg-master\规矩文档.txt / 采坑日志.txt / shared-memory.json / 知识图谱.md
+- 辅助脚本：D:\workspace-java\_*.py（paramiko 部署/验证、_push_gh.py GitHub推送、_qrcodejs_inline.js qrcodejs 公共副本）
+- Maven 本地仓库：D:\workspace-java\m2repo
+- 旧 AGENTS.md 内 /root/remote-workspace、Z:\ 路径全部失效
+
+二、必装工具与密钥
+- Python 3 + paramiko（pip install paramiko）——所有部署/SSH/上传脚本依赖
+- JDK 17（可用 D:\devtools\jdk Temurin 17）+ Maven 3.9——后端打包
+- SSH 密钥：
+  · 生产服务器：C:\Users\Administrator\.ssh\ybg_key（root@121.229.160.2:5366）
+  · NAS：C:\Users\Administrator\.ssh\id_ed25519（Alan@192.168.31.228 免密）
+- specify-cli（Spec Kit，见 G14）：C:\Users\Administrator\.local\bin\specify.exe
+
+三、GitHub 怎么使用（远程主备份，G11 强制）
+- 仓库：https://github.com/Alan3911971/ybg（master 分支，git_user doubao/doubao@ibigou.local）
+- 重要：github.com 443 直连不通，git 命令行不可用，必须用 Git Data API 脚本推送（D:\workspace-java\_push_gh.py）
+- token：存于 shared-memory.json 的 github_token 字段（不写明文，防泄露）
+- 推送流程：blobs→trees→commit→PATCH refs/heads/master（force），成功后报告 commit
+- 注意：token 若在公开输出中出现会被 GitHub Secret 检测告警，文档一律脱敏
+
+四、NAS 怎么对接（本地灾备，G11 强制）
+- Synology 192.168.31.228，用户 Alan，密钥 id_ed25519，仓库 /volume1/docker/github-backup/ybg-master
+- scp 不可用（NAS 未启用 scp subsystem），必须用 ssh stdin 管道：
+  ① 本地打包：tar -cf - --exclude=backend/target -C D:\workspace-java ybg-master
+  ② 传输：| ssh alan@192.168.31.228 "cat > /tmp/ybg_sync.tar"（约35秒）
+  ③ NAS 解压：tar 解压到仓库目录（保留 .git）→ git add -A && commit
+- 首次需 Synology 执行：git config --global --add safe.directory /volume1/docker/github-backup/ybg-master
+- NAS 与生产（121.229.160.2）网络不通，不能从 NAS 直连生产
+
+五、生产服务器（唯一含最新代码的副本）
+- SSH：121.229.160.2:5366 root，密钥 ybg_key；网站根 /www/wwwroot/ybgtc.com/，jar ibigou.jar，端口 8085
+- 前端 H5：/www/wwwroot/ybgtc.com/h5/（property 目录 nginx 磁盘直放，改后直接 scp/sftp 覆盖；其它 h5 打包进 jar）
+- MySQL：库 ybgtc.com（带点号，SQL 必须反引号），账号 ybgtc.com，密码见服务器 .env（start.sh 用 set -a . .env 加载）
+- 重启 jar（唯一成功方式）：setsid bash -c 'cd /www/wwwroot/ybgtc.com && bash start.sh > start.log 2>&1' < /dev/null > /dev/null 2>&1 &，然后轮询 ps aux | grep '[i]bigou.jar' | wc -l 直到 =1（约30秒）
+- 大文件（102MB jar）必须 SFTP put（paramiko），禁止 base64 heredoc（会断连 WinError 10054）
+- 恢复代码：一律从生产 jar 反编译/从 GitHub 拉，D 盘旧副本可能过期
+
+六、浏览器测试（bu 平面）
+- computer_use_tool plane="bu" + seed_browser_use；登录态存 localStorage（token 重启后失效需重登）
+- 窄屏验证：bu.js 注入 375px iframe 检查 scrollWidth<=innerWidth
+- 已知坑：bu.js 返回值含 emoji 触发 PY_UNICODE_ENCODE_ERROR（用纯 ASCII JS）；bu 无 set_viewport；页面加载瞬间 fetch 可能挂起（延迟 setTimeout 800ms）
+
+七、测试账号（全部测试环境）
+- 物业后台：admin / Admin@2026（登录 https://ybgtc.com/h5/property/admin/login.html）
+- 业主：13851918986 / test123（ownerId=1，阳光花园1号楼101=roomId1，companyId1=宜必购物业）
+- 家庭成员：13900001111 测试家人(子女)、13900002222 王小明(子女)、13900003333 李小红(配偶)
+- 商家：m001 / M001@2026（merchantNo=M90380836 鲜果时光）
+- 顾客端：手机号+验证码 123456（测试固定）
+- 平台后台：admin / Admin@2026
+
+八、换电脑后第一步
+1. 拷贝 D:\workspace-java 整个目录到新电脑
+2. 安装 Python3+paramiko、JDK17、Maven3.9
+3. 复制 SSH 密钥到 C:\Users\<新用户>\.ssh\
+4. 按本指南验证：SSH 生产 → mvn 打包 → bu 打开物业后台
+5. 读四文档（本文件 + shared-memory.json + 知识图谱.md + 采坑日志.txt）了解最新状态

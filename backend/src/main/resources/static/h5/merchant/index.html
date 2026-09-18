@@ -2712,39 +2712,6 @@ async function _blePrint(bytes){
   }
 
   // Bind events after DOM ready
-  // Bluetooth print handler - global function for reliable onclick (defined outside DOMContentLoaded)
-  window._handleBtPrint = async function(){
-    var mno2 = lsGet("ibigou_merchant_no", "");
-    if (!mno2) {
-      try {
-        var _resp2 = await fetch("/api/merchant/config/weights", { headers: { "X-Merchant-Token": lsGet("ibigou_merchant_token", "") } });
-        var mi2 = await _resp2.json();
-        if (mi2 && mi2.code === 0 && mi2.data && mi2.data.merchantNo) { mno2 = mi2.data.merchantNo; }
-      } catch(e3){}
-    }
-    if (!mno2) { toast("未获取到商家编号", "danger"); return; }
-    var url2 = location.origin + "/h5/customer/login.html?merchantNo=" + encodeURIComponent(mno2);
-    var shop2 = lsGet("ibigou_shop", {});
-    var shopName = shop2.name || "开盲盒";
-    var qrImg = $("printQrBox");
-    var imgSrc = "";
-    if (qrImg) {
-      var img = qrImg.querySelector("img") || qrImg.querySelector("canvas");
-      if (img) {
-        imgSrc = (img.tagName === "CANVAS") ? img.toDataURL("image/png") : img.src;
-      }
-    }
-    if (!imgSrc) {
-      if (window._ensureQrCode) { await window._ensureQrCode(); }
-      var img2 = qrImg ? (qrImg.querySelector("img") || qrImg.querySelector("canvas")) : null;
-      if (img2) {
-        imgSrc = (img2.tagName === "CANVAS") ? img2.toDataURL("image/png") : img2.src;
-      }
-    }
-    if (!imgSrc) { toast("请先生成二维码", "warning"); return; }
-    _showPrintPreview(url2, shopName, imgSrc);
-  };
-
   document.addEventListener("DOMContentLoaded", function() {
     // Paper size buttons
     document.querySelectorAll(".pp-size-btn").forEach(function(btn) {
@@ -2767,30 +2734,7 @@ async function _blePrint(bytes){
   var ppCancel = $("ppCancel");
   if (ppCancel) ppCancel.onclick = function() { $("printPreviewOverlay").classList.remove("show"); };
 
-  // Confirm print
-  var ppConfirm = $("ppConfirm");
-  if (ppConfirm) ppConfirm.onclick = async function() {
-    $("printPreviewOverlay").classList.remove("show");
-    // Do BLE print
-    if (!_printerChar) {
-      var _connected = await _connectBtPrinter();
-      if (!_printerChar) { toast("è¯·è¿æ¥èçæå°æº", "warning"); return; }
-    }
-    try {
-      var bytes = _escPosQR(_ppData.url, _ppData.shopName || "å¼ç®ç");
-      await _blePrint(bytes);
-      toast("äºç»´ç å·²æå°", "success");
-    } catch(e2) {
-      toast("æå°å¤±è´¥: " + (e2.message || ""), "danger");
-    }
-    // Also try Android native as backup
-    if (window.AndroidPrinter && window.AndroidPrinter.isAvailable() && window.AndroidPrinter.isConnected()) {
-      try {
-        var result = JSON.parse(window.AndroidPrinter.printQR(_ppData.url, _ppData.shopName || "å¼ç®ç"));
-        console.log("[Print] Android native result:", result);
-      } catch(pe) { console.log("[Print] Android native error:", pe); }
-    }
-  };
+  // Confirm print - 使用内联onclick+全局函数_handleConfirmPrint（在页面底部独立script中定义）
 
   }); // end DOMContentLoaded
 })();
@@ -3051,17 +2995,18 @@ async function _blePrint(bytes){
       </div>
     </div>
     <div class="pp-actions">
-      <button class="btn btn--ghost" id="ppCancel">取消</button>
-      <button class="btn btn--primary" id="ppConfirm">确认打印</button>
+      <button class="btn btn--ghost" id="ppCancel" onclick="document.getElementById('printPreviewOverlay').classList.remove('show')">取消</button>
+      <button class="btn btn--primary" id="ppConfirm" onclick="window._handleConfirmPrint && window._handleConfirmPrint()">确认打印</button>
     </div>
   </div>
 </div>
 <script>
 // 独立蓝牙打印处理函数 - 不依赖IIFE
-window._handleBtPrint = function() {
+window._handleBtPrint = async function() {
   try {
-    // 获取商家编号
+    // 获取商家编号（去掉可能的双引号，localStorage可能存的是JSON字符串）
     var mno2 = localStorage.getItem("ibigou_merchant_no") || "";
+    mno2 = mno2.replace(/^["']+|["']+$/g, ""); // 去掉首尾的引号
     if (!mno2) {
       alert("未获取到商家编号，请重新登录");
       return;
@@ -3075,15 +3020,43 @@ window._handleBtPrint = function() {
       if (shop && shop.name) shopName = shop.name;
     } catch(e) {}
     
-    // 获取二维码图片
+    // 获取二维码图片（增加容错：APP端可能是canvas，toDataURL可能失败）
     var qrBox = document.getElementById("printQrBox");
     var imgSrc = "";
-    if (qrBox) {
-      var img = qrBox.querySelector("img") || qrBox.querySelector("canvas");
-      if (img) {
-        imgSrc = (img.tagName === "CANVAS") ? img.toDataURL("image/png") : img.src;
+    
+    function getQrSrc() {
+      if (!qrBox) return "";
+      // 优先找img（显示的二维码）
+      var imgEl = qrBox.querySelector("img");
+      if (imgEl && imgEl.src && imgEl.src.length > 10) return imgEl.src;
+      // 再找canvas（隐藏的二维码，转base64）
+      var canvasEl = qrBox.querySelector("canvas");
+      if (canvasEl) {
+        try {
+          var dataUrl = canvasEl.toDataURL("image/png");
+          if (dataUrl && dataUrl.length > 10) return dataUrl;
+        } catch(e) { console.log("canvas toDataURL failed:", e); }
       }
+      return "";
     }
+    
+    // 第一次尝试获取
+    imgSrc = getQrSrc();
+    
+    // 如果没获取到，尝试重新生成二维码
+    if (!imgSrc && window._ensureQrCode) {
+      try {
+        await window._ensureQrCode();
+        imgSrc = getQrSrc();
+      } catch(e) { console.log("ensureQrCode failed:", e); }
+    }
+    
+    // 如果还是没获取到，用外部API生成二维码图片
+    if (!imgSrc) {
+      var qrUrl = location.origin + "/h5/customer/login.html?merchantNo=" + encodeURIComponent(mno2);
+      imgSrc = "https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=" + encodeURIComponent(qrUrl);
+    }
+    
     if (!imgSrc) {
       alert("请先生成二维码");
       return;
@@ -3111,10 +3084,42 @@ window._handleBtPrint = function() {
     if (ppImg) { ppImg.style.width = "120px"; ppImg.style.height = "120px"; }
     if (ppName) { ppName.style.fontSize = "13px"; ppName.style.maxWidth = "140px"; }
     if (overlay) overlay.classList.add("show");
+    // 保存打印数据到window，供确认打印按钮使用
+    window._printData = { url: url2, shopName: shopName, imgSrc: imgSrc };
   } catch(e) {
     alert("蓝牙打印出错: " + e.message);
   }
 };
-</script>
+
+// 独立确认打印处理函数 - 不依赖IIFE
+window._handleConfirmPrint = async function() {
+  try {
+    // 关闭预览弹窗
+    var overlay = document.getElementById("printPreviewOverlay");
+    if (overlay) overlay.classList.remove("show");
+    // 获取打印数据
+    var data = window._printData || {};
+    var printUrl = data.url || "";
+    var printName = data.shopName || "开盲盒";
+    if (!printUrl) { alert("未获取到打印数据，请重新生成二维码"); return; }
+    // Android 原生 LPAPI 打印（只打一次）
+    if (window.AndroidPrinter && window.AndroidPrinter.isAvailable()) {
+      try {
+        var result = JSON.parse(window.AndroidPrinter.printQR(printUrl, printName));
+        if (result.code === 0) {
+          if (window.toast) { window.toast("打印中，请等待出纸", "success"); }
+          else { alert("打印中，请等待出纸"); }
+        } else {
+          alert("打印失败: " + (result.msg || ""));
+        }
+      } catch(e) { alert("打印异常: " + e.message); }
+    } else {
+      alert("未检测到蓝牙打印接口，请在APP中打开本页面");
+    }
+  } catch(e) { alert("确认打印出错: " + e.message); }
+};
+
+</body>
+</html></script>
 </body>
 </html>

@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover">
+<meta name="theme-color" content="#4f46e5">
+<title>增值服务 · 我的物业</title>
+<link rel="icon" href="data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='80' font-size='90'%3E🏠%3C/text%3E%3C/svg%3E">
+<style>
+:root{--pri:#4f46e5;--pri-grad:linear-gradient(135deg,#4f46e5,#7c3aed);--pri-bg:#eef2ff;--text:#1e293b;--text-2:#64748b;--text-3:#94a3b8;--bg:#f8fafc;--surface:#fff;--border:#e2e8f0;--shadow-card:0 2px 12px rgba(0,0,0,.04);--r-md:14px;--r-lg:20px;--r-full:999px;--safe-bottom:env(safe-area-inset-bottom,0px);--success:#16a34a;--success-bg:#ecfdf5;--warning:#f59e0b;--warning-bg:#fffbeb;--danger:#dc2626;--danger-bg:#fef2f2;--blue:#3b82f6;--blue-bg:#eff6ff;}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+html,body{font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","PingFang SC","Microsoft YaHei",sans-serif;color:var(--text);background:var(--bg);-webkit-font-smoothing:antialiased;font-size:15px;}
+body{min-height:100vh;padding-bottom:calc(70px + var(--safe-bottom));max-width:480px;margin:0 auto;position:relative;}
+a{color:inherit;text-decoration:none;}
+button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit;}
+
+@keyframes fadeInUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+.anim-in{animation:fadeInUp .4s ease both;}
+.anim-d1{animation-delay:.05s}.anim-d2{animation-delay:.1s}.anim-d3{animation-delay:.15s}.anim-d4{animation-delay:.2s}
+
+/* Hero */
+.hero{background:var(--pri-grad);color:#fff;padding:40px 24px 28px;position:relative;overflow:hidden;border-radius:0 0 var(--r-lg) var(--r-lg);}
+.hero::before{content:"";position:absolute;top:-60px;right:-40px;width:180px;height:180px;background:rgba(255,255,255,.08);border-radius:50%;}
+.hero::after{content:"";position:absolute;bottom:-30px;left:-20px;width:120px;height:120px;background:rgba(255,255,255,.06);border-radius:50%;}
+.hero h1{font-size:22px;font-weight:700;position:relative;z-index:1;letter-spacing:-.3px;}
+.hero .sub{font-size:13px;opacity:.85;margin-top:6px;position:relative;z-index:1;font-weight:400;}
+
+.wrap{padding:0 16px;}
+
+/* Category Tabs */
+.cat-tabs{display:flex;gap:8px;overflow-x:auto;padding:18px 0 12px;-webkit-overflow-scrolling:touch;}
+.cat-tabs::-webkit-scrollbar{display:none;}
+.cat-tab{flex:0 0 auto;padding:8px 20px;border-radius:var(--r-full);font-size:13px;font-weight:500;background:var(--surface);border:none;color:var(--text-2);white-space:nowrap;cursor:pointer;transition:all .2s ease;box-shadow:var(--shadow-card);}
+.cat-tab.active{background:var(--pri-grad);color:#fff;font-weight:600;box-shadow:0 4px 14px rgba(79,70,229,.3);}
+
+/* Service Grid */
+.svc-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px;}
+.svc-card{background:var(--surface);border-radius:var(--r-md);overflow:hidden;border:none;box-shadow:var(--shadow-card);transition:transform .15s ease,box-shadow .15s ease;}
+.svc-card:active{transform:scale(.97);box-shadow:0 1px 6px rgba(0,0,0,.03);}
+.svc-card .cover{width:100%;height:110px;background:var(--pri-bg);display:flex;align-items:center;justify-content:center;font-size:36px;color:var(--text-3);}
+.svc-card .info{padding:12px 14px;}
+.svc-card .name{font-size:14px;font-weight:600;line-height:1.3;margin-bottom:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text);}
+.svc-card .desc{font-size:11px;color:var(--text-3);margin-bottom:6px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.svc-card .price{font-size:16px;font-weight:800;color:var(--pri);}
+.svc-card .price .unit{font-size:11px;font-weight:400;color:var(--text-3);}
+.svc-card .book-btn{display:block;width:100%;margin-top:10px;height:34px;border-radius:var(--r-full);background:var(--pri-bg);color:var(--pri);font-size:12px;font-weight:600;text-align:center;line-height:34px;cursor:pointer;transition:all .15s ease;}
+.svc-card .book-btn:active{background:var(--pri-grad);color:#fff;}
+
+/* Section */
+.sec-title{font-size:15px;font-weight:700;margin:22px 0 12px;display:flex;align-items:center;gap:8px;color:var(--text);}
+.sec-title .count{font-size:12px;color:var(--text-3);font-weight:400;}
+
+/* Order Card */
+.order-card{background:var(--surface);border:none;border-radius:var(--r-md);padding:16px;margin-bottom:16px;box-shadow:var(--shadow-card);}
+.order-card .o-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;}
+.order-card .o-name{font-size:14px;font-weight:600;color:var(--text);}
+.o-badge{display:inline-block;padding:3px 10px;border-radius:var(--r-full);font-size:10px;font-weight:600;letter-spacing:.2px;}
+.o-badge.pending{background:var(--warning-bg);color:var(--warning);}
+.o-badge.confirmed{background:var(--blue-bg);color:var(--blue);}
+.o-badge.done{background:var(--success-bg);color:var(--success);}
+.o-badge.cancelled{background:#f1f5f9;color:var(--text-3);}
+.o-badge.paid{background:var(--success-bg);color:var(--success);}
+.order-card .o-info{font-size:12px;color:var(--text-2);line-height:1.7;}
+.order-card .o-actions{display:flex;gap:8px;margin-top:12px;justify-content:flex-end;}
+.o-btn{height:32px;padding:0 14px;border-radius:var(--r-full);font-size:12px;font-weight:600;cursor:pointer;border:none;transition:all .15s ease;}
+.o-btn:active{transform:scale(.96);}
+.o-btn.pay{background:var(--pri-grad);color:#fff;box-shadow:0 2px 8px rgba(79,70,229,.25);}
+.o-btn.cancel{background:var(--danger-bg);color:var(--danger);}
+
+.empty{text-align:center;padding:40px 16px;color:var(--text-3);font-size:13px;}
+.empty .emoji{font-size:40px;display:block;margin-bottom:10px;}
+
+/* Bottom Sheet */
+.mask{position:fixed;inset:0;z-index:150;background:rgba(0,0,0,.4);backdrop-filter:blur(4px);display:none;align-items:flex-end;justify-content:center;}
+.mask.show{display:flex;}
+.sheet{background:var(--surface);border-radius:var(--r-lg) var(--r-lg) 0 0;width:100%;max-width:480px;max-height:85vh;overflow-y:auto;padding:28px 24px calc(28px + var(--safe-bottom));animation:slideUp .3s cubic-bezier(.32,.72,0,1);}
+@keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+.sheet .sheet-title{font-size:18px;font-weight:700;margin-bottom:20px;display:flex;align-items:center;justify-content:space-between;color:var(--text);}
+.sheet .sheet-close{font-size:22px;color:var(--text-3);padding:4px;width:32px;height:32px;display:flex;align-items:center;justify-content:center;border-radius:50%;background:var(--bg);transition:background .15s;}
+.sheet .sheet-close:active{background:var(--border);}
+.form-group{margin-bottom:16px;}
+.form-group label{display:block;font-size:13px;font-weight:600;color:var(--text-2);margin-bottom:8px;}
+.input{width:100%;height:48px;padding:0 16px;border:none;border-radius:var(--r-md);background:var(--bg);font-size:15px;color:var(--text);transition:box-shadow .2s ease;outline:none;}
+.input:focus{box-shadow:0 0 0 2px var(--pri-bg),0 0 0 4px rgba(79,70,229,.15);}
+.input::placeholder{color:var(--text-3);}
+select.input{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath d='M2 4l4 4 4-4' fill='none' stroke='%2394a3b8' stroke-width='1.5'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 16px center;}
+textarea.input{height:88px;padding:14px 16px;resize:none;font-family:inherit;line-height:1.5;}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:none;font-weight:600;cursor:pointer;transition:all .2s cubic-bezier(.4,0,.2,1);letter-spacing:.2px;white-space:nowrap;}
+.btn-xs{height:28px;padding:0 10px;font-size:12px;border-radius:6px;}
+.btn-sm{height:36px;padding:0 16px;font-size:13px;border-radius:8px;}
+.btn-md{height:44px;padding:0 24px;font-size:14px;border-radius:10px;}
+.btn-lg{height:52px;padding:0 32px;font-size:16px;border-radius:12px;}
+.btn-xl{height:60px;padding:0 40px;font-size:18px;border-radius:14px;}
+.btn-block{width:100%;}
+.btn-icon{width:44px;height:44px;padding:0;border-radius:12px;}
+.btn-primary{background:linear-gradient(135deg,#4f46e5 0%,#7c3aed 100%);color:#fff;box-shadow:0 4px 14px rgba(79,70,229,.3);}
+.btn-secondary{background:var(--surface);color:var(--text);border:1.5px solid var(--border);}
+.btn-soft{background:var(--pri-bg);color:var(--pri);}
+.btn-ghost{background:transparent;color:var(--pri);}
+.btn-success{background:linear-gradient(135deg,#10b981,#059669);color:#fff;box-shadow:0 4px 14px rgba(16,185,129,.3);}
+.btn-danger{background:linear-gradient(135deg,#ef4444,#dc2626);color:#fff;box-shadow:0 4px 14px rgba(239,68,68,.3);}
+.btn-warning{background:linear-gradient(135deg,#f59e0b,#d97706);color:#fff;box-shadow:0 4px 14px rgba(245,158,11,.3);}
+.btn:hover{transform:translateY(-1px);filter:brightness(1.05);}
+.btn:active{transform:scale(.97);filter:brightness(.95);}
+.btn:focus-visible{outline:2px solid var(--pri);outline-offset:2px;}
+.btn[disabled]{opacity:.45;cursor:not-allowed;transform:none!important;filter:none!important;}
+.btn.loading{pointer-events:none;position:relative;color:transparent!important;}
+.btn.loading::after{content:"";position:absolute;width:18px;height:18px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:btn-spin .6s linear infinite;}
+@keyframes btn-spin{to{transform:rotate(360deg);}}
+/* FAB */
+.fab{position:fixed;bottom:calc(88px + var(--safe-bottom));right:20px;width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,#4f46e5,#7c3aed);color:#fff;display:flex;align-items:center;justify-content:center;font-size:24px;box-shadow:0 6px 20px rgba(79,70,229,.4);z-index:40;border:none;cursor:pointer;transition:transform .15s;}
+.fab:active{transform:scale(.9);}
+/* CTA full-width */
+.btn-cta{width:100%;height:56px;font-size:17px;font-weight:700;border-radius:16px;letter-spacing:.3px;}
+
+/* Stepper */
+.stepper{display:flex;align-items:center;gap:0;height:44px;}
+.stepper button{width:44px;height:44px;border-radius:var(--r-md);background:var(--bg);border:none;font-size:18px;color:var(--text-2);display:flex;align-items:center;justify-content:center;transition:background .15s;}
+.stepper button:active{background:var(--border);}
+.stepper .val{flex:1;text-align:center;font-size:17px;font-weight:700;color:var(--text);}
+
+/* Bottom Nav */
+.nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:480px;z-index:100;height:calc(60px + var(--safe-bottom));background:rgba(255,255,255,.85);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);display:flex;border-top:none;padding-bottom:var(--safe-bottom);box-shadow:0 -1px 20px rgba(0,0,0,.04);}
+.nav .tab{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;color:var(--text-3);font-size:10px;font-weight:500;transition:color .2s;}
+.nav .tab .ic{font-size:22px;transition:transform .2s;}
+.nav .tab.active{color:var(--pri);font-weight:600;}
+.nav .tab.active::after{content:"";width:4px;height:4px;border-radius:50%;background:var(--pri);margin-top:2px;}
+.nav .tab.active .ic{transform:translateY(-2px);}
+
+/* Toast */
+.toast-host{position:fixed;top:16px;left:50%;transform:translateX(-50%);width:100%;max-width:440px;z-index:200;display:flex;flex-direction:column;align-items:center;gap:8px;pointer-events:none;padding:0 16px;}
+.toast{background:rgba(30,41,59,.92);backdrop-filter:blur(10px);color:#fff;padding:10px 20px;border-radius:var(--r-full);font-size:13px;font-weight:500;max-width:90%;text-align:center;opacity:0;transform:translateY(-10px);transition:all .25s ease;box-shadow:0 4px 20px rgba(0,0,0,.15);}
+.toast.show{opacity:1;transform:translateY(0);}
+.toast.success{background:rgba(22,163,74,.92);}
+.toast.warning{background:rgba(245,158,11,.92);}
+.toast.danger{background:rgba(220,38,38,.92);}
+</style>
+</head>
+<body>
+<div class="hero anim-in">
+  <h1>🛎 增值服务</h1>
+  <div class="sub">维修、家政、保洁、搬家等便民服务</div>
+</div>
+
+<div class="wrap">
+  <!-- Category Tabs -->
+  <div class="cat-tabs anim-in anim-d1" id="catTabs">
+    <div class="cat-tab active" data-cat="all">全部</div>
+    <div class="cat-tab" data-cat="repair">维修</div>
+    <div class="cat-tab" data-cat="housekeeping">家政</div>
+    <div class="cat-tab" data-cat="cleaning">保洁</div>
+    <div class="cat-tab" data-cat="moving">搬家</div>
+  </div>
+
+  <!-- Service Grid -->
+  <div class="svc-grid anim-in anim-d2" id="svcGrid"></div>
+
+  <!-- My Orders -->
+  <div class="sec-title anim-in anim-d3">📦 我的订单 <span class="count" id="orderHint"></span></div>
+  <div class="anim-in anim-d4" id="orderList"></div>
+</div>
+
+<!-- Booking Sheet -->
+<div class="mask" id="bookMask">
+  <div class="sheet">
+    <div class="sheet-title"><span id="bookSvcName">预约服务</span> <button class="sheet-close" id="bookClose">✕</button></div>
+    <input type="hidden" id="bookSvcId">
+    <div class="form-group">
+      <label>数量</label>
+      <div class="stepper">
+        <button id="stepMinus">−</button>
+        <div class="val" id="stepVal">1</div>
+        <button id="stepPlus">+</button>
+      </div>
+    </div>
+    <div class="form-group">
+      <label>备注</label>
+      <textarea id="bookRemark" class="input" placeholder="如有特殊需求请在此说明..."></textarea>
+    </div>
+    <div style="margin-bottom:16px;font-size:13px;color:var(--text-2);">预估费用：<b id="bookPrice" style="color:var(--pri);font-size:16px;">¥0</b></div>
+    <button id="btnBook" class="btn btn-md btn-primary btn-block">确认下单</button>
+  </div>
+</div>
+
+<div class="toast-host" id="toastHost"></div>
+
+<nav class="nav">
+  <div class="tab" data-go="index.html"><span class="ic">🏠</span><span>首页</span></div>
+  <div class="tab" data-go="access.html"><span class="ic">🚪</span><span>门禁</span></div>
+  <div class="tab" data-go="bills.html"><span class="ic">📋</span><span>账单</span></div>
+  <div class="tab active" data-go="bind.html"><span class="ic">👤</span><span>我的</span></div>
+</nav>
+
+<script>
+const $=id=>document.getElementById(id);
+const API="/api/property/owner";
+function toast(m,t){const h=$("toastHost");if(!h)return;const e=document.createElement("div");e.className="toast "+(t||"");e.textContent=m;h.appendChild(e);requestAnimationFrame(()=>e.classList.add("show"));setTimeout(()=>{e.classList.remove("show");setTimeout(()=>e.remove(),250)},2400)}
+
+const tk=localStorage.getItem("property_owner_token");
+if(!tk){location.href="login.html"}
+
+async function req(path,method,body){
+  const h={};const token=localStorage.getItem("property_owner_token");
+  if(token)h["X-Owner-Token"]=token;
+  const o={method:method||"GET",headers:h};
+  if(body&&method!=="GET"){
+    h["Content-Type"]="application/json";
+    o.body=JSON.stringify(body);
+  }
+  try{
+    const r=await fetch(API+path,o).then(r=>r.json());
+    if(r.code===401){localStorage.removeItem("property_owner_token");toast("登录已过期，请重新登录","warning");setTimeout(()=>{location.href="login.html"},1500)}
+    return r;
+  }catch(e){return{code:-1,msg:e.message}}
+}
+const get=p=>req(p,"GET");
+const post=(p,b)=>req(p,"POST",b);
+
+function emptyBox(emoji,text){return '<div class="empty"><span class="emoji">'+emoji+'</span>'+text+'</div>'}
+function fmtTime(s){return s?s.replace("T"," ").slice(0,16):""}
+
+const catIcons={"repair":"🔧","housekeeping":"👩‍🍳","cleaning":"🧹","moving":"🚚"};
+let curCat="all";
+let allServices=[];
+let _bookQty=1;
+let _bookUnitPrice=0;
+
+// Category tabs
+document.querySelectorAll(".cat-tab").forEach(function(t){
+  t.addEventListener("click",function(){
+    document.querySelectorAll(".cat-tab").forEach(function(x){x.classList.remove("active")});
+    t.classList.add("active");
+    curCat=t.dataset.cat;
+    renderServices();
+  });
+});
+
+function renderServices(){
+  let list=allServices;
+  if(curCat!=="all"){list=list.filter(function(s){return s.category===curCat})}
+  if(!list.length){
+    $("svcGrid").innerHTML=emptyBox("🛎","暂无相关服务");
+    return;
+  }
+  $("svcGrid").innerHTML=list.map(function(s){
+    const icon=catIcons[s.category]||"🛎";
+    return '<div class="svc-card">'
+      +'<div class="cover">'+icon+'</div>'
+      +'<div class="info">'
+      +'<div class="name">'+(s.name||"服务")+'</div>'
+      +(s.description?'<div class="desc">'+s.description+'</div>':'')
+      +'<div class="price">¥'+(Number(s.price||0).toFixed(0))+'<span class="unit">/次</span></div>'
+      +'<div class="book-btn" onclick="openBook('+s.id+',\''+(s.name||"").replace(/'/g,"\\'")+'\','+Number(s.price||0)+')">立即预约</div>'
+      +'</div></div>';
+  }).join("");
+}
+
+// Load services
+async function loadServices(){
+  $("svcGrid").innerHTML='<div style="text-align:center;padding:20px;color:var(--text-3);font-size:13px;grid-column:1/-1;">加载中...</div>';
+  const r=await get("/p1/value-services");
+  if(r.code===0&&r.data&&r.data.length){
+    allServices=r.data;
+    renderServices();
+  }else{
+    allServices=[];
+    $("svcGrid").innerHTML=emptyBox("🛎","暂无可用服务");
+  }
+}
+
+// Booking sheet
+window.openBook=function(id,name,price){
+  $("bookSvcId").value=id;
+  $("bookSvcName").textContent=name;
+  _bookUnitPrice=price;
+  _bookQty=1;
+  $("stepVal").textContent=_bookQty;
+  $("bookPrice").textContent="¥"+(_bookUnitPrice*_bookQty).toFixed(0);
+  $("bookRemark").value="";
+  $("bookMask").classList.add("show");
+};
+$("bookClose").addEventListener("click",()=>{$("bookMask").classList.remove("show")});
+$("bookMask").addEventListener("click",function(e){if(e.target===$("bookMask"))$("bookMask").classList.remove("show")});
+
+$("stepMinus").addEventListener("click",function(){
+  if(_bookQty>1){_bookQty--;$("stepVal").textContent=_bookQty;$("bookPrice").textContent="¥"+(_bookUnitPrice*_bookQty).toFixed(0)}
+});
+$("stepPlus").addEventListener("click",function(){
+  if(_bookQty<99){_bookQty++;$("stepVal").textContent=_bookQty;$("bookPrice").textContent="¥"+(_bookUnitPrice*_bookQty).toFixed(0)}
+});
+
+$("btnBook").addEventListener("click",async function(){
+  const svcId=$("bookSvcId").value;
+  const remark=($("bookRemark").value||"").trim();
+  if(!svcId){toast("请选择服务","warning");return}
+  $("btnBook").disabled=true;$("btnBook").textContent="下单中...";
+  try{
+    const body={serviceId:parseInt(svcId),quantity:_bookQty};
+    if(remark)body.remark=remark;
+    const r=await post("/p1/vs-orders",body);
+    if(r.code===0){
+      toast("下单成功","success");
+      $("bookMask").classList.remove("show");
+      loadOrders();
+    }else{
+      toast(r.msg||"下单失败","danger");
+    }
+  }catch(e){
+    toast("网络异常："+(e.message||"请稍后再试"),"danger");
+  }
+  $("btnBook").disabled=false;$("btnBook").textContent="确认下单";
+});
+
+// Pay balance
+window.payOrder=function(orderNo,btn){
+  btn.disabled=true;btn.textContent="支付中...";
+  post("/p1/vs-orders/"+orderNo+"/pay-balance",{}).then(function(r){
+    if(r.code===0){
+      toast("支付成功","success");
+      loadOrders();
+    }else{
+      toast(r.msg||"支付失败","danger");
+    }
+    btn.disabled=false;btn.textContent="余额支付";
+  }).catch(function(){
+    toast("网络异常","danger");
+    btn.disabled=false;btn.textContent="余额支付";
+  });
+};
+
+// Cancel order
+window.cancelOrder=function(orderNo,btn){
+  if(!confirm("确定要取消此订单吗？"))return;
+  btn.disabled=true;btn.textContent="取消中...";
+  post("/p1/vs-orders/"+orderNo+"/cancel",{}).then(function(r){
+    if(r.code===0){
+      toast("订单已取消","success");
+      loadOrders();
+    }else{
+      toast(r.msg||"取消失败","danger");
+    }
+    btn.disabled=false;btn.textContent="取消订单";
+  }).catch(function(){
+    toast("网络异常","danger");
+    btn.disabled=false;btn.textContent="取消订单";
+  });
+};
+
+// Load orders
+const orderStatusMap={"pending":{cls:"pending",text:"待支付"},"confirmed":{cls:"confirmed",text:"已确认"},"processing":{cls:"confirmed",text:"服务中"},"done":{cls:"done",text:"已完成"},"completed":{cls:"done",text:"已完成"},"cancelled":{cls:"cancelled",text:"已取消"},"paid":{cls:"paid",text:"已支付"}};
+async function loadOrders(){
+  $("orderList").innerHTML='<div style="text-align:center;padding:20px;color:var(--text-3);font-size:13px;">加载中...</div>';
+  const r=await get("/p1/vs-orders");
+  if(r.code===0&&r.data&&r.data.length){
+    const list=r.data;
+    $("orderHint").textContent="共 "+list.length+" 条";
+    $("orderList").innerHTML=list.map(function(o){
+      const st=orderStatusMap[o.status]||{cls:"pending",text:o.status||"未知"};
+      const orderNo=o.orderNo||o.order_no||o.id;
+      // Action buttons based on status
+      let actionsHtml='';
+      if(o.status==="pending"){
+        actionsHtml='<div class="o-actions">'
+          +'<button class="o-btn cancel" onclick="cancelOrder(\''+orderNo+'\',this)">取消订单</button>'
+          +'<button class="o-btn pay" onclick="payOrder(\''+orderNo+'\',this)">余额支付</button>'
+          +'</div>';
+      }
+      return '<div class="order-card">'
+        +'<div class="o-header"><span class="o-name">'+(o.serviceName||"增值服务")+'</span><span class="o-badge '+st.cls+'">'+st.text+'</span></div>'
+        +'<div class="o-info">'
+        +'订单号：'+orderNo+'<br>'
+        +'数量：'+(o.quantity||1)+'次 · 费用：¥'+(Number(o.totalAmount||o.amount||0).toFixed(2))+'<br>'
+        +(o.remark?'备注：'+o.remark+'<br>':'')
+        +'下单：'+fmtTime(o.createTime||o.created_at)
+        +'</div>'
+        +actionsHtml
+        +'</div>';
+    }).join("");
+  }else{
+    $("orderHint").textContent="";
+    $("orderList").innerHTML=emptyBox("📦","暂无服务订单");
+  }
+}
+
+// Nav
+document.querySelectorAll(".nav .tab").forEach(el=>el.addEventListener("click",()=>{
+  const h=el.dataset.go;if(h)location.href=h;
+}));
+
+loadServices();
+loadOrders();
+</script>
+</body>
+</html>

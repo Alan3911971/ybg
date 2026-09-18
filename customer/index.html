@@ -58,6 +58,14 @@ button{font-family:inherit;cursor:pointer;border:none;background:none;color:inhe
 .toast.success{background:#16a34a;}
 .toast.warning{background:#f59e0b;}
 .nav{position:fixed;bottom:0;left:0;right:0;z-index:100;height:calc(56px + env(safe-area-inset-bottom));background:rgba(255,255,255,.97);backdrop-filter:blur(10px);display:flex;border-top:1px solid var(--c-border);z-index:50;padding-bottom:env(safe-area-inset-bottom);}
+.prop-card{display:none;max-width:480px;margin:14px auto 0;padding:0 16px;}
+.prop-inner{display:flex;align-items:center;gap:12px;background:linear-gradient(135deg,#4f46e5 0%,#7c3aed 100%);border-radius:16px;padding:16px;color:#fff;box-shadow:0 8px 24px rgba(79,70,229,.3);cursor:pointer;position:relative;overflow:hidden;}
+.prop-inner::after{content:"";position:absolute;top:-30px;right:-20px;width:110px;height:110px;background:rgba(255,255,255,.08);border-radius:50%;}
+.prop-inner .p-ic{width:42px;height:42px;border-radius:12px;background:rgba(255,255,255,.16);display:flex;align-items:center;justify-content:center;font-size:22px;flex:0 0 42px;}
+.prop-inner .p-info{flex:1;min-width:0;}
+.prop-inner .p-name{font-size:15px;font-weight:700;}
+.prop-inner .p-sub{font-size:12px;color:rgba(255,255,255,.75);margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.prop-inner .p-arrow{font-size:18px;opacity:.7;}
 .nav .tab{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;color:var(--c-text-3);font-size:10px;}
 .nav .tab .ic{font-size:20px;}
 .nav .tab.active{color:var(--c-primary);font-weight:600;}
@@ -100,6 +108,16 @@ button{font-family:inherit;cursor:pointer;border:none;background:none;color:inhe
 <div class="promo-sub">折扣券 / 立减券 / 余额赠送 / 团购免单<br>中奖后到店消费自动抵扣，快来开始吧</div>
 </div>
 </div>
+<div class="prop-card" id="propCard">
+<div class="prop-inner" onclick="location.href='/h5/property/customer/index.html'">
+<div class="p-ic">🏢</div>
+<div class="p-info">
+<div class="p-name" id="propName">我的物业</div>
+<div class="p-sub" id="propSub">点击进入物业服务中心</div>
+</div>
+<div class="p-arrow">›</div>
+</div>
+</div>
 <div class="toast-host" id="toastHost"></div>
 <nav class="nav">
 <div class="tab active" data-go="/h5/customer/index.html"><span class="ic">🎯</span><span>抽盒</span></div>
@@ -118,6 +136,23 @@ if(mno)localStorage.setItem("ibigou_merchant_no",mno);
 const tk=localStorage.getItem("ibigou_user_token");
 const ph=localStorage.getItem("ibigou_phone");
 if(!tk||!ph){location.href="/h5/customer/login.html?merchantNo="+(mno||"");}
+// 业主/家庭成员身份检测（合并物业入口）
+(function(){
+  if(!ph) return;
+  fetch("/api/property/owner/lookup?phone="+encodeURIComponent(ph)).then(r=>r.json()).then(res=>{
+    if(res.code===0 && res.data && res.data.bound){
+      var nm=res.data.companyName||"我的物业";
+      var sub=res.data.roomNo?("小区 · "+nm+" "+res.data.roomNo+"室"):("小区 · "+nm);
+      if(res.data.isFamily){
+        nm=(res.data.ownerName||"业主")+"的家庭";
+        sub=(res.data.relation||"成员")+" · "+nm+" "+(res.data.roomNo?res.data.roomNo+"室":"");
+      }
+      $("propName").textContent=nm;
+      $("propSub").textContent=sub+" · 账单/预约/门禁";
+      $("propCard").style.display="block";
+    }
+  }).catch(function(){});
+})();
 const typeName={1:"折扣券",2:"立减券",3:"余额赠送",4:"免单",5:"谢谢参与"};
 const prizeEmoji={1:"🎫",2:"💸",3:"👤",4:"🧧",5:"👋"};
 const SAMPLE_PH=["138****8888","139****6666","159****1234","186****5678","133****9999","152****3333","177****7777","189****0000"];

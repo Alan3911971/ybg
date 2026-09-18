@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover">
+<meta name="theme-color" content="#4f46e5">
+<title>我的物业</title>
+<link rel="icon" href="data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='80' font-size='90'%3E🏠%3C/text%3E%3C/svg%3E">
+<style>
+:root{--pri:#4f46e5;--pri-hover:#4338ca;--pri-light:#818cf8;--pri-bg:#eef2ff;--pri-grad:linear-gradient(135deg,#4f46e5 0%,#7c3aed 100%);--gold:#f59e0b;--gold-bg:#fffbeb;--success:#10b981;--success-bg:#ecfdf5;--danger:#ef4444;--danger-bg:#fef2f2;--text:#1e293b;--text-2:#64748b;--text-3:#94a3b8;--bg:#f8fafc;--surface:#ffffff;--border:#e2e8f0;--divider:#f1f5f9;--shadow-card:0 2px 12px rgba(0,0,0,.04);--shadow-float:0 8px 30px rgba(0,0,0,.08);--r-md:14px;--r-lg:20px;--r-xl:24px;--r-full:999px;--safe-bottom:env(safe-area-inset-bottom,0px);--ease:cubic-bezier(.4,0,.2,1);}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+html,body{font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif;color:var(--text);background:var(--bg);-webkit-font-smoothing:antialiased;font-size:15px;}
+body{min-height:100vh;}
+a{color:inherit;text-decoration:none;}
+button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit;}
+
+@keyframes fadeInUp{from{opacity:0;transform:translateY(16px);}to{opacity:1;transform:translateY(0);}}
+.page-content>*{animation:fadeInUp .4s var(--ease) backwards;}
+.page-content>*:nth-child(1){animation-delay:0s;}
+.page-content>*:nth-child(2){animation-delay:.05s;}
+.page-content>*:nth-child(3){animation-delay:.1s;}
+.page-content>*:nth-child(4){animation-delay:.15s;}
+.page-content>*:nth-child(5){animation-delay:.2s;}
+.page-content>*:nth-child(6){animation-delay:.25s;}
+.page-content>*:nth-child(7){animation-delay:.3s;}
+.page-content>*:nth-child(8){animation-delay:.35s;}
+
+.app-shell{max-width:480px;margin:0 auto;min-height:100vh;background:var(--bg);}
+.page-content{padding:0 20px calc(80px + var(--safe-bottom));}
+
+/* Hero */
+.hero{background:var(--pri-grad);color:#fff;padding:36px 20px 28px;position:relative;overflow:hidden;border-radius:0 0 var(--r-xl) var(--r-xl);}
+.hero::before{content:"";position:absolute;top:-60px;right:-40px;width:180px;height:180px;background:rgba(255,255,255,.08);border-radius:50%;}
+.hero::after{content:"";position:absolute;bottom:-30px;left:-20px;width:120px;height:120px;background:rgba(255,255,255,.06);border-radius:50%;}
+.hero h1{font-size:20px;font-weight:700;position:relative;z-index:1;}
+.bal{margin-top:16px;position:relative;z-index:1;}
+.bal .label{font-size:12px;opacity:.85;font-weight:500;}
+.bal .amount-row{display:flex;align-items:flex-end;gap:4px;margin-top:4px;}
+.bal .sym{font-size:18px;opacity:.9;padding-bottom:4px;font-weight:600;}
+.bal .num{font-size:36px;font-weight:800;letter-spacing:-1px;line-height:1;}
+.bal .sub-row{display:flex;gap:10px;margin-top:12px;flex-wrap:wrap;}
+.bal .sub-item{display:inline-flex;align-items:center;gap:4px;padding:5px 14px;border-radius:var(--r-full);font-size:12px;background:rgba(255,255,255,.15);backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,.2);font-weight:500;}
+
+/* Info Card */
+.info-card{background:var(--surface);border-radius:var(--r-lg);padding:20px;margin-top:-20px;position:relative;z-index:2;box-shadow:var(--shadow-card);display:flex;align-items:center;gap:16px;}
+.info-card .avatar{width:64px;height:64px;border-radius:50%;background:var(--pri-bg);display:flex;align-items:center;justify-content:center;font-size:28px;flex:0 0 64px;border:3px solid transparent;background-image:var(--pri-grad);background-origin:border-box;background-clip:padding-box,border-box;position:relative;}
+.info-card .avatar::before{content:"👤";position:absolute;font-size:28px;}
+.info-card .info-main{flex:1;min-width:0;}
+.info-card .name{font-size:20px;font-weight:700;}
+.info-card .phone{font-size:14px;color:var(--text-2);margin-top:2px;}
+.info-card .companies{margin-top:6px;display:flex;flex-wrap:wrap;gap:6px;}
+.info-card .companies .tag{display:inline-block;padding:3px 10px;border-radius:var(--r-full);background:var(--pri-bg);color:var(--pri);font-size:11px;font-weight:700;letter-spacing:.3px;}
+
+/* Action Grid */
+.action-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:20px;}
+.action-card{background:var(--surface);border-radius:var(--r-lg);padding:18px 10px;text-align:center;box-shadow:var(--shadow-card);cursor:pointer;transition:all .2s var(--ease);}
+.action-card:active{transform:scale(.96);}
+.action-card .ic{width:44px;height:44px;border-radius:var(--r-md);display:flex;align-items:center;justify-content:center;font-size:22px;margin:0 auto 10px;background:var(--pri-bg);}
+.action-card .t{font-size:13px;font-weight:700;color:var(--text);}
+.action-card .s{font-size:10px;color:var(--text-3);margin-top:3px;}
+
+/* Section Title */
+.sec-title{font-size:18px;font-weight:700;color:var(--text);margin:24px 0 14px;display:flex;align-items:center;justify-content:space-between;}
+.sec-title .count{font-size:13px;color:var(--text-3);font-weight:500;}
+
+/* Split Summary */
+.split-summary{background:var(--surface);border-radius:var(--r-lg);padding:20px;box-shadow:var(--shadow-card);}
+.split-total{display:flex;align-items:flex-end;gap:4px;margin-bottom:14px;}
+.split-total .sym{font-size:16px;color:var(--text-2);padding-bottom:2px;font-weight:600;}
+.split-total .num{font-size:32px;font-weight:800;color:var(--pri);line-height:1;letter-spacing:-1px;}
+.split-modes{display:flex;flex-wrap:wrap;gap:10px;}
+.split-mode{flex:1;min-width:100px;background:var(--bg);border-radius:var(--r-md);padding:14px;text-align:center;}
+.split-mode .mode-name{font-size:12px;color:var(--text-3);font-weight:500;}
+.split-mode .mode-amt{font-size:16px;font-weight:700;color:var(--text);margin-top:4px;}
+
+/* Deduction List */
+.card{background:var(--surface);border-radius:var(--r-lg);padding:8px 16px;box-shadow:var(--shadow-card);}
+.flow-item{display:flex;align-items:center;gap:12px;padding:12px 0;}
+.flow-item+.flow-item{border-top:1px solid var(--divider);}
+.flow-item .ic{width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;flex:0 0 34px;}
+.flow-item.out .ic{background:var(--danger-bg);color:var(--danger);}
+.flow-item .main{flex:1;min-width:0;}
+.flow-item .t{font-size:14px;font-weight:600;}
+.flow-item .s{font-size:11px;color:var(--text-3);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.flow-item .amt{font-size:15px;font-weight:700;color:var(--danger);}
+
+.empty{text-align:center;padding:32px 16px;color:var(--text-3);font-size:13px;}
+.empty .emoji{font-size:36px;display:block;margin-bottom:8px;}
+
+.deduct-link{display:block;text-align:center;padding:14px;font-size:13px;color:var(--pri);font-weight:600;background:var(--surface);border-radius:var(--r-lg);margin-top:12px;box-shadow:var(--shadow-card);transition:all .2s var(--ease);}
+.deduct-link:active{background:var(--pri-bg);}
+
+/* Bottom Nav */
+.bottom-nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:480px;background:rgba(255,255,255,.85);backdrop-filter:blur(20px) saturate(180%);-webkit-backdrop-filter:blur(20px) saturate(180%);border-top:.5px solid rgba(0,0,0,.06);display:flex;justify-content:space-around;align-items:center;padding:8px 0 calc(8px + var(--safe-bottom));z-index:50;}
+.bottom-nav a{display:flex;flex-direction:column;align-items:center;gap:2px;font-size:10px;color:var(--text-3);text-decoration:none;transition:color .2s;}
+.bottom-nav a.active{color:var(--pri);}
+.bottom-nav a.active::after{content:"";width:4px;height:4px;border-radius:50%;background:var(--pri);margin-top:2px;}
+.bottom-nav a.active .icon{transform:translateY(-2px);}
+.bottom-nav a .icon{font-size:24px;line-height:1;transition:transform .2s var(--ease);}
+.bottom-nav a.active .icon{transform:scale(1.1);}
+
+/* Toast */
+.toast-host{position:fixed;top:20px;left:50%;transform:translateX(-50%);z-index:200;display:flex;flex-direction:column;gap:8px;pointer-events:none;width:90%;max-width:400px;}
+.toast{padding:12px 20px;border-radius:var(--r-full);background:rgba(30,41,59,.92);backdrop-filter:blur(10px);color:#fff;font-size:13px;font-weight:500;text-align:center;opacity:0;transform:translateY(-12px);transition:all .3s var(--ease);box-shadow:0 4px 20px rgba(0,0,0,.15);}
+.toast.show{opacity:1;transform:translateY(0);}
+.toast.success{background:var(--success);}
+.toast.warning{background:var(--gold);}
+.toast.danger{background:var(--danger);}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:none;font-weight:600;cursor:pointer;transition:all .2s cubic-bezier(.4,0,.2,1);letter-spacing:.2px;white-space:nowrap;}
+.btn-xs{height:28px;padding:0 10px;font-size:12px;border-radius:6px;}
+.btn-sm{height:36px;padding:0 16px;font-size:13px;border-radius:8px;}
+.btn-md{height:44px;padding:0 24px;font-size:14px;border-radius:10px;}
+.btn-lg{height:52px;padding:0 32px;font-size:16px;border-radius:12px;}
+.btn-xl{height:60px;padding:0 40px;font-size:18px;border-radius:14px;}
+.btn-block{width:100%;}
+.btn-icon{width:44px;height:44px;padding:0;border-radius:12px;}
+.btn-primary{background:linear-gradient(135deg,#4f46e5 0%,#7c3aed 100%);color:#fff;box-shadow:0 4px 14px rgba(79,70,229,.3);}
+.btn-secondary{background:var(--surface);color:var(--text);border:1.5px solid var(--border);}
+.btn-soft{background:var(--pri-bg);color:var(--pri);}
+.btn-ghost{background:transparent;color:var(--pri);}
+.btn-success{background:linear-gradient(135deg,#10b981,#059669);color:#fff;box-shadow:0 4px 14px rgba(16,185,129,.3);}
+.btn-danger{background:linear-gradient(135deg,#ef4444,#dc2626);color:#fff;box-shadow:0 4px 14px rgba(239,68,68,.3);}
+.btn-warning{background:linear-gradient(135deg,#f59e0b,#d97706);color:#fff;box-shadow:0 4px 14px rgba(245,158,11,.3);}
+.btn:hover{transform:translateY(-1px);filter:brightness(1.05);}
+.btn:active{transform:scale(.97);filter:brightness(.95);}
+.btn:focus-visible{outline:2px solid var(--pri);outline-offset:2px;}
+.btn[disabled]{opacity:.45;cursor:not-allowed;transform:none!important;filter:none!important;}
+.btn.loading{pointer-events:none;position:relative;color:transparent!important;}
+.btn.loading::after{content:"";position:absolute;width:18px;height:18px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:btn-spin .6s linear infinite;}
+@keyframes btn-spin{to{transform:rotate(360deg);}}
+.fab{position:fixed;bottom:calc(88px + var(--safe-bottom));right:20px;width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,#4f46e5,#7c3aed);color:#fff;display:flex;align-items:center;justify-content:center;font-size:24px;box-shadow:0 6px 20px rgba(79,70,229,.4);z-index:40;border:none;cursor:pointer;transition:transform .15s;}
+.fab:active{transform:scale(.9);}
+.btn-cta{width:100%;height:56px;font-size:17px;font-weight:700;border-radius:16px;letter-spacing:.3px;}
+</style>
+</head>
+<body>
+<div class="app-shell">
+<div class="hero">
+  <h1>我的物业</h1>
+  <div class="bal">
+    <div class="label">可用余额（元）</div>
+    <div class="amount-row"><span class="sym">¥</span><span class="num" id="balNum">--</span></div>
+    <div class="sub-row">
+      <span class="sub-item">在途分账 ¥<b id="pendingAmt">--</b></span>
+      <span class="sub-item">历年结转 ¥<b id="carryAmt">--</b></span>
+    </div>
+  </div>
+</div>
+
+<div class="page-content">
+  <!-- Personal Info Card -->
+  <div class="info-card" id="infoCard" style="display:none;">
+    <div class="avatar"></div>
+    <div class="info-main">
+      <div class="name" id="ownerName">--</div>
+      <div class="phone" id="ownerPhone">--</div>
+      <div class="companies" id="ownerCompanies"></div>
+    </div>
+  </div>
+
+  <!-- Quick Actions -->
+  <div class="action-grid">
+    <div class="action-card" onclick="location.href='bind.html'">
+      <div class="ic">📱</div>
+      <div class="t">扫码绑定</div>
+      <div class="s">绑定物业公司</div>
+    </div>
+    <div class="action-card" onclick="location.href='access.html'">
+      <div class="ic">🚪</div>
+      <div class="t">开门</div>
+      <div class="s">生成开门码</div>
+    </div>
+    <div class="action-card" onclick="location.href='vehicles.html'">
+      <div class="ic">🚗</div>
+      <div class="t">我的车辆</div>
+      <div class="s">管理车辆信息</div>
+    </div>
+    <div class="action-card" onclick="location.href='bills.html'">
+      <div class="ic">📋</div>
+      <div class="t">账单查询</div>
+      <div class="s">物业费 / 车位费</div>
+    </div>
+    <div class="action-card" onclick="location.href='family.html'">
+      <div class="ic">👨‍👩‍👧</div>
+      <div class="t">家庭成员</div>
+      <div class="s">管理家人信息</div>
+    </div>
+    <div class="action-card" onclick="location.href='workorder.html'">
+      <div class="ic">🔧</div>
+      <div class="t">报修服务</div>
+      <div class="s">提交维修工单</div>
+    </div>
+  </div>
+
+  <!-- Split Summary -->
+  <div class="sec-title">📊 分账汇总</div>
+  <div class="split-summary" id="splitSummary">
+    <div class="split-total"><span class="sym">¥</span><span class="num" id="splitTotal">--</span></div>
+    <div class="split-modes" id="splitModes"></div>
+  </div>
+
+  <!-- Recent Deductions -->
+  <div class="sec-title">💰 近期扣款 <span class="count" id="deductHint"></span></div>
+  <div class="card"><div id="deductList"></div></div>
+  <a class="deduct-link" href="bills.html?tab=deduct">查看全部抵扣流水 →</a>
+</div>
+</div>
+
+<div class="toast-host" id="toastHost"></div>
+
+<nav class="bottom-nav">
+  <a href="index.html" class="active"><span class="icon">🏠</span><span>首页</span></a>
+  <a href="access.html"><span class="icon">🚪</span><span>门禁</span></a>
+  <a href="reservation.html"><span class="icon">🏟️</span><span>预约</span></a>
+  <a href="bills.html"><span class="icon">📋</span><span>账单</span></a>
+  <a href="bind.html"><span class="icon">👤</span><span>我的</span></a>
+</nav>
+
+<script>
+const $=id=>document.getElementById(id);
+const API="/api/property/owner";
+function toast(m,t){const h=$("toastHost");if(!h)return;const e=document.createElement("div");e.className="toast "+(t||"");e.textContent=m;h.appendChild(e);requestAnimationFrame(()=>e.classList.add("show"));setTimeout(()=>{e.classList.remove("show");setTimeout(()=>e.remove(),220)},2400)}
+
+// Token check
+const tk=localStorage.getItem("property_owner_token");
+if(!tk){location.href="login.html"}
+
+async function req(path,method,body){
+  const p=new URLSearchParams();
+  if(body)Object.keys(body).forEach(k=>{const v=body[k];if(v!=null&&v!=="")p.append(k,v)});
+  const h={};const token=localStorage.getItem("property_owner_token");
+  if(token)h["X-Owner-Token"]=token;
+  if(token)h["Authorization"]="Bearer "+token;
+  const o={method:method||"GET",headers:h};
+  if(method==="POST"||method==="PUT"||method==="DELETE"){h["Content-Type"]="application/x-www-form-urlencoded";o.body=p.toString()}
+  try{
+    const r=await fetch(API+path,o).then(r=>r.json());
+    if(r.code===401){localStorage.removeItem("property_owner_token");toast("登录已过期，请重新登录","warning");setTimeout(()=>{location.href="login.html"},1500)}
+    return r;
+  }catch(e){return{code:-1,msg:e.message}}
+}
+const get=p=>req(p,"GET");
+
+function emptyBox(emoji,text){return '<div class="empty"><span class="emoji">'+emoji+'</span>'+text+'</div>'}
+function fmtTime(s){return s?s.replace("T"," ").slice(0,16):""}
+
+// Load owner info — GET /api/property/owner/info
+async function loadInfo(){
+  const r=await get("/info");
+  if(r.code===0&&r.data){
+    const d=r.data;
+    $("balNum").textContent=(d.balance!=null?Number(d.balance):0).toFixed(2);
+    $("pendingAmt").textContent=(d.pendingAmount!=null?Number(d.pendingAmount):0).toFixed(2);
+    $("carryAmt").textContent=(d.carryOver!=null?Number(d.carryOver):0).toFixed(2);
+    // Personal info card
+    if(d.name||d.phone){
+      $("infoCard").style.display="flex";
+      $("ownerName").textContent=d.name||"业主";
+      $("ownerPhone").textContent=d.phone||"--";
+      // Bound companies
+      const companies=d.companies||d.boundCompanies||[];
+      if(companies.length){
+        $("ownerCompanies").innerHTML=companies.map(c=>'<span class="tag">'+(c.companyName||c.name||c)+'</span>').join("");
+      }else{
+        $("ownerCompanies").innerHTML='<span style="color:var(--text-3)">暂未绑定物业公司</span>';
+      }
+    }
+  }else{
+    $("balNum").textContent="0.00";
+    $("pendingAmt").textContent="0.00";
+    $("carryAmt").textContent="0.00";
+  }
+}
+
+// Load split summary — GET /api/property/owner/split-summary
+async function loadSplitSummary(){
+  const r=await get("/split-summary");
+  if(r.code===0&&r.data){
+    const d=r.data;
+    $("splitTotal").textContent=(d.totalAmount!=null?Number(d.totalAmount):0).toFixed(2);
+    const modes=d.modes||d.modeBreakdown||d.breakdown||[];
+    if(modes.length){
+      $("splitModes").innerHTML=modes.map(m=>'<div class="split-mode"><div class="mode-name">'+(m.mode||m.name||m.type||"其他")+'</div><div class="mode-amt">¥'+(Number(m.amount||0).toFixed(2))+'</div></div>').join("");
+    }else{
+      $("splitModes").innerHTML='<div style="font-size:12px;color:var(--text-3);padding:8px 0;">暂无分账模式明细</div>';
+    }
+  }else{
+    $("splitTotal").textContent="0.00";
+    $("splitModes").innerHTML='<div style="font-size:12px;color:var(--text-3);padding:8px 0;">暂无分账数据</div>';
+  }
+}
+
+// Load recent deductions — GET /api/property/owner/deduct-logs
+async function loadDeductions(){
+  const r=await get("/deduct-logs");
+  if(r.code===0&&r.data&&r.data.length){
+    const list=r.data.slice(0,5);
+    $("deductHint").textContent="近 "+list.length+" 条";
+    $("deductList").innerHTML=list.map(function(c){
+      const t=fmtTime(c.createTime||c.deductTime);
+      return '<div class="flow-item out">'
+        +'<div class="ic">-</div>'
+        +'<div class="main"><div class="t">'+(c.remark||c.description||"扣款")+'</div>'
+        +'<div class="s">'+t+(c.companyName?" · "+c.companyName:"")+'</div></div>'
+        +'<div class="amt">-¥'+(Number(c.amount||0).toFixed(2))+'</div>'
+        +'</div>';
+    }).join("");
+  }else{
+    $("deductList").innerHTML=emptyBox("💰","暂无扣款记录");
+  }
+}
+
+loadInfo();
+loadSplitSummary();
+loadDeductions();
+</script>
+</body>
+</html>

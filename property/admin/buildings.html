@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#4f46e5">
+<title>楼栋房间 · 物业后台 · 宜必购物业</title>
+<link rel="icon" href="data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='80' font-size='90'%3E%F0%9F%8F%A2%3C/text%3E%3C/svg%3E">
+<style>
+  :root{
+    --pri:#4f46e5; --pri-grad:linear-gradient(135deg,#4f46e5 0%,#7c3aed 100%);
+    --success:#10b981; --danger:#ef4444; --warning:#f59e0b;
+    --dark:#0f172a; --text:#1e293b; --text-2:#64748b; --text-3:#94a3b8;
+    --bg:#f8fafc; --surface:#ffffff; --border:#e2e8f0; --divider:#f1f5f9;
+    --shadow-card:0 1px 3px rgba(0,0,0,.04),0 8px 24px rgba(0,0,0,.04);
+    --r-sm:8px; --r-md:12px; --r-lg:16px; --r-xl:20px; --sidebar-w:272px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+  html,body{font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei","Helvetica Neue",Arial,sans-serif;color:var(--text);background:var(--bg);-webkit-font-smoothing:antialiased;height:100%;}
+  a{color:inherit;text-decoration:none;}
+  input,select,button,textarea{font-size:16px;font-family:inherit;}
+  @keyframes fadeInUp{from{opacity:0;transform:translateY(16px);}to{opacity:1;transform:translateY(0);}}
+  .layout{display:flex;min-height:100vh;}
+  .sidebar{width:var(--sidebar-w);background:linear-gradient(180deg,#0f172a 0%,#1e293b 100%);display:flex;flex-direction:column;position:fixed;top:0;left:0;bottom:0;z-index:40;transition:transform .25s ease;}
+  .sidebar .brand{padding:24px 20px;display:flex;align-items:center;gap:12px;border-bottom:1px solid rgba(255,255,255,.08);}
+  .sidebar .brand .logo{width:40px;height:40px;border-radius:var(--r-md);background:var(--pri-grad);color:#fff;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;font-weight:700;}
+  .sidebar .brand h1{font-size:16px;font-weight:700;line-height:1.3;color:#fff;}
+  .sidebar .brand h1 span{font-size:11px;color:rgba(255,255,255,.5);font-weight:400;display:block;margin-top:2px;}
+  .sidebar nav{flex:1;overflow-y:auto;padding:16px 12px;}
+  .nav-section{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:rgba(255,255,255,.35);padding:16px 12px 6px;margin-top:4px;}
+  .nav-section:first-child{margin-top:0;padding-top:8px;}
+  .sidebar nav a{height:44px;padding:0 16px;border-radius:10px;font-size:14px;color:rgba(255,255,255,.55);font-weight:500;transition:all .2s;margin-bottom:2px;display:flex;align-items:center;gap:12px;border-left:none;}
+  .sidebar nav a:hover{color:rgba(255,255,255,.9);background:rgba(255,255,255,.06);}
+  .sidebar nav a.active{color:#fff;background:rgba(79,70,229,.15);font-weight:600;border-left:3px solid #818cf8;border-radius:0 10px 10px 0;}
+  .sidebar nav a .icon{font-size:16px;width:22px;text-align:center;flex-shrink:0;}
+  .sidebar .logout-area{padding:16px 12px;border-top:1px solid rgba(255,255,255,.08);}
+  .sidebar .logout-area a{color:rgba(255,255,255,.5);justify-content:center;border-radius:var(--r-sm);padding:11px 14px;border-left:none;}
+  .sidebar .logout-area a:hover{color:var(--danger);background:rgba(239,68,68,.1);}
+  .main{margin-left:var(--sidebar-w);flex:1;min-height:100vh;}
+  .topbar{background:var(--surface);border-bottom:1px solid var(--border);padding:14px 28px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:30;backdrop-filter:blur(12px);background:rgba(255,255,255,.85);}
+  .topbar .page-title{font-size:28px;font-weight:800;color:var(--text);letter-spacing:-.5px;line-height:1.2;}
+  .topbar .menu-toggle{display:none;background:none;border:none;font-size:22px;cursor:pointer;padding:4px 8px;color:var(--text-2);}
+  .main-content{margin-left:var(--sidebar-w);flex:1;padding:32px 40px;max-width:1200px;animation:fadeInUp .5s ease both;}
+  .sidebar-overlay{display:none;position:fixed;inset:0;background:rgba(15,23,42,.6);z-index:35;backdrop-filter:blur(2px);}
+  @media(max-width:768px){
+    .sidebar{transform:translateX(-100%);}
+    .sidebar.open{transform:translateX(0);}
+    .sidebar-overlay.show{display:block;}
+    .main{margin-left:0;}
+    .main-content{margin-left:0;padding:20px 16px;}
+    .topbar .menu-toggle{display:block;}
+  }
+  .card{background:var(--surface);border-radius:var(--r-lg);padding:24px;margin-bottom:20px;box-shadow:var(--shadow-card);border:none;}
+  .sec{display:flex;align-items:center;gap:10px;font-weight:700;margin:0 0 16px;font-size:15px;color:var(--text);}
+  .sec .ic{width:32px;height:32px;border-radius:var(--r-sm);background:linear-gradient(135deg,rgba(79,70,229,.1) 0%,rgba(124,58,237,.1) 100%);color:var(--pri);display:inline-flex;align-items:center;justify-content:center;font-size:15px;flex:0 0 32px;}
+  .input,.select,textarea.input{height:44px;padding:0 14px;border:1.5px solid var(--border);border-radius:var(--r-sm);font-size:14px;color:var(--text);background:#fff;transition:border-color .2s,box-shadow .2s;-webkit-appearance:none;appearance:none;width:100%;}
+  .input:focus,.select:focus{outline:none;border-color:var(--pri);box-shadow:0 0 0 3px rgba(79,70,229,.12);}
+  .filter-bar{display:flex;gap:12px;margin-bottom:16px;flex-wrap:wrap;align-items:center;}
+  .filter-bar .select{min-width:160px;width:auto;}
+  .filter-bar .input{min-width:120px;width:auto;}
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;height:40px;padding:0 18px;border-radius:var(--r-sm);font-size:14px;font-weight:600;cursor:pointer;border:none;transition:all .2s;}
+  .btn:active{transform:scale(.97);}
+  .btn-primary{background:var(--pri-grad);color:#fff;box-shadow:0 4px 14px rgba(79,70,229,.3);}
+  .btn-secondary{background:var(--bg);color:var(--text-2);border:1px solid var(--border);}
+  .btn-danger{background:rgba(239,68,68,.1);color:var(--danger);}
+  .btn-success{background:rgba(16,185,129,.1);color:#059669;}
+  .btn-sm{height:32px;padding:0 12px;font-size:12px;border-radius:6px;}
+  .table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;border-radius:var(--r-md);}
+  table{width:100%;border-collapse:collapse;font-size:13px;min-width:640px;}
+  th{text-align:left;padding:12px 16px;background:var(--bg);color:var(--text-2);font-weight:700;font-size:11px;text-transform:uppercase;letter-spacing:.06em;border-bottom:1px solid var(--border);white-space:nowrap;}
+  td{padding:12px 16px;border-bottom:1px solid var(--divider);color:var(--text);white-space:nowrap;}
+  tr:nth-child(even) td{background:var(--bg);}
+  tr:hover td{background:rgba(79,70,229,.04);}
+  .badge{display:inline-block;padding:4px 12px;border-radius:999px;font-size:11px;font-weight:600;letter-spacing:.02em;}
+  .badge.green{background:rgba(16,185,129,.1);color:#059669;}
+  .badge.gray{background:rgba(100,116,139,.1);color:#64748b;}
+  .badge.red{background:rgba(239,68,68,.1);color:#dc2626;}
+  .empty{padding:48px 0;text-align:center;color:var(--text-3);font-size:14px;}
+  .modal{display:none;position:fixed;inset:0;background:rgba(15,23,42,.5);z-index:100;align-items:center;justify-content:center;padding:20px;}
+  .modal.show{display:flex;}
+  .modal-box{background:#fff;border-radius:var(--r-lg);padding:24px;width:100%;max-width:420px;box-shadow:0 24px 60px rgba(0,0,0,.2);animation:fadeInUp .3s ease both;}
+  .modal-box h3{font-size:17px;font-weight:700;margin-bottom:16px;}
+  .modal-box .field{margin-bottom:14px;}
+  .modal-box .field label{display:block;font-size:12px;color:var(--text-2);margin-bottom:6px;font-weight:600;}
+  .modal-box .modal-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:20px;}
+  .toast-wrap{position:fixed;top:20px;right:20px;z-index:200;display:flex;flex-direction:column;gap:10px;}
+  .toast{padding:12px 18px;border-radius:var(--r-md);color:#fff;font-size:14px;font-weight:500;box-shadow:0 8px 24px rgba(0,0,0,.15);opacity:0;transform:translateY(-8px);transition:all .3s;max-width:340px;}
+  .toast.show{opacity:1;transform:translateY(0);}
+  .toast.success{background:var(--success);}
+  .toast.error{background:var(--danger);}
+  .toast.info{background:var(--pri);}
+  .toast.warning{background:var(--warning);}
+  .form-row{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;margin-bottom:14px;}
+  .form-row .grow{flex:1;min-width:110px;}
+  .gen-box{background:linear-gradient(135deg,rgba(79,70,229,.06),rgba(124,58,237,.08));border:1px dashed rgba(79,70,229,.3);border-radius:var(--r-md);padding:18px;margin-top:6px;}
+  .gen-box .gen-title{font-size:13px;font-weight:700;color:var(--pri);margin-bottom:12px;}
+
+/* ===== 窄屏防变形（统一注入）===== */
+@media(max-width:900px){
+  .sidebar{transform:translateX(-100%);}
+  .sidebar.open{transform:translateX(0);}
+  .sidebar-overlay.show{display:block;}
+  .main,.main-content{margin-left:0 !important;padding:20px 14px !important;min-width:0 !important;max-width:100% !important;}
+  .topbar .menu-toggle{display:block !important;}
+  .card{overflow-x:auto;-webkit-overflow-scrolling:touch;min-width:0 !important;}
+  .topbar{padding:14px 14px;}
+  .tabs{min-width:0 !important;}
+}
+@media(max-width:480px){
+  .main{padding:14px 10px !important;}
+  .card{padding:16px 12px;}
+  .sec{font-size:14px;}
+  .page-title{font-size:22px !important;}
+}
+</style>
+</head>
+<body>
+<div class="layout">
+  <aside class="sidebar" id="sidebar">
+    <div class="brand"><div class="logo">🏢</div><h1>宜必购物业<span>Property Management</span></h1></div>
+    <nav>
+      <div class="nav-section">概览</div>
+      <a href="dashboard.html"><span class="icon">📊</span>工作台</a>
+      <a href="index.html"><span class="icon">🏠</span>首页看板</a>
+      <div class="nav-section">业务管理</div>
+      <a href="owners.html"><span class="icon">👥</span>业主管理</a>
+      <a href="buildings.html" class="active"><span class="icon">🏢</span>楼栋房间</a>
+      <a href="bills.html"><span class="icon">🧾</span>账单管理</a>
+      <a href="splits.html"><span class="icon">💰</span>分账流水</a>
+      <a href="merchant-bindings.html"><span class="icon">🔗</span>商家绑定</a>
+      <a href="activity-audit.html"><span class="icon">✅</span>活动审核</a>
+      <a href="facilities.html"><span class="icon">🏟️</span>场地预约</a>
+      <a href="workorders.html"><span class="icon">🔧</span>报修工单</a>
+      <div class="nav-section">安防通行</div>
+      <a href="access.html"><span class="icon">🚪</span>门禁管理</a>
+      <a href="vehicles.html"><span class="icon">🚗</span>车辆管理</a>
+      <a href="devices.html"><span class="icon">📡</span>IoT设备</a>
+    </nav>
+    <div class="logout-area"><a href="#" id="logoutBtn">🚪 退出登录</a></div>
+  </aside>
+  <div class="sidebar-overlay" id="overlay"></div>
+
+  <div class="main-content">
+    <div class="topbar" style="position:static;border:none;padding:0 0 20px;">
+      <div style="display:flex;align-items:center;gap:12px;">
+        <button class="menu-toggle" id="menuToggle" style="display:none;">☰</button>
+        <div class="page-title">楼栋房间管理</div>
+      </div>
+    </div>
+
+    <!-- 选择区 -->
+    <div class="card">
+      <div class="sec"><span class="ic">🏘️</span>选择小区</div>
+      <div class="filter-bar">
+        <select class="select" id="companyId"></select>
+        <select class="select" id="communityId"></select>
+        <button class="btn btn-secondary" id="btnRefreshComm">↻ 刷新</button>
+      </div>
+      <div style="font-size:12px;color:var(--text-3);margin-top:4px;">提示：先选择物业公司与小区，再管理该小区的楼栋与房间。</div>
+    </div>
+
+    <!-- 楼栋管理 -->
+    <div class="card">
+      <div class="sec"><span class="ic">🏢</span>楼栋列表</div>
+      <div class="form-row">
+        <input class="input grow" id="bdName" placeholder="楼栋名称，如：20栋">
+        <input class="input grow" id="bdUnit" type="number" placeholder="单元数" value="1">
+        <input class="input grow" id="bdFloor" type="number" placeholder="层数" value="18">
+        <button class="btn btn-primary" id="btnAddBuilding">＋ 新增楼栋</button>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>ID</th><th>楼栋名称</th><th>单元数</th><th>层数</th><th>房间数</th><th>操作</th></tr></thead>
+          <tbody id="buildingTable"><tr><td colspan="6" class="empty">请先选择小区</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- 房间管理 -->
+    <div class="card">
+      <div class="sec"><span class="ic">🚪</span>房间列表 <span id="curBuildingName" style="font-size:13px;color:var(--text-2);font-weight:500;"></span></div>
+      <div class="form-row">
+        <input class="input" id="rmUnit" type="number" placeholder="单元" value="1" style="width:80px;">
+        <input class="input" id="rmFloor" type="number" placeholder="楼层" value="1" style="width:80px;">
+        <input class="input grow" id="rmNo" placeholder="房号，如：601">
+        <input class="input" id="rmArea" type="number" step="0.01" placeholder="面积㎡" style="width:110px;">
+        <button class="btn btn-primary" id="btnAddRoom">＋ 新增房间</button>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>ID</th><th>房号</th><th>单元</th><th>楼层</th><th>面积㎡</th><th>绑定业主</th><th>操作</th></tr></thead>
+          <tbody id="roomTable"><tr><td colspan="7" class="empty">请先选择楼栋</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- 年度批量生成 -->
+    <div class="card">
+      <div class="sec"><span class="ic">📅</span>年度批量生成物业费</div>
+      <div class="gen-box">
+        <div class="gen-title">按小区下所有楼栋房间批量生成全年（12个月）账单，未绑定业主的房间也会生成，绑定后自动归属</div>
+        <div class="form-row" style="margin-bottom:0;">
+          <input class="input" id="genYear" type="number" placeholder="年份，如2027" style="width:120px;">
+          <input class="input" id="genAmount" type="number" step="0.01" placeholder="每月物业费（元）" style="width:150px;">
+          <button class="btn btn-success" id="btnGenYear">⚡ 批量生成全年账单</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 绑定业主弹窗 -->
+<div class="modal" id="bindModal">
+  <div class="modal-box">
+    <h3>绑定业主到房间</h3>
+    <div class="field">
+      <label>业主手机号</label>
+      <input class="input" id="bindOwnerPhone" placeholder="输入业主手机号查询">
+      <div id="bindOwnerResult" style="margin-top:8px;"></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" id="btnBindCancel">取消</button>
+      <button class="btn btn-primary" id="btnBindConfirm">确认绑定</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast-wrap" id="toastWrap"></div>
+
+<script>
+(function(){
+  var token = localStorage.getItem('property_admin_token');
+  if (!token) { location.href = 'login.html'; return; }
+
+  function $(id){ return document.getElementById(id); }
+  function api(path, opts){
+    opts = opts || {};
+    opts.headers = Object.assign({'X-Property-Token': token}, opts.headers || {});
+    if (opts.method === 'POST' && opts.body && typeof opts.body === 'object') {
+      opts.headers['Content-Type'] = 'application/x-www-form-urlencoded';
+      var p = new URLSearchParams();
+      Object.keys(opts.body).forEach(function(k){ if (opts.body[k] != null && opts.body[k] !== '') p.append(k, opts.body[k]); });
+      opts.body = p.toString();
+    }
+    return fetch(path, opts).then(function(r){ return r.json(); });
+  }
+  function toast(msg, type){
+    var t = document.createElement('div');
+    t.className = 'toast ' + (type || 'info');
+    t.textContent = msg;
+    $('toastWrap').appendChild(t);
+    setTimeout(function(){ t.classList.add('show'); }, 10);
+    setTimeout(function(){ t.classList.remove('show'); setTimeout(function(){ t.remove(); }, 400); }, 2600);
+  }
+  function esc(s){ return String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+  // ---- 侧边栏 ----
+  $('menuToggle').onclick = function(){ $('sidebar').classList.add('open'); $('overlay').classList.add('show'); };
+  $('overlay').onclick = function(){ $('sidebar').classList.remove('open'); $('overlay').classList.remove('show'); };
+  $('logoutBtn').onclick = function(e){ e.preventDefault(); localStorage.removeItem('property_admin_token'); location.href = 'login.html'; };
+
+  // ---- 公司/小区联动 ----
+  var companies = [];
+  var currentBuildingId = null;
+
+  function loadCompanies(){
+    api('/api/property/admin/companies').then(function(res){
+      if (res.code !== 0 || !res.data || !res.data.length) {
+        toast('无物业公司，请先在后台创建', 'warning');
+        return;
+      }
+      companies = res.data;
+      var sel = $('companyId');
+      sel.innerHTML = '';
+      res.data.forEach(function(c){
+        var opt = document.createElement('option');
+        opt.value = c.companyId;
+        opt.textContent = c.companyName;
+        sel.appendChild(opt);
+      });
+      loadCommunities();
+    }).catch(function(){ toast('加载公司失败', 'error'); });
+  }
+
+  function loadCommunities(){
+    var cid = $('companyId').value;
+    if (!cid) { $('communityId').innerHTML = ''; return; }
+    api('/api/property/admin/communities?companyId=' + cid).then(function(res){
+      var sel = $('communityId');
+      sel.innerHTML = '';
+      if (!res.data || !res.data.length) {
+        var opt = document.createElement('option');
+        opt.value = '';
+        opt.textContent = '暂无小区，请先创建';
+        sel.appendChild(opt);
+        return;
+      }
+      res.data.forEach(function(c){
+        var opt = document.createElement('option');
+        opt.value = c.communityId;
+        opt.textContent = c.communityName;
+        sel.appendChild(opt);
+      });
+      loadBuildings();
+    }).catch(function(){ toast('加载小区失败', 'error'); });
+  }
+
+  // ---- 楼栋 ----
+  function loadBuildings(){
+    var commId = $('communityId').value;
+    var tb = $('buildingTable');
+    if (!commId) { tb.innerHTML = '<tr><td colspan="6" class="empty">请先选择小区</td></tr>'; $('roomTable').innerHTML = '<tr><td colspan="7" class="empty">请先选择楼栋</td></tr>'; return; }
+    api('/api/property/admin/buildings?communityId=' + commId).then(function(res){
+      if (res.code !== 0) { tb.innerHTML = '<tr><td colspan="6" class="empty">加载失败</td></tr>'; return; }
+      var list = res.data || [];
+      if (!list.length) { tb.innerHTML = '<tr><td colspan="6" class="empty">暂无楼栋，请先新增</td></tr>'; return; }
+      var html = '';
+      list.forEach(function(b){
+        var active = currentBuildingId === b.buildingId ? ' style="background:rgba(79,70,229,.06)"' : '';
+        html += '<tr' + active + '>' +
+          '<td>' + b.buildingId + '</td>' +
+          '<td><a href="javascript:;" onclick="window._selBuilding(' + b.buildingId + ',\'' + esc(b.buildingName) + '\')" style="color:var(--pri);font-weight:600;">' + esc(b.buildingName) + '</a></td>' +
+          '<td>' + (b.unitCount || 1) + '个</td>' +
+          '<td>' + (b.floorCount || 0) + '层</td>' +
+          '<td><span id="bdCnt_' + b.buildingId + '">-</span></td>' +
+          '<td><button class="btn btn-sm btn-danger" onclick="window._delBuilding(' + b.buildingId + ',\'' + esc(b.buildingName) + '\')">删除</button></td></tr>';
+      });
+      tb.innerHTML = html;
+      // 默认选中第一个楼栋
+      if (currentBuildingId == null) { window._selBuilding(list[0].buildingId, list[0].buildingName); }
+    }).catch(function(){ tb.innerHTML = '<tr><td colspan="6" class="empty">加载失败</td></tr>'; });
+  }
+
+  window._selBuilding = function(id, name){
+    currentBuildingId = id;
+    $('curBuildingName').textContent = '· ' + name;
+    loadRooms();
+    // 高亮
+    var rows = $('buildingTable').querySelectorAll('tr');
+    rows.forEach(function(r){ r.style.background = ''; });
+  };
+
+  window._delBuilding = function(id, name){
+    if (!confirm('确认删除楼栋「' + name + '」？楼栋下有房间时无法删除。')) return;
+    api('/api/property/admin/buildings/' + id, { method: 'DELETE' }).then(function(res){
+      if (res.code === 0) { toast('删除成功', 'success'); loadBuildings(); }
+      else toast(res.msg || '删除失败', 'error');
+    });
+  };
+
+  $('btnAddBuilding').onclick = function(){
+    var commId = $('communityId').value;
+    if (!commId) { toast('请先选择小区', 'warning'); return; }
+    var name = $('bdName').value.trim();
+    if (!name) { toast('请输入楼栋名称', 'warning'); return; }
+    api('/api/property/admin/buildings', {
+      method: 'POST',
+      body: { communityId: commId, buildingName: name, unitCount: $('bdUnit').value || 1, floorCount: $('bdFloor').value || 0 }
+    }).then(function(res){
+      if (res.code === 0) { toast('新增成功', 'success'); $('bdName').value = ''; loadBuildings(); }
+      else toast(res.msg || '新增失败', 'error');
+    });
+  };
+
+  // ---- 房间 ----
+  function loadRooms(){
+    var tb = $('roomTable');
+    if (!currentBuildingId) { tb.innerHTML = '<tr><td colspan="7" class="empty">请先选择楼栋</td></tr>'; return; }
+    api('/api/property/admin/rooms?buildingId=' + currentBuildingId).then(function(res){
+      if (res.code !== 0) { tb.innerHTML = '<tr><td colspan="7" class="empty">加载失败</td></tr>'; return; }
+      var list = res.data || [];
+      var cnt = $('bdCnt_' + currentBuildingId);
+      if (cnt) cnt.textContent = list.length + '间';
+      if (!list.length) { tb.innerHTML = '<tr><td colspan="7" class="empty">暂无房间，请先新增</td></tr>'; return; }
+      var html = '';
+      list.forEach(function(r){
+        var ownerHtml = r.ownerId
+          ? '<span class="badge green">' + esc(r.ownerName || r.ownerPhone) + '</span>'
+          : '<span class="badge gray">未绑定</span>';
+        html += '<tr>' +
+          '<td>' + r.roomId + '</td>' +
+          '<td><strong>' + esc(r.roomNo) + '</strong></td>' +
+          '<td>' + (r.unitNo || 1) + '单元</td>' +
+          '<td>' + (r.floorNo || '-') + '层</td>' +
+          '<td>' + (r.roomArea || 0) + '</td>' +
+          '<td>' + ownerHtml + '</td>' +
+          '<td style="display:flex;gap:6px;">' +
+            '<button class="btn btn-sm btn-secondary" onclick="window._bindRoom(' + r.roomId + ',\'' + esc(r.roomNo) + '\')">绑定业主</button>' +
+            '<button class="btn btn-sm btn-danger" onclick="window._delRoom(' + r.roomId + ',\'' + esc(r.roomNo) + '\')">删除</button>' +
+          '</td></tr>';
+      });
+      tb.innerHTML = html;
+    }).catch(function(){ tb.innerHTML = '<tr><td colspan="7" class="empty">加载失败</td></tr>'; });
+  }
+
+  window._delRoom = function(id, no){
+    if (!confirm('确认删除房间「' + no + '」？')) return;
+    api('/api/property/admin/rooms/' + id, { method: 'DELETE' }).then(function(res){
+      if (res.code === 0) { toast('删除成功', 'success'); loadRooms(); loadBuildings(); }
+      else toast(res.msg || '删除失败', 'error');
+    });
+  };
+
+  $('btnAddRoom').onclick = function(){
+    if (!currentBuildingId) { toast('请先选择楼栋', 'warning'); return; }
+    var no = $('rmNo').value.trim();
+    if (!no) { toast('请输入房号', 'warning'); return; }
+    api('/api/property/admin/rooms', {
+      method: 'POST',
+      body: { buildingId: currentBuildingId, unitNo: $('rmUnit').value || 1, floorNo: $('rmFloor').value || 1, roomNo: no, roomArea: $('rmArea').value || 0 }
+    }).then(function(res){
+      if (res.code === 0) { toast('新增成功', 'success'); $('rmNo').value = ''; $('rmArea').value = ''; loadRooms(); loadBuildings(); }
+      else toast(res.msg || '新增失败', 'error');
+    });
+  };
+
+  // ---- 绑定业主 ----
+  var bindRoomId = null, bindOwner = null;
+  window._bindRoom = function(id, no){
+    bindRoomId = id;
+    $('bindOwnerPhone').value = '';
+    $('bindOwnerResult').innerHTML = '<div style="font-size:12px;color:var(--text-3);">输入业主手机号，输入后自动查询</div>';
+    $('bindModal').classList.add('show');
+  };
+  $('btnBindCancel').onclick = function(){ $('bindModal').classList.remove('show'); };
+  $('bindOwnerPhone').addEventListener('input', function(){
+    var ph = this.value.trim();
+    var box = $('bindOwnerResult');
+    if (ph.length < 5) { box.innerHTML = ''; bindOwner = null; return; }
+    api('/api/property/admin/owners?keyword=' + encodeURIComponent(ph)).then(function(res){
+      var list = (res.data && res.data.content) ? res.data.content : (res.data || []);
+      var hit = list.filter(function(o){ return o.ownerPhone === ph; });
+      if (hit.length) {
+        bindOwner = hit[0];
+        box.innerHTML = '<div class="badge green">业主：' + esc(bindOwner.ownerName) + '（' + esc(bindOwner.ownerPhone) + '）</div>';
+      } else {
+        bindOwner = null;
+        box.innerHTML = '<div style="font-size:12px;color:var(--danger);">未找到该手机号的业主，请先在业主管理注册</div>';
+      }
+    });
+  });
+  $('btnBindConfirm').onclick = function(){
+    if (!bindRoomId || !bindOwner) { toast('请先输入正确的业主手机号', 'warning'); return; }
+    var cid = $('companyId').value;
+    api('/api/property/admin/rooms/' + bindRoomId + '/bind', {
+      method: 'POST',
+      body: { ownerId: bindOwner.ownerId, companyId: cid }
+    }).then(function(res){
+      if (res.code === 0) { toast('绑定成功', 'success'); $('bindModal').classList.remove('show'); loadRooms(); }
+      else toast(res.msg || '绑定失败', 'error');
+    });
+  };
+
+  // ---- 年度批量生成 ----
+  $('btnGenYear').onclick = function(){
+    var cid = $('companyId').value;
+    var year = parseInt($('genYear').value, 10);
+    var amount = parseFloat($('genAmount').value);
+    if (!cid) { toast('请先选择物业公司', 'warning'); return; }
+    if (!year || year < 2024 || year > 2035) { toast('请输入正确的年份（如2027）', 'warning'); return; }
+    if (!amount || amount <= 0) { toast('请输入每月物业费金额', 'warning'); return; }
+    if (!confirm('确认为该公司下所有楼栋房间批量生成 ' + year + ' 年全年（12个月）物业费账单？\n每月 ' + amount + ' 元。已存在的月份自动跳过。')) return;
+    var btn = this;
+    btn.disabled = true; btn.textContent = '⏳ 生成中...';
+    api('/api/property/admin/bills/generate-year', {
+      method: 'POST',
+      body: { companyId: cid, year: year, amount: amount, billType: 1 }
+    }).then(function(res){
+      btn.disabled = false; btn.textContent = '⚡ 批量生成全年账单';
+      if (res.code === 0) {
+        toast('生成成功：新增 ' + res.data.created + ' 张，跳过 ' + res.data.skipped + ' 张', 'success');
+      } else {
+        toast(res.msg || '生成失败', 'error');
+      }
+    }).catch(function(){
+      btn.disabled = false; btn.textContent = '⚡ 批量生成全年账单';
+      toast('请求失败', 'error');
+    });
+  };
+
+  $('companyId').onchange = loadCommunities;
+  $('communityId').onchange = loadBuildings;
+  $('btnRefreshComm').onclick = function(){ loadCompanies(); };
+
+  loadCompanies();
+})();
+</script>
+</body>
+</html>
