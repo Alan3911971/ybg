@@ -812,15 +812,15 @@
     "qrcodejs_inline": "D:\\workspace-java\\_qrcodejs_inline.js（19928B 公共副本，从 dashboard.html 提取）"
   },
   "github_backup_20260919": {
-    "commit": "7dceb62786ea8e175e91affd1518f7b323bd7d45",
-    "files": 484,
-    "scope": "G86-G90 预约全闭环+工单全流程+业主写操作链路（backend+property+四文档）",
-    "script": "D:\\workspace-java\\_push_gh_full.py（用法：$env:GH_PAT=<token>; python _push_gh_full.py）"
+    "commit": "6c9167c5d6ea61b627b628249260c55ab53ac0d5",
+    "files": 488,
+    "scope": "G86-G91 预约全闭环+工单全流程+业主写操作链路+物业开奖配置（backend+property+四文档）",
+    "script": "D:\\\\workspace-java\\\\_push_gh_full.py（用法：\\=<token>; python _push_gh_full.py）"
   },
   "nas_backup_20260919": {
-    "commit": "15e0fda",
-    "message": "sync 20260919: G86-G90 预约全闭环+工单全流程+业主写操作链路",
-    "script": "D:\\workspace-java\\_nas_sync4.py（本地tar → paramiko exec stdin 管道，NAS 无 sftp/scp subsystem）"
+    "commit": "bfb704f",
+    "message": "sync 20260918b: 业主物业费在线缴费+修2个支付bug+四文档G79",
+    "script": "D:\\\\workspace-java\\\\_nas_sync4.py（本地tar → paramiko exec stdin 管道，NAS 无 sftp/scp subsystem）"
   },
   "g91_20260919": {
     "scope": "物业开奖配置（物业专用，复刻商家奖品池）",

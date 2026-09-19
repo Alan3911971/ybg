@@ -147,19 +147,12 @@
         <select class="select" id="companyId" onchange="loadPrizes()">
           <option value="">选择物业公司</option>
         </select>
-        <div class="chips" id="channelChips">
-          <span class="chip active" data-c="">全部渠道</span>
-          <span class="chip" data-c="0">🔄 通用</span>
-          <span class="chip" data-c="1">🟡 美团</span>
-          <span class="chip" data-c="2">🛍️ 团购</span>
-          <span class="chip" data-c="3">🎵 抖音</span>
-        </div>
         <button class="btn btn-md btn-primary" onclick="openModal()">+ 添加奖品</button>
       </div>
       <div class="table-wrap">
         <table>
-          <thead><tr><th>奖品名称</th><th>类型</th><th>面值</th><th>权重</th><th>池类别</th><th>渠道</th><th>状态</th><th>操作</th></tr></thead>
-          <tbody id="prizeBody"><tr><td colspan="8" class="empty">加载中...</td></tr></tbody>
+          <thead><tr><th>奖品名称</th><th>类型</th><th>面值</th><th>权重</th><th>池类别</th><th>状态</th><th>操作</th></tr></thead>
+          <tbody id="prizeBody"><tr><td colspan="7" class="empty">加载中...</td></tr></tbody>
         </table>
       </div>
     </div>
@@ -206,15 +199,6 @@
         <option value="1">🌐 公共奖品池（平台公共池）</option>
       </select>
     </div>
-    <div class="form-group">
-      <label>渠道</label>
-      <select class="select" id="fChannel">
-        <option value="0">🔄 通用（所有渠道）</option>
-        <option value="1">🟡 美团</option>
-        <option value="2">🛍️ 团购</option>
-        <option value="3">🎵 抖音</option>
-      </select>
-    </div>
     <div class="modal-actions">
       <button class="btn btn-md btn-soft" onclick="closeModal()">取消</button>
       <button class="btn btn-md btn-primary" onclick="savePrize()">保存</button>
@@ -226,7 +210,7 @@
 <script>
   var token = localStorage.getItem('property_admin_token');
   if (!token) { location.href = 'login.html'; }
-  var companies = [], channelFilter = '', editId = null;
+  var companies = [], editId = null;
 
   function toast(msg, type){
     var t = document.getElementById('toast');
@@ -249,15 +233,6 @@
     location.href = 'login.html';
   };
 
-  // 渠道筛选
-  document.querySelectorAll('#channelChips .chip').forEach(function(c){
-    c.onclick = function(){
-      document.querySelectorAll('#channelChips .chip').forEach(function(x){ x.classList.remove('active'); });
-      c.classList.add('active');
-      channelFilter = c.getAttribute('data-c');
-      loadPrizes();
-    };
-  });
 
   function loadCompanies(){
     fetch('/api/property/admin/companies', { headers: { 'X-Property-Token': token } })
@@ -279,20 +254,24 @@
   }
 
   function loadStats(companyId){
-    fetch('/api/property/admin/prize-stats?companyId=' + companyId, { headers: { 'X-Property-Token': token } })
+    fetch('/api/property/admin/prize-pools?companyId=' + companyId, { headers: { 'X-Property-Token': token } })
       .then(function(r){ return r.json(); })
       .then(function(res){
         var grid = document.getElementById('statsGrid');
-        if (res.code !== 0 || !res.data || res.data.length === 0) {
+        var list = (res.data || []);
+        if (list.length === 0) {
           grid.innerHTML = '<div class="stat-card"><div class="s-name">🎁 暂无配置</div><div class="s-num">0</div><div class="s-sub">选择公司后添加奖品</div></div>';
           return;
         }
-        grid.innerHTML = res.data.map(function(s){
-          return '<div class="stat-card"><div class="s-emoji">' + (s.channelName === '美团' ? '🟡' : s.channelName === '团购' ? '🛍️' : s.channelName === '抖音' ? '🎵' : '🔄') + '</div>' +
-            '<div class="s-name">' + s.channelName + '渠道</div>' +
-            '<div class="s-num">' + s.enabledCount + ' / ' + s.count + '</div>' +
-            '<div class="s-sub">启用奖品数 · 总权重 ' + s.totalWeight + '</div></div>';
-        }).join('');
+        var enabled = list.filter(function(p){ return p.enabled === 1; });
+        var totalWeight = enabled.reduce(function(a, p){ return a + (p.weight || 1); }, 0);
+        var pools = {};
+        list.forEach(function(p){ pools[p.poolType === 1 ? 1 : 0] = (pools[p.poolType === 1 ? 1 : 0] || 0) + 1; });
+        grid.innerHTML =
+          '<div class="stat-card"><div class="s-emoji">🎁</div><div class="s-name">奖品总数</div><div class="s-num">' + list.length + '</div><div class="s-sub">启用 ' + enabled.length + ' 项</div></div>' +
+          '<div class="stat-card"><div class="s-emoji">⚖️</div><div class="s-name">总权重</div><div class="s-num">' + totalWeight + '</div><div class="s-sub">启用奖品权重合计</div></div>' +
+          '<div class="stat-card"><div class="s-emoji">🏍️</div><div class="s-name">本店奖品池</div><div class="s-num">' + (pools[0] || 0) + '</div><div class="s-sub">仅本公司业主可抽</div></div>' +
+          '<div class="stat-card"><div class="s-emoji">🌐</div><div class="s-name">公共奖品池</div><div class="s-num">' + (pools[1] || 0) + '</div><div class="s-sub">平台公共池</div></div>';
       });
   }
 
@@ -303,20 +282,18 @@
 
   function loadPrizes(){
     var cid = document.getElementById('companyId').value;
-    if (!cid) { document.getElementById('prizeBody').innerHTML = '<tr><td colspan="8" class="empty">请选择物业公司</td></tr>'; document.getElementById('statsGrid').innerHTML = ''; return; }
+    if (!cid) { document.getElementById('prizeBody').innerHTML = '<tr><td colspan="7" class="empty">请选择物业公司</td></tr>'; document.getElementById('statsGrid').innerHTML = ''; return; }
     fetch('/api/property/admin/prize-pools?companyId=' + cid, { headers: { 'X-Property-Token': token } })
       .then(function(r){ return r.json(); })
       .then(function(res){
         loadStats(cid);
         var list = res.data || [];
-        if (channelFilter !== '') list = list.filter(function(p){ return String(p.channel) === channelFilter; });
         var tbody = document.getElementById('prizeBody');
         if (list.length === 0) {
-          tbody.innerHTML = '<tr><td colspan="8" class="empty">暂无奖品，点击右上角添加</td></tr>';
+          tbody.innerHTML = '<tr><td colspan="7" class="empty">暂无奖品，点击右上角添加</td></tr>';
           return;
         }
         tbody.innerHTML = list.map(function(p){
-          var ch = CHANNEL_NAMES[p.channel] || '通用';
           var cls = p.enabled === 1 ? 'badge-success' : 'badge-gray';
           var st = p.enabled === 1 ? '启用' : '停用';
           var action = p.enabled === 1
@@ -329,12 +306,11 @@
             '<td>¥' + Number(p.prizeValue || 0).toFixed(2) + '</td>' +
             '<td>' + p.weight + '</td>' +
             '<td><span class="badge badge-' + (p.poolType === 1 ? 'purple' : 'blue') + '">' + (POOL_NAMES[p.poolType] || '本店') + '</span></td>' +
-            '<td><span class="badge badge-orange">' + ch + '</span></td>' +
             '<td><span class="badge ' + cls + '">' + st + '</span></td>' +
             '<td>' + action + '</td></tr>';
         }).join('');
       })
-      .catch(function(){ document.getElementById('prizeBody').innerHTML = '<tr><td colspan="8" class="empty">加载失败</td></tr>'; });
+      .catch(function(){ document.getElementById('prizeBody').innerHTML = '<tr><td colspan="7" class="empty">加载失败</td></tr>'; });
   }
 
   function openModal(){
@@ -345,7 +321,6 @@
     document.getElementById('fValue').value = '';
     document.getElementById('fWeight').value = '1';
     document.getElementById('fPool').value = '0';
-    document.getElementById('fChannel').value = channelFilter !== '' ? channelFilter : '0';
     document.getElementById('prizeMask').classList.add('show');
   }
   function closeModal(){ document.getElementById('prizeMask').classList.remove('show'); }
@@ -358,11 +333,10 @@
     var value = document.getElementById('fValue').value;
     var weight = document.getElementById('fWeight').value;
     var pool = document.getElementById('fPool').value;
-    var channel = document.getElementById('fChannel').value;
     if (!companyId) { toast('请选择物业公司', 'error'); return; }
     if (!remark) { toast('请输入奖品名称', 'error'); return; }
     var params = 'companyId=' + companyId + '&prizeType=' + type + '&remark=' + encodeURIComponent(remark) +
-      '&weight=' + (weight || 1) + '&poolType=' + pool + '&channel=' + channel;
+      '&weight=' + (weight || 1) + '&poolType=' + pool + '&channel=0';
     if (value !== '') params += '&prizeValue=' + value;
     if (editId) params += '&prizeId=' + editId;
     fetch('/api/property/admin/prize-pools', {
