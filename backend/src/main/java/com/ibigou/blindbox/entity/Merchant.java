@@ -129,6 +129,10 @@ public class Merchant {
     @Column(nullable = false)
     private Integer splitAuditStatus;
 
+    /** 所属物业公司（分账给哪个物业），null=不绑定物业 */
+    @Column(name = "company_id")
+    private Long companyId;
+
     @Column(nullable = false, updatable = false)
     private LocalDateTime createTime;
 

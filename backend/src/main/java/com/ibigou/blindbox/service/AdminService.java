@@ -38,7 +38,7 @@ public class AdminService {
     private final BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
 
     @Transactional
-    public Merchant createMerchant(String merchantNo, String merchantName, String loginAccount, String loginPwd) {
+    public Merchant createMerchant(String merchantNo, String merchantName, String loginAccount, String loginPwd, Long companyId) {
         if (merchantNo == null || merchantNo.isBlank()) {
             throw new BizException("商家编号不能为空");
         }
@@ -71,6 +71,7 @@ public class AdminService {
         m.setReceiveQrStatus(0);
         m.setCreateTime(LocalDateTime.now());
         m.setUpdateTime(LocalDateTime.now());
+        m.setCompanyId(companyId);
         // V1.5：免费试用期 = 激活当天 + 平台配置试用天数（代码不写死）
         m.setMemberExpireTime(LocalDateTime.now().plusDays(memberService.freeTrialDays()));
         Merchant saved = merchantRepository.save(m);

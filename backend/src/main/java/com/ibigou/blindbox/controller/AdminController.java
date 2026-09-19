@@ -42,6 +42,7 @@ public class AdminController {
     private final BoxPrizePoolRepository prizePoolRepository;
     private final BoxPublicPoolRepository publicPoolRepository;
     private final BoxGroupPrizePoolRepository groupPoolRepository;
+    private final com.ibigou.blindbox.repository.PropertyCompanyRepository propertyCompanyRepository;
 
     // ---------------- 平台登录 ----------------
 
@@ -87,8 +88,9 @@ public class AdminController {
 
     @PostMapping("/merchant/create")
     public Result<Merchant> createMerchant(@RequestParam String merchantNo, @RequestParam String merchantName,
-                                           @RequestParam String loginAccount, @RequestParam String loginPwd) {
-        return Result.ok(adminService.createMerchant(merchantNo, merchantName, loginAccount, loginPwd));
+                                           @RequestParam String loginAccount, @RequestParam String loginPwd,
+                                           @RequestParam(required = false) Long companyId) {
+        return Result.ok(adminService.createMerchant(merchantNo, merchantName, loginAccount, loginPwd, companyId));
     }
 
     @PostMapping("/merchant/{merchantNo}/enable")
@@ -116,9 +118,40 @@ public class AdminController {
         return Result.ok();
     }
 
+    @PutMapping("/merchant/{merchantNo}/bind-company")
+    public Result<Void> bindCompany(@PathVariable String merchantNo, @RequestParam(required = false) Long companyId) {
+        Merchant m = merchantRepository.findById(merchantNo).orElseThrow(() -> new RuntimeException("商家不存在"));
+        m.setCompanyId(companyId);
+        m.setUpdateTime(LocalDateTime.now());
+        merchantRepository.save(m);
+        return Result.ok();
+    }
+
     @GetMapping("/merchant/list")
     public Result<List<Merchant>> listMerchants() {
         return Result.ok(adminService.listMerchants());
+    }
+
+    // ---------------- 物业公司管理 ----------------
+
+    @GetMapping("/property-company/list")
+    public Result<List<PropertyCompany>> listPropertyCompanies() {
+        return Result.ok(propertyCompanyRepository.findAll());
+    }
+
+    @PostMapping("/property-company/create")
+    public Result<PropertyCompany> createPropertyCompany(@RequestParam String companyName,
+                                                        @RequestParam String contactName,
+                                                        @RequestParam String contactPhone) {
+        PropertyCompany c = new PropertyCompany();
+        c.setCompanyName(companyName);
+        c.setContactName(contactName);
+        c.setContactPhone(contactPhone);
+        c.setStatus(1);
+        c.setReservationFeeEnabled(0);
+        c.setCreateTime(LocalDateTime.now());
+        c.setUpdateTime(LocalDateTime.now());
+        return Result.ok(propertyCompanyRepository.save(c));
     }
 
     // ---------------- 商家配置只读审计 ----------------

@@ -1046,3 +1046,11 @@ G71 | %s | 浏览器/curl访问生产页面被豆包翻译器注入 <script src=
 1. 新增 GET /api/property/pay-qr/wallet?companyId=&phone= 查业主钱包余额（免登录）
 2. 新增 property/customer/wallet.html：输手机号→显示余额卡片+说明（余额来自抽奖/缴费自动抵扣/仅限本物业/不可提现）
 3. 踩坑：第一次部署后 jar 损坏（ClassNotFoundException: Lifecycle），重新上传解决
+
+【2026-09-20 G96】SaaS后台物业公司管理+商家绑定物业
+1. Merchant 表加 company_id 字段（关联 property_company，null=不绑定物业）
+2. AdminController 加：GET /property-company/list、POST /property-company/create、PUT /merchant/{no}/bind-company
+3. createMerchant 加可选 companyId 参数（不强制选物业，兼容已有商家）
+4. admin/index.html：新增「物业公司」tab（创建+列表）、新增商家表单加「所属物业公司」下拉、商家列表加「绑定物业」按钮
+5. 验证：创建测试物业公司 companyId=2 成功；已有商家可通过「绑定物业」按钮绑定/解绑
+6. 踩坑：连续两次 jar 部署后 ClassNotFoundException（BCrypt/Lifecycle），clean package 后正常
