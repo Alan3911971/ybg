@@ -16,6 +16,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -308,19 +309,35 @@ public class PropertyOwnerP1Controller {
     }
 
     @PostMapping("/reservations")
-    public Result<PropertyReservation> createReservation(@RequestHeader("X-Owner-Token") String token,
+    public Result<Map<String, Object>> createReservation(@RequestHeader("X-Owner-Token") String token,
                                                           @RequestParam Long companyId,
                                                           @RequestParam Long facilityId,
                                                           @RequestParam String date,
                                                           @RequestParam String startTime,
                                                           @RequestParam String endTime,
-                                                          @RequestParam(required = false) String remark) {
+                                                          @RequestParam(required = false) String remark,
+                                                          @RequestParam(required = false) String channel) {
         Long ownerId = validateOwnerToken(token);
         LocalDate d = LocalDate.parse(date);
         LocalTime st = LocalTime.parse(startTime);
         LocalTime et = LocalTime.parse(endTime);
         PropertyReservation r = reservationService.createReservation(ownerId, companyId, facilityId, d, st, et, remark);
-        return Result.ok(r);
+        Map<String, Object> m = new HashMap<>();
+        m.put("id", r.getId());
+        m.put("reservationNo", r.getReservationNo());
+        m.put("amount", r.getAmount());
+        m.put("payStatus", r.getPayStatus());
+        m.put("status", r.getStatus());
+        m.put("reservedType", r.getReservedType());
+        m.put("reserveDate", r.getReserveDate());
+        m.put("startTime", r.getStartTime());
+        m.put("endTime", r.getEndTime());
+        m.put("remark", r.getRemark());
+        if (r.getPayStatus() != null && r.getPayStatus() == 0) {
+            String ch = (channel == null || channel.isBlank()) ? "wechat" : channel;
+            m.put("pay", reservationService.createPayOrder(r.getId(), ch));
+        }
+        return Result.ok(m);
     }
 
     @GetMapping("/reservations")
@@ -328,6 +345,28 @@ public class PropertyOwnerP1Controller {
         Long ownerId = validateOwnerToken(token);
         List<PropertyReservation> list = reservationRepository.findByOwnerIdOrderByCreateTimeDesc(ownerId);
         return Result.ok(list);
+    }
+
+    /** 收费预约下单/换渠道（返回二维码） */
+    @PostMapping("/reservations/{id}/pay")
+    public Result<Map<String, Object>> payReservation(@RequestHeader("X-Owner-Token") String token,
+                                                       @PathVariable Long id,
+                                                       @RequestParam String channel) {
+        Long ownerId = validateOwnerToken(token);
+        PropertyReservation r = reservationRepository.findById(id)
+                .orElseThrow(() -> new BizException("预约记录不存在"));
+        if (r.getOwnerId() == null || !r.getOwnerId().equals(ownerId)) {
+            throw new BizException("无权操作该预约");
+        }
+        return Result.ok(reservationService.createPayOrder(id, channel));
+    }
+
+    /** 预约支付状态轮询 */
+    @GetMapping("/reservations/pay-status")
+    public Result<Map<String, Object>> reservationPayStatus(@RequestHeader("X-Owner-Token") String token,
+                                                             @RequestParam String paymentNo) {
+        validateOwnerToken(token);
+        return Result.ok(reservationService.queryStatus(paymentNo));
     }
 
     @PostMapping("/reservations/{id}/cancel")

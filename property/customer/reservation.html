@@ -106,6 +106,22 @@ button{font-family:inherit;cursor:pointer;border:none;background:none;color:inhe
 .empty{text-align:center;padding:32px 16px;color:var(--text-3);font-size:13px;}
 .empty .emoji{font-size:36px;display:block;margin-bottom:8px;}
 
+/* Pay Modal */
+@keyframes popIn{from{opacity:0;transform:scale(.92);}to{opacity:1;transform:scale(1);}}
+.pay-mask{position:fixed;inset:0;background:rgba(15,23,42,.55);z-index:80;display:none;align-items:center;justify-content:center;padding:24px;}
+.pay-mask.show{display:flex;}
+.pay-modal{background:#fff;border-radius:var(--r-lg);width:100%;max-width:340px;padding:28px 24px;text-align:center;animation:popIn .25s var(--ease);}
+.pay-modal h3{font-size:17px;font-weight:800;margin-bottom:6px;}
+.pay-modal .pay-amount{font-size:28px;font-weight:800;color:var(--pri);margin:10px 0 4px;}
+.pay-modal .pay-tip{font-size:12px;color:var(--text-3);margin-bottom:12px;}
+.pay-ch-row{display:flex;gap:8px;justify-content:center;margin-bottom:12px;}
+.pay-ch{padding:6px 18px;border-radius:var(--r-full);font-size:12px;font-weight:700;background:var(--bg);color:var(--text-2);border:1.5px solid var(--border);}
+.pay-ch.active{background:var(--pri-bg);color:var(--pri);border-color:var(--pri);}
+.pay-modal img{width:220px;height:220px;border:1px solid var(--border);border-radius:var(--r-md);margin-bottom:16px;}
+.pay-status{font-size:13px;color:var(--text-2);margin-bottom:8px;min-height:18px;}
+.btn-done{width:100%;height:44px;border-radius:var(--r-md);background:var(--success);color:#fff;font-size:14px;font-weight:700;}
+.btn-close-pay{width:100%;height:40px;margin-top:8px;font-size:13px;color:var(--text-3);font-weight:600;}
+
 /* Bottom Nav */
 .bottom-nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:480px;background:rgba(255,255,255,.85);backdrop-filter:blur(20px) saturate(180%);-webkit-backdrop-filter:blur(20px) saturate(180%);border-top:.5px solid rgba(0,0,0,.06);display:flex;justify-content:space-around;align-items:center;padding:8px 0 calc(8px + var(--safe-bottom));z-index:50;}
 .bottom-nav a{display:flex;flex-direction:column;align-items:center;gap:2px;font-size:10px;color:var(--text-3);text-decoration:none;transition:color .2s;}
@@ -163,6 +179,23 @@ button{font-family:inherit;cursor:pointer;border:none;background:none;color:inhe
     <!-- My Reservations View -->
     <div id="view-my-reservations" style="display:none;">
       <div id="reservationList"></div>
+    </div>
+  </div>
+
+  <!-- Pay Modal -->
+  <div class="pay-mask" id="payMask">
+    <div class="pay-modal">
+      <h3>场地预约费</h3>
+      <div class="pay-amount" id="payAmount">¥0.00</div>
+      <div class="pay-tip">请扫码支付</div>
+      <div class="pay-ch-row">
+        <button class="pay-ch active" data-ch="wechat" onclick="switchPayChannel('wechat')">微信</button>
+        <button class="pay-ch" data-ch="alipay" onclick="switchPayChannel('alipay')">支付宝</button>
+      </div>
+      <img id="payQr" alt="支付二维码">
+      <div class="pay-status" id="payStatus">等待支付...</div>
+      <button class="btn-done" id="btnDone" onclick="closePay(true)" style="display:none;">支付完成</button>
+      <button class="btn-close-pay" onclick="closePay(false)">稍后支付</button>
     </div>
   </div>
 
@@ -300,9 +333,14 @@ async function submitBooking(){
   $('btnSubmitBooking').textContent='确认预约';
   $('btnSubmitBooking').disabled=false;
   if(r.code!==0){toast(r.msg||'预约失败','danger');return;}
-  toast('预约成功！等待确认','success');
-  closeBooking();
-  setTimeout(()=>switchView('my-reservations'),800);
+  const pay=r.data&&r.data.pay;
+  if(pay&&pay.qrCode){
+    openPay(r.data.id,pay);
+  }else{
+    toast('预约成功！等待确认','success');
+    closeBooking();
+    setTimeout(()=>switchView('my-reservations'),800);
+  }
 }
 
 // ========== My Reservations ==========
@@ -324,13 +362,63 @@ async function loadMyReservations(){
       +'</div>'
       +'<div class="rsv-info">'+esc(facName)+'</div>'
       +'<div class="rsv-time">📅 '+rv.reserveDate+' 🕐 '+(rv.startTime||'').substring(0,5)+' ~ '+(rv.endTime||'').substring(0,5)+'</div>'
-      +'<div class="rsv-amount">¥'+rv.amount+'</div>'
+      +'<div class="rsv-amount">'+(rv.payStatus===1?'已支付 ¥'+Number(rv.amount||0).toFixed(2):(Number(rv.amount||0)>0?'待支付 ¥'+Number(rv.amount||0).toFixed(2):'免费'))+'</div>'
       +(rv.remark?'<div style="font-size:12px;color:var(--text-3);margin-top:4px;">💬 '+esc(rv.remark)+'</div>':'')
       +(rv.cancelReason?'<div style="font-size:12px;color:var(--danger);margin-top:4px;">❌ '+esc(rv.cancelReason)+'</div>':'')
-      +(canCancel?'<div class="rsv-actions"><button class="btn-cancel" onclick="cancelRsv('+rv.id+')">取消预约</button></div>':'')
+      +(rv.payStatus===0&&Number(rv.amount||0)>0?'<div class="rsv-actions"><button class="btn-cancel" style="background:var(--pri-bg);color:var(--pri);" onclick="payRsv('+rv.id+')">去支付</button><button class="btn-cancel" onclick="cancelRsv('+rv.id+')">取消预约</button></div>':(canCancel?'<div class="rsv-actions"><button class="btn-cancel" onclick="cancelRsv('+rv.id+')">取消预约</button></div>':''))
       +'</div>';
   });
   el.innerHTML=html;
+}
+
+// ========== 预约支付 ==========
+let payTimer=null;
+let curPayRsvId=null;
+let curPayChannel="wechat";
+async function payRsv(id){
+  const r=await post("/p1/reservations/"+id+"/pay",{channel:curPayChannel});
+  if(r.code!==0){toast(r.msg||"下单失败","danger");return;}
+  openPay(id,r.data);
+}
+function openPay(rsvId,pay){
+  curPayRsvId=rsvId;
+  $("payAmount").textContent="¥"+Number(pay.amount||0).toFixed(2);
+  $("payQr").src=pay.qrCode;
+  $("payStatus").textContent="等待支付...";
+  $("btnDone").style.display="none";
+  $("payMask").classList.add("show");
+  pollPay(pay.paymentNo);
+}
+async function pollPay(paymentNo){
+  if(payTimer)clearInterval(payTimer);
+  payTimer=setInterval(async()=>{
+    const r=await get("/p1/reservations/pay-status?paymentNo="+paymentNo);
+    if(r.code===0&&r.data&&r.data.paid){
+      clearInterval(payTimer);
+      $("payStatus").textContent="支付成功";
+      $("btnDone").style.display="block";
+      toast("支付成功！预约已提交","success");
+    }
+  },2500);
+}
+async function switchPayChannel(ch){
+  if(!curPayRsvId)return;
+  clearInterval(payTimer);
+  curPayChannel=ch;
+  document.querySelectorAll(".pay-ch").forEach(b=>b.classList.remove("active"));
+  document.querySelector("[data-ch='"+ch+"']").classList.add("active");
+  $("payStatus").textContent="下单中...";
+  const r=await post("/p1/reservations/"+curPayRsvId+"/pay",{channel:ch});
+  if(r.code!==0){$("payStatus").textContent=r.msg||"下单失败";return;}
+  $("payQr").src=r.data.qrCode;
+  $("payStatus").textContent="等待支付...";
+  pollPay(r.data.paymentNo);
+}
+function closePay(paid){
+  clearInterval(payTimer);
+  $("payMask").classList.remove("show");
+  if(paid){closeBooking();setTimeout(()=>switchView("my-reservations"),500);}
+  else{closeBooking();}
 }
 
 async function cancelRsv(id){

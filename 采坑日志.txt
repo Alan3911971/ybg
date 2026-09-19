@@ -971,3 +971,10 @@ G71 | %s | 浏览器/curl访问生产页面被豆包翻译器注入 <script src=
 6. 验证：免费预约 payStatus=1/收费预约出码/模拟微信回调(CDMA+MD5) → paid=true/后台来源列业主+商家/0元场地不炸/业主旧预约兼容；公司开关演示后保留开启(1)
 7. 数据：property_reservation 新增 id=2(免费)/id=3(收费已付)/id=4(0元边界)/id=5(页面免费)/id=6(页面收费待付)；merchant_session 造 token=b159e40458444481bc9d8eee4cc7b8e7(M90380836, 24h)
 8. 遗留：预约费支付无退款自动处理（后台 refund 置 payStatus=2）；业主端预约仍无支付（业主预约是免费登记式，收费公司下业主预约会 amount>0 但业主端无支付流程——G86 仅商家预约接支付，业主收费预约如需支付待后续）
+
+【2026-09-19 G87】业主预约支付闭环（补 G86 遗留：收费公司下业主预约卡单）
+1. 背景：G86 后收费公司下业主预约 amount>0/payStatus=0 但业主端无支付入口 → 卡单
+2. 实现：PropertyOwnerP1Controller ①POST /reservations 改为返回 Map（含 id/amount/payStatus 等，收费时调 createPayOrder 返回 pay 字段）；②新增 POST /reservations/{id}/pay（下单/换渠道，校验预约归属 ownerId）；③新增 GET /reservations/pay-status?paymentNo=（轮询）；回调 RS 路由 G86 已就绪，业主预约支付直接复用
+3. 前端 customer/reservation.html：提交后收费返回 pay → 弹支付窗（¥金额+微信/支付宝切换+二维码+轮询 2.5s+支付完成）；我的预约列表显示 待支付¥xx/已支付¥xx/免费 + 待支付显示「去支付」按钮（调 /pay 端点重下单）
+4. 验证（生产）：业主 13851918986/123456 → 收费预约返回 RS 单+qrCode → 模拟微信回调 → paid=true；页面弹窗/去支付/旧卡单(id=1)重新下单全部通过；id=7(id=7,8) 已支付
+5. 注意：业主 P1 控制器新增 java.util.HashMap import（原只有 Map）；页面锚点匹配用单引号 JS 字符串（勿用双引号）
