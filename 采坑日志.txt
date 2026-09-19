@@ -984,3 +984,11 @@ G71 | %s | 浏览器/curl访问生产页面被豆包翻译器注入 <script src=
 2. 实现：PropertyAdminController ①POST /reservations/{id}/refund（校验 payStatus==1 且 status 非3/4，置 payStatus=2+status=3）；②POST /reservations/{id}/cancel（已付一并标记退款，未付走 cancelReservation）；facilities.html 预约记录操作区加「退款」（已付且待确认/已确认）「取消」（待确认/已确认）按钮
 3. 验证：id=8 退款成功 payStatus=2/status=3；重复退款正确拦截（该预约未支付）；id=6 未付取消 status=3；页面按钮与状态（已退/已取消/已付+三操作）渲染正确
 4. 注意：退款为状态标记（payStatus=2），非微信/支付宝原路退回（V2 退款需证书，服务器未配置）；已签到/已完成的预约不可退（业务保守）
+
+【2026-09-19 G89】全页面巡检（19后台+14业主）+ 工单系统三处修复
+1. 巡检：后台 19 页、业主端 14 页逐一加载探针（JS error/fetch 4xx/404/undefined）——除工单页外全部干净；工单页暴露 3 个 bug
+2. 修复①提交人 undefined：后端 /p1/workorders 返回 Map 列表补 submitter（fastjson 转 Map + ownerRepository/familyMemberRepository 解析业主/家庭成员名）
+3. 修复②工单编号/操作按钮坏：页面读 wo.order_no/wo.id，实体字段是 woNo/woId → 页面全部改 woNo/woId（data-id/data-expand/doAssign/doTransfer/doComplete/viewLogs/doClose）；images 字符串改 split 数组
+4. 修复③工单类型体系混乱：前端提交/筛选传字符串 repair/complaint/suggestion，后端要 Integer（业主提交必 400）；统一数字体系 1报修2投诉3建议4咨询：后端 parseWoType 兼容字符串别名+数字，P1 createWorkorder 参数改 String、AdminP1 筛选 type 参数改 String；前端后台 typeMap/typeBadgeMap/筛选 option、业主端 option 全改数字
+5. 验证：业主提交 woType=2 成功（woId=2）；后台筛选 type=1 精确 1 条；列表编号/类型/提交人渲染正确无 undefined
+6. 教训：页面按 snake_case 写、后端实体 camelCase 的老毛病在工单页再次出现（编号/操作按钮全坏，比显示问题更隐蔽）；「全页面巡检」应作为收尾常规步骤

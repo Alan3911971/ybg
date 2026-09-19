@@ -44,6 +44,8 @@ public class PropertyAdminP1Controller {
     private final PropertyAdminRepository adminRepository;
     private final PropertyWoLogRepository woLogRepository;
     private final PropertySplitRecordRepository splitRecordRepository;
+    private final PropertyOwnerRepository ownerRepository;
+    private final PropertyFamilyMemberRepository familyMemberRepository;
     private final MerchantPropertyBindingRepository bindingRepository;
 
     // ---------------- Token 校验 ----------------
@@ -64,16 +66,35 @@ public class PropertyAdminP1Controller {
      * 1. 工单列表（可按状态、类型过滤）
      */
     @GetMapping("/workorders")
-    public Result<List<PropertyWorkorder>> workorders(@RequestHeader("X-Property-Token") String token,
-                                                      @RequestParam(required = false) Integer status,
-                                                      @RequestParam(required = false) Integer type) {
+    public Result<List<Map<String, Object>>> workorders(@RequestHeader("X-Property-Token") String token,
+                                                         @RequestParam(required = false) Integer status,
+                                                         @RequestParam(required = false) String type) {
         validateToken(token);
+        Integer typeInt = type == null || type.isBlank() ? null : com.ibigou.blindbox.controller.PropertyOwnerP1Controller.parseWoType(type);
         List<PropertyWorkorder> all = workorderRepository.findAll();
         List<PropertyWorkorder> filtered = all.stream()
                 .filter(wo -> status == null || status.equals(wo.getStatus()))
-                .filter(wo -> type == null || type.equals(wo.getWoType()))
+                .filter(wo -> typeInt == null || typeInt.equals(wo.getWoType()))
                 .collect(Collectors.toList());
-        return Result.ok(filtered);
+        return Result.ok(filtered.stream().map(wo -> {
+            Map<String, Object> m = (Map<String, Object>) com.alibaba.fastjson.JSON.parse(
+                    com.alibaba.fastjson.JSON.toJSONString(wo));
+            m.put("submitter", resolveWorkorderSubmitter(wo));
+            return m;
+        }).collect(Collectors.toList()));
+    }
+
+    /** 工单提交人：业主名优先，家庭成员次之 */
+    private String resolveWorkorderSubmitter(PropertyWorkorder wo) {
+        if (wo.getOwnerId() != null && wo.getOwnerId() > 0) {
+            return ownerRepository.findById(wo.getOwnerId())
+                    .map(o -> o.getOwnerName()).orElse(null);
+        }
+        if (wo.getMemberId() != null && wo.getMemberId() > 0) {
+            return familyMemberRepository.findById(wo.getMemberId())
+                    .map(fm -> fm.getMemberName()).orElse(null);
+        }
+        return null;
     }
 
     /**

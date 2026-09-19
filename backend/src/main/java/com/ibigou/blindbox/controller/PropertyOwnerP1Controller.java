@@ -64,16 +64,29 @@ public class PropertyOwnerP1Controller {
     @PostMapping("/workorders")
     public Result<PropertyWorkorder> createWorkorder(@RequestHeader("X-Owner-Token") String token,
                                                      @RequestParam Long companyId,
-                                                     @RequestParam Integer woType,
+                                                     @RequestParam String woType,
                                                      @RequestParam String title,
                                                      @RequestParam(required = false) String description,
                                                      @RequestParam(required = false) String images,
                                                      @RequestParam(required = false) Integer urgency,
                                                      @RequestParam(required = false) String category) {
         Long ownerId = validateOwnerToken(token);
-        PropertyWorkorder wo = workorderService.createWorkorder(ownerId, companyId, woType,
+        PropertyWorkorder wo = workorderService.createWorkorder(ownerId, companyId, parseWoType(woType),
                 title, description, images, urgency != null ? urgency : 1, category);
         return Result.ok(wo);
+    }
+
+    /** 工单类型解析：repair/complaint/suggestion/consult → 1/2/3/4，数字原样返回 */
+    public static int parseWoType(String t) {
+        if (t == null || t.isBlank()) return 1;
+        switch (t.trim()) {
+            case "complaint": return 2;
+            case "suggestion": return 3;
+            case "consult": return 4;
+            default:
+                try { return Integer.parseInt(t.trim()); }
+                catch (NumberFormatException e) { return 1; }
+        }
     }
 
     @GetMapping("/workorders")

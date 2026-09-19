@@ -209,10 +209,10 @@
           </select>
           <select class="select" id="filterType">
             <option value="">全部类型</option>
-            <option value="repair">报修</option>
-            <option value="complaint">投诉</option>
-            <option value="suggestion">建议</option>
-            <option value="consult">咨询</option>
+            <option value="1">报修</option>
+            <option value="2">投诉</option>
+            <option value="3">建议</option>
+            <option value="4">咨询</option>
           </select>
           <button class="btn-md btn-primary" id="btnFilter">查询</button>
           <button class="btn-sm btn-primary" id="btnRefresh">刷新</button>
@@ -263,8 +263,8 @@
     setTimeout(function(){ el.classList.remove('show'); setTimeout(function(){ el.remove(); }, 200); }, 2500);
   }
 
-  var typeMap = { repair:'报修', complaint:'投诉', suggestion:'建议', consult:'咨询' };
-  var typeBadgeMap = { repair:'blue', complaint:'red', suggestion:'purple', consult:'orange' };
+  var typeMap = { 1:'报修', 2:'投诉', 3:'建议', 4:'咨询' };
+  var typeBadgeMap = { 1:'blue', 2:'red', 3:'purple', 4:'orange' };
   var statusMap = { 0:'待接单', 1:'处理中', 2:'待验收', 3:'已完成', 4:'已关闭' };
   var statusBadgeMap = { 0:'yellow', 1:'blue', 2:'orange', 3:'green', 4:'gray' };
   var urgencyMap = { 0:'普通', 1:'紧急', 2:'非常紧急' };
@@ -292,14 +292,14 @@
     var s = wo.status;
     var btns = '';
     if (s === 0) {
-      btns += '<button class="btn-sm btn-primary" onclick="doAssign(' + wo.id + ')">派单</button>';
+      btns += '<button class="btn-sm btn-primary" onclick="doAssign(' + wo.woId + ')">派单</button>';
     }
     if (s === 1) {
-      btns += '<button class="btn-sm btn-warning" onclick="doTransfer(' + wo.id + ')">转派</button>';
-      btns += '<button class="btn-sm btn-success" onclick="doComplete(' + wo.id + ')">完工</button>';
+      btns += '<button class="btn-sm btn-warning" onclick="doTransfer(' + wo.woId + ')">转派</button>';
+      btns += '<button class="btn-sm btn-success" onclick="doComplete(' + wo.woId + ')">完工</button>';
     }
-    btns += '<button class="btn-sm btn-primary" onclick="viewLogs(' + wo.id + ')">📝日志</button>';
-    btns += '<button class="btn-sm btn-danger" onclick="doClose(' + wo.id + ')">关闭</button>';
+    btns += '<button class="btn-sm btn-primary" onclick="viewLogs(' + wo.woId + ')">📝日志</button>';
+    btns += '<button class="btn-sm btn-danger" onclick="doClose(' + wo.woId + ')">关闭</button>';
     return '<div class="action-btns">' + btns + '</div>';
   }
 
@@ -354,9 +354,9 @@
         }
         var html = '';
         res.data.forEach(function(wo){
-          html += '<tr class="row-main" data-id="' + wo.id + '">' +
-            '<td>' + (wo.order_no || wo.id) + '</td>' +
-            '<td>' + typeBadge(wo.type) + '</td>' +
+          html += '<tr class="row-main" data-id="' + wo.woId + '">' +
+            '<td>' + (wo.woNo || wo.woId) + '</td>' +
+            '<td>' + typeBadge(wo.woType) + '</td>' +
             '<td>' + (wo.title || '--') + '</td>' +
             '<td>' + (wo.submitter || '--') + '</td>' +
             '<td>' + urgencyBadge(wo.urgency) + '</td>' +
@@ -366,12 +366,13 @@
             '<td>' + actionButtons(wo) + '</td></tr>';
           // Expand row with inline detail
           var imgs = '';
-          if (wo.images && wo.images.length) {
-            wo.images.forEach(function(img){
+          var imgArr = typeof wo.images === 'string' ? wo.images.split(',').filter(function(x){return x;}) : (wo.images || []);
+          if (imgArr.length) {
+            imgArr.forEach(function(img){
               imgs += '<img src="' + img + '" alt="工单图片">';
             });
           }
-          html += '<tr class="expand-row" data-expand="' + wo.id + '"><td colspan="9"><div class="expand-content" id="expand-' + wo.id + '">' +
+          html += '<tr class="expand-row" data-expand="' + wo.woId + '"><td colspan="9"><div class="expand-content" id="expand-' + wo.woId + '">' +
             '<div class="expand-section"><h4>描述</h4><p>' + (wo.description || '无') + '</p></div>' +
             (imgs ? '<div class="expand-section"><h4>图片</h4><div class="img-thumbs">' + imgs + '</div></div>' : '') +
             '<div class="expand-section"><h4>操作日志</h4><p style="color:var(--c-text-3)">点击「📝日志」按钮查看完整日志</p></div>' +

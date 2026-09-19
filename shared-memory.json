@@ -796,7 +796,7 @@
     }
   ],
   "project_20260918": "需求1/2/3完成；家庭成员扫码绑定闭环；后台窄屏防变形修复",
-  "payment_20260918": "物业缴费三闭环+后台对账（G79-G85）+G86商家场地预约+G87业主预约支付+G88后台预约退款/取消：收费预约已付可后台退款（payStatus→2+status→3，幂等拦截），未付可后台取消；facilities.html 操作区确认/签到/完成/退款/取消；退款为状态标记（V2退款需证书未配置原路退回）；业主/商家统一RS支付；商家session=b159e40458444481bc9d8eee4cc7b8e7(M90380836)；auto-pay调度未做；bu截图RPC损坏",
+  "payment_20260918": "物业缴费三闭环+后台对账（G79-G85）+G86商家场地预约+G87业主预约支付+G88后台预约退款/取消+G89工单修复：全页面巡检（19后台+14业主）除工单页外全净；工单补submitter、编号/操作按钮改camelCase(woNo/woId)、类型统一数字体系1报修2投诉3建议4咨询（parseWoType兼容字符串）；退款为状态标记；业主/商家统一RS支付；商家session=b159e40458444481bc9d8eee4cc7b8e7(M90380836)；auto-pay调度未做；bu截图RPC损坏",
   "toolchain": {
     "python": "Python 3 + paramiko（pip install paramiko），所有 SSH/部署/SFTP 脚本依赖",
     "jdk": "D:\\devtools\\jdk（Temurin 17.0.20.1）",
@@ -812,14 +812,14 @@
     "qrcodejs_inline": "D:\\workspace-java\\_qrcodejs_inline.js（19928B 公共副本，从 dashboard.html 提取）"
   },
   "github_backup_20260919": {
-    "commit": "a5f76d7427e8f66a1d3430360697a6d5155fdc76",
+    "commit": "a0f2652d8e25997ef3afe9135eba0744e606c84a",
     "files": 484,
-    "scope": "G86 商家预约 + G87 业主预约支付闭环（backend+property/merchant+四文档）",
+    "scope": "G86商家预约+G87业主预约支付+G88后台退款/取消（backend+property+四文档）",
     "script": "D:\\workspace-java\\_push_gh_full.py（用法：$env:GH_PAT=<token>; python _push_gh_full.py）"
   },
   "nas_backup_20260919": {
-    "commit": "c2683d6",
-    "message": "sync 20260919: G86 商家场地预约 + G87 业主预约支付闭环",
+    "commit": "8934b60",
+    "message": "sync 20260919: G86-G88 场地预约全闭环（商家/业主预约+支付+退款）",
     "script": "D:\\workspace-java\\_nas_sync4.py（本地tar → paramiko exec stdin 管道，NAS 无 sftp/scp subsystem）"
   }
 }
