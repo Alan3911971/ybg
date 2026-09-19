@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#4f46e5">
+<title>开奖配置 · 物业后台 · 宜必购物业</title>
+<link rel="icon" href="data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='80' font-size='90'%3E%F0%9F%8E%81%3C/text%3E%3C/svg%3E">
+<style>
+  :root{
+    --pri:#4f46e5; --pri-grad:linear-gradient(135deg,#4f46e5 0%,#7c3aed 100%);
+    --success:#10b981; --danger:#ef4444; --warning:#f59e0b;
+    --dark:#0f172a; --text:#1e293b; --text-2:#64748b; --text-3:#94a3b8;
+    --bg:#f8fafc; --surface:#ffffff; --border:#e2e8f0; --divider:#f1f5f9;
+    --shadow-card:0 1px 3px rgba(0,0,0,.04),0 8px 24px rgba(0,0,0,.04);
+    --r-sm:8px; --r-md:12px; --r-lg:16px; --r-xl:20px; --sidebar-w:272px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+  html,body{font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei","Helvetica Neue",Arial,sans-serif;color:var(--text);background:var(--bg);-webkit-font-smoothing:antialiased;height:100%;}
+  a{color:inherit;text-decoration:none;}
+  input,select,button,textarea{font-size:16px;font-family:inherit;}
+  .layout{display:flex;min-height:100vh;}
+  .sidebar{width:var(--sidebar-w);background:linear-gradient(180deg,#0f172a 0%,#1e293b 100%);display:flex;flex-direction:column;position:fixed;top:0;left:0;bottom:0;z-index:40;transition:transform .25s ease;}
+  .sidebar .brand{padding:24px 20px;display:flex;align-items:center;gap:12px;border-bottom:1px solid rgba(255,255,255,.08);}
+  .sidebar .brand .logo{width:40px;height:40px;border-radius:var(--r-md);background:var(--pri-grad);color:#fff;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;font-weight:700;}
+  .sidebar .brand h1{font-size:16px;font-weight:700;line-height:1.3;color:#fff;}
+  .sidebar .brand h1 span{font-size:11px;color:rgba(255,255,255,.5);font-weight:400;display:block;margin-top:2px;}
+  .sidebar nav{flex:1;overflow-y:auto;padding:16px 12px;}
+  .nav-section{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:rgba(255,255,255,.35);padding:16px 12px 6px;margin-top:4px;}
+  .sidebar nav a{height:44px;padding:0 16px;border-radius:10px;font-size:14px;color:rgba(255,255,255,.55);font-weight:500;transition:all .2s;margin-bottom:2px;display:flex;align-items:center;gap:12px;border-left:none;}
+  .sidebar nav a:hover{color:rgba(255,255,255,.9);background:rgba(255,255,255,.06);}
+  .sidebar nav a.active{color:#fff;background:rgba(79,70,229,.15);font-weight:600;border-left:3px solid #818cf8;border-radius:0 10px 10px 0;}
+  .sidebar nav a .icon{font-size:16px;width:22px;text-align:center;flex-shrink:0;}
+  .sidebar .logout-area{padding:16px;}
+  .sidebar .logout-area a{height:44px;padding:0 16px;border-radius:10px;display:flex;align-items:center;gap:12px;color:rgba(255,255,255,.4);font-size:14px;}
+  .sidebar .logout-area a:hover{color:#fca5a5;background:rgba(239,68,68,.08);}
+  .sidebar-overlay{display:none;position:fixed;inset:0;background:rgba(15,23,42,.5);z-index:39;}
+  .main{flex:1;margin-left:var(--sidebar-w);padding:24px;min-width:0;}
+  .topbar{display:flex;align-items:center;gap:16px;margin-bottom:24px;}
+  .page-title{font-size:22px;font-weight:800;}
+  .menu-toggle{display:none;background:var(--surface);border:1px solid var(--border);border-radius:10px;width:42px;height:42px;font-size:18px;cursor:pointer;}
+  .card{background:var(--surface);border-radius:var(--r-lg);box-shadow:var(--shadow-card);padding:24px;margin-bottom:24px;}
+  .sec{font-size:16px;font-weight:700;display:flex;align-items:center;gap:10px;margin-bottom:16px;}
+  .sec .ic{font-size:18px;}
+  .filter-bar{display:flex;gap:12px;flex-wrap:wrap;align-items:center;margin-bottom:16px;}
+  .select,.input{height:42px;padding:0 12px;border:1.5px solid var(--border);border-radius:10px;background:#fff;color:var(--text);outline:none;min-width:140px;}
+  .select:focus,.input:focus{border-color:var(--pri);}
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:none;font-weight:600;cursor:pointer;transition:all .2s;}
+  .btn-sm{height:32px;padding:0 12px;font-size:13px;border-radius:8px;}
+  .btn-md{height:42px;padding:0 20px;font-size:14px;border-radius:10px;}
+  .btn-primary{background:var(--pri-grad);color:#fff;box-shadow:0 2px 8px rgba(79,70,229,.3);}
+  .btn-primary:hover{opacity:.9;}
+  .btn-soft{background:#eef2ff;color:var(--pri);}
+  .btn-soft:hover{background:#e0e7ff;}
+  .btn-danger{background:#fef2f2;color:var(--danger);}
+  .btn-danger:hover{background:#fee2e2;}
+  .btn-success{background:#ecfdf5;color:var(--success);}
+  .btn-success:hover{background:#d1fae5;}
+  .table-wrap{overflow-x:auto;}
+  table{width:100%;border-collapse:collapse;font-size:14px;}
+  thead th{background:var(--divider);color:var(--text-2);font-size:12px;font-weight:600;text-align:left;padding:12px 14px;white-space:nowrap;}
+  tbody td{padding:13px 14px;border-bottom:1px solid var(--divider);white-space:nowrap;}
+  tbody tr:hover{background:#fafbff;}
+  .badge{display:inline-block;padding:3px 10px;border-radius:999px;font-size:12px;font-weight:600;}
+  .badge-blue{background:#eef2ff;color:#4f46e5;}
+  .badge-red{background:#fef2f2;color:#ef4444;}
+  .badge-purple{background:#faf5ff;color:#9333ea;}
+  .badge-orange{background:#fff7ed;color:#f97316;}
+  .badge-green{background:#ecfdf5;color:#10b981;}
+  .badge-gray{background:#f1f5f9;color:#64748b;}
+  .badge-success{background:#d1fae5;color:#059669;}
+  .badge-danger{background:#fee2e2;color:#dc2626;}
+  .badge-warning{background:#fef3c7;color:#d97706;}
+  .empty{text-align:center;color:var(--text-3);padding:40px 0!important;}
+  .tabs{display:flex;gap:8px;margin-bottom:20px;border-bottom:2px solid var(--divider);}
+  .tab-btn{padding:12px 20px;font-size:14px;font-weight:500;color:var(--text-2);background:none;border:none;border-bottom:2px solid transparent;margin-bottom:-2px;cursor:pointer;}
+  .tab-btn.active{color:var(--pri);border-bottom-color:var(--pri);font-weight:600;}
+  .tab-panel{display:none;}
+  .tab-panel.active{display:block;}
+  .mask{display:none;position:fixed;inset:0;background:rgba(15,23,42,.5);z-index:100;align-items:center;justify-content:center;padding:20px;}
+  .mask.show{display:flex;}
+  .modal{background:#fff;border-radius:var(--r-xl);width:100%;max-width:480px;padding:24px;box-shadow:0 20px 60px rgba(0,0,0,.2);animation:fadeInUp .25s ease;}
+  @keyframes fadeInUp{from{opacity:0;transform:translateY(16px);}to{opacity:1;transform:translateY(0);}}
+  .modal h3{font-size:17px;font-weight:700;margin-bottom:20px;}
+  .form-group{margin-bottom:16px;}
+  .form-group label{display:block;font-size:13px;font-weight:600;color:var(--text-2);margin-bottom:6px;}
+  .form-group .select,.form-group .input{width:100%;}
+  .modal-actions{display:flex;gap:12px;justify-content:flex-end;margin-top:8px;}
+  .toast{position:fixed;top:24px;left:50%;transform:translateX(-50%);padding:12px 22px;border-radius:12px;color:#fff;font-size:14px;font-weight:500;z-index:200;box-shadow:0 8px 24px rgba(0,0,0,.2);opacity:0;transition:opacity .3s;pointer-events:none;}
+  .toast.show{opacity:1;}
+  .toast.success{background:var(--success);}
+  .toast.error{background:var(--danger);}
+  .toast.info{background:var(--pri);}
+  .stats-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:16px;margin-bottom:24px;}
+  .stat-card{background:var(--surface);border-radius:var(--r-lg);box-shadow:var(--shadow-card);padding:18px;}
+  .stat-card .s-name{font-size:13px;color:var(--text-2);font-weight:600;}
+  .stat-card .s-num{font-size:26px;font-weight:800;margin-top:6px;}
+  .stat-card .s-sub{font-size:12px;color:var(--text-3);margin-top:4px;}
+  .stat-card .s-emoji{font-size:22px;}
+  .chips{display:flex;gap:8px;flex-wrap:wrap;}
+  .chip{padding:6px 14px;border-radius:999px;background:#f1f5f9;color:var(--text-2);font-size:13px;font-weight:500;cursor:pointer;border:1.5px solid transparent;}
+  .chip.active{background:#eef2ff;color:var(--pri);border-color:var(--pri);font-weight:600;}
+  @media(max-width:960px){
+    .sidebar{transform:translateX(-100%);}
+    .sidebar.show{transform:translateX(0);}
+    .sidebar-overlay.show{display:block;}
+    .main{margin-left:0;padding:16px;}
+    .menu-toggle{display:block;}
+  }
+</style>
+</head>
+<body>
+<div class="layout">
+  <aside class="sidebar" id="sidebar">
+    <div class="brand"><div class="logo">🏠</div><h1>宜必购物业<span>物业后台管理</span></h1></div>
+    <nav>
+      <div class="nav-section">运营管理</div>
+      <a href="dashboard.html"><span class="icon">📊</span>数据看板</a>
+      <a href="owners.html"><span class="icon">👥</span>业主管理</a>
+      <a href="bills.html"><span class="icon">🧾</span>账单管理</a>
+      <a href="splits.html"><span class="icon">💰</span>分账流水</a>
+      <a href="merchant-bindings.html"><span class="icon">🔗</span>商家绑定</a>
+      <a href="activity-audit.html"><span class="icon">✅</span>活动审核</a>
+      <a href="prizes.html" class="active"><span class="icon">🎁</span>开奖配置</a>
+      <a href="facilities.html"><span class="icon">🏟️</span>场地预约</a>
+      <div class="nav-section">安防通行</div>
+      <a href="access.html"><span class="icon">🚪</span>门禁管理</a>
+      <a href="vehicles.html"><span class="icon">🚗</span>车辆管理</a>
+      <a href="devices.html"><span class="icon">📡</span>IoT设备</a>
+    </nav>
+    <div class="logout-area"><a href="#" id="logoutBtn"><span class="icon">🚪</span>退出登录</a></div>
+  </aside>
+  <div class="sidebar-overlay" id="overlay"></div>
+
+  <div class="main">
+    <div class="topbar">
+      <button class="menu-toggle" id="menuToggle">☰</button>
+      <div class="page-title">开奖配置</div>
+    </div>
+
+    <!-- 渠道汇总 -->
+    <div class="stats-grid" id="statsGrid"></div>
+
+    <div class="card">
+      <div class="sec"><span class="ic">🎁</span>奖品池</div>
+      <div class="filter-bar">
+        <select class="select" id="companyId" onchange="loadPrizes()">
+          <option value="">选择物业公司</option>
+        </select>
+        <div class="chips" id="channelChips">
+          <span class="chip active" data-c="">全部渠道</span>
+          <span class="chip" data-c="0">🔄 通用</span>
+          <span class="chip" data-c="1">🟡 美团</span>
+          <span class="chip" data-c="2">🛍️ 团购</span>
+          <span class="chip" data-c="3">🎵 抖音</span>
+        </div>
+        <button class="btn btn-md btn-primary" onclick="openModal()">+ 添加奖品</button>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>奖品名称</th><th>类型</th><th>面值</th><th>权重</th><th>池类别</th><th>渠道</th><th>状态</th><th>操作</th></tr></thead>
+          <tbody id="prizeBody"><tr><td colspan="8" class="empty">加载中...</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 添加/编辑弹层 -->
+<div class="mask" id="prizeMask">
+  <div class="modal">
+    <h3 id="modalTitle">添加奖品</h3>
+    <div class="form-group">
+      <label>物业公司</label>
+      <select class="select" id="fCompany"><option value="">请选择</option></select>
+    </div>
+    <div class="form-group">
+      <label>奖品名称</label>
+      <input class="input" id="fRemark" placeholder="如 9折优惠券 / 神秘礼品 / 谢谢参与" list="prizePresets">
+      <datalist id="prizePresets">
+        <option value="谢谢参与"><option value="神秘礼品"><option value="9折优惠券"><option value="8折优惠券"><option value="立减10元"><option value="余额5元"><option value="团购免单券">
+      </datalist>
+    </div>
+    <div class="form-group">
+      <label>奖品类型</label>
+      <select class="select" id="fType">
+        <option value="0">普通商品（仅展示奖品名称）</option>
+        <option value="1">折扣券</option>
+        <option value="2">立减券</option>
+        <option value="3">普通余额</option>
+        <option value="4">团购免单余额</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label>面值/额度（折扣填 88 表示 88 折；立减/余额填元）</label>
+      <input class="input" id="fValue" type="number" step="0.01" placeholder="0">
+    </div>
+    <div class="form-group">
+      <label>权重（越大越容易中，默认 1）</label>
+      <input class="input" id="fWeight" type="number" min="1" value="1">
+    </div>
+    <div class="form-group">
+      <label>奖品池类别</label>
+      <select class="select" id="fPool">
+        <option value="0">🏍️ 本店奖品池（仅本公司业主可抽）</option>
+        <option value="1">🌐 公共奖品池（平台公共池）</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label>渠道</label>
+      <select class="select" id="fChannel">
+        <option value="0">🔄 通用（所有渠道）</option>
+        <option value="1">🟡 美团</option>
+        <option value="2">🛍️ 团购</option>
+        <option value="3">🎵 抖音</option>
+      </select>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-md btn-soft" onclick="closeModal()">取消</button>
+      <button class="btn btn-md btn-primary" onclick="savePrize()">保存</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+<script>
+  var token = localStorage.getItem('property_admin_token');
+  if (!token) { location.href = 'login.html'; }
+  var companies = [], channelFilter = '', editId = null;
+
+  function toast(msg, type){
+    var t = document.getElementById('toast');
+    t.textContent = msg; t.className = 'toast show ' + (type || 'info');
+    setTimeout(function(){ t.className = 'toast'; }, 2200);
+  }
+
+  // 侧边栏
+  document.getElementById('menuToggle').onclick = function(){
+    document.getElementById('sidebar').classList.add('show');
+    document.getElementById('overlay').classList.add('show');
+  };
+  document.getElementById('overlay').onclick = function(){
+    document.getElementById('sidebar').classList.remove('show');
+    document.getElementById('overlay').classList.remove('show');
+  };
+  document.getElementById('logoutBtn').onclick = function(e){
+    e.preventDefault();
+    localStorage.removeItem('property_admin_token');
+    location.href = 'login.html';
+  };
+
+  // 渠道筛选
+  document.querySelectorAll('#channelChips .chip').forEach(function(c){
+    c.onclick = function(){
+      document.querySelectorAll('#channelChips .chip').forEach(function(x){ x.classList.remove('active'); });
+      c.classList.add('active');
+      channelFilter = c.getAttribute('data-c');
+      loadPrizes();
+    };
+  });
+
+  function loadCompanies(){
+    fetch('/api/property/admin/companies', { headers: { 'X-Property-Token': token } })
+      .then(function(r){ return r.json(); })
+      .then(function(res){
+        if (res.code !== 0) { toast(res.msg || '加载公司失败', 'error'); return; }
+        companies = res.data || [];
+        var sel = document.getElementById('companyId');
+        var opts = '<option value="">选择物业公司</option>';
+        companies.forEach(function(c){ opts += '<option value="' + c.companyId + '">' + c.companyName + '</option>'; });
+        sel.innerHTML = opts;
+        var sel2 = document.getElementById('fCompany');
+        var opts2 = '<option value="">请选择</option>';
+        companies.forEach(function(c){ opts2 += '<option value="' + c.companyId + '">' + c.companyName + '</option>'; });
+        sel2.innerHTML = opts2;
+        if (companies.length === 1) { sel.value = companies[0].companyId; loadPrizes(); }
+      })
+      .catch(function(){ toast('网络异常', 'error'); });
+  }
+
+  function loadStats(companyId){
+    fetch('/api/property/admin/prize-stats?companyId=' + companyId, { headers: { 'X-Property-Token': token } })
+      .then(function(r){ return r.json(); })
+      .then(function(res){
+        var grid = document.getElementById('statsGrid');
+        if (res.code !== 0 || !res.data || res.data.length === 0) {
+          grid.innerHTML = '<div class="stat-card"><div class="s-name">🎁 暂无配置</div><div class="s-num">0</div><div class="s-sub">选择公司后添加奖品</div></div>';
+          return;
+        }
+        grid.innerHTML = res.data.map(function(s){
+          return '<div class="stat-card"><div class="s-emoji">' + (s.channelName === '美团' ? '🟡' : s.channelName === '团购' ? '🛍️' : s.channelName === '抖音' ? '🎵' : '🔄') + '</div>' +
+            '<div class="s-name">' + s.channelName + '渠道</div>' +
+            '<div class="s-num">' + s.enabledCount + ' / ' + s.count + '</div>' +
+            '<div class="s-sub">启用奖品数 · 总权重 ' + s.totalWeight + '</div></div>';
+        }).join('');
+      });
+  }
+
+  var TYPE_NAMES = { 0:'普通', 1:'折扣券', 2:'立减券', 3:'普通余额', 4:'团购免单' };
+  var TYPE_CLS = { 0:'gray', 1:'blue', 2:'orange', 3:'green', 4:'purple' };
+  var CHANNEL_NAMES = { 0:'通用', 1:'美团', 2:'团购', 3:'抖音' };
+  var POOL_NAMES = { 0:'本店', 1:'公共' };
+
+  function loadPrizes(){
+    var cid = document.getElementById('companyId').value;
+    if (!cid) { document.getElementById('prizeBody').innerHTML = '<tr><td colspan="8" class="empty">请选择物业公司</td></tr>'; document.getElementById('statsGrid').innerHTML = ''; return; }
+    fetch('/api/property/admin/prize-pools?companyId=' + cid, { headers: { 'X-Property-Token': token } })
+      .then(function(r){ return r.json(); })
+      .then(function(res){
+        loadStats(cid);
+        var list = res.data || [];
+        if (channelFilter !== '') list = list.filter(function(p){ return String(p.channel) === channelFilter; });
+        var tbody = document.getElementById('prizeBody');
+        if (list.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="8" class="empty">暂无奖品，点击右上角添加</td></tr>';
+          return;
+        }
+        tbody.innerHTML = list.map(function(p){
+          var ch = CHANNEL_NAMES[p.channel] || '通用';
+          var cls = p.enabled === 1 ? 'badge-success' : 'badge-gray';
+          var st = p.enabled === 1 ? '启用' : '停用';
+          var action = p.enabled === 1
+            ? '<button class="btn btn-sm btn-soft" onclick="togglePrize(' + p.prizeId + ',0)">停用</button> '
+            : '<button class="btn btn-sm btn-success" onclick="togglePrize(' + p.prizeId + ',1)">启用</button> ';
+          action += '<button class="btn btn-sm btn-danger" onclick="delPrize(' + p.prizeId + ')">删除</button>';
+          return '<tr>' +
+            '<td>' + (p.remark || '--') + '</td>' +
+            '<td><span class="badge badge-' + (TYPE_CLS[p.prizeType] || 'gray') + '">' + (TYPE_NAMES[p.prizeType] || p.prizeType) + '</span></td>' +
+            '<td>¥' + Number(p.prizeValue || 0).toFixed(2) + '</td>' +
+            '<td>' + p.weight + '</td>' +
+            '<td><span class="badge badge-' + (p.poolType === 1 ? 'purple' : 'blue') + '">' + (POOL_NAMES[p.poolType] || '本店') + '</span></td>' +
+            '<td><span class="badge badge-orange">' + ch + '</span></td>' +
+            '<td><span class="badge ' + cls + '">' + st + '</span></td>' +
+            '<td>' + action + '</td></tr>';
+        }).join('');
+      })
+      .catch(function(){ document.getElementById('prizeBody').innerHTML = '<tr><td colspan="8" class="empty">加载失败</td></tr>'; });
+  }
+
+  function openModal(){
+    editId = null;
+    document.getElementById('modalTitle').textContent = '添加奖品';
+    document.getElementById('fRemark').value = '';
+    document.getElementById('fType').value = '0';
+    document.getElementById('fValue').value = '';
+    document.getElementById('fWeight').value = '1';
+    document.getElementById('fPool').value = '0';
+    document.getElementById('fChannel').value = channelFilter !== '' ? channelFilter : '0';
+    document.getElementById('prizeMask').classList.add('show');
+  }
+  function closeModal(){ document.getElementById('prizeMask').classList.remove('show'); }
+  document.getElementById('prizeMask').addEventListener('click', function(e){ if (e.target === this) closeModal(); });
+
+  function savePrize(){
+    var companyId = document.getElementById('fCompany').value;
+    var remark = document.getElementById('fRemark').value.trim();
+    var type = document.getElementById('fType').value;
+    var value = document.getElementById('fValue').value;
+    var weight = document.getElementById('fWeight').value;
+    var pool = document.getElementById('fPool').value;
+    var channel = document.getElementById('fChannel').value;
+    if (!companyId) { toast('请选择物业公司', 'error'); return; }
+    if (!remark) { toast('请输入奖品名称', 'error'); return; }
+    var params = 'companyId=' + companyId + '&prizeType=' + type + '&remark=' + encodeURIComponent(remark) +
+      '&weight=' + (weight || 1) + '&poolType=' + pool + '&channel=' + channel;
+    if (value !== '') params += '&prizeValue=' + value;
+    if (editId) params += '&prizeId=' + editId;
+    fetch('/api/property/admin/prize-pools', {
+      method: 'POST',
+      headers: { 'X-Property-Token': token, 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: params
+    })
+    .then(function(r){ return r.json(); })
+    .then(function(res){
+      if (res.code === 0) {
+        toast('保存成功', 'success');
+        closeModal();
+        var sel = document.getElementById('companyId');
+        if (sel.value !== String(companyId)) { sel.value = companyId; }
+        loadPrizes();
+      } else { toast(res.msg || '保存失败', 'error'); }
+    })
+    .catch(function(){ toast('网络异常', 'error'); });
+  }
+
+  function togglePrize(id, enabled){
+    fetch('/api/property/admin/prize-pools/' + id + '/' + (enabled === 1 ? 'enable' : 'disable'), {
+      method: 'POST', headers: { 'X-Property-Token': token }
+    })
+    .then(function(r){ return r.json(); })
+    .then(function(res){
+      if (res.code === 0) { toast(enabled === 1 ? '已启用' : '已停用', 'success'); loadPrizes(); }
+      else toast(res.msg || '操作失败', 'error');
+    });
+  }
+
+  function delPrize(id){
+    if (!confirm('确认删除该奖品？')) return;
+    fetch('/api/property/admin/prize-pools/' + id, { method: 'DELETE', headers: { 'X-Property-Token': token } })
+      .then(function(r){ return r.json(); })
+      .then(function(res){
+        if (res.code === 0) { toast('已删除', 'success'); loadPrizes(); }
+        else toast(res.msg || '删除失败', 'error');
+      });
+  }
+
+  document.getElementById('companyId').addEventListener('change', function(){ loadPrizes(); });
+  loadCompanies();
+</script>
+</body>
+</html>

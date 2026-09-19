@@ -1002,3 +1002,12 @@ G71 | %s | 浏览器/curl访问生产页面被豆包翻译器注入 <script src=
 6. services.html 字段修复：价格 s.price→s.unitPrice（显示 ¥0 的坑）、订单状态 orderStatusMap 改数字（0待支付1已支付3已完成4已取消5已退款）
 7. 教训：G89 巡检探针只抓「列表渲染」级问题，抓不到「写操作页面」级问题——需逐页模拟提交验证；页面 JSON body 与后端 @RequestParam 的不匹配是本轮最大雷区；datetime-local 给 ISO T 格式，测试别用空格格式
 8. 测试数据：visitor-vehicles 2 条（苏E66666/苏E99999）、value_service 1 条（开锁换锁 ¥50/次）、vs-order 1 条（VS1789812499376 待支付）
+
+【2026-09-19 G91】物业开奖配置（物业专用，复刻商家奖品池）
+1. 需求：物业后台没有美团/团购/抖音等渠道的开奖配置，把商家后台开奖配置复刻到物业，物业专用独立配置（不借商家体系）
+2. 新建 property_prize_pool 表（company_id 维度：prize_type 0普通1折扣2立减3余额4团购免单 / channel 0通用1美团2团购3抖音 / pool_type 0本店1公共 / weight / enabled）；PropertyPrizePool 实体 + 仓库 3 查询
+3. PropertyAdminController 开奖 5 端点：GET/POST /prize-pools、/prize-pools/{id}/enable|disable、DELETE、GET /prize-stats（按渠道分组 count/enabledCount/totalWeight）
+4. 页面 property/admin/prizes.html（公司选择+渠道tab通用/美团/团购/抖音+添加弹层+启停删除+报表卡片），侧边栏「🎁开奖配置」+ 首页快捷入口
+5. 踩坑：① 实体 import javax.persistence 编译失败——本项目用 jakarta.persistence（SpringBoot3）② 生产建表用 paramiko ssh -e 内联执行静默失败（无报错也无建表）→ 改 sftp 上传 sql + mysql < file 可靠 ③ 验证脚本 print token 截断 30 字符误导「登录过期」，真 token 32 字符——打印别截断 ④ disown 启动管道超时属预期，另写健康检查脚本确认 200
+6. 验证：API e2e 全通（添加5种奖品/列表排序 channel asc/启停/报表分组/非法渠道9拦截/删除）+ 页面 bu 渲染 4 行奖品 + JS 交互（openModal/savePrize 新行出现）
+7. 测试数据：宜必购物业保留 4 条演示奖品（9折优惠券/立减10元/余额5元/团购免单券，渠道含通用美团团购抖音）

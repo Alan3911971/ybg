@@ -812,14 +812,29 @@
     "qrcodejs_inline": "D:\\workspace-java\\_qrcodejs_inline.js（19928B 公共副本，从 dashboard.html 提取）"
   },
   "github_backup_20260919": {
-    "commit": "4c441e11c3b4f89873690893f46881b6342b1a79",
+    "commit": "7dceb62786ea8e175e91affd1518f7b323bd7d45",
     "files": 484,
-    "scope": "G86-G89 预约全闭环+工单修复（backend+property+四文档）",
+    "scope": "G86-G90 预约全闭环+工单全流程+业主写操作链路（backend+property+四文档）",
     "script": "D:\\workspace-java\\_push_gh_full.py（用法：$env:GH_PAT=<token>; python _push_gh_full.py）"
   },
   "nas_backup_20260919": {
-    "commit": "89a435b",
-    "message": "sync 20260919: G86-G89 预约全闭环+工单修复",
+    "commit": "15e0fda",
+    "message": "sync 20260919: G86-G90 预约全闭环+工单全流程+业主写操作链路",
     "script": "D:\\workspace-java\\_nas_sync4.py（本地tar → paramiko exec stdin 管道，NAS 无 sftp/scp subsystem）"
+  },
+  "g91_20260919": {
+    "scope": "物业开奖配置（物业专用，复刻商家奖品池）",
+    "detail": "property_prize_pool 表+实体+仓库；PropertyAdminController 5 开奖端点（prize-pools CRUD/enable/disable/prize-stats 按渠道报表）；页面 prizes.html（渠道tab 通用/美团/团购/抖音+添加弹层+启停删除+报表卡片）；侧边栏+首页入口",
+    "channel": "0通用 1美团 2团购 3抖音；prizeType 0普通1折扣2立减3余额4团购免单；poolType 0本店1公共",
+    "verified": "API e2e 全通 + 页面 bu 渲染/JS 交互验证",
+    "test_data": "宜必购物业 4 条演示奖品（9折优惠券/立减10元/余额5元/团购免单券）",
+    "files": [
+      "db/property_prize_pool.sql",
+      "entity/PropertyPrizePool.java",
+      "repository/PropertyPrizePoolRepository.java",
+      "controller/PropertyAdminController.java",
+      "property/admin/prizes.html",
+      "property/admin/index.html"
+    ]
   }
 }

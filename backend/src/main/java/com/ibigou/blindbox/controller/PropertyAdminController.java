@@ -62,6 +62,7 @@ public class PropertyAdminController {
     private final PropertyBuildingRepository buildingRepository;
     private final PropertyRoomRepository roomRepository;
     private final PropertyPaymentRepository paymentRepository;
+    private final PropertyPrizePoolRepository prizePoolRepository;
 
     private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 
@@ -312,6 +313,95 @@ public class PropertyAdminController {
             return Result.ok(billRepository.findByCompanyId(companyId, pageable));
         }
         return Result.ok(billRepository.findAll(pageable));
+    }
+
+    // ---------------- 开奖配置（物业专用，复刻商家奖品池） ----------------
+
+    @GetMapping("/prize-pools")
+    public Result<java.util.List<PropertyPrizePool>> prizePools(@RequestHeader("X-Property-Token") String token,
+                                                                 @RequestParam Long companyId) {
+        validateToken(token);
+        return Result.ok(prizePoolRepository.findByCompanyIdOrderByChannelAscPoolTypeAscCreateTimeDesc(companyId));
+    }
+
+    /** 新增/编辑奖品：prizeType 0普通 1折扣券 2立减券 3普通余额 4团购免单余额；channel 0通用 1美团 2团购 3抖音；poolType 0本店 1公共 */
+    @PostMapping("/prize-pools")
+    public Result<PropertyPrizePool> savePrizePool(@RequestHeader("X-Property-Token") String token,
+                                                    @RequestParam Long companyId,
+                                                    @RequestParam(required = false) Long prizeId,
+                                                    @RequestParam Integer prizeType,
+                                                    @RequestParam(required = false) java.math.BigDecimal prizeValue,
+                                                    @RequestParam(required = false) Integer weight,
+                                                    @RequestParam String remark,
+                                                    @RequestParam(defaultValue = "0") Integer poolType,
+                                                    @RequestParam(defaultValue = "0") Integer channel) {
+        validateToken(token);
+        if (channel == null || channel < 0 || channel > 3) throw new BizException("渠道不合法（0通用 1美团 2团购 3抖音）");
+        if (prizeType == null || prizeType < 0 || prizeType > 4) throw new BizException("奖品类型不合法（0普通 1折扣 2立减 3余额 4团购免单）");
+        PropertyPrizePool p = prizeId == null ? new PropertyPrizePool()
+                : prizePoolRepository.findById(prizeId).orElseThrow(() -> new BizException("奖品不存在"));
+        p.setCompanyId(companyId);
+        p.setPrizeType(prizeType);
+        p.setPrizeValue(prizeValue == null ? java.math.BigDecimal.ZERO : prizeValue);
+        p.setWeight(weight == null ? 1 : weight);
+        p.setRemark(remark);
+        p.setPoolType(poolType);
+        p.setChannel(channel);
+        if (p.getCreateTime() == null) p.setCreateTime(java.time.LocalDateTime.now());
+        p.setUpdateTime(java.time.LocalDateTime.now());
+        return Result.ok(prizePoolRepository.save(p));
+    }
+
+    @PostMapping("/prize-pools/{id}/enable")
+    public Result<Void> enablePrize(@RequestHeader("X-Property-Token") String token, @PathVariable Long id) {
+        validateToken(token);
+        PropertyPrizePool p = prizePoolRepository.findById(id).orElseThrow(() -> new BizException("奖品不存在"));
+        p.setEnabled(1);
+        p.setUpdateTime(java.time.LocalDateTime.now());
+        prizePoolRepository.save(p);
+        return Result.ok();
+    }
+
+    @PostMapping("/prize-pools/{id}/disable")
+    public Result<Void> disablePrize(@RequestHeader("X-Property-Token") String token, @PathVariable Long id) {
+        validateToken(token);
+        PropertyPrizePool p = prizePoolRepository.findById(id).orElseThrow(() -> new BizException("奖品不存在"));
+        p.setEnabled(0);
+        p.setUpdateTime(java.time.LocalDateTime.now());
+        prizePoolRepository.save(p);
+        return Result.ok();
+    }
+
+    @DeleteMapping("/prize-pools/{id}")
+    public Result<Void> deletePrize(@RequestHeader("X-Property-Token") String token, @PathVariable Long id) {
+        validateToken(token);
+        prizePoolRepository.deleteById(id);
+        return Result.ok();
+    }
+
+    /** 开奖配置汇总（按渠道分组：奖品数/总权重/启用数），作中奖报表基础 */
+    @GetMapping("/prize-stats")
+    public Result<java.util.List<java.util.Map<String, Object>>> prizeStats(@RequestHeader("X-Property-Token") String token,
+                                                                            @RequestParam Long companyId) {
+        validateToken(token);
+        java.util.List<PropertyPrizePool> all = prizePoolRepository.findByCompanyIdOrderByChannelAscPoolTypeAscCreateTimeDesc(companyId);
+        java.util.Map<Integer, java.util.List<PropertyPrizePool>> byChannel = new java.util.LinkedHashMap<>();
+        for (PropertyPrizePool p : all) {
+            byChannel.computeIfAbsent(p.getChannel() == null ? 0 : p.getChannel(), k -> new java.util.ArrayList<>()).add(p);
+        }
+        String[] names = {"通用", "美团", "团购", "抖音"};
+        java.util.List<java.util.Map<String, Object>> out = new java.util.ArrayList<>();
+        byChannel.forEach((ch, list) -> {
+            java.util.Map<String, Object> m = new java.util.HashMap<>();
+            m.put("channel", ch);
+            m.put("channelName", ch >= 0 && ch < names.length ? names[ch] : "未知");
+            m.put("count", list.size());
+            m.put("enabledCount", list.stream().filter(x -> x.getEnabled() != null && x.getEnabled() == 1).count());
+            m.put("totalWeight", list.stream().filter(x -> x.getEnabled() != null && x.getEnabled() == 1)
+                    .mapToInt(x -> x.getWeight() == null ? 1 : x.getWeight()).sum());
+            out.add(m);
+        });
+        return Result.ok(out);
     }
 
     // ---------------- 缴费记录（对账） ----------------
