@@ -1041,3 +1041,8 @@ G71 | %s | 浏览器/curl访问生产页面被豆包翻译器注入 <script src=
 【2026-09-19 G94b】pay-confirm 支付二维码修复 + 回调到账验证
 1. 踩坑：PropertyBillPaymentService.createPayment 返回的 qrCode 是 weixin:// 链接（44字符），不是 SVG；前端 pay-confirm 原来用 data:image/svg+xml 渲染必坏。修：改用 api.qrserver.com 服务把 weixin:// 链接转成二维码 img（与 bills.html 一致）
 2. 验证：发起微信支付返回 PB17898266490249642，amount=45（账单50-钱包5=45）；模拟微信 V2 回调（MD5 大写+CDATA+TreeMap）后 status paid=false→true；浏览器二维码正常显示
+
+【2026-09-19 G95】业主端钱包页
+1. 新增 GET /api/property/pay-qr/wallet?companyId=&phone= 查业主钱包余额（免登录）
+2. 新增 property/customer/wallet.html：输手机号→显示余额卡片+说明（余额来自抽奖/缴费自动抵扣/仅限本物业/不可提现）
+3. 踩坑：第一次部署后 jar 损坏（ClassNotFoundException: Lifecycle），重新上传解决

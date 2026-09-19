@@ -132,6 +132,21 @@ public class PropertyPayQrController {
         return Result.ok(m);
     }
 
+    /** 业主钱包余额查询（扫码缴费场景，免登录） */
+    @GetMapping("/wallet")
+    public Result<Map<String, Object>> wallet(@RequestParam Long companyId,
+                                              @RequestParam String phone) {
+        PropertyOwner owner = ownerRepository.findByOwnerPhone(phone)
+                .orElseThrow(() -> new com.ibigou.blindbox.common.BizException("该手机号未绑定业主"));
+        PropertyWallet w = walletRepository.findByOwnerIdAndCompanyId(owner.getOwnerId(), companyId)
+                .orElse(new PropertyWallet());
+        Map<String, Object> m = new HashMap<>();
+        m.put("ownerName", owner.getOwnerName());
+        m.put("companyId", companyId);
+        m.put("balance", w.getBalance() == null ? BigDecimal.ZERO : w.getBalance());
+        return Result.ok(m);
+    }
+
     /** 公司级扫码：手机号查该公司待缴账单（免登录） */
     @GetMapping("/company-bills")
     public Result<Map<String, Object>> companyBills(@RequestParam Long companyId,
