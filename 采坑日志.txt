@@ -1037,3 +1037,7 @@ G71 | %s | 浏览器/curl访问生产页面被豆包翻译器注入 <script src=
 4. 页3 pay-confirm.html?companyId=X&phone=Y&billId=Z：账单概要→微信/支付宝→二维码轮询
 5. 二维码 SVG 指向从 draw-pay.html 改 pay.html（第一页）；旧 draw-pay.html 服务器已删
 6. 验证：浏览器 bu 走通 pay→选账单→draw→中奖9折优惠券→pay-confirm 微信/支付宝按钮
+
+【2026-09-19 G94b】pay-confirm 支付二维码修复 + 回调到账验证
+1. 踩坑：PropertyBillPaymentService.createPayment 返回的 qrCode 是 weixin:// 链接（44字符），不是 SVG；前端 pay-confirm 原来用 data:image/svg+xml 渲染必坏。修：改用 api.qrserver.com 服务把 weixin:// 链接转成二维码 img（与 bills.html 一致）
+2. 验证：发起微信支付返回 PB17898266490249642，amount=45（账单50-钱包5=45）；模拟微信 V2 回调（MD5 大写+CDATA+TreeMap）后 status paid=false→true；浏览器二维码正常显示

@@ -99,7 +99,7 @@ function doPay(channel){
     }
     document.getElementById('payQrBox').classList.remove('hidden');
     document.getElementById('payQrBox').innerHTML=
-      '<img src="data:image/svg+xml;utf8,'+encodeURIComponent(data.qrCode)+'" alt="支付二维码"><br>'+
+      '<img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&margin=8&data='+encodeURIComponent(data.qrCode)+'" alt="支付二维码"><br>'+
       '<div style="font-size:13px;color:var(--text-2);margin-top:8px;">请使用'+(channel==='wechat'?'微信':'支付宝')+'扫码支付 ¥'+Number(data.amount||0).toFixed(2)+'</div>';
     document.getElementById('payStatus').textContent='等待支付完成...';
     startPoll(data.paymentNo);
