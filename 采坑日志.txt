@@ -1029,3 +1029,11 @@ G71 | %s | 浏览器/curl访问生产页面被豆包翻译器注入 <script src=
 4. 前端 draw-pay.html：账单行显示钱包余额（绿色）；中奖余额类显示「✅ 已入账物业钱包」；pay 返回后显示「✅ 钱包余额抵扣 ¥X」，全额抵扣直接「🎉 钱包余额已结清」
 5. 踩坑：draw 方法原代码 ownerRepository.findByOwnerPhone(phone).orElseThrow() 没赋值给变量，加钱包逻辑后引用 owner.getOwnerId() 编译错——改成 PropertyOwner owner = ...
 6. 验证：连续 draw 5 次，团购免单券入账 50；company-bills 返回 walletBalance=50；pay 账单100 部分抵扣 50 实付 50；前端待缴从 4080→4030，中奖卡片显示入账提示
+
+【2026-09-19 G94】扫码缴费拆三页（pay/draw/pay-confirm）
+1. 用户反馈：draw-pay.html 单页三步骤太挤，拆三个独立页面，URL 参数传参跳转
+2. 页1 pay.html?companyId=X：手机号→查账单→选账单→跳 draw.html
+3. 页2 draw.html?companyId=X&phone=Y&billId=Z：开盲盒动效→中奖卡片→跳 pay-confirm.html
+4. 页3 pay-confirm.html?companyId=X&phone=Y&billId=Z：账单概要→微信/支付宝→二维码轮询
+5. 二维码 SVG 指向从 draw-pay.html 改 pay.html（第一页）；旧 draw-pay.html 服务器已删
+6. 验证：浏览器 bu 走通 pay→选账单→draw→中奖9折优惠券→pay-confirm 微信/支付宝按钮

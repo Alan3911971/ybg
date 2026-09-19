@@ -322,7 +322,7 @@ public class PropertyAdminController {
     public org.springframework.http.ResponseEntity<String> payQrSvg(@RequestHeader("X-Property-Token") String token,
                                                                    @RequestParam Long companyId) {
         validateToken(token);
-        String content = "https://ybgtc.com/h5/property/draw-pay.html?companyId=" + companyId;
+        String content = "https://ybgtc.com/h5/property/customer/pay.html?companyId=" + companyId;
         String svg = com.ibigou.blindbox.common.QrSvgUtil.toSvg(content, 260);
         return org.springframework.http.ResponseEntity.ok()
                 .header("Cache-Control", "no-store")

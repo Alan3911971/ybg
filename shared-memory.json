@@ -812,13 +812,13 @@
     "qrcodejs_inline": "D:\\workspace-java\\_qrcodejs_inline.js（19928B 公共副本，从 dashboard.html 提取）"
   },
   "github_backup_20260919": {
-    "commit": "58b2c579f48494b64afa19fd2d1a6d0f8e0e9f1a",
+    "commit": "f9bc5945ffd4550d08c99f486bca0a155638cbb0",
     "files": 488,
-    "scope": "G91 物业开奖配置 + G92 物业收款二维码（扫码开盲盒交物业费）",
+    "scope": "G91-G93 物业开奖配置+收款二维码+钱包入账抵扣+UI统一",
     "script": "D:\\\\workspace-java\\\\_push_gh_full.py（用法：\\=<token>; python _push_gh_full.py）"
   },
   "nas_backup_20260919": {
-    "commit": "5dd5940",
+    "commit": "9a3cea3",
     "message": "sync 20260918b: 业主物业费在线缴费+修2个支付bug+四文档G79",
     "script": "D:\\\\workspace-java\\\\_nas_sync4.py（本地tar → paramiko exec stdin 管道，NAS 无 sftp/scp subsystem）"
   },
@@ -857,6 +857,14 @@
       "repository/PropertyWalletRepository.java",
       "controller/PropertyPayQrController.java",
       "property/customer/draw-pay.html"
+    ]
+  },
+  "g94_20260919": {
+    "scope": "扫码缴费拆三页（pay/draw/pay-confirm）",
+    "files": [
+      "property/customer/pay.html",
+      "property/customer/draw.html",
+      "property/customer/pay-confirm.html"
     ]
   }
 }

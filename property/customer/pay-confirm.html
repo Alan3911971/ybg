@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover">
+<meta name="theme-color" content="#4f46e5">
+<title>缴费 · 我的物业</title>
+<link rel="icon" href="data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='80' font-size='90'%3E💳%3C/text%3E%3C/svg%3E">
+<style>
+:root{
+  --pri:#4f46e5;--pri-grad:linear-gradient(135deg,#4f46e5,#7c3aed);--pri-bg:#eef2ff;
+  --text:#1e293b;--text-2:#64748b;--text-3:#94a3b8;
+  --bg:#f8fafc;--surface:#fff;--border:#e2e8f0;
+  --shadow-card:0 2px 12px rgba(0,0,0,.04);
+  --r-md:14px;--r-lg:20px;
+  --safe-bottom:env(safe-area-inset-bottom,0px);
+  --success:#10b981;--danger:#ef4444;--ease:cubic-bezier(.4,0,.2,1);
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+html,body{font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","PingFang SC","Microsoft YaHei",sans-serif;color:var(--text);background:var(--bg);font-size:15px;}
+button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit;}
+@keyframes fadeInUp{from{opacity:0;transform:translateY(16px);}to{opacity:1;transform:translateY(0);}}
+.app-shell{max-width:480px;margin:0 auto;min-height:100vh;background:var(--bg);}
+.hero{background:var(--pri-grad);color:#fff;padding:44px 24px 28px;position:relative;overflow:hidden;border-radius:0 0 var(--r-lg) var(--r-lg);}
+.hero::before{content:"";position:absolute;top:-60px;right:-40px;width:200px;height:200px;background:rgba(255,255,255,.08);border-radius:50%;}
+.hero h1{font-size:22px;font-weight:800;position:relative;z-index:1;}
+.hero .sub{font-size:13px;opacity:.85;margin-top:6px;position:relative;z-index:1;}
+.content{padding:16px 20px calc(40px + var(--safe-bottom));}
+.card{background:var(--surface);border-radius:var(--r-lg);padding:20px;box-shadow:var(--shadow-card);margin-bottom:16px;animation:fadeInUp .35s var(--ease) both;}
+.form-label{font-size:13px;font-weight:600;color:var(--text-2);margin-bottom:6px;display:block;}
+.btn{width:100%;height:48px;border-radius:var(--r-md);font-size:15px;font-weight:700;transition:all .2s var(--ease);}
+.btn:active{transform:scale(.98);}
+.btn-wechat{background:#07c160;color:#fff;margin-bottom:10px;}
+.btn-alipay{background:#1677ff;color:#fff;}
+.pay-info{font-size:14px;padding:14px;background:var(--bg);border-radius:var(--r-md);margin-bottom:14px;line-height:1.8;}
+.deduct-tip{font-size:13px;color:var(--success);font-weight:700;text-align:center;padding:8px;}
+.ok-tip{color:var(--success);font-size:15px;font-weight:700;text-align:center;padding:12px;}
+.status-tip{font-size:13px;color:var(--text-2);text-align:center;padding:10px;}
+.qr-box{text-align:center;padding:16px 0;}
+.qr-box img{width:200px;height:200px;border-radius:var(--r-md);border:1px solid var(--border);}
+</style>
+</head>
+<body>
+<div class="app-shell">
+  <div class="hero">
+    <h1>💳 缴费</h1>
+    <div class="sub">选择支付方式，完成账单支付</div>
+  </div>
+  <div class="content">
+    <div class="card">
+      <span class="form-label">账单信息</span>
+      <div class="pay-info" id="billInfo">加载中...</div>
+      <div id="deductTip" class="deduct-tip hidden"></div>
+      <button class="btn btn-wechat" onclick="doPay('wechat')">💚 微信支付</button>
+      <button class="btn btn-alipay" onclick="doPay('alipay')">💙 支付宝支付</button>
+      <div id="payQrBox" class="qr-box hidden"></div>
+      <div id="payStatus" class="status-tip"></div>
+    </div>
+  </div>
+</div>
+<script>
+var params=new URLSearchParams(location.search);
+var companyId=params.get('companyId');
+var phone=decodeURIComponent(params.get('phone')||'');
+var billId=params.get('billId');
+var pollTimer=null;
+
+function api(path,method,data){
+  return fetch(path,{method:method||'GET',headers:{'Content-Type':'application/x-www-form-urlencoded'},
+    body:data?Object.keys(data).map(function(k){return k+'='+encodeURIComponent(data[k]);}).join('&'):null})
+  .then(function(r){return r.json();});
+}
+
+// 加载账单概要
+api('/api/property/pay-qr/bill?billId='+billId).then(function(res){
+  if(res.code===0){
+    var b=res.data;
+    document.getElementById('billInfo').innerHTML=
+      '账单 <b>'+b.billNo+'</b><br>账期 '+b.billPeriod+'<br>待缴 <b style="color:var(--danger);">¥'+Number(b.remaining).toFixed(2)+'</b>';
+  }else{
+    document.getElementById('billInfo').textContent=res.msg||'账单加载失败';
+  }
+});
+
+function doPay(channel){
+  api('/api/property/pay-qr/pay','POST',{billId:billId,phone:phone,channel:channel}).then(function(res){
+    if(res.code!==0){alert(res.msg||'发起支付失败');return;}
+    var data=res.data;
+    var tip='';
+    if(data.walletUsed&&Number(data.walletUsed)>0){
+      document.getElementById('deductTip').textContent='✅ 钱包余额抵扣 ¥'+Number(data.walletUsed).toFixed(2);
+      document.getElementById('deductTip').classList.remove('hidden');
+    }
+    if(data.fullyPaid){
+      document.getElementById('payQrBox').classList.remove('hidden');
+      document.getElementById('payQrBox').innerHTML='<div class="ok-tip">🎉 钱包余额已结清全部账单！</div>';
+      document.getElementById('payStatus').textContent='';
+      return;
+    }
+    document.getElementById('payQrBox').classList.remove('hidden');
+    document.getElementById('payQrBox').innerHTML=
+      '<img src="data:image/svg+xml;utf8,'+encodeURIComponent(data.qrCode)+'" alt="支付二维码"><br>'+
+      '<div style="font-size:13px;color:var(--text-2);margin-top:8px;">请使用'+(channel==='wechat'?'微信':'支付宝')+'扫码支付 ¥'+Number(data.amount||0).toFixed(2)+'</div>';
+    document.getElementById('payStatus').textContent='等待支付完成...';
+    startPoll(data.paymentNo);
+  }).catch(function(){alert('网络异常');});
+}
+
+function startPoll(paymentNo){
+  if(pollTimer)clearInterval(pollTimer);
+  var n=0;
+  pollTimer=setInterval(function(){
+    api('/api/property/pay-qr/status?paymentNo='+paymentNo).then(function(res){
+      n++;
+      if(res.code===0&&res.data.paid){
+        clearInterval(pollTimer);
+        document.getElementById('payStatus').innerHTML='<span class="ok-tip">✅ 缴费成功！</span>';
+      }else if(n>60){
+        clearInterval(pollTimer);
+        document.getElementById('payStatus').textContent='轮询超时，请手动刷新';
+      }
+    });
+  },2000);
+}
+</script>
+</body>
+</html>
