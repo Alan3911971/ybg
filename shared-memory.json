@@ -812,13 +812,13 @@
     "qrcodejs_inline": "D:\\workspace-java\\_qrcodejs_inline.js（19928B 公共副本，从 dashboard.html 提取）"
   },
   "github_backup_20260919": {
-    "commit": "6c9167c5d6ea61b627b628249260c55ab53ac0d5",
+    "commit": "6fec5ada6587dd4a4ea317104b28198cd10f85b9",
     "files": 488,
-    "scope": "G86-G91 预约全闭环+工单全流程+业主写操作链路+物业开奖配置（backend+property+四文档）",
+    "scope": "G86-G91+渠道去简化（物业开奖配置去美团/团购/抖音渠道，纯通用奖品池）",
     "script": "D:\\\\workspace-java\\\\_push_gh_full.py（用法：\\=<token>; python _push_gh_full.py）"
   },
   "nas_backup_20260919": {
-    "commit": "bfb704f",
+    "commit": "2c55081",
     "message": "sync 20260918b: 业主物业费在线缴费+修2个支付bug+四文档G79",
     "script": "D:\\\\workspace-java\\\\_nas_sync4.py（本地tar → paramiko exec stdin 管道，NAS 无 sftp/scp subsystem）"
   },
@@ -835,6 +835,17 @@
       "controller/PropertyAdminController.java",
       "property/admin/prizes.html",
       "property/admin/index.html"
+    ]
+  },
+  "g92_20260919": {
+    "scope": "物业专用收款二维码（扫码开盲盒交物业费）",
+    "detail": "pay-qr.svg 端点 + company-bills/draw 公开端点 + prizes.html 二维码卡片 + customer/draw-pay.html 全流程页",
+    "verified": "API e2e + bu 全流程验证",
+    "files": [
+      "controller/PropertyAdminController.java",
+      "controller/PropertyPayQrController.java",
+      "property/admin/prizes.html",
+      "property/customer/draw-pay.html"
     ]
   }
 }

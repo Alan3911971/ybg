@@ -4,10 +4,12 @@ import com.ibigou.blindbox.common.Result;
 import com.ibigou.blindbox.entity.PropertyBill;
 import com.ibigou.blindbox.entity.PropertyCompany;
 import com.ibigou.blindbox.entity.PropertyOwner;
+import com.ibigou.blindbox.entity.PropertyPrizePool;
 import com.ibigou.blindbox.repository.PropertyBillRepository;
 import com.ibigou.blindbox.repository.PropertyCompanyRepository;
 import com.ibigou.blindbox.repository.PropertyOwnerRepository;
 import com.ibigou.blindbox.repository.PropertyPaymentRepository;
+import com.ibigou.blindbox.repository.PropertyPrizePoolRepository;
 import com.ibigou.blindbox.service.PropertyBillPaymentService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -32,6 +34,7 @@ public class PropertyPayQrController {
     private final PropertyCompanyRepository companyRepository;
     private final PropertyPaymentRepository paymentRepository;
     private final PropertyBillPaymentService propertyBillPaymentService;
+    private final PropertyPrizePoolRepository prizePoolRepository;
 
     /** 扫码落地页：账单概要（免登录） */
     @GetMapping("/bill")
@@ -80,6 +83,71 @@ public class PropertyPayQrController {
         m.put("status", payment.getStatus());
         m.put("paid", payment.getStatus() != null && payment.getStatus() == 1);
         m.put("billId", payment.getBillId());
+        return Result.ok(m);
+    }
+
+    /** 公司级扫码：手机号查该公司待缴账单（免登录） */
+    @GetMapping("/company-bills")
+    public Result<Map<String, Object>> companyBills(@RequestParam Long companyId,
+                                                    @RequestParam String phone) {
+        PropertyOwner owner = ownerRepository.findByOwnerPhone(phone)
+                .orElseThrow(() -> new com.ibigou.blindbox.common.BizException("该手机号未绑定业主，请确认是否已登记"));
+        java.util.List<PropertyBill> bills = billRepository.findByOwnerIdAndCompanyIdAndStatusInOrderByDueDateAsc(owner.getOwnerId(), companyId, java.util.Collections.singletonList(0));
+        java.util.List<Map<String, Object>> list = new java.util.ArrayList<>();
+        java.math.BigDecimal total = BigDecimal.ZERO;
+        for (PropertyBill b : bills) {
+            BigDecimal remaining = nz(b.getAmount()).subtract(nz(b.getDeducted())).subtract(nz(b.getPaid()));
+            if (remaining.compareTo(BigDecimal.ZERO) <= 0) continue;
+            Map<String, Object> m = new HashMap<>();
+            m.put("billId", b.getBillId());
+            m.put("billNo", b.getBillNo());
+            m.put("billPeriod", b.getBillPeriod());
+            m.put("billType", b.getBillType());
+            m.put("remaining", remaining);
+            total = total.add(remaining);
+            list.add(m);
+        }
+        PropertyCompany company = companyRepository.findById(companyId).orElse(null);
+        Map<String, Object> out = new HashMap<>();
+        out.put("ownerName", owner.getOwnerName());
+        out.put("companyName", company == null ? "物业公司" : company.getCompanyName());
+        out.put("bills", list);
+        out.put("totalDue", total);
+        return Result.ok(out);
+    }
+
+    /** 公司级扫码：开盲盒（按 property_prize_pool 权重随机，免登录，仅展示中奖结果） */
+    @PostMapping("/draw")
+    public Result<Map<String, Object>> draw(@RequestParam Long companyId,
+                                             @RequestParam String phone) {
+        ownerRepository.findByOwnerPhone(phone)
+                .orElseThrow(() -> new com.ibigou.blindbox.common.BizException("该手机号未绑定业主"));
+        java.util.List<PropertyPrizePool> pool = prizePoolRepository.findByCompanyIdOrderByChannelAscPoolTypeAscCreateTimeDesc(companyId);
+        java.util.List<PropertyPrizePool> enabled = new java.util.ArrayList<>();
+        int totalWeight = 0;
+        for (PropertyPrizePool p : pool) {
+            if (p.getEnabled() != null && p.getEnabled() == 1) {
+                enabled.add(p);
+                totalWeight += (p.getWeight() == null ? 1 : p.getWeight());
+            }
+        }
+        if (enabled.isEmpty() || totalWeight <= 0) {
+            throw new com.ibigou.blindbox.common.BizException("该公司暂未配置开奖奖品");
+        }
+        int r = (int) (Math.random() * totalWeight);
+        int acc = 0;
+        PropertyPrizePool hit = enabled.get(enabled.size() - 1);
+        for (PropertyPrizePool p : enabled) {
+            acc += (p.getWeight() == null ? 1 : p.getWeight());
+            if (r < acc) { hit = p; break; }
+        }
+        String[] typeNames = {"普通商品", "折扣券", "立减券", "普通余额", "团购免单余额"};
+        Map<String, Object> m = new HashMap<>();
+        m.put("prizeId", hit.getPrizeId());
+        m.put("remark", hit.getRemark());
+        m.put("prizeType", hit.getPrizeType());
+        m.put("prizeTypeName", typeNames[hit.getPrizeType() == null ? 0 : Math.min(hit.getPrizeType(), 4)]);
+        m.put("prizeValue", hit.getPrizeValue());
         return Result.ok(m);
     }
 

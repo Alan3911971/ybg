@@ -315,6 +315,20 @@ public class PropertyAdminController {
         return Result.ok(billRepository.findAll(pageable));
     }
 
+    // ---------------- 物业收款二维码（扫码开盲盒交物业费） ----------------
+
+    /** 生成公司专属收款二维码 SVG：content 指向 H5 扫码页 draw-pay.html?companyId=X */
+    @GetMapping(value = "/pay-qr.svg", produces = "image/svg+xml;charset=UTF-8")
+    public org.springframework.http.ResponseEntity<String> payQrSvg(@RequestHeader("X-Property-Token") String token,
+                                                                   @RequestParam Long companyId) {
+        validateToken(token);
+        String content = "https://ybgtc.com/h5/property/draw-pay.html?companyId=" + companyId;
+        String svg = com.ibigou.blindbox.common.QrSvgUtil.toSvg(content, 260);
+        return org.springframework.http.ResponseEntity.ok()
+                .header("Cache-Control", "no-store")
+                .body(svg);
+    }
+
     // ---------------- 开奖配置（物业专用，复刻商家奖品池） ----------------
 
     @GetMapping("/prize-pools")

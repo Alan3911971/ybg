@@ -1014,3 +1014,10 @@ G71 | %s | 浏览器/curl访问生产页面被豆包翻译器注入 <script src=
 
 【G91 补充】用户指着奖品池页面截图（美团/团购/抖音三个渠道 chip）说「这个不要」：物业开奖配置不需要渠道分组，只要通用奖品池。
 改动：prizes.html 删渠道 chips、删表格渠道列、删弹层渠道选择；报表卡片改汇总（奖品总数/总权重/本店池/公共池）；后端 channel 字段保留默认 0 但页面不再暴露。教训：用户最初说「物业后台里面没有美团团购抖音」是陈述现状，不是要求补这些渠道，只复刻「开奖配置」本身。
+
+【2026-09-19 G92】物业专用收款二维码（扫码开盲盒交物业费）
+1. 需求：物业后台生成公司专属二维码，扫码后直接盲盒开奖+交物业费（复刻商家收款码模式）
+2. 后端：PropertyAdminController 加 GET /pay-qr.svg?companyId=（admin 鉴权，QrSvgUtil 260px SVG，content=H5 扫码页 URL）；PropertyPayQrController 加 GET /company-bills（手机号+companyId 查待缴账单）、POST /draw（按 property_prize_pool enabled 权重随机抽奖，仅展示不实际入账）
+3. 页面：prizes.html 加「📱物业收款二维码」卡片+弹层（img 拉 qr-svg.svg）；新写 property/customer/draw-pay.html（手机H5：输手机号→账单列表→选账单→3D cube 2s 动效开奖→中奖卡片→微信/支付宝缴费→支付二维码→2s 轮询 status）
+4. 验证：admin qr-svg 返回 31KB SVG；company-bills 查到测试业主 36 条待缴 ¥4080；draw 随机抽中 9折优惠券/余额5元；错误手机号拦截；浏览器 bu 走通 手机号→账单→开盲盒→中奖→缴费页全流程
+5. 教训：SVG 作为 img src 时 naturalWidth=0 属正常（SVG 特性），不要当成加载失败；cube 3D 动效用 transform rotateY/rotateZ 2s，setTimeout 2s 后展示结果与后端 draw 返回对齐

@@ -141,6 +141,17 @@
     <!-- 渠道汇总 -->
     <div class="stats-grid" id="statsGrid"></div>
 
+    <!-- 物业收款二维码 -->
+    <div class="card">
+      <div class="sec"><span class="ic">📱</span>物业收款二维码</div>
+      <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center;">
+        <p style="color:var(--text-2);font-size:14px;flex:1;min-width:220px;">
+          生成本公司专属二维码，打印张贴后，业主扫码即可直接<b>开盲盒 + 交物业费</b>（免登录，手机号验证）。
+        </p>
+        <button class="btn btn-md btn-primary" onclick="showPayQr()">生成二维码</button>
+      </div>
+    </div>
+
     <div class="card">
       <div class="sec"><span class="ic">🎁</span>奖品池</div>
       <div class="filter-bar">
@@ -206,6 +217,19 @@
   </div>
 </div>
 
+<!-- 二维码弹层 -->
+<div class="mask" id="qrMask">
+  <div class="modal" style="max-width:420px;text-align:center;">
+    <h3 id="qrTitle" style="text-align:left;">物业收款二维码</h3>
+    <div id="qrBox" style="display:flex;justify-content:center;padding:16px 0;"></div>
+    <div style="font-size:13px;color:var(--text-2);margin-bottom:16px;">
+      业主扫码后：输手机号 → 开盲盒 → 选账单缴费
+    </div>
+    <div class="modal-actions" style="justify-content:center;">
+      <button class="btn btn-md btn-soft" onclick="closeQr()">关闭</button>
+    </div>
+  </div>
+</div>
 <div class="toast" id="toast"></div>
 <script>
   var token = localStorage.getItem('property_admin_token');
@@ -380,6 +404,17 @@
 
   document.getElementById('companyId').addEventListener('change', function(){ loadPrizes(); });
   loadCompanies();
+  function showPayQr(){
+    var cid = document.getElementById('companyId').value;
+    if (!cid) { toast('请先选择物业公司', 'error'); return; }
+    document.getElementById('qrBox').innerHTML =
+      '<img src="/api/property/admin/pay-qr.svg?companyId=' + cid + '&_=' + Date.now() +
+      '" alt="收款二维码" style="width:240px;height:240px;border:1px solid var(--border);border-radius:12px;" />';
+    document.getElementById('qrMask').classList.add('show');
+  }
+  function closeQr(){ document.getElementById('qrMask').classList.remove('show'); }
+  document.getElementById('qrMask').addEventListener('click', function(e){ if (e.target === this) closeQr(); });
+
 </script>
 </body>
 </html>
