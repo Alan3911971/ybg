@@ -437,6 +437,8 @@ function loadReservations() {
         if (r.status === 0) actions += '<button class="btn btn-xs btn-success" onclick="confirmRsv(' + r.id + ')">确认</button>';
         if (r.status === 1) actions += '<button class="btn btn-xs btn-primary" onclick="checkInRsv(' + r.id + ')">签到</button>';
         if (r.status === 2) actions += '<button class="btn btn-xs btn-success" onclick="completeRsv(' + r.id + ')">完成</button>';
+        if ((r.status === 0 || r.status === 1) && r.payStatus === 1) actions += '<button class="btn btn-xs btn-danger" onclick="refundRsv(' + r.id + ')">退款</button>';
+        if (r.status === 0 || r.status === 1) actions += '<button class="btn btn-xs btn-secondary" onclick="cancelRsv(' + r.id + ')">取消</button>';
         html += '<tr>'
           + '<td>' + esc(r.reservationNo) + '</td>'
           + '<td>' + esc(facilityMap[r.facilityId] || r.facilityId) + '</td>'
@@ -454,6 +456,20 @@ function loadReservations() {
     .catch(function(e){ toast('加载失败: ' + e.message, 'danger'); });
 }
 
+function refundRsv(id) {
+  if(!confirm('确定要退款该预约吗？将标记为已退并取消。')) return;
+  fetch('/api/property/admin/reservations/' + id + '/refund', { method: 'POST', headers: { 'X-Property-Token': token } })
+    .then(function(r){ return r.json(); })
+    .then(function(res){ if(res.code!==0){toast(res.msg,'danger');return;} toast('已退款','success'); loadReservations(); })
+    .catch(function(e){ toast('操作失败','danger'); });
+}
+function cancelRsv(id) {
+  if(!confirm('确定要取消该预约吗？已支付的将一并标记退款。')) return;
+  fetch('/api/property/admin/reservations/' + id + '/cancel?reason=后台取消', { method: 'POST', headers: { 'X-Property-Token': token } })
+    .then(function(r){ return r.json(); })
+    .then(function(res){ if(res.code!==0){toast(res.msg,'danger');return;} toast('已取消','success'); loadReservations(); })
+    .catch(function(e){ toast('操作失败','danger'); });
+}
 function confirmRsv(id) {
   fetch('/api/property/admin/reservations/' + id + '/confirm', { method: 'POST', headers: { 'X-Property-Token': token } })
     .then(function(r){ return r.json(); })

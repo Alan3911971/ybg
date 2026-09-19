@@ -881,6 +881,42 @@ public class PropertyAdminController {
         return Result.ok();
     }
 
+    /** 预约退款（已支付、未签到/未完成）：payStatus 1→2，status→3 */
+    @PostMapping("/reservations/{id}/refund")
+    public Result<Void> refundReservation(@RequestHeader("X-Property-Token") String token,
+                                           @PathVariable Long id) {
+        validateToken(token);
+        com.ibigou.blindbox.entity.PropertyReservation r = reservationRepository.findById(id)
+                .orElseThrow(() -> new BizException("预约记录不存在"));
+        if (r.getPayStatus() == null || r.getPayStatus() != 1) {
+            throw new BizException("该预约未支付，无需退款");
+        }
+        if (r.getStatus() == null || r.getStatus() == 3 || r.getStatus() == 4) {
+            throw new BizException("已取消或已完成的预约不能退款");
+        }
+        reservationService.refundReservation(id);
+        return Result.ok();
+    }
+
+    /** 后台取消预约（已支付的一并标记退款） */
+    @PostMapping("/reservations/{id}/cancel")
+    public Result<Void> cancelReservation(@RequestHeader("X-Property-Token") String token,
+                                           @PathVariable Long id,
+                                           @RequestParam(required = false) String reason) {
+        validateToken(token);
+        com.ibigou.blindbox.entity.PropertyReservation r = reservationRepository.findById(id)
+                .orElseThrow(() -> new BizException("预约记录不存在"));
+        if (r.getStatus() == 3 || r.getStatus() == 4) {
+            throw new BizException("已取消或已完成的预约不能再取消");
+        }
+        if (r.getPayStatus() != null && r.getPayStatus() == 1) {
+            reservationService.refundReservation(id);
+        } else {
+            reservationService.cancelReservation(id, reason);
+        }
+        return Result.ok();
+    }
+
     // ==================== IoT 设备与告警管理 ====================
 
     /**

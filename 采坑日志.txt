@@ -978,3 +978,9 @@ G71 | %s | 浏览器/curl访问生产页面被豆包翻译器注入 <script src=
 3. 前端 customer/reservation.html：提交后收费返回 pay → 弹支付窗（¥金额+微信/支付宝切换+二维码+轮询 2.5s+支付完成）；我的预约列表显示 待支付¥xx/已支付¥xx/免费 + 待支付显示「去支付」按钮（调 /pay 端点重下单）
 4. 验证（生产）：业主 13851918986/123456 → 收费预约返回 RS 单+qrCode → 模拟微信回调 → paid=true；页面弹窗/去支付/旧卡单(id=1)重新下单全部通过；id=7(id=7,8) 已支付
 5. 注意：业主 P1 控制器新增 java.util.HashMap import（原只有 Map）；页面锚点匹配用单引号 JS 字符串（勿用双引号）
+
+【2026-09-19 G88】后台预约退款/取消闭环
+1. 需求背景：收费预约（RS 单）已支付后取消/退款无后台入口，钱状态无法流转
+2. 实现：PropertyAdminController ①POST /reservations/{id}/refund（校验 payStatus==1 且 status 非3/4，置 payStatus=2+status=3）；②POST /reservations/{id}/cancel（已付一并标记退款，未付走 cancelReservation）；facilities.html 预约记录操作区加「退款」（已付且待确认/已确认）「取消」（待确认/已确认）按钮
+3. 验证：id=8 退款成功 payStatus=2/status=3；重复退款正确拦截（该预约未支付）；id=6 未付取消 status=3；页面按钮与状态（已退/已取消/已付+三操作）渲染正确
+4. 注意：退款为状态标记（payStatus=2），非微信/支付宝原路退回（V2 退款需证书，服务器未配置）；已签到/已完成的预约不可退（业务保守）
