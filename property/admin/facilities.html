@@ -204,11 +204,12 @@
             <option value="4">已完成</option>
           </select>
           <button class="btn btn-md btn-primary" onclick="loadReservations()">查询</button>
+          <button class="btn btn-md btn-secondary" id="feeSwitchBtn" onclick="toggleReservationFee()">预约收费：加载中</button>
         </div>
         <div class="table-wrap">
           <table>
-            <thead><tr><th>编号</th><th>场地</th><th>日期</th><th>时段</th><th>费用</th><th>支付</th><th>状态</th><th>备注</th><th>操作</th></tr></thead>
-            <tbody id="reservationBody"><tr><td colspan="9" class="empty">加载中...</td></tr></tbody>
+            <thead><tr><th>编号</th><th>场地</th><th>来源</th><th>日期</th><th>时段</th><th>费用</th><th>支付</th><th>状态</th><th>备注</th><th>操作</th></tr></thead>
+            <tbody id="reservationBody"><tr><td colspan="10" class="empty">加载中...</td></tr></tbody>
           </table>
         </div>
       </div>
@@ -251,7 +252,7 @@ document.querySelectorAll('.tab-btn').forEach(function(btn){
     document.querySelectorAll('.tab-panel').forEach(function(p){ p.classList.remove('active'); });
     btn.classList.add('active');
     document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
-    if (btn.dataset.tab === 'reservation') loadReservations();
+    if (btn.dataset.tab === 'reservation') loadFeeSwitch();
   };
 });
 
@@ -378,6 +379,35 @@ function toggleFacilityStatus(id) {
 
 // ========== Reservations ==========
 var facilityMap = {};
+var currentFeeEnabled = 0;
+function loadFeeSwitch(){
+  fetch('/api/property/admin/companies', { headers: { 'X-Property-Token': token } })
+    .then(function(r){ return r.json(); })
+    .then(function(res){
+      var list = res.data || [];
+      var cur = list.find(function(c){ return String(c.companyId) === String(companyId); });
+      currentFeeEnabled = cur ? (cur.reservationFeeEnabled === 1 ? 1 : 0) : 0;
+      var b = document.getElementById('feeSwitchBtn');
+      b.textContent = '预约收费：' + (currentFeeEnabled === 1 ? '开启' : '关闭');
+      b.className = 'btn btn-md ' + (currentFeeEnabled === 1 ? 'btn-primary' : 'btn-secondary');
+    })
+    .catch(function(){})
+    .finally(function(){ loadReservations(); });
+}
+function toggleReservationFee(){
+  var enabled = currentFeeEnabled === 1 ? 0 : 1;
+  fetch('/api/property/admin/companies/' + companyId + '/reservation-fee?enabled=' + enabled, { method: 'PUT', headers: { 'X-Property-Token': token } })
+    .then(function(r){ return r.json(); })
+    .then(function(res){
+      if(res.code!==0){ toast(res.msg || '设置失败', 'danger'); return; }
+      currentFeeEnabled = enabled;
+      var b = document.getElementById('feeSwitchBtn');
+      b.textContent = '预约收费：' + (enabled === 1 ? '开启' : '关闭');
+      b.className = 'btn btn-md ' + (enabled === 1 ? 'btn-primary' : 'btn-secondary');
+      toast(enabled === 1 ? '已开启预约收费（预约按场地单价计费）' : '已关闭预约收费（预约免费）', 'success');
+    })
+    .catch(function(e){ toast("操作失败", "danger"); });
+}
 function loadReservations() {
   // Load facility map first
   fetch('/api/property/admin/facilities?companyId=' + companyId, { headers: { 'X-Property-Token': token } })
@@ -396,7 +426,7 @@ function loadReservations() {
     .then(function(res){
       var list = res.data || [];
       var tbody = document.getElementById('reservationBody');
-      if (!list.length) { tbody.innerHTML = '<tr><td colspan="9" class="empty">暂无预约记录</td></tr>'; return; }
+      if (!list.length) { tbody.innerHTML = '<tr><td colspan="10" class="empty">暂无预约记录</td></tr>'; return; }
       var html = '';
       list.forEach(function(r){
         var statusMap = {0:'待确认',1:'已确认',2:'已签到',3:'已取消',4:'已完成'};
@@ -410,6 +440,7 @@ function loadReservations() {
         html += '<tr>'
           + '<td>' + esc(r.reservationNo) + '</td>'
           + '<td>' + esc(facilityMap[r.facilityId] || r.facilityId) + '</td>'
+          + '<td>' + (r.reservedType === 2 ? '<span class=\"badge badge-primary\">商家</span>' + (r.merchantNo ? '<div style=\"font-size:11px;color:#64748b;\">' + esc(r.merchantNo) + '</div>' : '') : '<span class=\"badge badge-gray\">业主</span>') + '</td>'
           + '<td>' + (r.reserveDate || '') + '</td>'
           + '<td>' + (r.startTime || '').substring(0,5) + '~' + (r.endTime || '').substring(0,5) + '</td>'
           + '<td>¥' + (r.amount || 0) + '</td>'

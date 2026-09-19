@@ -377,8 +377,8 @@ async function loadDeductLogs(){
       html+='<tr>'
         +'<td>'+fmtTime(c.createTime||c.deductTime)+'</td>'
         +'<td>'+(c.remark||c.description||"扣款")+'</td>'
-        +'<td>'+(c.source||c.companyName||"--")+'</td>'
-        +'<td class="amt">-¥'+(Number(c.amount||0).toFixed(2))+'</td>'
+        +'<td>'+(c.sourceType===1?"分账结算":(c.source||"--"))+'</td>'
+        +'<td class="amt">-¥'+(Number(c.deductAmount||0).toFixed(2))+'</td>'
         +'</tr>';
     });
     html+='</tbody></table></div>';

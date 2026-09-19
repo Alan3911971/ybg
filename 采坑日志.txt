@@ -954,3 +954,20 @@ G71 | %s | 浏览器/curl访问生产页面被豆包翻译器注入 <script src=
 3. 坑：①LocalDateTime 没有 atTime()（LocalDate 才有 atTime 返回 LocalDateTime；LocalDateTime 拼日期用 atStartOfDay）→ mvn 找不到符号；②部署重启事故：pkill 后 2 秒即 start，旧进程还没释放 8085 → 新进程 Port already in use 退出、旧进程又活着响应（健康检查误报 UP，测试数据写入旧进程）→ 必须 pkill 后轮询 ss -ltn :8085 直到端口释放再 start；③python urllib 无 body POST 后台登录 502 是应用宕机表象，不是登录问题
 4. 验证：业主下单 → 新单 community_id=1（旧单 0）→ 后台无参 4 条全量、community_id=1 精确 1 条；页面 4 笔/总收入¥30.00/分账¥1.00（仅已付那笔）、筛选宜必购物业 → 1 条 TP17897485756312438
 5. 遗留：历史 TP 单（G83 期间建的）community_id=0 不归任何小区，属测试数据无碍；auto-pay 自动扣款调度仍未做
+
+【2026-09-19 G85】分账管理/抵扣日志页面字段修复 + 后台看板验证
+1. 盘点：dashboard.html（/dashboard/stats）与 splits.html（/p1/split-records）参数、字段基本匹配、可正常渲染；发现两处显示 bug：①splits.html splitStatusBadge 只映射字符串 success/pending/failed，后端返回数字 0/1/3/4 → 状态恒 --；②admin/owner 两侧抵扣日志表读 snake 字段（amount/bill_no/source/created_at），实体返回驼峰（deductAmount/billId/sourceType/createTime）→ 金额恒 ¥0.00、来源/时间恒 --
+2. 修复：splits.html 徽章加数字映射（0待结算/1已结算/3退款冲正/4失败）+ 抵扣日志字段改驼峰（billId/deductAmount/sourceType 1=分账结算/createTime 格式化）；customer/bills.html 抵扣日志金额 c.amount→c.deductAmount、来源 c.source→sourceType 映射
+3. 验证：后台看板实测渲染正常（绑定业主1/绑定关系2/收缴率0.69%/分账¥5.00/工单1）；分账流水 1 条 TESTSPLIT351CDE80AFCC 商家→物业 ¥100→¥5.00 状态「待结算」；deduct-logs?ownerId=1 200 空数组；业主账单页抵扣日志 tab 空态正常
+4. 事实：property_deduct_log 无数据（扣款引擎 onSplitSettled 只在分账结算时跑，当前唯一分账记录 TESTSPLIT split_status=0 未结算，属真实测试数据）；物业费/车位费/临停费支付不产生分账记录（G28 平台代收/独立商户拍板前按设计不生成，分账页当前只展示盲盒 OFF- 订单分账）
+5. 遗留：auto-pay 自动扣费调度未做（依赖代扣产品开通，G28 前不可自主闭环）；分账结算（split_status 0→1）链路依赖真实微信分账操作，生产暂无自动结算
+
+【2026-09-19 G86】商家场地预约闭环（双来源：业主/商家 + 物业公司收费开关）
+1. 需求：场地预约分业主/商家两种；商家端新增预约入口、预约时自选物业公司（无需绑定）；收费与否物业公司在后台配置
+2. 实现：DDL property_company+reservation_fee_enabled / property_reservation+reserved_type(1业主2商家)+merchant_no+payment_no；实体/仓库/服务扩展；商家端 7 端点（/api/merchant/property/companies、facilities、facilities/{id}/slots、reservations POST/GET/cancel、pay-status），X-Merchant-Token 鉴权（authService.merchantNoByToken，session 表）；后台 PUT /companies/{id}/reservation-fee 开关；免费公司 amount=0/payStatus=1 直接登记，收费公司 小时×单价/payStatus=0 + RS- 单真实下单（nativePay/precreate）返回 qrCode；微信/支付宝回调加 RS 前缀路由→onPaymentSuccess（幂等）
+3. 前端：新页 /h5/property/merchant/reservation.html（选公司→场地→日期→时段→免费直通/收费弹码轮询→我的预约+取消）；商家端 backend static h5/merchant/index.html footer 加入口（需打包）；后台 facilities.html 预约记录加来源列 + 收费开关按钮
+4. 边界修复：收费公司下 price=0 场地 amount=0 会进 createPayOrder 抛错卡单 → payStatus 改为 feeEnabled&&amount>0 ? 0 : 1
+5. 坑：生产 /h5/property/merchant 目录不存在需先 mkdir；商家登录密码为 bcrypt 未知 → 直接 INSERT merchant_session 造 token（merchantNoByToken 只查 session 表）；PowerShell python -c 转义坑（一律写 .py）；setsid nohup 启动后 exec_command read 会管道超时（非失败，单独健康检查）
+6. 验证：免费预约 payStatus=1/收费预约出码/模拟微信回调(CDMA+MD5) → paid=true/后台来源列业主+商家/0元场地不炸/业主旧预约兼容；公司开关演示后保留开启(1)
+7. 数据：property_reservation 新增 id=2(免费)/id=3(收费已付)/id=4(0元边界)/id=5(页面免费)/id=6(页面收费待付)；merchant_session 造 token=b159e40458444481bc9d8eee4cc7b8e7(M90380836, 24h)
+8. 遗留：预约费支付无退款自动处理（后台 refund 置 payStatus=2）；业主端预约仍无支付（业主预约是免费登记式，收费公司下业主预约会 amount>0 但业主端无支付流程——G86 仅商家预约接支付，业主收费预约如需支付待后续）

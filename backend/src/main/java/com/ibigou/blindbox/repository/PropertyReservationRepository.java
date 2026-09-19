@@ -17,5 +17,9 @@ public interface PropertyReservationRepository extends JpaRepository<PropertyRes
 
     List<PropertyReservation> findByCompanyIdAndStatusInOrderByCreateTimeDesc(Long companyId, List<Integer> statuses);
 
+    List<PropertyReservation> findByMerchantNoOrderByCreateTimeDesc(String merchantNo);
+
+    Optional<PropertyReservation> findByPaymentNo(String paymentNo);
+
     Optional<PropertyReservation> findByReservationNo(String reservationNo);
 }

@@ -5,11 +5,19 @@ import com.ibigou.blindbox.common.Result;
 import com.ibigou.blindbox.entity.Merchant;
 import com.ibigou.blindbox.entity.MerchantPropertyBinding;
 import com.ibigou.blindbox.entity.PropertyActivityAudit;
+import com.ibigou.blindbox.entity.PropertyCompany;
+import com.ibigou.blindbox.entity.PropertyFacility;
+import com.ibigou.blindbox.entity.PropertyReservation;
 import com.ibigou.blindbox.entity.PropertySplitRecord;
 import com.ibigou.blindbox.repository.MerchantPropertyBindingRepository;
 import com.ibigou.blindbox.repository.MerchantRepository;
 import com.ibigou.blindbox.repository.PropertyActivityAuditRepository;
+import com.ibigou.blindbox.repository.PropertyCompanyRepository;
+import com.ibigou.blindbox.repository.PropertyFacilityRepository;
+import com.ibigou.blindbox.repository.PropertyReservationRepository;
 import com.ibigou.blindbox.repository.PropertySplitRecordRepository;
+import com.ibigou.blindbox.service.MerchantAuthService;
+import com.ibigou.blindbox.service.PropertyReservationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
@@ -17,6 +25,7 @@ import org.springframework.web.bind.annotation.*;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.List;
@@ -36,6 +45,11 @@ public class PropertyMerchantExtController {
     private final MerchantPropertyBindingRepository bindingRepository;
     private final PropertyActivityAuditRepository activityAuditRepository;
     private final PropertySplitRecordRepository splitRecordRepository;
+    private final MerchantAuthService authService;
+    private final PropertyCompanyRepository companyRepository;
+    private final PropertyFacilityRepository facilityRepository;
+    private final PropertyReservationRepository reservationRepository;
+    private final PropertyReservationService reservationService;
 
     // ---------------- 1. 查询分账配置 ----------------
 
@@ -283,5 +297,82 @@ public class PropertyMerchantExtController {
         stats.put("platformToProperty", m2);
         stats.put("grandTotal", merchantTotal.add(platformTotal));
         return Result.ok(stats);
+    }
+
+    // ======================== 场地预约（商家端，自选物业公司，无需绑定） ========================
+
+    /** 物业公司列表（启用）：供商家自选 */
+    @GetMapping("/companies")
+    public Result<List<Map<String, Object>>> companies() {
+        List<PropertyCompany> list = companyRepository.findAllByStatusOrderByCreateTimeDesc(1);
+        return Result.ok(list.stream().map(c -> {
+            Map<String, Object> m = new HashMap<>();
+            m.put("companyId", c.getCompanyId());
+            m.put("companyName", c.getCompanyName());
+            m.put("reservationFeeEnabled", c.getReservationFeeEnabled() != null ? c.getReservationFeeEnabled() : 0);
+            return m;
+        }).collect(Collectors.toList()));
+    }
+
+    /** 场地列表（该公司启用场地） */
+    @GetMapping("/facilities")
+    public Result<List<PropertyFacility>> facilities(@RequestParam Long companyId) {
+        return Result.ok(facilityRepository.findByCompanyIdAndStatusOrderByCreateTimeDesc(companyId, 1));
+    }
+
+    /** 场地可用时段 */
+    @GetMapping("/facilities/{id}/slots")
+    public Result<List<String[]>> facilitySlots(@PathVariable Long id, @RequestParam String date) {
+        return Result.ok(reservationService.getAvailableSlots(id, LocalDate.parse(date)));
+    }
+
+    /** 商家创建预约（自选物业公司；收费公司自动下单返回二维码，免费公司直接登记） */
+    @PostMapping("/reservations")
+    public Result<Map<String, Object>> createReservation(@RequestHeader("X-Merchant-Token") String token,
+                                                         @RequestParam Long companyId,
+                                                         @RequestParam Long facilityId,
+                                                         @RequestParam String date,
+                                                         @RequestParam String startTime,
+                                                         @RequestParam String endTime,
+                                                         @RequestParam(required = false) String remark,
+                                                         @RequestParam(required = false) String channel) {
+        String merchantNo = authService.merchantNoByToken(token);
+        PropertyReservation r = reservationService.createMerchantReservation(merchantNo, companyId, facilityId,
+                LocalDate.parse(date), LocalTime.parse(startTime), LocalTime.parse(endTime), remark);
+        Map<String, Object> m = new HashMap<>();
+        m.put("id", r.getId());
+        m.put("reservationNo", r.getReservationNo());
+        m.put("amount", r.getAmount());
+        m.put("payStatus", r.getPayStatus());
+        m.put("status", r.getStatus());
+        m.put("reservedType", r.getReservedType());
+        if (r.getPayStatus() != null && r.getPayStatus() == 0) {
+            String ch = (channel == null || channel.isBlank()) ? "wechat" : channel;
+            m.put("pay", reservationService.createPayOrder(r.getId(), ch));
+        }
+        return Result.ok(m);
+    }
+
+    /** 我的预约（商家） */
+    @GetMapping("/reservations")
+    public Result<List<PropertyReservation>> myReservations(@RequestHeader("X-Merchant-Token") String token) {
+        String merchantNo = authService.merchantNoByToken(token);
+        return Result.ok(reservationRepository.findByMerchantNoOrderByCreateTimeDesc(merchantNo));
+    }
+
+    /** 取消预约 */
+    @PostMapping("/reservations/{id}/cancel")
+    public Result<Void> cancelReservation(@RequestHeader("X-Merchant-Token") String token,
+                                          @PathVariable Long id,
+                                          @RequestParam(required = false) String reason) {
+        authService.merchantNoByToken(token);
+        reservationService.cancelReservation(id, reason);
+        return Result.ok();
+    }
+
+    /** 预约支付状态轮询 */
+    @GetMapping("/reservations/{id}/pay-status")
+    public Result<Map<String, Object>> payStatus(@PathVariable Long id, @RequestParam String paymentNo) {
+        return Result.ok(reservationService.queryStatus(paymentNo));
     }
 }

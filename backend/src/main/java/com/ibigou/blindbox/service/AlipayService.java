@@ -30,6 +30,8 @@ public class AlipayService {
     private final OfflineOrderService offlineOrderService;
     private final PropertyBillPaymentService propertyBillPaymentService;
     private final PropertyTempParkingService tempParkingService;
+    @org.springframework.context.annotation.Lazy
+    private final PropertyReservationService reservationService;
 
     public boolean enabled() {
         return "1".equals(configService.get("alipay_enabled", "0"));
@@ -120,6 +122,12 @@ public class AlipayService {
                         tempParkingService.onPaymentSuccess(outTradeNo, params.get("trade_no"));
                     } catch (Exception e) {
                         log.warn("确认临停支付失败: {}", e.getMessage());
+                    }
+                } else if (outTradeNo != null && outTradeNo.startsWith("RS")) {
+                    try {
+                        reservationService.onPaymentSuccess(outTradeNo, params.get("trade_no"));
+                    } catch (Exception e) {
+                        log.warn("确认预约支付失败: {}", e.getMessage());
                     }
                 } else {
                     try {

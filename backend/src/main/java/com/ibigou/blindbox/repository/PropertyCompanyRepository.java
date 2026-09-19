@@ -4,10 +4,13 @@ import com.ibigou.blindbox.entity.PropertyCompany;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 
 @Repository
 public interface PropertyCompanyRepository extends JpaRepository<PropertyCompany, Long> {
 
     Optional<PropertyCompany> findByWxMchId(String wxMchId);
+
+    List<PropertyCompany> findAllByStatusOrderByCreateTimeDesc(Integer status);
 }

@@ -38,6 +38,8 @@ public class WxPayService {
     private final OfflineOrderService offlineOrderService;
     private final PropertyBillPaymentService propertyBillPaymentService;
     private final PropertyTempParkingService tempParkingService;
+    @org.springframework.context.annotation.Lazy
+    private final PropertyReservationService reservationService;
 
     private static final String UNIFIED_ORDER_URL = "https://api.mch.weixin.qq.com/pay/unifiedorder";
     private static final String ORDER_QUERY_URL = "https://api.mch.weixin.qq.com/pay/orderquery";
@@ -404,6 +406,8 @@ public class WxPayService {
                 propertyBillPaymentService.confirmPaid(outTradeNo, "wechat");
             } else if (outTradeNo != null && outTradeNo.startsWith("TP")) {
                 tempParkingService.onPaymentSuccess(outTradeNo, transactionId);
+            } else if (outTradeNo != null && outTradeNo.startsWith("RS")) {
+                reservationService.onPaymentSuccess(outTradeNo, transactionId);
             } else if (outTradeNo != null && outTradeNo.startsWith("OFF-")) {
                 offlineOrderService.confirmPaid(outTradeNo, "wechat");
             } else {

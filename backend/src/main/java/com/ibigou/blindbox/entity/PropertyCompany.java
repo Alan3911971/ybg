@@ -34,6 +34,10 @@ public class PropertyCompany {
     @Column(nullable = false)
     private Integer status = 1;
 
+    /** 场地预约是否收费：0=免费 1=收费（物业后台配置） */
+    @Column(nullable = false)
+    private Integer reservationFeeEnabled = 0;
+
     @Column(nullable = false, insertable = false, updatable = false)
     private LocalDateTime createTime;
 

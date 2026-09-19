@@ -119,8 +119,22 @@ public class PropertyAdminController {
                     java.util.Map<String, Object> m = new java.util.HashMap<>();
                     m.put("companyId", c.getCompanyId());
                     m.put("companyName", c.getCompanyName());
+                    m.put("reservationFeeEnabled", c.getReservationFeeEnabled() != null ? c.getReservationFeeEnabled() : 0);
                     return m;
                 }).collect(java.util.stream.Collectors.toList()));
+    }
+
+    /** 物业公司「场地预约收费开关」：0=免费 1=收费（物业后台配置） */
+    @PutMapping("/companies/{id}/reservation-fee")
+    public Result<Void> setReservationFee(@RequestHeader("X-Property-Token") String token,
+                                          @PathVariable Long id,
+                                          @RequestParam Integer enabled) {
+        validateToken(token);
+        com.ibigou.blindbox.entity.PropertyCompany c = companyRepository.findById(id)
+                .orElseThrow(() -> new BizException("物业公司不存在"));
+        c.setReservationFeeEnabled(enabled != null && enabled == 1 ? 1 : 0);
+        companyRepository.save(c);
+        return Result.ok();
     }
 
     @GetMapping("/dashboard")

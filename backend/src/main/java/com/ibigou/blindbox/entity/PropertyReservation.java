@@ -31,6 +31,18 @@ public class PropertyReservation {
     @Column(nullable = false)
     private Long ownerId;
 
+    /** 预约来源：1=业主 2=商家 */
+    @Column(nullable = false)
+    private Integer reservedType = 1;
+
+    /** 商家预约的商家编号（reservedType=2 时非空） */
+    @Column(length = 32)
+    private String merchantNo;
+
+    /** 收费预约的支付单号（RS 前缀） */
+    @Column(length = 64)
+    private String paymentNo;
+
     @Column(nullable = false)
     private Long companyId;
 

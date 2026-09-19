@@ -322,6 +322,11 @@
 
   function splitStatusBadge(s){
     var map = {
+      0: '<span class="badge badge-warning">待结算</span>',
+      1: '<span class="badge badge-success">已结算</span>',
+      2: '<span class="badge badge-success">已分账</span>',
+      3: '<span class="badge badge-danger">退款冲正</span>',
+      4: '<span class="badge badge-danger">失败</span>',
       'success': '<span class="badge badge-success">成功</span>',
       'pending': '<span class="badge badge-warning">处理中</span>',
       'failed': '<span class="badge badge-danger">失败</span>'
@@ -415,11 +420,11 @@
           html += '<tr>' +
             '<td>' + (d.id || '--') + '</td>' +
             '<td>' + (d.owner_name || d.ownerId || '--') + '</td>' +
-            '<td>' + (d.bill_no || '--') + '</td>' +
-            '<td>¥' + Number(d.amount || d.deduct_amount || 0).toFixed(2) + '</td>' +
-            '<td>' + (d.source || d.type || '--') + '</td>' +
+            '<td>' + (d.billId || '--') + '</td>' +
+            '<td>¥' + Number(d.deductAmount || 0).toFixed(2) + '</td>' +
+            '<td>' + (d.sourceType === 1 ? '分账结算' : (d.sourceType || '--')) + '</td>' +
             '<td>' + (d.remark || d.memo || '--') + '</td>' +
-            '<td>' + (d.created_at || d.deduct_time || '--') + '</td></tr>';
+            '<td>' + (d.createTime ? d.createTime.replace('T', ' ').slice(0, 19) : '--') + '</td></tr>';
         });
         tbody.innerHTML = html;
       })
