@@ -1021,3 +1021,11 @@ G71 | %s | 浏览器/curl访问生产页面被豆包翻译器注入 <script src=
 3. 页面：prizes.html 加「📱物业收款二维码」卡片+弹层（img 拉 qr-svg.svg）；新写 property/customer/draw-pay.html（手机H5：输手机号→账单列表→选账单→3D cube 2s 动效开奖→中奖卡片→微信/支付宝缴费→支付二维码→2s 轮询 status）
 4. 验证：admin qr-svg 返回 31KB SVG；company-bills 查到测试业主 36 条待缴 ¥4080；draw 随机抽中 9折优惠券/余额5元；错误手机号拦截；浏览器 bu 走通 手机号→账单→开盲盒→中奖→缴费页全流程
 5. 教训：SVG 作为 img src 时 naturalWidth=0 属正常（SVG 特性），不要当成加载失败；cube 3D 动效用 transform rotateY/rotateZ 2s，setTimeout 2s 后展示结果与后端 draw 返回对齐
+
+【2026-09-19 G93】物业钱包：中奖余额自动入账 + 缴费自动抵扣
+1. 新表 property_wallet（owner_id+company_id 唯一键，balance）；实体 PropertyWallet + 仓库 findByOwnerIdAndCompanyId
+2. draw 端点：中奖 prizeType=3普通余额/4团购免单余额 → upsert 钱包 balance += prizeValue，返回 credited/walletBalance；其他类型返回当前余额
+3. company-bills 返回 walletBalance；pay 端点先抵扣：余额≥剩余→全额抵扣（bill.status=1）；余额<剩余→部分抵扣（钱包清零，bill.deducted += walletUsed，剩余走微信/支付宝）
+4. 前端 draw-pay.html：账单行显示钱包余额（绿色）；中奖余额类显示「✅ 已入账物业钱包」；pay 返回后显示「✅ 钱包余额抵扣 ¥X」，全额抵扣直接「🎉 钱包余额已结清」
+5. 踩坑：draw 方法原代码 ownerRepository.findByOwnerPhone(phone).orElseThrow() 没赋值给变量，加钱包逻辑后引用 owner.getOwnerId() 编译错——改成 PropertyOwner owner = ...
+6. 验证：连续 draw 5 次，团购免单券入账 50；company-bills 返回 walletBalance=50；pay 账单100 部分抵扣 50 实付 50；前端待缴从 4080→4030，中奖卡片显示入账提示

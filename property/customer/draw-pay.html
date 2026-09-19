@@ -2,232 +2,247 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover">
 <meta name="theme-color" content="#4f46e5">
-<title>物业缴费 · 宜必购</title>
+<title>缴费抽奖 · 我的物业</title>
+<link rel="icon" href="data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='80' font-size='90'%3E🏠%3C/text%3E%3C/svg%3E">
 <style>
-  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
-  body{font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif;background:linear-gradient(180deg,#4f46e5 0%,#7c3aed 100%);min-height:100vh;padding:20px 16px;color:#1e293b;}
-  .wrap{max-width:480px;margin:0 auto;}
-  .hero{color:#fff;text-align:center;padding:24px 0 16px;}
-  .hero h1{font-size:22px;font-weight:800;margin-bottom:6px;}
-  .hero p{font-size:13px;opacity:.85;}
-  .card{background:#fff;border-radius:18px;padding:20px;box-shadow:0 12px 40px rgba(0,0,0,.15);margin-bottom:16px;}
-  .label{font-size:13px;font-weight:600;color:#64748b;margin-bottom:8px;}
-  .input{width:100%;height:48px;padding:0 14px;border:1.5px solid #e2e8f0;border-radius:12px;font-size:16px;outline:none;margin-bottom:14px;}
-  .input:focus{border-color:#4f46e5;}
-  .btn{width:100%;height:50px;border:none;border-radius:14px;font-size:16px;font-weight:700;cursor:pointer;}
-  .btn-primary{background:linear-gradient(135deg,#4f46e5,#7c3aed);color:#fff;box-shadow:0 4px 14px rgba(79,70,229,.4);}
-  .btn-primary:disabled{opacity:.5;}
-  .btn-success{background:#10b981;color:#fff;}
-  .btn-warning{background:#f59e0b;color:#fff;}
-  .bill-item{padding:12px;border:1.5px solid #e2e8f0;border-radius:12px;margin-bottom:10px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;}
-  .bill-item.sel{border-color:#4f46e5;background:#eef2ff;}
-  .bill-item .b-name{font-size:14px;font-weight:600;}
-  .bill-item .b-period{font-size:12px;color:#94a3b8;margin-top:2px;}
-  .bill-item .b-amt{font-size:16px;font-weight:800;color:#ef4444;}
-  .prize-card{text-align:center;padding:20px 0;}
-  .prize-emoji{font-size:64px;}
-  .prize-name{font-size:20px;font-weight:800;margin-top:10px;color:#4f46e5;}
-  .prize-type{display:inline-block;padding:3px 12px;border-radius:999px;background:#eef2ff;color:#4f46e5;font-size:12px;font-weight:600;margin-top:8px;}
-  /* 开盲盒动效 */
-  .cube{width:140px;height:140px;margin:0 auto;position:relative;perspective:600px;}
-  .cube-inner{width:100%;height:100%;position:relative;transform-style:preserve-3d;transition:transform 2s ease;}
-  .cube.rolling .cube-inner{transform:rotateY(1080deg) rotateZ(720deg);}
-  .cube-face{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:48px;background:#fff;border:3px solid #4f46e5;border-radius:16px;}
-  .face-front{transform:translateZ(70px);}
-  .face-back{transform:rotateY(180deg) translateZ(70px);}
-  .face-right{transform:rotateY(90deg) translateZ(70px);}
-  .face-left{transform:rotateY(-90deg) translateZ(70px);}
-  .face-top{transform:rotateX(90deg) translateZ(70px);}
-  .face-bottom{transform:rotateX(-90deg) translateZ(70px);}
-  .qr-box{text-align:center;padding:16px 0;}
-  .qr-box img{width:220px;height:220px;border-radius:12px;border:1px solid #e2e8f0;}
-  .status{font-size:13px;color:#64748b;text-align:center;padding:10px;}
-  .steps{display:flex;gap:6px;margin-bottom:16px;}
-  .step{flex:1;text-align:center;font-size:12px;color:#94a3b8;padding:6px 0;border-radius:8px;background:#f1f5f9;}
-  .step.active{background:#4f46e5;color:#fff;font-weight:600;}
-  .err{color:#ef4444;font-size:13px;text-align:center;padding:8px;}
-  .ok{color:#10b981;font-size:14px;font-weight:600;text-align:center;padding:10px;}
-  .hidden{display:none!important;}
+:root{
+  --pri:#4f46e5;--pri-grad:linear-gradient(135deg,#4f46e5,#7c3aed);--pri-bg:#eef2ff;
+  --text:#1e293b;--text-2:#64748b;--text-3:#94a3b8;
+  --bg:#f8fafc;--surface:#fff;--border:#e2e8f0;
+  --shadow-card:0 2px 12px rgba(0,0,0,.04);
+  --r-md:14px;--r-lg:20px;--r-full:999px;
+  --safe-bottom:env(safe-area-inset-bottom,0px);
+  --gold:#f59e0b;--gold-bg:#fffbeb;
+  --success:#10b981;--success-bg:#ecfdf5;
+  --danger:#ef4444;--ease:cubic-bezier(.4,0,.2,1);
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+html,body{font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","PingFang SC","Microsoft YaHei",sans-serif;color:var(--text);background:var(--bg);-webkit-font-smoothing:antialiased;font-size:15px;}
+button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit;}
+@keyframes fadeInUp{from{opacity:0;transform:translateY(16px);}to{opacity:1;transform:translateY(0);}}
+.app-shell{max-width:480px;margin:0 auto;min-height:100vh;background:var(--bg);position:relative;}
+.hero{background:var(--pri-grad);color:#fff;padding:44px 24px 28px;position:relative;overflow:hidden;border-radius:0 0 var(--r-lg) var(--r-lg);}
+.hero::before{content:"";position:absolute;top:-60px;right:-40px;width:200px;height:200px;background:rgba(255,255,255,.08);border-radius:50%;}
+.hero::after{content:"";position:absolute;bottom:-30px;left:-20px;width:120px;height:120px;background:rgba(255,255,255,.06);border-radius:50%;}
+.hero h1{font-size:22px;font-weight:800;position:relative;z-index:1;}
+.hero .sub{font-size:13px;opacity:.85;margin-top:6px;position:relative;z-index:1;font-weight:500;}
+.content{padding:16px 20px calc(40px + var(--safe-bottom));}
+.steps{display:flex;gap:8px;margin:0 0 16px;}
+.step{flex:1;text-align:center;font-size:12px;color:var(--text-3);padding:8px 0;border-radius:var(--r-full);background:var(--surface);font-weight:600;}
+.step.active{background:var(--pri);color:#fff;}
+.card{background:var(--surface);border-radius:var(--r-lg);padding:20px;box-shadow:var(--shadow-card);margin-bottom:16px;animation:fadeInUp .35s var(--ease) both;}
+.form-label{font-size:13px;font-weight:600;color:var(--text-2);margin-bottom:6px;display:block;}
+.form-input{width:100%;height:46px;padding:0 14px;border:1.5px solid var(--border);border-radius:var(--r-md);font-size:15px;color:var(--text);background:#fff;transition:border-color .2s;margin-bottom:14px;}
+.form-input:focus{outline:none;border-color:var(--pri);box-shadow:0 0 0 3px rgba(79,70,229,.12);}
+.btn{width:100%;height:48px;border-radius:var(--r-md);font-size:15px;font-weight:700;transition:all .2s var(--ease);}
+.btn:active{transform:scale(.98);}
+.btn-pri{background:var(--pri-grad);color:#fff;box-shadow:0 4px 14px rgba(79,70,229,.3);}
+.btn-pri:disabled{opacity:.5;}
+.btn-wechat{background:#07c160;color:#fff;margin-bottom:10px;}
+.btn-alipay{background:#1677ff;color:#fff;}
+.bill-item{display:flex;justify-content:space-between;align-items:center;padding:14px;border:1.5px solid var(--border);border-radius:var(--r-md);margin-bottom:10px;cursor:pointer;transition:all .2s;}
+.bill-item.sel{border-color:var(--pri);background:var(--pri-bg);}
+.bill-name{font-size:14px;font-weight:600;}
+.bill-period{font-size:12px;color:var(--text-3);margin-top:2px;}
+.bill-amt{font-size:17px;font-weight:800;color:var(--danger);}
+.hero-line{font-size:14px;font-weight:600;margin-bottom:14px;}
+.wallet-tag{color:var(--success);font-weight:700;}
+.cube-wrap{display:flex;justify-content:center;margin:20px 0;}
+.cube{width:120px;height:120px;position:relative;perspective:600px;}
+.cube-inner{width:100%;height:100%;position:relative;transform-style:preserve-3d;transition:transform 2s var(--ease);}
+.cube.rolling .cube-inner{transform:rotateY(1080deg) rotateZ(720deg);}
+.cube-face{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:44px;background:#fff;border:3px solid var(--pri);border-radius:14px;}
+.face-front{transform:translateZ(60px);}.face-back{transform:rotateY(180deg) translateZ(60px);}
+.face-right{transform:rotateY(90deg) translateZ(60px);}.face-left{transform:rotateY(-90deg) translateZ(60px);}
+.face-top{transform:rotateX(90deg) translateZ(60px);}.face-bottom{transform:rotateX(-90deg) translateZ(60px);}
+.prize-card{text-align:center;padding:10px 0;}
+.prize-emoji{font-size:56px;}
+.prize-name{font-size:20px;font-weight:800;margin-top:8px;color:var(--pri);}
+.prize-type{display:inline-block;padding:4px 14px;border-radius:var(--r-full);background:var(--pri-bg);color:var(--pri);font-size:12px;font-weight:600;margin-top:8px;}
+.credited{font-size:13px;color:var(--success);margin-top:8px;font-weight:600;}
+.qr-box{text-align:center;padding:16px 0;}
+.qr-box img{width:200px;height:200px;border-radius:var(--r-md);border:1px solid var(--border);}
+.pay-info{font-size:14px;padding:14px;background:var(--bg);border-radius:var(--r-md);margin-bottom:14px;line-height:1.8;}
+.deduct-tip{font-size:13px;color:var(--success);font-weight:700;text-align:center;padding:8px;}
+.ok-tip{color:var(--success);font-size:15px;font-weight:700;text-align:center;padding:12px;}
+.status-tip{font-size:13px;color:var(--text-2);text-align:center;padding:10px;}
+.err-tip{color:var(--danger);font-size:13px;text-align:center;padding:6px;}
+.hidden{display:none!important;}
 </style>
 </head>
 <body>
-<div class="wrap">
+<div class="app-shell">
   <div class="hero">
     <h1 id="heroTitle">🏠 物业缴费</h1>
-    <p id="heroSub">扫码开盲盒 · 缴费有惊喜</p>
+    <div class="sub" id="heroSub">扫码开盲盒 · 缴费有惊喜</div>
   </div>
+  <div class="content">
 
-  <!-- 步骤条 -->
-  <div class="steps">
-    <div class="step active" id="st1">1 手机号</div>
-    <div class="step" id="st2">2 开盲盒</div>
-    <div class="step" id="st3">3 缴费</div>
-  </div>
+    <div class="steps">
+      <div class="step active" id="st1">1 手机号</div>
+      <div class="step" id="st2">2 开盲盒</div>
+      <div class="step" id="st3">3 缴费</div>
+    </div>
 
-  <!-- 第一步：手机号 -->
-  <div class="card" id="stepPhone">
-    <div class="label">请输入业主手机号</div>
-    <input class="input" id="phone" type="tel" maxlength="11" placeholder="用于定位您的账单">
-    <div id="phoneErr" class="err hidden"></div>
-    <button class="btn btn-primary" onclick="loadBills()">下一步</button>
-  </div>
+    <!-- 第一步：手机号 -->
+    <div class="card" id="stepPhone">
+      <span class="form-label">请输入业主手机号</span>
+      <input class="form-input" id="phone" type="tel" maxlength="11" placeholder="用于定位您的账单">
+      <div id="phoneErr" class="err-tip hidden"></div>
+      <button class="btn btn-pri" onclick="loadBills()">下一步</button>
+    </div>
 
-  <!-- 第二步：账单+开盲盒 -->
-  <div class="card hidden" id="stepDraw">
-    <div class="label" id="ownerName"></div>
-    <div id="billList"></div>
-    <div style="display:flex;justify-content:center;margin:18px 0;">
-      <div class="cube" id="cube">
-        <div class="cube-inner">
-          <div class="cube-face face-front">🎁</div>
-          <div class="cube-face face-back">🍎</div>
-          <div class="cube-face face-right">🍊</div>
-          <div class="cube-face face-left">🍋</div>
-          <div class="cube-face face-top">🍇</div>
-          <div class="cube-face face-bottom">🍓</div>
+    <!-- 第二步：账单+开盲盒 -->
+    <div class="card hidden" id="stepDraw">
+      <div class="hero-line" id="ownerName"></div>
+      <div id="billList"></div>
+      <div class="cube-wrap">
+        <div class="cube" id="cube">
+          <div class="cube-inner">
+            <div class="cube-face face-front">🎁</div>
+            <div class="cube-face face-back">🍎</div>
+            <div class="cube-face face-right">🍊</div>
+            <div class="cube-face face-left">🍋</div>
+            <div class="cube-face face-top">🍇</div>
+            <div class="cube-face face-bottom">🍓</div>
+          </div>
         </div>
       </div>
+      <div id="prizeResult" class="prize-card hidden"></div>
+      <button class="btn btn-pri" id="drawBtn" onclick="doDraw()">🎰 开盲盒</button>
     </div>
-    <div id="prizeResult" class="prize-card hidden"></div>
-    <button class="btn btn-primary" id="drawBtn" onclick="doDraw()">🎰 开盲盒</button>
-  </div>
 
-  <!-- 第三步：缴费 -->
-  <div class="card hidden" id="stepPay">
-    <div class="label">选择缴费方式</div>
-    <div id="payBillInfo" style="font-size:14px;padding:10px;background:#f1f5f9;border-radius:10px;margin-bottom:14px;"></div>
-    <button class="btn btn-success" onclick="doPay('wechat')" style="margin-bottom:10px;">💚 微信支付</button>
-    <button class="btn btn-warning" onclick="doPay('alipay')">💙 支付宝支付</button>
-    <div id="payQrBox" class="qr-box hidden"></div>
-    <div id="payStatus" class="status"></div>
+    <!-- 第三步：缴费 -->
+    <div class="card hidden" id="stepPay">
+      <div class="form-label">选择缴费方式</div>
+      <div class="pay-info" id="payBillInfo"></div>
+      <div id="deductTip" class="deduct-tip hidden"></div>
+      <button class="btn btn-wechat" onclick="doPay('wechat')">💚 微信支付</button>
+      <button class="btn btn-alipay" onclick="doPay('alipay')">💙 支付宝支付</button>
+      <div id="payQrBox" class="qr-box hidden"></div>
+      <div id="payStatus" class="status-tip"></div>
+    </div>
+
   </div>
 </div>
 
 <script>
-  var params = new URLSearchParams(location.search);
-  var companyId = params.get('companyId');
-  var phone = '';
-  var bills = [];
-  var selectedBillId = null;
-  var pollTimer = null;
+var params=new URLSearchParams(location.search);
+var companyId=params.get('companyId');
+var phone='',bills=[],selectedBillId=null,pollTimer=null;
 
-  function setStep(n){
-    for (var i=1;i<=3;i++){
-      document.getElementById('st'+i).classList.toggle('active', i===n);
+function setStep(n){for(var i=1;i<=3;i++)document.getElementById('st'+i).classList.toggle('active',i===n);}
+
+function api(path,method,data){
+  return fetch(path,{method:method||'GET',headers:{'Content-Type':'application/x-www-form-urlencoded'},
+    body:data?Object.keys(data).map(function(k){return k+'='+encodeURIComponent(data[k]);}).join('&'):null})
+  .then(function(r){return r.json();});
+}
+
+function loadBills(){
+  phone=document.getElementById('phone').value.trim();
+  if(!/^1\d{10}$/.test(phone)){
+    var e=document.getElementById('phoneErr');e.textContent='请输入正确的 11 位手机号';e.classList.remove('hidden');return;
+  }
+  api('/api/property/pay-qr/company-bills?companyId='+companyId+'&phone='+phone).then(function(res){
+    if(res.code!==0){alert(res.msg||'查询失败');return;}
+    document.getElementById('heroTitle').textContent='🏠 '+(res.data.companyName||'物业');
+    var wb=Number(res.data.walletBalance||0);
+    document.getElementById('ownerName').innerHTML='👤 '+res.data.ownerName+' · 待缴 ¥'+Number(res.data.totalDue||0).toFixed(2)+(wb>0?' <span class="wallet-tag">（钱包余额 ¥'+wb.toFixed(2)+'）</span>':'');
+    bills=res.data.bills||[];
+    var html='';
+    if(bills.length===0){
+      html='<div style="padding:20px;text-align:center;color:var(--text-3);">🎉 暂无待缴账单</div>';
+    }else{
+      bills.forEach(function(b){
+        html+='<div class="bill-item" data-id="'+b.billId+'" onclick="selBill(this,'+b.billId+')">'+
+          '<div><div class="bill-name">账单 '+b.billNo+'</div><div class="bill-period">'+b.billPeriod+'</div></div>'+
+          '<div class="bill-amt">¥'+Number(b.remaining).toFixed(2)+'</div></div>';
+      });
     }
-  }
+    document.getElementById('billList').innerHTML=html;
+    document.getElementById('stepPhone').classList.add('hidden');
+    document.getElementById('stepDraw').classList.remove('hidden');
+    setStep(2);
+  }).catch(function(){alert('网络异常');});
+}
 
-  function api(path, method, data){
-    return fetch(path, {
-      method: method || 'GET',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: data ? Object.keys(data).map(function(k){ return k+'='+encodeURIComponent(data[k]); }).join('&') : null
-    }).then(function(r){ return r.json(); });
-  }
+function selBill(el,id){
+  document.querySelectorAll('.bill-item').forEach(function(x){x.classList.remove('sel');});
+  el.classList.add('sel');selectedBillId=id;
+}
 
-  function loadBills(){
-    phone = document.getElementById('phone').value.trim();
-    if (!/^1\d{10}$/.test(phone)) {
-      var e = document.getElementById('phoneErr');
-      e.textContent = '请输入正确的 11 位手机号';
-      e.classList.remove('hidden');
+function doDraw(){
+  var btn=document.getElementById('drawBtn');
+  btn.disabled=true;btn.textContent='开奖中...';
+  document.getElementById('cube').classList.add('rolling');
+  api('/api/property/pay-qr/draw','POST',{companyId:companyId,phone:phone}).then(function(res){
+    setTimeout(function(){
+      document.getElementById('cube').classList.remove('rolling');
+      if(res.code!==0){alert(res.msg||'开奖失败');btn.disabled=false;btn.textContent='🎰 开盲盒';return;}
+      var p=res.data;
+      var creditedTip=p.credited?'<div class="credited">✅ 已入账物业钱包 ¥'+Number(p.prizeValue).toFixed(2)+'，缴费时自动抵扣</div>':'';
+      document.getElementById('prizeResult').innerHTML=
+        '<div class="prize-emoji">🎁</div>'+
+        '<div class="prize-name">'+(p.remark||'恭喜中奖')+'</div>'+
+        '<div class="prize-type">'+(p.prizeTypeName||'奖品')+(p.prizeValue?' · 面值 ¥'+Number(p.prizeValue).toFixed(2):'')+'</div>'+creditedTip;
+      document.getElementById('prizeResult').classList.remove('hidden');
+      btn.textContent='下一步：缴费 →';
+      btn.onclick=goPay;
+    },2000);
+  }).catch(function(){alert('网络异常');btn.disabled=false;btn.textContent='🎰 开盲盒';});
+}
+
+function goPay(){
+  if(!selectedBillId){alert('请先选择要缴费的账单');return;}
+  var b=bills.find(function(x){return x.billId===selectedBillId;});
+  document.getElementById('payBillInfo').innerHTML='账单 <b>'+b.billNo+'</b><br>账期 '+b.billPeriod+'<br>待缴 <b style="color:var(--danger);">¥'+Number(b.remaining).toFixed(2)+'</b>';
+  document.getElementById('stepDraw').classList.add('hidden');
+  document.getElementById('stepPay').classList.remove('hidden');
+  setStep(3);
+}
+
+function doPay(channel){
+  api('/api/property/pay-qr/pay','POST',{billId:selectedBillId,phone:phone,channel:channel}).then(function(res){
+    if(res.code!==0){alert(res.msg||'发起支付失败');return;}
+    var data=res.data;
+    var tip='';
+    if(data.walletUsed&&Number(data.walletUsed)>0){
+      tip='<div class="deduct-tip">✅ 钱包余额抵扣 ¥'+Number(data.walletUsed).toFixed(2)+'</div>';
+    }
+    if(data.fullyPaid){
+      document.getElementById('payQrBox').classList.remove('hidden');
+      document.getElementById('payQrBox').innerHTML=tip+'<div class="ok-tip">🎉 钱包余额已结清全部账单！</div>';
+      document.getElementById('payStatus').textContent='';
       return;
     }
-    api('/api/property/pay-qr/company-bills?companyId=' + companyId + '&phone=' + phone).then(function(res){
-      if (res.code !== 0) { alert(res.msg || '查询失败'); return; }
-      document.getElementById('heroTitle').textContent = '🏠 ' + res.data.companyName;
-      document.getElementById('ownerName').textContent = '👤 ' + res.data.ownerName + ' · 待缴合计 ¥' + Number(res.data.totalDue || 0).toFixed(2);
-      bills = res.data.bills || [];
-      var html = '';
-      if (bills.length === 0) {
-        html = '<div style="padding:20px;text-align:center;color:#94a3b8;">🎉 暂无待缴账单</div>';
-      } else {
-        bills.forEach(function(b){
-          html += '<div class="bill-item" data-id="'+b.billId+'" onclick="selBill(this,'+b.billId+')">' +
-            '<div><div class="b-name">账单 '+b.billNo+'</div><div class="b-period">'+b.billPeriod+'</div></div>' +
-            '<div class="b-amt">¥'+Number(b.remaining).toFixed(2)+'</div></div>';
-        });
+    document.getElementById('payQrBox').classList.remove('hidden');
+    document.getElementById('payQrBox').innerHTML=tip+
+      '<img src="data:image/svg+xml;utf8,'+encodeURIComponent(data.qrCode)+'" alt="支付二维码"><br>'+
+      '<div style="font-size:13px;color:var(--text-2);margin-top:8px;">请使用'+(channel==='wechat'?'微信':'支付宝')+'扫码支付 ¥'+Number(data.amount||0).toFixed(2)+'</div>';
+    document.getElementById('payStatus').textContent='等待支付完成...';
+    startPoll(data.paymentNo);
+  }).catch(function(){alert('网络异常');});
+}
+
+function startPoll(paymentNo){
+  if(pollTimer)clearInterval(pollTimer);
+  var n=0;
+  pollTimer=setInterval(function(){
+    api('/api/property/pay-qr/status?paymentNo='+paymentNo).then(function(res){
+      n++;
+      if(res.code===0&&res.data.paid){
+        clearInterval(pollTimer);
+        document.getElementById('payStatus').innerHTML='<span class="ok-tip">✅ 缴费成功！</span>';
+      }else if(n>60){
+        clearInterval(pollTimer);
+        document.getElementById('payStatus').textContent='轮询超时，请手动刷新';
       }
-      document.getElementById('billList').innerHTML = html;
-      document.getElementById('stepPhone').classList.add('hidden');
-      document.getElementById('stepDraw').classList.remove('hidden');
-      setStep(2);
-    }).catch(function(){ alert('网络异常'); });
-  }
-
-  function selBill(el, id){
-    document.querySelectorAll('.bill-item').forEach(function(x){ x.classList.remove('sel'); });
-    el.classList.add('sel');
-    selectedBillId = id;
-  }
-
-  function doDraw(){
-    var btn = document.getElementById('drawBtn');
-    btn.disabled = true;
-    btn.textContent = '开奖中...';
-    var cube = document.getElementById('cube');
-    cube.classList.add('rolling');
-    api('/api/property/pay-qr/draw', 'POST', { companyId: companyId, phone: phone }).then(function(res){
-      setTimeout(function(){
-        cube.classList.remove('rolling');
-        if (res.code !== 0) { alert(res.msg || '开奖失败'); btn.disabled=false; btn.textContent='🎰 开盲盒'; return; }
-        var p = res.data;
-        var box = document.getElementById('prizeResult');
-        box.innerHTML =
-          '<div class="prize-emoji">🎁</div>' +
-          '<div class="prize-name">' + (p.remark || '恭喜中奖') + '</div>' +
-          '<div class="prize-type">' + (p.prizeTypeName || '奖品') + (p.prizeValue ? ' · 面值 ¥' + Number(p.prizeValue).toFixed(2) : '') + '</div>';
-        box.classList.remove('hidden');
-        btn.textContent = '下一步：缴费 →';
-        btn.onclick = goPay;
-      }, 2000);
-    }).catch(function(){
-      alert('网络异常');
-      btn.disabled=false; btn.textContent='🎰 开盲盒';
     });
-  }
-
-  function goPay(){
-    if (!selectedBillId) { alert('请先选择要缴费的账单'); return; }
-    var b = bills.find(function(x){ return x.billId === selectedBillId; });
-    document.getElementById('payBillInfo').innerHTML =
-      '账单 <b>' + b.billNo + '</b><br>账期 ' + b.billPeriod + '<br>待缴 <b style="color:#ef4444;">¥' + Number(b.remaining).toFixed(2) + '</b>';
-    document.getElementById('stepDraw').classList.add('hidden');
-    document.getElementById('stepPay').classList.remove('hidden');
-    setStep(3);
-  }
-
-  function doPay(channel){
-    api('/api/property/pay-qr/pay', 'POST', { billId: selectedBillId, phone: phone, channel: channel }).then(function(res){
-      if (res.code !== 0) { alert(res.msg || '发起支付失败'); return; }
-      var data = res.data;
-      document.getElementById('payQrBox').classList.remove('hidden');
-      document.getElementById('payQrBox').innerHTML =
-        '<img src="data:image/svg+xml;utf8,' + encodeURIComponent(data.qrCode) + '" alt="支付二维码"><br>' +
-        '<div style="font-size:13px;color:#64748b;margin-top:8px;">请使用' + (channel==='wechat'?'微信':'支付宝') + '扫码支付 ¥' + Number(data.amount||0).toFixed(2) + '</div>';
-      document.getElementById('payStatus').textContent = '等待支付完成...';
-      startPoll(data.paymentNo);
-    }).catch(function(){ alert('网络异常'); });
-  }
-
-  function startPoll(paymentNo){
-    if (pollTimer) clearInterval(pollTimer);
-    var n = 0;
-    pollTimer = setInterval(function(){
-      api('/api/property/pay-qr/status?paymentNo=' + paymentNo).then(function(res){
-        n++;
-        if (res.code === 0 && res.data.paid) {
-          clearInterval(pollTimer);
-          document.getElementById('payStatus').innerHTML = '<span class="ok">✅ 缴费成功！</span>';
-        } else if (n > 60) {
-          clearInterval(pollTimer);
-          document.getElementById('payStatus').textContent = '轮询超时，请手动刷新查看';
-        }
-      });
-    }, 2000);
-  }
+  },2000);
+}
 </script>
 </body>
 </html>

@@ -812,13 +812,13 @@
     "qrcodejs_inline": "D:\\workspace-java\\_qrcodejs_inline.js（19928B 公共副本，从 dashboard.html 提取）"
   },
   "github_backup_20260919": {
-    "commit": "6fec5ada6587dd4a4ea317104b28198cd10f85b9",
+    "commit": "58b2c579f48494b64afa19fd2d1a6d0f8e0e9f1a",
     "files": 488,
-    "scope": "G86-G91+渠道去简化（物业开奖配置去美团/团购/抖音渠道，纯通用奖品池）",
+    "scope": "G91 物业开奖配置 + G92 物业收款二维码（扫码开盲盒交物业费）",
     "script": "D:\\\\workspace-java\\\\_push_gh_full.py（用法：\\=<token>; python _push_gh_full.py）"
   },
   "nas_backup_20260919": {
-    "commit": "2c55081",
+    "commit": "5dd5940",
     "message": "sync 20260918b: 业主物业费在线缴费+修2个支付bug+四文档G79",
     "script": "D:\\\\workspace-java\\\\_nas_sync4.py（本地tar → paramiko exec stdin 管道，NAS 无 sftp/scp subsystem）"
   },
@@ -845,6 +845,17 @@
       "controller/PropertyAdminController.java",
       "controller/PropertyPayQrController.java",
       "property/admin/prizes.html",
+      "property/customer/draw-pay.html"
+    ]
+  },
+  "g93_20260919": {
+    "scope": "物业钱包：中奖余额自动入账+缴费自动抵扣",
+    "detail": "property_wallet 表+draw 入账+pay 抵扣+前端钱包显示",
+    "files": [
+      "db/property_wallet.sql",
+      "entity/PropertyWallet.java",
+      "repository/PropertyWalletRepository.java",
+      "controller/PropertyPayQrController.java",
       "property/customer/draw-pay.html"
     ]
   }
