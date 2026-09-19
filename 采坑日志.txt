@@ -992,3 +992,13 @@ G71 | %s | 浏览器/curl访问生产页面被豆包翻译器注入 <script src=
 4. 修复③工单类型体系混乱：前端提交/筛选传字符串 repair/complaint/suggestion，后端要 Integer（业主提交必 400）；统一数字体系 1报修2投诉3建议4咨询：后端 parseWoType 兼容字符串别名+数字，P1 createWorkorder 参数改 String、AdminP1 筛选 type 参数改 String；前端后台 typeMap/typeBadgeMap/筛选 option、业主端 option 全改数字
 5. 验证：业主提交 woType=2 成功（woId=2）；后台筛选 type=1 精确 1 条；列表编号/类型/提交人渲染正确无 undefined
 6. 教训：页面按 snake_case 写、后端实体 camelCase 的老毛病在工单页再次出现（编号/操作按钮全坏，比显示问题更隐蔽）；「全页面巡检」应作为收尾常规步骤
+
+【2026-09-19 G90】工单全流程闭环 + 业主端写操作链路系统性修复
+1. 工单全生命周期 e2e 打通：业主提交→后台派单→转派→完工→业主评价→日志时间线→状态3已完成（WO1789810811067，rating=5，assignee=李师傅）
+2. 派单/转派前后端不匹配：页面发 JSON body {handler}，后端要 assigneeId/assigneeName URL 参数→必失败；后端改兼容（@RequestBody(required=false) Map + handler 参数，assigneeId 置空）
+3. 业主端 5 页 req 封装系统性 bug：auto-pay/face/services/visitor-parking/workorder 全用 JSON body，后端 P1 端点全用 @RequestParam→所有写操作页面必失败；统一改为 URLSearchParams（application/x-www-form-urlencoded），与 reservation.html 一致
+4. 工单页渲染 camelCase 补齐：后台 workorders.html 编号 woNo/woId、按钮参数 wo.woId（G89b 补）；业主端 workorder.html typeMap/statusMap 改数字体系（1报修2投诉3建议4咨询 / 0待处理1处理中2待验收3已完成4已关闭）、w.woType/woId、canRate=status===2、assigneeName、images 字符串 split、rateComment→ratingComment；业主端列表/详情返回 Map 带 logs（woLogRepository 注入）
+5. 访客车辆/增值服务页面-后端参数完全不匹配：页面只发 plateNo/visitorName/visitStartDate/visitEndDate 与 serviceId/quantity/remark，后端必填 visitorPhone/communityId/roomId/arriveTime/expireTime 与 companyId/roomId/appointmentTime→后端全部可选化+owner 绑定推断（findFirstByOwnerIdAndStatusOrderByBindTimeAsc 已存在勿重复添加，重复方法会编译失败）+默认时间；availableServices 支持 X-Owner-Token 推断 companyId（原只收 companyId 页面没传→500）
+6. services.html 字段修复：价格 s.price→s.unitPrice（显示 ¥0 的坑）、订单状态 orderStatusMap 改数字（0待支付1已支付3已完成4已取消5已退款）
+7. 教训：G89 巡检探针只抓「列表渲染」级问题，抓不到「写操作页面」级问题——需逐页模拟提交验证；页面 JSON body 与后端 @RequestParam 的不匹配是本轮最大雷区；datetime-local 给 ISO T 格式，测试别用空格格式
+8. 测试数据：visitor-vehicles 2 条（苏E66666/苏E99999）、value_service 1 条（开锁换锁 ¥50/次）、vs-order 1 条（VS1789812499376 待支付）

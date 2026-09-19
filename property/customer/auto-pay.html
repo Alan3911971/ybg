@@ -190,8 +190,10 @@ async function req(path,method,body){
   if(token)h["X-Owner-Token"]=token;
   const o={method:method||"GET",headers:h};
   if(body&&method!=="GET"){
-    h["Content-Type"]="application/json";
-    o.body=JSON.stringify(body);
+    h["Content-Type"]="application/x-www-form-urlencoded";
+    const sp=new URLSearchParams();
+    Object.keys(body).forEach(function(k){ const v=body[k]; if(v!=null) sp.append(k,v); });
+    o.body=sp.toString();
   }
   try{
     const r=await fetch(API+path,o).then(r=>r.json());

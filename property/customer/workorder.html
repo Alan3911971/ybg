@@ -255,8 +255,10 @@ async function req(path,method,body,isFormData){
   if(isFormData){
     o.body=body;
   }else if(body&&method!=="GET"){
-    h["Content-Type"]="application/json";
-    o.body=JSON.stringify(body);
+    h["Content-Type"]="application/x-www-form-urlencoded";
+    const sp=new URLSearchParams();
+    Object.keys(body).forEach(function(k){ const v=body[k]; if(v!=null) sp.append(k,v); });
+    o.body=sp.toString();
   }
   try{
     const r=await fetch(API+path,o).then(r=>r.json());
@@ -272,8 +274,8 @@ const postFormData=(p,fd)=>req(p,"POST",fd,true);
 function emptyBox(emoji,text){return '<div class="empty"><span class="emoji">'+emoji+'</span>'+text+'</div>'}
 function fmtTime(s){return s?s.replace("T"," ").slice(0,16):""}
 
-const typeMap={"repair":{cls:"repair",text:"报修"},"complaint":{cls:"complaint",text:"投诉"},"suggest":{cls:"suggest",text:"建议"}};
-const statusMap={"pending":{cls:"pending",text:"待处理"},"processing":{cls:"processing",text:"处理中"},"completed":{cls:"completed",text:"已完成"},"done":{cls:"done",text:"已完成"},"accept":{cls:"accept",text:"待验收"},"closed":{cls:"closed",text:"已关闭"}};
+const typeMap={1:{cls:"repair",text:"报修"},2:{cls:"complaint",text:"投诉"},3:{cls:"suggest",text:"建议"},4:{cls:"consult",text:"咨询"}};
+const statusMap={0:{cls:"pending",text:"待处理"},1:{cls:"processing",text:"处理中"},2:{cls:"accept",text:"待验收"},3:{cls:"completed",text:"已完成"},4:{cls:"closed",text:"已关闭"}};
 
 function getTypeBadge(t){const m=typeMap[t]||{cls:"repair",text:t||"工单"};return '<span class="wo-badge '+m.cls+'">'+m.text+'</span>'}
 function getStatusBadge(s){const m=statusMap[s]||{cls:"pending",text:s||"未知"};return '<span class="status-badge '+m.cls+'">'+m.text+'</span>'}
@@ -294,7 +296,7 @@ $("fPhotos").addEventListener("change",function(){
 });
 
 function renderCard(w){
-  const imgs=w.images||[];
+  const imgs=typeof w.images==='string'?w.images.split(',').filter(function(x){return x;}):(w.images||[]);
   let imgHtml='';
   if(imgs.length){
     imgHtml='<div class="detail-label">相关图片</div><div class="img-grid">';
@@ -304,8 +306,8 @@ function renderCard(w){
 
   // Handler info
   let handlerHtml='';
-  if(w.handlerName||w.handler){
-    handlerHtml='<div class="handler-info">👷 处理人：'+(w.handlerName||w.handler||"--")+(w.handlerPhone?' 📞 '+w.handlerPhone:'')+'</div>';
+  if(w.assigneeName){
+    handlerHtml='<div class="handler-info">👷 处理人：'+(w.assigneeName||"--")+'</div>';
   }
 
   // Logs
@@ -320,27 +322,27 @@ function renderCard(w){
 
   // Rating - show when status is completed/done/accept
   let ratingHtml='';
-  const canRate=w.status==="completed"||w.status==="done"||w.status==="accept";
+  const canRate=w.status===2;
   if(canRate&&!w.rating){
-    ratingHtml='<div class="rating-row" data-id="'+w.id+'">'
+    ratingHtml='<div class="rating-row" data-id="'+w.woId+'">'
       +'<span class="star" data-v="1">★</span><span class="star" data-v="2">★</span><span class="star" data-v="3">★</span><span class="star" data-v="4">★</span><span class="star" data-v="5">★</span>'
-      +'<button class="rate-btn" onclick="submitRate('+w.id+',this)">评价</button>'
+      +'<button class="rate-btn" onclick="submitRate('+w.woId+',this)">评价</button>'
       +'</div>'
-      +'<textarea class="rating-comment" id="rateComment-'+w.id+'" placeholder="写下您的评价（选填）"></textarea>';
+      +'<textarea class="rating-comment" id="rateComment-'+w.woId+'" placeholder="写下您的评价（选填）"></textarea>';
   }else if(w.rating){
     let stars='';for(let i=1;i<=5;i++){stars+='<span class="star'+(i<=w.rating?' active':'')+'" style="cursor:default;">★</span>'}
     ratingHtml='<div class="rating-row">'+stars+'<span style="margin-left:8px;font-size:12px;color:var(--text-3);">已评价</span></div>';
-    if(w.rateComment){ratingHtml+='<div style="font-size:13px;color:var(--text-2);margin-top:6px;padding:12px;background:var(--surface);border-radius:var(--r-md);">💬 '+w.rateComment+'</div>';}
+    if(w.ratingComment){ratingHtml+='<div style="font-size:13px;color:var(--text-2);margin-top:6px;padding:12px;background:var(--surface);border-radius:var(--r-md);">💬 '+w.ratingComment+'</div>';}
   }
 
-  return '<div class="wo-card" data-id="'+w.id+'" onclick="toggleWo(this)">'
+  return '<div class="wo-card" data-id="'+w.woId+'" onclick="toggleWo(this)">'
     +'<div class="wo-main">'
     +'<span class="expand-icon">▼</span>'
-    +'<div class="wo-header">'+getTypeBadge(w.type)+getStatusBadge(w.status)+'</div>'
+    +'<div class="wo-header">'+getTypeBadge(w.woType)+getStatusBadge(w.status)+'</div>'
     +'<div class="wo-title">'+(w.title||"无标题")+'</div>'
     +'<div class="wo-time">'+fmtTime(w.createTime||w.created_at)+'</div>'
     +'</div>'
-    +'<div class="wo-detail" id="detail-'+w.id+'">'
+    +'<div class="wo-detail" id="detail-'+w.woId+'">'
     +'<div class="detail-label">描述</div>'
     +'<div class="detail-text">'+(w.description||"无描述")+'</div>'
     +(w.location?'<div class="detail-label">位置</div><div class="detail-text">'+w.location+'</div>':'')
@@ -375,14 +377,14 @@ async function fetchDetail(id,detailEl){
       // Update detail content with full data
       let html='<div class="detail-label">描述</div><div class="detail-text">'+(w.description||"无描述")+'</div>';
       if(w.location)html+='<div class="detail-label">位置</div><div class="detail-text">'+w.location+'</div>';
-      const imgs=w.images||[];
+      const imgs=typeof w.images==='string'?w.images.split(',').filter(function(x){return x;}):(w.images||[]);
       if(imgs.length){
         html+='<div class="detail-label">相关图片</div><div class="img-grid">';
         imgs.forEach(function(u){html+='<img src="'+u+'" alt="工单图片" onerror="this.outerHTML=\'<div class=img-ph>🖼</div>\'">'});
         html+='</div>';
       }
-      if(w.handlerName||w.handler){
-        html+='<div class="handler-info">👷 处理人：'+(w.handlerName||w.handler||"--")+(w.handlerPhone?' 📞 '+w.handlerPhone:'')+'</div>';
+      if(w.assigneeName){
+        html+='<div class="handler-info">👷 处理人：'+(w.assigneeName||"--")+'</div>';
       }
       if(w.logs&&w.logs.length){
         html+='<div class="detail-label">处理日志</div><div class="log-timeline">';
@@ -391,13 +393,13 @@ async function fetchDetail(id,detailEl){
         });
         html+='</div>';
       }
-      const canRate=w.status==="completed"||w.status==="done"||w.status==="accept";
+      const canRate=w.status===2;
       if(canRate&&!w.rating){
-        html+='<div class="rating-row" data-id="'+w.id+'">'
+        html+='<div class="rating-row" data-id="'+w.woId+'">'
           +'<span class="star" data-v="1">★</span><span class="star" data-v="2">★</span><span class="star" data-v="3">★</span><span class="star" data-v="4">★</span><span class="star" data-v="5">★</span>'
-          +'<button class="rate-btn" onclick="submitRate('+w.id+',this)">评价</button>'
+          +'<button class="rate-btn" onclick="submitRate('+w.woId+',this)">评价</button>'
           +'</div>'
-          +'<textarea class="rating-comment" id="rateComment-'+w.id+'" placeholder="写下您的评价（选填）"></textarea>';
+          +'<textarea class="rating-comment" id="rateComment-'+w.woId+'" placeholder="写下您的评价（选填）"></textarea>';
       }else if(w.rating){
         let stars='';for(let i=1;i<=5;i++){stars+='<span class="star'+(i<=w.rating?' active':'')+'" style="cursor:default;">★</span>'}
         html+='<div class="rating-row">'+stars+'<span style="margin-left:8px;font-size:12px;color:var(--text-3);">已评价</span></div>';

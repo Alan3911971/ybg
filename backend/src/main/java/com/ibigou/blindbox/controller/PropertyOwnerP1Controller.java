@@ -38,7 +38,10 @@ public class PropertyOwnerP1Controller {
     private final PropertyReservationRepository reservationRepository;
     private final PropertyFaceInfoRepository faceInfoRepository;
     private final PropertyVisitorVehicleRepository visitorVehicleRepository;
+    private final PropertyRoomRepository roomRepository;
+    private final PropertyBuildingRepository buildingRepository;
     private final PropertyWorkorderRepository workorderRepository;
+    private final PropertyWoLogRepository woLogRepository;
     private final PropertyVsOrderRepository vsOrderRepository;
     private final PropertyValueServiceRepository valueServiceRepository;
     private final PropertyAutoPayBindingRepository autoPayBindingRepository;
@@ -90,14 +93,20 @@ public class PropertyOwnerP1Controller {
     }
 
     @GetMapping("/workorders")
-    public Result<List<PropertyWorkorder>> myWorkorders(@RequestHeader("X-Owner-Token") String token) {
+    public Result<List<Map<String, Object>>> myWorkorders(@RequestHeader("X-Owner-Token") String token) {
         Long ownerId = validateOwnerToken(token);
         List<PropertyWorkorder> list = workorderRepository.findByOwnerIdOrderByCreateTimeDesc(ownerId);
-        return Result.ok(list);
+        List<Map<String, Object>> out = new java.util.ArrayList<>();
+        for (PropertyWorkorder wo : list) {
+            Map<String, Object> m = com.alibaba.fastjson.JSON.parseObject(com.alibaba.fastjson.JSON.toJSONString(wo));
+            m.put("logs", woLogRepository.findByWoIdOrderByCreateTimeAsc(wo.getWoId()));
+            out.add(m);
+        }
+        return Result.ok(out);
     }
 
     @GetMapping("/workorders/{id}")
-    public Result<PropertyWorkorder> workorderDetail(@RequestHeader("X-Owner-Token") String token,
+    public Result<Map<String, Object>> workorderDetail(@RequestHeader("X-Owner-Token") String token,
                                                      @PathVariable Long id) {
         Long ownerId = validateOwnerToken(token);
         PropertyWorkorder wo = workorderRepository.findById(id)
@@ -105,7 +114,9 @@ public class PropertyOwnerP1Controller {
         if (!wo.getOwnerId().equals(ownerId)) {
             throw new BizException("无权查看");
         }
-        return Result.ok(wo);
+        Map<String, Object> m = com.alibaba.fastjson.JSON.parseObject(com.alibaba.fastjson.JSON.toJSONString(wo));
+        m.put("logs", woLogRepository.findByWoIdOrderByCreateTimeAsc(wo.getWoId()));
+        return Result.ok(m);
     }
 
     @PostMapping("/workorders/{id}/rate")
@@ -121,7 +132,17 @@ public class PropertyOwnerP1Controller {
     // ======================== 增值服务 ========================
 
     @GetMapping("/value-services")
-    public Result<List<PropertyValueService>> availableServices(@RequestParam Long companyId) {
+    public Result<List<PropertyValueService>> availableServices(
+            @RequestHeader(value = "X-Owner-Token", required = false) String token,
+            @RequestParam(required = false) Long companyId) {
+        if (companyId == null && token != null && !token.isBlank()) {
+            Long ownerId = TOKEN_STORE.get(token);
+            if (ownerId != null) {
+                PropertyBindRelation rel = bindRelationRepository.findFirstByOwnerIdAndStatusOrderByBindTimeAsc(ownerId, 1).orElse(null);
+                if (rel != null) companyId = rel.getCompanyId();
+            }
+        }
+        if (companyId == null) return Result.ok(new java.util.ArrayList<>());
         List<PropertyValueService> services = valueServiceRepository
                 .findByCompanyIdAndStatusOrderBySortOrderAsc(companyId, 1);
         return Result.ok(services);
@@ -129,13 +150,21 @@ public class PropertyOwnerP1Controller {
 
     @PostMapping("/vs-orders")
     public Result<PropertyVsOrder> createVsOrder(@RequestHeader("X-Owner-Token") String token,
-                                                  @RequestParam Long companyId,
+                                                  @RequestParam(required = false) Long companyId,
                                                   @RequestParam Long serviceId,
-                                                  @RequestParam Long roomId,
+                                                  @RequestParam(required = false) Long roomId,
                                                   @RequestParam(required = false) Integer quantity,
-                                                  @RequestParam String appointmentTime) {
+                                                  @RequestParam(required = false) String appointmentTime) {
         Long ownerId = validateOwnerToken(token);
-        LocalDateTime appt = LocalDateTime.parse(appointmentTime);
+        if (roomId == null || companyId == null) {
+            PropertyBindRelation rel = bindRelationRepository.findFirstByOwnerIdAndStatusOrderByBindTimeAsc(ownerId, 1).orElse(null);
+            if (rel != null) {
+                if (roomId == null) roomId = rel.getRoomId();
+                if (companyId == null) companyId = rel.getCompanyId();
+            }
+        }
+        java.time.LocalDateTime appt = appointmentTime != null && !appointmentTime.isBlank()
+                ? LocalDateTime.parse(appointmentTime) : java.time.LocalDateTime.now().plusHours(1);
         PropertyVsOrder order = vsOrderService.createOrder(ownerId, companyId, serviceId,
                 roomId, quantity != null ? quantity : 1, appt);
         return Result.ok(order);
@@ -196,14 +225,26 @@ public class PropertyOwnerP1Controller {
     public Result<PropertyVisitorVehicle> createVisitorVehicle(@RequestHeader("X-Owner-Token") String token,
                                                                @RequestParam String plateNo,
                                                                @RequestParam String visitorName,
-                                                               @RequestParam String visitorPhone,
-                                                               @RequestParam Long communityId,
-                                                               @RequestParam Long roomId,
-                                                               @RequestParam String arriveTime,
-                                                               @RequestParam String expireTime) {
+                                                               @RequestParam(required = false) String visitorPhone,
+                                                               @RequestParam(required = false) Long communityId,
+                                                               @RequestParam(required = false) Long roomId,
+                                                               @RequestParam(required = false) String arriveTime,
+                                                               @RequestParam(required = false) String expireTime) {
         Long ownerId = validateOwnerToken(token);
-        LocalDateTime arrive = LocalDateTime.parse(arriveTime);
-        LocalDateTime expire = LocalDateTime.parse(expireTime);
+        if (roomId == null) {
+            PropertyBindRelation rel = bindRelationRepository.findFirstByOwnerIdAndStatusOrderByBindTimeAsc(ownerId, 1).orElse(null);
+            if (rel != null) roomId = rel.getRoomId();
+        }
+        if (communityId == null && roomId != null) {
+            PropertyRoom room = roomRepository.findById(roomId).orElse(null);
+            if (room != null) {
+                PropertyBuilding b = buildingRepository.findById(room.getBuildingId()).orElse(null);
+                if (b != null) communityId = b.getCommunityId();
+            }
+        }
+        java.time.LocalDateTime now = java.time.LocalDateTime.now();
+        LocalDateTime arrive = arriveTime != null && !arriveTime.isBlank() ? LocalDateTime.parse(arriveTime) : now;
+        LocalDateTime expire = expireTime != null && !expireTime.isBlank() ? LocalDateTime.parse(expireTime) : now.plusHours(24);
 
         PropertyVisitorVehicle vv = new PropertyVisitorVehicle();
         vv.setOwnerId(ownerId);

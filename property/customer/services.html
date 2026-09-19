@@ -204,8 +204,10 @@ async function req(path,method,body){
   if(token)h["X-Owner-Token"]=token;
   const o={method:method||"GET",headers:h};
   if(body&&method!=="GET"){
-    h["Content-Type"]="application/json";
-    o.body=JSON.stringify(body);
+    h["Content-Type"]="application/x-www-form-urlencoded";
+    const sp=new URLSearchParams();
+    Object.keys(body).forEach(function(k){ const v=body[k]; if(v!=null) sp.append(k,v); });
+    o.body=sp.toString();
   }
   try{
     const r=await fetch(API+path,o).then(r=>r.json());
@@ -249,8 +251,8 @@ function renderServices(){
       +'<div class="info">'
       +'<div class="name">'+(s.name||"服务")+'</div>'
       +(s.description?'<div class="desc">'+s.description+'</div>':'')
-      +'<div class="price">¥'+(Number(s.price||0).toFixed(0))+'<span class="unit">/次</span></div>'
-      +'<div class="book-btn" onclick="openBook('+s.id+',\''+(s.name||"").replace(/'/g,"\\'")+'\','+Number(s.price||0)+')">立即预约</div>'
+      +'<div class="price">¥'+(Number(s.unitPrice||0).toFixed(0))+'<span class="unit">/次</span></div>'
+      +'<div class="book-btn" onclick="openBook('+s.id+',\''+(s.name||"").replace(/'/g,"\\'")+'\','+Number(s.unitPrice||0)+')">立即预约</div>'
       +'</div></div>';
   }).join("");
 }
@@ -347,7 +349,7 @@ window.cancelOrder=function(orderNo,btn){
 };
 
 // Load orders
-const orderStatusMap={"pending":{cls:"pending",text:"待支付"},"confirmed":{cls:"confirmed",text:"已确认"},"processing":{cls:"confirmed",text:"服务中"},"done":{cls:"done",text:"已完成"},"completed":{cls:"done",text:"已完成"},"cancelled":{cls:"cancelled",text:"已取消"},"paid":{cls:"paid",text:"已支付"}};
+const orderStatusMap={0:{cls:"pending",text:"待支付"},1:{cls:"paid",text:"已支付"},3:{cls:"done",text:"已完成"},4:{cls:"cancelled",text:"已取消"},5:{cls:"cancelled",text:"已退款"}};
 async function loadOrders(){
   $("orderList").innerHTML='<div style="text-align:center;padding:20px;color:var(--text-3);font-size:13px;">加载中...</div>';
   const r=await get("/p1/vs-orders");

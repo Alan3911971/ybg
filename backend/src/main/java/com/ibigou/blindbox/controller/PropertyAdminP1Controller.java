@@ -103,10 +103,14 @@ public class PropertyAdminP1Controller {
     @PostMapping("/workorders/{id}/assign")
     public Result<Void> assignWorkorder(@RequestHeader("X-Property-Token") String token,
                                         @PathVariable Long id,
-                                        @RequestParam Long assigneeId,
-                                        @RequestParam String assigneeName) {
+                                        @RequestParam(required = false) String handler,
+                                        @RequestBody(required = false) Map<String, Object> body) {
         PropertyAdmin admin = validateToken(token);
-        workorderService.assignWorkorder(id, assigneeId, assigneeName, admin.getAdminName());
+        String h = handler;
+        if ((h == null || h.isBlank()) && body != null && body.get("handler") != null) {
+            h = String.valueOf(body.get("handler"));
+        }
+        workorderService.assignWorkorder(id, null, h, admin.getAdminName());
         return Result.ok();
     }
 
@@ -116,11 +120,15 @@ public class PropertyAdminP1Controller {
     @PostMapping("/workorders/{id}/transfer")
     public Result<Void> transferWorkorder(@RequestHeader("X-Property-Token") String token,
                                           @PathVariable Long id,
-                                          @RequestParam Long newAssigneeId,
-                                          @RequestParam String newAssigneeName,
-                                          @RequestParam String reason) {
+                                          @RequestParam(required = false) String handler,
+                                          @RequestParam(required = false) String reason,
+                                          @RequestBody(required = false) Map<String, Object> body) {
         PropertyAdmin admin = validateToken(token);
-        workorderService.transferWorkorder(id, newAssigneeId, newAssigneeName, reason, admin.getAdminName());
+        String h = handler;
+        if ((h == null || h.isBlank()) && body != null && body.get("handler") != null) {
+            h = String.valueOf(body.get("handler"));
+        }
+        workorderService.transferWorkorder(id, null, h, reason, admin.getAdminName());
         return Result.ok();
     }
 
