@@ -22,6 +22,7 @@ public class TvQueueController {
     private final MerchantAdRepository adRepository;
     private final MerchantRepository merchantRepository;
     private final com.ibigou.blindbox.service.AnnounceService announceService;
+    private final com.ibigou.blindbox.service.WxTemplateService wxTemplateService;
 
     /** 电视大屏：当前叫号 + 等待队列 + 广告 */
     @GetMapping("/{merchantNo}/screen")
@@ -97,7 +98,8 @@ public class TvQueueController {
     public Result<Map<String, Object>> take(@PathVariable String merchantNo,
                                             @RequestParam String phone,
                                             @RequestParam(required = false) Integer seats,
-                                            @RequestParam(required = false) Integer windowNo) {
+                                            @RequestParam(required = false) Integer windowNo,
+                                            @RequestParam(required = false) String openid) {
         MerchantQueueConfig cfg = configRepository.findById(merchantNo).orElse(null);
         if (cfg == null || cfg.getEnabled() != 1) {
             return Result.fail("排队未开启");
@@ -130,6 +132,10 @@ public class TvQueueController {
         t.setStatus(0);
         t.setCreateTime(LocalDateTime.now());
         ticketRepository.save(t);
+        // 绑定 openid
+        if (openid != null && !openid.isBlank()) {
+            wxTemplateService.bindOpenid(phone, openid);
+        }
         Map<String, Object> m = new HashMap<>();
         m.put("ticketNo", ticketNo);
         m.put("seats", seats);

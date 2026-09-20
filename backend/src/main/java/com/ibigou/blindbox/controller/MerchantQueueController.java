@@ -112,6 +112,20 @@ public class MerchantQueueController {
                 .findByMerchantNoAndStatusOrderByCreateTimeAsc(merchantNo, 0));
         m.put("skipped", ticketRepository
                 .findByMerchantNoAndStatusOrderByCreateTimeAsc(merchantNo, 3));
+        // 今日统计
+        LocalDateTime today = LocalDateTime.now().toLocalDate().atStartOfDay();
+        long total = ticketRepository.findAll().stream()
+                .filter(t -> merchantNo.equals(t.getMerchantNo()) && t.getCreateTime().isAfter(today))
+                .count();
+        long called = ticketRepository.findAll().stream()
+                .filter(t -> merchantNo.equals(t.getMerchantNo()) && t.getCreateTime().isAfter(today) && t.getStatus() == 2)
+                .count();
+        long skipped = ticketRepository.findAll().stream()
+                .filter(t -> merchantNo.equals(t.getMerchantNo()) && t.getCreateTime().isAfter(today) && t.getStatus() == 3)
+                .count();
+        m.put("todayTotal", total);
+        m.put("todayCalled", called);
+        m.put("todaySkipped", skipped);
         return Result.ok(m);
     }
 
@@ -168,5 +182,41 @@ public class MerchantQueueController {
     public Result<Void> deleteAd(@PathVariable Long adId) {
         adRepository.deleteById(adId);
         return Result.ok();
+    }
+
+    /** 历史记录（最近完成/过号） */
+    @GetMapping("/history")
+    public Result<List<MerchantQueueTicket>> history(@RequestParam String merchantNo,
+                                                      @RequestParam(required = false, defaultValue = "50") Integer limit) {
+        List<MerchantQueueTicket> all = ticketRepository
+                .findByMerchantNoAndStatusOrderByCreateTimeAsc(merchantNo, 2);
+        Collections.reverse(all);
+        List<MerchantQueueTicket> skipped = ticketRepository
+                .findByMerchantNoAndStatusOrderByCreateTimeAsc(merchantNo, 3);
+        Collections.reverse(skipped);
+        all.addAll(0, skipped);
+        return Result.ok(all.size() > limit ? all.subList(0, limit) : all);
+    }
+
+    /** 上传广告素材 */
+    @PostMapping("/ads/upload")
+    public Result<String> uploadAd(@RequestParam String merchantNo,
+                                   @RequestParam("file") org.springframework.web.multipart.MultipartFile file) {
+        try {
+            String original = file.getOriginalFilename() == null ? "" : file.getOriginalFilename().toLowerCase();
+            String ext = original.substring(original.lastIndexOf('.'));
+            String[] allowed = {".jpg", ".jpeg", ".png", ".webp", ".mp4", ".webm"};
+            boolean ok = false;
+            for (String e : allowed) if (e.equals(ext)) { ok = true; break; }
+            if (!ok) return Result.fail("仅支持 jpg/png/webp/mp4");
+            java.nio.file.Path dir = java.nio.file.Paths.get("./uploads/ads/" + merchantNo).toAbsolutePath().normalize();
+            java.nio.file.Files.createDirectories(dir);
+            String filename = "ad-" + System.currentTimeMillis() + ext;
+            java.nio.file.Path target = dir.resolve(filename);
+            file.transferTo(target);
+            return Result.ok("/uploads/ads/" + merchantNo + "/" + filename);
+        } catch (Exception e) {
+            return Result.fail("上传失败: " + e.getMessage());
+        }
     }
 }
