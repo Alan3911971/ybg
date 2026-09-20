@@ -812,13 +812,13 @@
     "qrcodejs_inline": "D:\\workspace-java\\_qrcodejs_inline.js（19928B 公共副本，从 dashboard.html 提取）"
   },
   "github_backup_20260919": {
-    "commit": "06e6eb51be53b9544c683ddad6372820a2fe1714",
+    "commit": "72685822c576a4283c51bb1ba0df625a72f06856",
     "files": 488,
-    "scope": "G91-G97 物业开奖+收款码+钱包+三页+业主钱包+SaaS后台物业+分账按业主绑定推导",
+    "scope": "G91-G98 物业开奖+收款码+钱包+三页+业主钱包(含分账待结算)+SaaS后台物业+分账按业主绑定推导",
     "script": "D:\\\\workspace-java\\\\_push_gh_full.py（用法：\\=<token>; python _push_gh_full.py）"
   },
   "nas_backup_20260919": {
-    "commit": "d78a490",
+    "commit": "3223df0",
     "message": "sync 20260918b: 业主物业费在线缴费+修2个支付bug+四文档G79",
     "script": "D:\\\\workspace-java\\\\_nas_sync4.py（本地tar → paramiko exec stdin 管道，NAS 无 sftp/scp subsystem）"
   },
