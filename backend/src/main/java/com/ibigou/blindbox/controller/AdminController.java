@@ -44,6 +44,7 @@ public class AdminController {
     private final BoxGroupPrizePoolRepository groupPoolRepository;
     private final com.ibigou.blindbox.repository.PropertyCompanyRepository propertyCompanyRepository;
     private final com.ibigou.blindbox.repository.MerchantPropertyBindingRepository merchantPropertyBindingRepository;
+    private final com.ibigou.blindbox.repository.MerchantAdRepository merchantAdRepository;
 
     // ---------------- 平台登录 ----------------
 
@@ -343,5 +344,29 @@ public class AdminController {
 
     public record MerchantAudit(Merchant merchant, List<BoxPrizePool> privatePools,
                                 List<BoxPublicPool> publicPools, List<BoxGroupPrizePool> groupPools) {
+    }
+
+    // ---------- 电视广告审核 ----------
+
+    /** 待审核广告列表 */
+    @GetMapping("/tv/ads/pending")
+    public Result<List<com.ibigou.blindbox.entity.MerchantAd>> pendingAds(
+            @RequestHeader("X-Admin-Token") String token) {
+        return Result.ok(merchantAdRepository.findByAuditStatusOrderByCreateTimeDesc(0));
+    }
+
+    /** 审核通过/驳回 */
+    @PostMapping("/tv/ads/{adId}/audit")
+    public Result<com.ibigou.blindbox.entity.MerchantAd> auditAd(
+            @PathVariable Long adId,
+            @RequestParam Integer pass,
+            @RequestParam(required = false) String remark,
+            @RequestHeader("X-Admin-Token") String token) {
+        com.ibigou.blindbox.entity.MerchantAd a = merchantAdRepository.findById(adId)
+                .orElseThrow(() -> new RuntimeException("广告不存在"));
+        a.setAuditStatus(pass == 1 ? 1 : 2);
+        a.setAuditRemark(remark);
+        a.setUpdateTime(java.time.LocalDateTime.now());
+        return Result.ok(merchantAdRepository.save(a));
     }
 }
