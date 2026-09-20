@@ -12,6 +12,7 @@ import com.ibigou.blindbox.repository.PropertyOwnerRepository;
 import com.ibigou.blindbox.repository.PropertyPaymentRepository;
 import com.ibigou.blindbox.repository.PropertyPrizePoolRepository;
 import com.ibigou.blindbox.repository.PropertyWalletRepository;
+import com.ibigou.blindbox.repository.PropertySplitRecordRepository;
 import com.ibigou.blindbox.service.PropertyBillPaymentService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -38,6 +39,7 @@ public class PropertyPayQrController {
     private final PropertyBillPaymentService propertyBillPaymentService;
     private final PropertyPrizePoolRepository prizePoolRepository;
     private final PropertyWalletRepository walletRepository;
+    private final PropertySplitRecordRepository splitRecordRepository;
 
     /** 扫码落地页：账单概要（免登录） */
     @GetMapping("/bill")
@@ -146,6 +148,31 @@ public class PropertyPayQrController {
         m.put("balance", w.getBalance() == null ? BigDecimal.ZERO : w.getBalance());
         m.put("pendingSplit", owner.getPendingSplit() == null ? BigDecimal.ZERO : owner.getPendingSplit());
         return Result.ok(m);
+    }
+
+    /** 业主分账明细（最近20条） */
+    @GetMapping("/wallet/records")
+    public Result<java.util.List<Map<String, Object>>> walletRecords(@RequestParam Long companyId,
+                                                                     @RequestParam String phone) {
+        PropertyOwner owner = ownerRepository.findByOwnerPhone(phone)
+                .orElseThrow(() -> new com.ibigou.blindbox.common.BizException("该手机号未绑定业主"));
+        java.util.List<com.ibigou.blindbox.entity.PropertySplitRecord> all =
+                splitRecordRepository.findByOwnerIdOrderByCreateTimeDesc(owner.getOwnerId());
+        java.util.List<com.ibigou.blindbox.entity.PropertySplitRecord> records =
+                all.size() > 20 ? all.subList(0, 20) : all;
+        java.util.List<Map<String, Object>> list = new java.util.ArrayList<>();
+        for (com.ibigou.blindbox.entity.PropertySplitRecord r : records) {
+            Map<String, Object> m = new HashMap<>();
+            m.put("orderNo", r.getOrderNo());
+            m.put("merchantNo", r.getMerchantNo());
+            m.put("orderAmount", r.getOrderAmount());
+            m.put("splitAmount", r.getSplitAmount());
+            m.put("splitRatio", r.getSplitRatio());
+            m.put("splitStatus", r.getSplitStatus());
+            m.put("createTime", r.getCreateTime());
+            list.add(m);
+        }
+        return Result.ok(list);
     }
 
     /** 公司级扫码：手机号查该公司待缴账单（免登录） */
