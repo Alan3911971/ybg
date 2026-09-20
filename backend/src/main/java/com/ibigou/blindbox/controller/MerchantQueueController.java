@@ -20,6 +20,7 @@ public class MerchantQueueController {
     private final MerchantQueueConfigRepository configRepository;
     private final MerchantQueueTicketRepository ticketRepository;
     private final MerchantAdRepository adRepository;
+    private final com.ibigou.blindbox.service.WxTemplateService wxTemplateService;
 
     // ---------- 排队配置 ----------
 
@@ -60,6 +61,11 @@ public class MerchantQueueController {
         t.setStatus(1);
         t.setCallTime(LocalDateTime.now());
         ticketRepository.save(t);
+        // 推送模板消息
+        if (t.getPhone() != null) {
+            wxTemplateService.sendQueueCall(t.getPhone(), t.getTicketNo(),
+                    t.getWindowNo() != null ? String.valueOf(t.getWindowNo()) : null);
+        }
         return Result.ok(t);
     }
 

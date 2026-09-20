@@ -21,6 +21,7 @@ public class TvQueueController {
     private final MerchantQueueTicketRepository ticketRepository;
     private final MerchantAdRepository adRepository;
     private final MerchantRepository merchantRepository;
+    private final com.ibigou.blindbox.service.AnnounceService announceService;
 
     /** 电视大屏：当前叫号 + 等待队列 + 广告 */
     @GetMapping("/{merchantNo}/screen")
@@ -40,6 +41,8 @@ public class TvQueueController {
         List<MerchantQueueTicket> waiting = ticketRepository
                 .findByMerchantNoAndStatusOrderByCreateTimeAsc(merchantNo, 0);
         m.put("waiting", waiting);
+        // 最近中奖事件（用于电视弹动画）
+        m.put("recentWins", recentWins(merchantNo));
         // 广告：自己家 enabled=1
         List<MerchantAd> ownAds = adRepository.findByMerchantNoOrderBySortAscCreateTimeDesc(merchantNo)
                 .stream().filter(a -> a.getEnabled() == 1 && inTimeRange(a))
@@ -61,6 +64,21 @@ public class TvQueueController {
         if (a.getStartTime() != null && now.isBefore(a.getStartTime())) return false;
         if (a.getEndTime() != null && now.isAfter(a.getEndTime())) return false;
         return true;
+    }
+
+    /** 最近 30 秒内的中奖事件（电视弹动画用） */
+    private List<Map<String, Object>> recentWins(String merchantNo) {
+        LocalDateTime since = LocalDateTime.now().minusSeconds(30);
+        return announceService.list(merchantNo).stream()
+                .filter(l -> "draw".equals(l.getEventType()))
+                .filter(l -> l.getCreateTime().isAfter(since))
+                .map(l -> {
+                    Map<String, Object> m = new HashMap<>();
+                    m.put("winId", l.getAnnounceId());
+                    m.put("prizeName", l.getContent());
+                    return m;
+                })
+                .toList();
     }
 
     private Map<String, Object> adMap(MerchantAd a) {
