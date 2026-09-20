@@ -43,6 +43,7 @@ public class AdminController {
     private final BoxPublicPoolRepository publicPoolRepository;
     private final BoxGroupPrizePoolRepository groupPoolRepository;
     private final com.ibigou.blindbox.repository.PropertyCompanyRepository propertyCompanyRepository;
+    private final com.ibigou.blindbox.repository.MerchantPropertyBindingRepository merchantPropertyBindingRepository;
 
     // ---------------- 平台登录 ----------------
 
@@ -90,7 +91,22 @@ public class AdminController {
     public Result<Merchant> createMerchant(@RequestParam String merchantNo, @RequestParam String merchantName,
                                            @RequestParam String loginAccount, @RequestParam String loginPwd,
                                            @RequestParam(required = false) Long companyId) {
-        return Result.ok(adminService.createMerchant(merchantNo, merchantName, loginAccount, loginPwd, companyId));
+        Merchant m = adminService.createMerchant(merchantNo, merchantName, loginAccount, loginPwd, companyId);
+        // 选了物业公司 → 自动创建「商家→物业」分账绑定
+        if (companyId != null && companyId > 0) {
+            merchantPropertyBindingRepository.findByMerchantNoAndSplitModeAndStatus(merchantNo, 1, 1)
+                .or(() -> {
+                    MerchantPropertyBinding b = new MerchantPropertyBinding();
+                    b.setMerchantNo(merchantNo);
+                    b.setCompanyId(companyId);
+                    b.setSplitMode(1);
+                    b.setStatus(1);
+                    b.setCreateTime(LocalDateTime.now());
+                    b.setUpdateTime(LocalDateTime.now());
+                    return java.util.Optional.of(merchantPropertyBindingRepository.save(b));
+                });
+        }
+        return Result.ok(m);
     }
 
     @PostMapping("/merchant/{merchantNo}/enable")
@@ -124,6 +140,32 @@ public class AdminController {
         m.setCompanyId(companyId);
         m.setUpdateTime(LocalDateTime.now());
         merchantRepository.save(m);
+        // 同步 merchant_property_binding（splitMode=1 商家→物业）
+        var existing = merchantPropertyBindingRepository.findByMerchantNoAndSplitModeAndStatus(merchantNo, 1, 1).orElse(null);
+        if (companyId == null || companyId <= 0) {
+            // 解绑：停用已有绑定
+            if (existing != null) {
+                existing.setStatus(0);
+                existing.setUpdateTime(LocalDateTime.now());
+                merchantPropertyBindingRepository.save(existing);
+            }
+        } else {
+            if (existing == null) {
+                MerchantPropertyBinding b = new MerchantPropertyBinding();
+                b.setMerchantNo(merchantNo);
+                b.setCompanyId(companyId);
+                b.setSplitMode(1);
+                b.setStatus(1);
+                b.setCreateTime(LocalDateTime.now());
+                b.setUpdateTime(LocalDateTime.now());
+                merchantPropertyBindingRepository.save(b);
+            } else {
+                existing.setCompanyId(companyId);
+                existing.setStatus(1);
+                existing.setUpdateTime(LocalDateTime.now());
+                merchantPropertyBindingRepository.save(existing);
+            }
+        }
         return Result.ok();
     }
 

@@ -1054,3 +1054,10 @@ G71 | %s | 浏览器/curl访问生产页面被豆包翻译器注入 <script src=
 4. admin/index.html：新增「物业公司」tab（创建+列表）、新增商家表单加「所属物业公司」下拉、商家列表加「绑定物业」按钮
 5. 验证：创建测试物业公司 companyId=2 成功；已有商家可通过「绑定物业」按钮绑定/解绑
 6. 踩坑：连续两次 jar 部署后 ClassNotFoundException（BCrypt/Lifecycle），clean package 后正常
+
+【2026-09-20 G97】分账逻辑改为按业主绑定关系推导
+1. 用户澄清：会员是平台级的，去任意商家消费，分账给会员绑定的物业公司（不是商家绑定的物业）
+2. 改 PropertySplitTriggerService.doSplit：不再查 merchant_property_binding，改为查 PropertyBindRelation（业主绑定的物业）
+3. 分账流程：会员手机号 → 查业主 → 查商家分账开关 → 查业主绑定的 companyId → 分账给该物业
+4. 物业负责把会员手机号录入系统建立业主绑定关系（PropertyOwner + PropertyBindRelation）
+5. 验证：测试业主 13851918986 (owner_id=1) 已绑定 companyId=1（宜必购物业）

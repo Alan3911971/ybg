@@ -79,7 +79,7 @@ public class PropertySplitTriggerService {
     // ==================== 统一分账核心逻辑 ====================
 
     private void doSplit(String orderNo, BigDecimal orderAmount, String merchantNo, String userPhone, int splitMode) {
-        // a. 查找业主
+        // a. 查找业主（平台级会员，手机号即业主）
         PropertyOwner owner = ownerRepository.findByOwnerPhone(userPhone).orElse(null);
         if (owner == null || owner.getStatus() != 1) {
             return;
@@ -92,37 +92,19 @@ public class PropertySplitTriggerService {
             return;
         }
 
-        // c. 按模式查找商家-物业绑定关系
-        MerchantPropertyBinding binding = merchantPropertyBindingRepository
-                .findByMerchantNoAndSplitModeAndStatus(merchantNo, splitMode, 1).orElse(null);
-        if (binding == null) {
-            log.debug("No split binding: merchant={}, mode={}, skipped", merchantNo, splitMode);
+        // c. 分账比例：商家全局 splitRatio
+        BigDecimal effectiveRatio = merchant.getSplitRatio();
+
+        // d. 分账目标：从业主绑定关系推导（会员绑定哪个物业就分账给哪个物业）
+        List<PropertyBindRelation> binds = bindRelationRepository
+                .findByOwnerIdAndStatusOrderByBindTimeAsc(owner.getOwnerId(), 1);
+        if (binds.isEmpty()) {
+            log.debug("Owner not bound to any property company: owner={}, phone={}", owner.getOwnerId(), userPhone);
             return;
         }
+        Long companyId = binds.get(0).getCompanyId();
 
-        Long companyId = binding.getCompanyId();
-
-        // d. 确定实际分账比例（绑定自定义 > 商家全局）
-        BigDecimal effectiveRatio = binding.getCustomSplitRatio() != null
-                ? binding.getCustomSplitRatio() : merchant.getSplitRatio();
-
-        // e. 活动审核检查
-        LocalDateTime now = LocalDateTime.now();
-        List<PropertyActivityAudit> activities = activityAuditRepository
-                .findByMerchantIdAndStartTimeBeforeAndEndTimeAfter(
-                        (long) (merchantNo.hashCode() & 0x7FFFFFFF), now, now);
-        if (!activities.isEmpty()) {
-            boolean hasApproved = activities.stream()
-                    .anyMatch(a -> a.getAuditStatus() != null && a.getAuditStatus() == 1);
-            boolean hasNonApproved = activities.stream()
-                    .anyMatch(a -> a.getAuditStatus() == null || a.getAuditStatus() != 1);
-            if (hasNonApproved && !hasApproved) {
-                log.debug("Activity audit blocking split: merchant={}, mode={}", merchantNo, splitMode);
-                return;
-            }
-        }
-
-        // f. 计算分账金额
+        // e. 计算分账金额
         BigDecimal splitAmount = orderAmount
                 .multiply(effectiveRatio)
                 .divide(BigDecimal.valueOf(100), 2, RoundingMode.DOWN);
@@ -130,16 +112,7 @@ public class PropertySplitTriggerService {
             return;
         }
 
-        // g. 查找业主与该物业公司的绑定关系
-        PropertyBindRelation bindRelation = bindRelationRepository
-                .findFirstByOwnerIdAndCompanyIdAndStatusOrderByBindTimeAsc(owner.getOwnerId(), companyId, 1)
-                .orElse(null);
-        if (bindRelation == null) {
-            log.debug("Owner not bound to company: owner={}, company={}, mode={}", owner.getOwnerId(), companyId, splitMode);
-            return;
-        }
-
-        // h. 创建分账记录
+        // f. 创建分账记录
         PropertySplitRecord record = new PropertySplitRecord();
         record.setOrderNo(orderNo);
         record.setOwnerId(owner.getOwnerId());
@@ -152,11 +125,11 @@ public class PropertySplitTriggerService {
         record.setSplitStatus(0); // PENDING
         splitRecordRepository.save(record);
 
-        // i. 累加业主待结算金额
+        // g. 累加业主待结算金额
         owner.setPendingSplit(owner.getPendingSplit().add(splitAmount));
         ownerRepository.save(owner);
 
-        // j. 日志
+        // h. 日志
         String modeLabel = splitMode == MODE_MERCHANT_TO_PROPERTY ? "商家→物业" : "平台→物业";
         log.info("Split triggered [{}]: merchant={}, order={}, amount={}, split={}, owner={}, company={}",
                 modeLabel, merchantNo, orderNo, orderAmount, splitAmount, owner.getOwnerId(), companyId);
