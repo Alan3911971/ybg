@@ -61,6 +61,13 @@ button{font-family:inherit;cursor:pointer;border:none;background:none;color:inhe
         <div class="balance-num">¥<span id="balanceNum">0.00</span></div>
       </div>
       <div class="card">
+        <div class="form-label">分账待结算</div>
+        <div class="tip-box">
+          商家消费分账待结算：¥<span id="pendingNum">0.00</span><br>
+          <span style="color:var(--text-3);">商家消费分账定期结算后自动转入可用余额</span>
+        </div>
+      </div>
+      <div class="card">
         <div class="form-label">余额说明</div>
         <div class="tip-box">
           ✅ 余额来自开盲盒抽奖中奖<br>
@@ -87,6 +94,7 @@ function loadWallet(){
   api('/api/property/pay-qr/wallet?companyId='+companyId+'&phone='+phone).then(function(res){
     if(res.code!==0){alert(res.msg||'查询失败');return;}
     document.getElementById('balanceNum').textContent=Number(res.data.balance).toFixed(2);
+    document.getElementById('pendingNum').textContent=Number(res.data.pendingSplit||0).toFixed(2);
     document.getElementById('stepPhone').classList.add('hidden');
     document.getElementById('stepResult').classList.remove('hidden');
   }).catch(function(){alert('网络异常');});

@@ -144,6 +144,7 @@ public class PropertyPayQrController {
         m.put("ownerName", owner.getOwnerName());
         m.put("companyId", companyId);
         m.put("balance", w.getBalance() == null ? BigDecimal.ZERO : w.getBalance());
+        m.put("pendingSplit", owner.getPendingSplit() == null ? BigDecimal.ZERO : owner.getPendingSplit());
         return Result.ok(m);
     }
 
