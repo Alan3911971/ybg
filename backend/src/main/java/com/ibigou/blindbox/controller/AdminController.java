@@ -19,6 +19,9 @@ import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * 软件公司平台后台 API（PC H5，V1.4 5.3）。
@@ -350,9 +353,22 @@ public class AdminController {
 
     /** 待审核广告列表 */
     @GetMapping("/tv/ads/pending")
-    public Result<List<com.ibigou.blindbox.entity.MerchantAd>> pendingAds(
+    public Result<List<Map<String, Object>>> pendingAds(
             @RequestHeader("X-Admin-Token") String token) {
-        return Result.ok(merchantAdRepository.findByAuditStatusOrderByCreateTimeDesc(0));
+        List<com.ibigou.blindbox.entity.MerchantAd> list = merchantAdRepository.findByAuditStatusOrderByCreateTimeDesc(0);
+        List<Map<String, Object>> result = new ArrayList<>();
+        for (com.ibigou.blindbox.entity.MerchantAd a : list) {
+            Map<String, Object> m = new HashMap<>();
+            m.put("adId", a.getAdId());
+            m.put("merchantNo", a.getMerchantNo());
+            Merchant merchant = merchantRepository.findById(a.getMerchantNo()).orElse(null);
+            m.put("merchantName", merchant != null ? merchant.getMerchantName() : a.getMerchantNo());
+            m.put("title", a.getTitle());
+            m.put("type", a.getType());
+            m.put("url", a.getUrl());
+            result.add(m);
+        }
+        return Result.ok(result);
     }
 
     /** 审核通过/驳回 */
