@@ -1099,3 +1099,21 @@ G71 | %s | 浏览器/curl访问生产页面被豆包翻译器注入 <script src=
 - 现象：index agent plan / index update --dry-run / status --deep 报"不支持修改 Volumes v1正式认知"
 - 解决：可用通道只有 init/scan/status/verify/update-entry/index agent guide；authoring 阶段用 update-entry 批量
 - 预防：不要尝试已确认不可用的命令
+
+
+【G76】PowerShell 原生管道破坏二进制流（tar 传 NAS 损坏）
+- 现象：tar ... | ssh ... 传 400MB tar 到 NAS，NAS 解压报 "numeric off_t value expected" / "Skipping to next header"，文件全部损坏
+- 根因：PowerShell 5.1 的原生程序管道按文本编码（$OutputEncoding）传输，二进制字节 0x80+ 被替换
+- 解决：用 cmd /c "tar ... | ssh ..."（cmd 原生管道字节级安全）或 Python subprocess.PIPE 流式转发
+- 预防：任何二进制管道（tar/zip/图片）禁止在 PowerShell 5.1 直接管道，一律 cmd /c 或 Python
+
+【G77】AOCI baseline 混入 _restore 第三方 jar 库
+- 现象：GitHub 推送按 baseline 清单 755 文件，跑到 _restore/extract/BOOT-INF/lib/*.jar（几百个依赖库）时全部超时失败
+- 根因：baseline.json 的 files 含 _restore/（生产 jar 解压产物 + 第三方 jar，alipay-sdk 19MB+）；大 blob base64 body 上传超时，且依赖库不应进远程仓库
+- 解决：推送脚本过滤 rel.startswith('_restore/')；最终 578 文件推送成功
+- 预防：GitHub 推送一律排除 _restore/；依赖库从生产服务器/本地 m2repo 恢复，不进仓库
+
+【G78】GitHub Git Data API 大 blob POST 超时
+- 现象：POST /git/blobs 大文件（>5MB）持续 "The write operation timed out"（GET 正常、小 POST 正常）
+- 解决：排除大文件（_restore jar）；脚本加 60s 超时 + 5 次指数退避重试 + 本地断点缓存（_gh_blob_cache.json 记录已推 sha，重跑跳过）
+- 预防：推送脚本固化重试与缓存；大文件（jar/媒体）用 SFTP 或单独通道，不走 Git Data API

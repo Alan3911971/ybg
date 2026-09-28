@@ -4,7 +4,7 @@
 AGENTS.md[SG7S]: F:项目AI协作纪律文档:绝对路径铁律、AOCI治理区块、多AI协作规则 | R:code:.aoci/config.json | A:- | S:AOCI治理区块由init追加勿删;路径以实际工作区为准
 README.md[SG5T]: F:宜必购盲盒系统总览:盲盒抽奖+商家端+物业模块,技术栈与目录结构 | R:- | A:- | S:后端SpringBoot+MySQL,前端H5直放
 规矩文档.txt[SG6M]: F:项目铁律文档:操作演示、完整闭环、四文档强制更新、G11双向备份、G32 AOCI索引规范等G系列规则 | R:- | A:- | S:改bug/更新后必须操作演示;换电脑先读G31
-采坑日志.txt[SG6L]: F:项目踩坑记录:G78换电脑恢复要点、G69-G75 AOCI使用坑 | R:- | A:- | S:换电脑/新会话必读
+采坑日志.txt[SG6L]: F:项目踩坑记录:G78换电脑恢复要点、G69-G78 AOCI使用坑与备份坑 | R:- | A:- | S:换电脑/新会话必读
 shared-memory.json[SG6L]: F:项目共享记忆:环境路径、生产服务器、账号、备份状态、toolchain、aoci配置 | R:- | A:- | S:密钥脱敏;勿写明文token/密码
 知识图谱.md[SG6L]: F:项目知识图谱:架构模块、环境工具链、GitHub/NAS对接、AOCI索引G94 | R:- | A:- | S:换电脑必读环境与工具链章节
 api.js[IG5M]: F:顾客端/商家端API封装:登录、支付、抽奖等接口调用 | R:- | A:- | S:测试环境验证码123456;生产域名ybgtc.com
