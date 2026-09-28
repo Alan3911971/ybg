@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>商家叫号面板</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:#f8fafc;}
+.topbar{background:#fff;padding:16px 20px;box-shadow:0 1px 3px rgba(0,0,0,0.05);display:flex;justify-content:space-between;align-items:center;}
+.topbar h1{font-size:18px;font-weight:700;}
+.topbar a{color:#4f46e5;text-decoration:none;font-size:14px;}
+.current{background:linear-gradient(135deg,#4f46e5,#7c3aed);color:#fff;padding:30px 20px;text-align:center;}
+.current .label{font-size:14px;opacity:0.9;margin-bottom:10px;}
+.current .ticket{font-size:64px;font-weight:900;line-height:1;}
+.actions{display:flex;gap:12px;padding:20px;}
+.actions button{flex:1;padding:16px;border:none;border-radius:12px;font-size:16px;font-weight:600;cursor:pointer;}
+.btn-primary{background:#4f46e5;color:#fff;}
+.btn-success{background:#10b981;color:#fff;}
+.btn-warn{background:#f59e0b;color:#fff;}
+.list-card{margin:0 20px 20px;background:#fff;border-radius:12px;padding:16px;}
+.list-card h3{font-size:14px;color:#64748b;margin-bottom:12px;}
+.ticket-item{display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid #f1f5f9;}
+.ticket-item:last-child{border-bottom:none;}
+.ticket-item .no{font-size:18px;font-weight:700;}
+.ticket-item .meta{font-size:12px;color:#94a3b8;}
+.ticket-item .ops button{margin-left:8px;padding:6px 12px;border:none;border-radius:6px;font-size:12px;cursor:pointer;}
+.tag{display:inline-block;padding:2px 8px;border-radius:4px;font-size:12px;margin-left:8px;}
+.tag-wait{background:#fef3c7;color:#92400e;}
+.tag-call{background:#dbeafe;color:#1e40af;}
+.tag-skip{background:#fce7f3;color:#9f1239;}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <h1>叫号面板</h1>
+  <div>
+    <a href="queue-config.html">配置</a>
+    <a href="ads.html" style="margin-left:12px;">广告管理 →</a>
+  </div>
+</div>
+
+<div class="current">
+  <div class="label">当前叫号</div>
+  <div class="ticket" id="callingNo">--</div>
+  <div id="callingInfo" style="margin-top:8px;opacity:0.9;"></div>
+</div>
+
+<div class="actions">
+  <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;">
+    <button class="btn-primary" onclick="callNext()">叫下一位</button>
+    <select id="callSeats" style="padding:10px 16px;border:1px solid #e2e8f0;border-radius:8px;font-size:14px;">
+      <option value="">全部桌型</option>
+      <option value="2">2人桌</option>
+      <option value="4">4人桌</option>
+      <option value="6">6人桌</option>
+      <option value="10">10人桌</option>
+    </select>
+    <label style="display:flex;align-items:center;gap:6px;font-size:14px;color:#64748b;cursor:pointer;">
+      <input type="checkbox" id="autoNext" checked>
+      完成后自动叫下一位
+    </label>
+  </div>
+  <button class="btn-success" onclick="finish()">完成</button>
+  <button class="btn-warn" onclick="skip()">过号</button>
+</div>
+
+<div class="list-card">
+  <h3>今日统计 <button style="float:right;padding:4px 10px;border:none;background:#e2e8f0;border-radius:6px;cursor:pointer;font-size:12px;" onclick="load()">刷新</button></h3>
+  <div style="display:flex;gap:20px;text-align:center;padding:8px 0;">
+    <div style="flex:1;"><div style="font-size:24px;font-weight:700;" id="todayTotal">0</div><div style="font-size:12px;color:#94a3b8;">取号总数</div></div>
+    <div style="flex:1;"><div style="font-size:24px;font-weight:700;color:#10b981;" id="todayCalled">0</div><div style="font-size:12px;color:#94a3b8;">已完成</div></div>
+    <div style="flex:1;"><div style="font-size:24px;font-weight:700;color:#f59e0b;" id="todaySkipped">0</div><div style="font-size:12px;color:#94a3b8;">过号</div></div>
+  </div>
+</div>
+
+<div class="list-card">
+  <h3>等待队列</h3>
+  <div id="waitingList"></div>
+</div>
+
+<div class="list-card">
+  <h3>已过号</h3>
+  <div id="skippedList"></div>
+</div>
+
+<div class="list-card">
+  <h3>历史记录 <button class="btn btn--sm" style="float:right;padding:4px 10px;font-size:12px;" onclick="loadHistory()">刷新</button></h3>
+  <div id="historyList"></div>
+</div>
+
+<script>
+var merchantNo = new URLSearchParams(location.search).get('merchantNo') || 'M001';
+var currentTicket = null;
+function api(path, method){
+  return fetch(path, {method: method||'GET'}).then(function(r){return r.json();});
+}
+function load(){
+  api('/api/merchant/queue/list?merchantNo='+merchantNo).then(function(res){
+    if(res.code!==0) return;
+    var d = res.data;
+    var calling = d.calling && d.calling[0];
+    currentTicket = calling;
+    if(calling){
+      document.getElementById('callingNo').textContent = calling.ticketNo;
+      var info = '';
+      if(calling.seats) info += calling.seats + '人桌 · ';
+      if(calling.windowNo) info += calling.windowNo + '号窗口';
+      document.getElementById('callingInfo').textContent = info;
+    } else {
+      document.getElementById('callingNo').textContent = '--';
+      document.getElementById('callingInfo').textContent = '';
+    }
+    renderList('waitingList', d.waiting, 'wait');
+    renderList('skippedList', d.skipped, 'skip');
+    // 统计
+    document.getElementById('todayTotal').textContent = d.todayTotal || 0;
+    document.getElementById('todayCalled').textContent = d.todayCalled || 0;
+    document.getElementById('todaySkipped').textContent = d.todaySkipped || 0;
+  });
+}
+function renderList(id, list, tag){
+  var el = document.getElementById(id);
+  if(!list || !list.length){ el.innerHTML = '<div style="color:#94a3b8;font-size:14px;padding:8px 0;">暂无</div>'; return; }
+  var html = '';
+  list.forEach(function(t){
+    html += '<div class="ticket-item">'+
+      '<div><span class="no">'+t.ticketNo+'</span>'+
+      '<span class="tag tag-'+tag+'">'+(tag==='wait'?'等待':'过号')+'</span></div>'+
+      '<div class="meta">'+(t.seats?t.seats+'人桌 · ':'')+(t.windowNo?t.windowNo+'号窗口 · ':'')+(t.phone? '****'+t.phone.slice(-4):'')+'</div>'+
+      (tag==='skip' ? '<div class="ops"><button onclick="recall(\''+t.ticketNo+'\')">重呼</button></div>' : '')+
+    '</div>';
+  });
+  el.innerHTML = html;
+}
+function callNext(){
+  var seats = document.getElementById('callSeats').value;
+  var url = '/api/merchant/queue/call-next?merchantNo='+merchantNo;
+  if(seats) url += '&seats='+seats;
+  api(url,'POST').then(function(res){
+    if(res.code!==0){alert(res.msg);return;}
+    playDing();
+    load();
+  });
+}
+function playDing(){
+  try{
+    var ctx = new (window.AudioContext||window.webkitAudioContext)();
+    var osc = ctx.createOscillator();
+    var gain = ctx.createGain();
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.frequency.value = 880;
+    gain.gain.value = 0.3;
+    osc.start();
+    osc.stop(ctx.currentTime + 0.5);
+  }catch(e){}
+}
+function finish(){ if(!currentTicket) return; api('/api/merchant/queue/finish?merchantNo='+merchantNo+'&ticketNo='+currentTicket.ticketNo,'POST').then(function(){ load(); // 自动叫下一位
+  if(document.getElementById('autoNext').checked){ setTimeout(callNext, 500); }
+}); }
+function skip(){ if(!currentTicket) return; api('/api/merchant/queue/skip?merchantNo='+merchantNo+'&ticketNo='+currentTicket.ticketNo,'POST').then(load); }
+function recall(ticketNo){
+  api('/api/merchant/queue/call?merchantNo='+merchantNo+'&ticketNo='+ticketNo,'POST').then(function(res){
+    if(res.code!==0){alert(res.msg);return;}
+    playDing();
+    load();
+  });
+}
+
+function loadHistory(){
+  api('/api/merchant/queue/history?merchantNo='+merchantNo+'&limit=50').then(function(res){
+    if(res.code!==0) return;
+    var list = res.data || [];
+    var el = document.getElementById('historyList');
+    if(!list.length){ el.innerHTML = '<div style="color:#94a3b8;font-size:14px;padding:8px 0;">暂无历史记录</div>'; return; }
+    var html = '';
+    list.forEach(function(t){
+      var status = t.status === 2 ? '<span class="tag tag-call">完成</span>' : '<span class="tag tag-skip">过号</span>';
+      html += '<div class="ticket-item">'+
+        '<div><span class="no">'+t.ticketNo+'</span> '+status+'</div>'+
+        '<div class="meta">'+(t.seats?t.seats+'人桌 · ':'')+(t.createTime||'').substring(5,16)+'</div>'+
+      '</div>';
+    });
+    el.innerHTML = html;
+  });
+}
+loadHistory();
+load();
+setInterval(load, 5000);
+</script>
+</body>
+</html>

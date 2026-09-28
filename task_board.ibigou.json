@@ -1,0 +1,58 @@
+{
+  "project": "ibigou 盲盒系统 (ybgtc.com)",
+  "updated_at": "2026-09-12T10:47:33",
+  "hermes_wake": true,
+  "notes": "2026-09-12 修正：IBIGOU-PENDING-001退款按钮已确认删除（见user_rules），已移除；新增商家列表优化提醒。",
+  "tasks": [
+    {
+      "id": "IBIGOU-PENDING-001",
+      "title": "APP商家端播报没声音",
+      "bot": "待确认",
+      "status": "pending",
+      "progress": 0,
+      "depends_on": [],
+      "priority": "high",
+      "notes": "APP WebView自动播放限制导致Audio无声。known_pitfalls已记录：需原生TTS或Web Speech。需确认：①是否继续排查APP端 ②TTS方案选型（云端百度女声？Android原生TTS？）",
+      "waiting": [
+        "alan"
+      ]
+    },
+    {
+      "id": "IBIGOU-PENDING-002",
+      "title": "多商户支付方案选型",
+      "bot": "待确认",
+      "status": "pending",
+      "progress": 0,
+      "depends_on": [],
+      "priority": "high",
+      "notes": "三个选项：①服务商模式 ②代收+分账 ③静态收款码。需用户拍板。选型后小程序开发才能重启。",
+      "waiting": [
+        "alan"
+      ]
+    },
+    {
+      "id": "IBIGOU-PENDING-003",
+      "title": "小程序开发（暂停）",
+      "bot": "待确认",
+      "status": "blocked",
+      "progress": 0,
+      "depends_on": [
+        "IBIGOU-PENDING-002"
+      ],
+      "priority": "low",
+      "notes": "依赖多商户支付方案确认后才能继续。",
+      "waiting": []
+    },
+    {
+      "id": "IBIGOU-PENDING-004",
+      "title": "商家列表页内存过滤优化（待商家数量增长后）",
+      "bot": "待定",
+      "status": "pending",
+      "progress": 0,
+      "depends_on": [],
+      "priority": "low",
+      "notes": "当前用findAll()内存过滤，商家多时需改数据库查询+分页。仅提醒，非紧急。",
+      "waiting": []
+    }
+  ]
+}

@@ -1,0 +1,1 @@
+# lottery 资源目录\n\n本目录存放以下文件（占位）：\n- thanks.ogg     谢课参与  轻叮一声\n- discount.ogg  折扣券   数字燃烧\n- cash.ogg      立减券   金币\n- bigmoney.ogg  大额余额 礼花\n- freeme.ogg    免单     礼炮+欢喜\n\n实际音频由 reasonix / hermes 后复。参考 docs/\u62bd\u5956\u70ab\u9177\u52a8\u6548\u8bbe\u8ba1-20260818.md\u3002

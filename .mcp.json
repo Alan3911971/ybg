@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "aoci": {
+      "args": [
+        "--repo",
+        "D:/workspace-java/ybg-master",
+        "mcp"
+      ],
+      "command": "D:/tools/aoci/bin/aoci.exe"
+    }
+  }
+}

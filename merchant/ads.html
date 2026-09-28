@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>广告管理</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:#f8fafc;}
+.topbar{background:#fff;padding:16px 20px;box-shadow:0 1px 3px rgba(0,0,0,0.05);display:flex;justify-content:space-between;align-items:center;}
+.topbar h1{font-size:18px;font-weight:700;}
+.topbar a{color:#4f46e5;text-decoration:none;font-size:14px;}
+.card{margin:16px;padding:20px;background:#fff;border-radius:12px;}
+.card h2{font-size:16px;font-weight:700;margin-bottom:16px;}
+.form-group{margin-bottom:14px;}
+.form-group label{display:block;font-size:14px;color:#64748b;margin-bottom:6px;}
+.form-group input,.form-group select{width:100%;padding:10px;border:1px solid #e2e8f0;border-radius:8px;font-size:14px;}
+.btn{padding:12px 24px;background:#4f46e5;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;}
+.ad-item{display:flex;gap:12px;padding:12px 0;border-bottom:1px solid #f1f5f9;align-items:center;}
+.ad-item:last-child{border-bottom:none;}
+.ad-item img{width:80px;height:60px;object-fit:cover;border-radius:6px;}
+.ad-item .info{flex:1;}
+.ad-item .title{font-size:14px;font-weight:600;}
+.ad-item .meta{font-size:12px;color:#94a3b8;margin-top:4px;}
+.tag{display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;margin-left:6px;}
+.tag-own{background:#dcfce7;color:#166534;}
+.tag-pub{background:#dbeafe;color:#1e40af;}
+.tag-pending{background:#fef3c7;color:#92400e;}
+.tag-reject{background:#fecaca;color:#991b1b;}
+.ad-item button{padding:6px 12px;border:none;border-radius:6px;font-size:12px;cursor:pointer;margin-left:4px;}
+.btn-toggle{background:#e2e8f0;color:#334155;}
+.btn-del{background:#fecaca;color:#991b1b;}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <h1>广告管理</h1>
+  <a href="queue.html">← 叫号面板</a>
+</div>
+
+<div class="card">
+  <h2>上传广告</h2>
+  <div class="form-group">
+    <label>标题</label>
+    <input type="text" id="title" placeholder="广告标题">
+  </div>
+  <div class="form-group">
+    <label>类型</label>
+    <select id="type">
+      <option value="image">图片</option>
+      <option value="video">视频</option>
+    </select>
+  </div>
+  <div class="form-group">
+    <label>素材文件（图片/视频）</label>
+    <input type="file" id="fileInput" accept="image/*,video/*">
+  </div>
+  <div class="form-group">
+    <label>或直接填 URL</label>
+    <input type="text" id="url" placeholder="https://...">
+  </div>
+  <div class="form-group">
+    <label>投放范围</label>
+    <select id="scope">
+      <option value="0">仅自家电视（免审）</option>
+      <option value="1">公共池（需要部门审核）</option>
+    </select>
+  </div>
+  <div class="form-group">
+    <label>停留时长（秒）</label>
+    <input type="number" id="durationSec" value="10">
+  </div>
+  <div class="form-group">
+    <label>播放开始时间（可选）</label>
+    <input type="datetime-local" id="startTime">
+  </div>
+  <div class="form-group">
+    <label>播放结束时间（可选）</label>
+    <input type="datetime-local" id="endTime">
+  </div>
+  <button class="btn" onclick="createAd()">上传</button>
+</div>
+
+<div class="card">
+  <h2>广告列表</h2>
+  <div id="adList"></div>
+</div>
+
+<script>
+var merchantNo = new URLSearchParams(location.search).get('merchantNo') || 'M001';
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function api(path, method){return fetch(path,{method:method||'GET'}).then(function(r){return r.json();});}
+function load(){
+  api('/api/merchant/queue/ads?merchantNo='+merchantNo).then(function(res){
+    if(res.code!==0) return;
+    var list = res.data || [];
+    var html = '';
+    list.forEach(function(a){
+      var statusTag = a.scope===1 ? (a.auditStatus===0?'<span class="tag tag-pending">待审</span>':(a.auditStatus===2?'<span class="tag tag-reject">驳回:'+esc(a.auditRemark||'')+'</span>':'<span class="tag tag-pub">公共池</span>')) : '<span class="tag tag-own">自家</span>';
+      var thumb = a.type==='video' ? '<div style="width:80px;height:60px;background:#000;color:#fff;display:flex;align-items:center;justify-content:center;border-radius:6px;">▶</div>' : '<img src="'+a.url+'">';
+      html += '<div class="ad-item">'+thumb+
+        '<div class="info"><div class="title">'+esc(a.title)+statusTag+'</div>'+
+        '<div class="meta">'+(a.enabled?'启用中':'已下架')+' · 时长'+a.durationSec+'s · 排序'+a.sort+'</div>'+
+        (a.startTime || a.endTime ? '<div class="meta" style="margin-top:2px;">⏰ '+(a.startTime||'').substring(0,16)+' ~ '+(a.endTime||'').substring(0,16)+'</div>' : '')+
+      '</div>'+
+        '<button class="btn-toggle" onclick="toggle('+a.adId+','+(a.enabled?0:1)+')">'+(a.enabled?'下架':'上架')+'</button>'+
+        '<button class="btn-toggle" onclick="moveSort('+a.adId+','+(a.sort-1)+')">↑</button>'+
+        '<button class="btn-toggle" onclick="moveSort('+a.adId+','+(a.sort+1)+')">↓</button>'+
+        '<button class="btn-del" onclick="del('+a.adId+')">删除</button>'+
+      '</div>';
+    });
+    document.getElementById('adList').innerHTML = html || '<div style="color:#94a3b8;">暂无广告</div>';
+  });
+}
+function createAd(){
+  var title=document.getElementById('title').value.trim();
+  var type=document.getElementById('type').value;
+  var url=document.getElementById('url').value.trim();
+  var scope=document.getElementById('scope').value;
+  var dur=document.getElementById('durationSec').value;
+  if(!title){alert('请填写标题');return;}
+  if(!url && fileInput.files.length === 0){alert('请上传文件或填URL');return;}
+  var doCreate = function(finalUrl){
+    var p='/api/merchant/queue/ads?merchantNo='+merchantNo+'&title='+encodeURIComponent(title)+'&type='+type+'&url='+encodeURIComponent(finalUrl)+'&scope='+scope+'&durationSec='+dur;
+    var st = document.getElementById('startTime').value;
+    var et = document.getElementById('endTime').value;
+    if(st) p += '&startTime=' + encodeURIComponent(st + ':00');
+    if(et) p += '&endTime=' + encodeURIComponent(et + ':00');
+    api(p,'POST').then(function(res){ if(res.code!==0){alert(res.msg);return;} load(); });
+  };
+  if(fileInput.files.length > 0){
+    var fd = new FormData();
+    fd.append('merchantNo', merchantNo);
+    fd.append('file', fileInput.files[0]);
+    fetch('/api/merchant/queue/ads/upload', {method:'POST', body: fd})
+      .then(function(r){return r.json();})
+      .then(function(res){
+        if(res.code !== 0){alert(res.msg);return;}
+        doCreate(res.data);
+      });
+  } else {
+    doCreate(url);
+  }
+}
+function toggle(id, enabled){
+  fetch('/api/merchant/queue/ads/'+id+'?enabled='+enabled,{method:'PUT'}).then(function(){load();});
+}
+function del(id){
+  if(!confirm('确认删除？')) return;
+  fetch('/api/merchant/queue/ads/'+id,{method:'DELETE'}).then(function(){load();});
+}
+function moveSort(id, newSort){
+  fetch('/api/merchant/queue/ads/'+id+'?sort='+newSort,{method:'PUT'}).then(function(){load();});
+}
+load();
+</script>
+</body>
+</html>

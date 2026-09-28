@@ -14,6 +14,8 @@ public interface MerchantQueueTicketRepository extends JpaRepository<MerchantQue
 
     Optional<MerchantQueueTicket> findFirstByMerchantNoAndStatusOrderByCreateTimeAsc(String merchantNo, Integer status);
 
+    Optional<MerchantQueueTicket> findFirstByMerchantNoAndStatusAndSeatsOrderByCreateTimeAsc(String merchantNo, Integer status, Integer seats);
+
     List<MerchantQueueTicket> findByMerchantNoAndPhoneAndStatusInOrderByCreateTimeDesc(String merchantNo, String phone, List<Integer> statuses);
 
     Optional<MerchantQueueTicket> findByMerchantNoAndTicketNo(String merchantNo, String ticketNo);

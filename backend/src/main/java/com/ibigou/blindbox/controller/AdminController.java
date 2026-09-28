@@ -366,6 +366,7 @@ public class AdminController {
             m.put("title", a.getTitle());
             m.put("type", a.getType());
             m.put("url", a.getUrl());
+            m.put("createTime", a.getCreateTime());
             result.add(m);
         }
         return Result.ok(result);

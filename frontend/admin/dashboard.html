@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#4f46e5">
+<title>工作台 · 物业后台 · 宜必购物业</title>
+<link rel="icon" href="data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='80' font-size='90'%3E%F0%9F%8F%A2%3C/text%3E%3C/svg%3E">
+<script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script>
+<style>
+  :root{
+    --pri:#4f46e5; --pri-grad:linear-gradient(135deg,#4f46e5 0%,#7c3aed 100%);
+    --success:#10b981; --danger:#ef4444; --warning:#f59e0b;
+    --dark:#0f172a; --text:#1e293b; --text-2:#64748b; --text-3:#94a3b8;
+    --bg:#f8fafc; --surface:#ffffff; --border:#e2e8f0; --divider:#f1f5f9;
+    --shadow-card:0 1px 3px rgba(0,0,0,.04),0 8px 24px rgba(0,0,0,.04);
+    --r-sm:8px; --r-md:12px; --r-lg:16px; --r-xl:20px; --sidebar-w:272px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+  html,body{font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei","Helvetica Neue",Arial,sans-serif;color:var(--text);background:var(--bg);-webkit-font-smoothing:antialiased;height:100%;}
+  a{color:inherit;text-decoration:none;}
+  input,select,button{font-size:16px;font-family:inherit;}
+
+  @keyframes fadeInUp{from{opacity:0;transform:translateY(16px);}to{opacity:1;transform:translateY(0);}}
+
+  .layout{display:flex;min-height:100vh;}
+  .sidebar{width:var(--sidebar-w);background:linear-gradient(180deg,#0f172a 0%,#1e293b 100%);display:flex;flex-direction:column;position:fixed;top:0;left:0;bottom:0;z-index:40;transition:transform .25s ease;}
+  .sidebar .brand{padding:24px 20px;display:flex;align-items:center;gap:12px;border-bottom:1px solid rgba(255,255,255,.08);}
+  .sidebar .brand .logo{width:40px;height:40px;border-radius:var(--r-md);background:var(--pri-grad);color:#fff;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;font-weight:700;}
+  .sidebar .brand h1{font-size:16px;font-weight:700;line-height:1.3;color:#fff;}
+  .sidebar .brand h1 span{font-size:11px;color:rgba(255,255,255,.5);font-weight:400;display:block;margin-top:2px;}
+  .sidebar nav{flex:1;overflow-y:auto;padding:16px 12px;}
+  .nav-section{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:rgba(255,255,255,.35);padding:16px 12px 6px;margin-top:4px;}
+  .nav-section:first-child{margin-top:0;padding-top:8px;}
+  .sidebar nav a{height:44px;padding:0 16px;border-radius:10px;font-size:14px;color:rgba(255,255,255,.55);font-weight:500;transition:all .2s;margin-bottom:2px;display:flex;align-items:center;gap:12px;border-left:none;}
+  .sidebar nav a:hover{color:rgba(255,255,255,.9);background:rgba(255,255,255,.06);}
+  .sidebar nav a.active{color:#fff;background:rgba(79,70,229,.15);font-weight:600;border-left:3px solid #818cf8;border-radius:0 10px 10px 0;}
+  .sidebar nav a .icon{font-size:16px;width:22px;text-align:center;flex-shrink:0;}
+  .sidebar .logout-area{padding:16px 12px;border-top:1px solid rgba(255,255,255,.08);}
+  .sidebar .logout-area a{color:rgba(255,255,255,.5);justify-content:center;border-radius:var(--r-sm);padding:11px 14px;border-left:none;}
+  .sidebar .logout-area a:hover{color:var(--danger);background:rgba(239,68,68,.1);}
+
+  .main{margin-left:var(--sidebar-w);flex:1;min-height:100vh;}
+  .topbar{background:var(--surface);border-bottom:1px solid var(--border);padding:14px 28px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:30;backdrop-filter:blur(12px);background:rgba(255,255,255,.85);}
+  .topbar .page-title{font-size:28px;font-weight:800;color:var(--text);letter-spacing:-.5px;line-height:1.2;}
+  .topbar .menu-toggle{display:none;background:none;border:none;font-size:22px;cursor:pointer;padding:4px 8px;color:var(--text-2);}
+  .content-wrap{margin-left:var(--sidebar-w);flex:1;padding:32px 40px;max-width:1400px;margin:0 auto;animation:fadeInUp .5s ease both;}
+  .sidebar-overlay{display:none;position:fixed;inset:0;background:rgba(15,23,42,.6);z-index:35;backdrop-filter:blur(2px);}
+
+  @media(max-width:768px){
+    .sidebar{transform:translateX(-100%);}
+    .sidebar.open{transform:translateX(0);}
+    .sidebar-overlay.show{display:block;}
+    .content-wrap{margin-left:0;padding:20px 16px;}
+    .topbar .menu-toggle{display:block;}
+  }
+
+  .card{background:var(--surface);border-radius:var(--r-lg);padding:24px;margin-bottom:20px;box-shadow:var(--shadow-card);border:none;}
+  .sec{display:flex;align-items:center;gap:10px;font-weight:700;margin:0 0 16px;font-size:15px;color:var(--text);}
+  .sec .ic{width:32px;height:32px;border-radius:var(--r-sm);background:linear-gradient(135deg,rgba(79,70,229,.1) 0%,rgba(124,58,237,.1) 100%);color:var(--pri);display:inline-flex;align-items:center;justify-content:center;font-size:15px;flex:0 0 32px;}
+
+  /* Stat cards grid */
+  .stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:20px;margin-bottom:24px;}
+  .stat-card{background:var(--surface);border-radius:var(--r-lg);padding:24px;box-shadow:var(--shadow-card);border:none;position:relative;overflow:hidden;}
+  .stat-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;border-radius:var(--r-lg) var(--r-lg) 0 0;}
+  .stat-card.blue::before{background:var(--pri-grad);}
+  .stat-card.green::before{background:linear-gradient(135deg,#10b981,#059669);}
+  .stat-card.orange::before{background:linear-gradient(135deg,#f59e0b,#d97706);}
+  .stat-card.red::before{background:linear-gradient(135deg,#ef4444,#dc2626);}
+  .stat-card .stat-icon{width:48px;height:48px;border-radius:var(--r-md);display:flex;align-items:center;justify-content:center;font-size:24px;margin-bottom:16px;}
+  .stat-card.blue .stat-icon{background:rgba(79,70,229,.1);color:var(--pri);}
+  .stat-card.green .stat-icon{background:rgba(16,185,129,.1);color:var(--success);}
+  .stat-card.orange .stat-icon{background:rgba(245,158,11,.1);color:var(--warning);}
+  .stat-card.red .stat-icon{background:rgba(239,68,68,.1);color:var(--danger);}
+  .stat-card .stat-label{font-size:13px;color:var(--text-2);font-weight:500;margin-bottom:8px;}
+  .stat-card .stat-value{font-size:28px;font-weight:800;color:var(--text);letter-spacing:-.5px;line-height:1.2;}
+  .stat-card .stat-sub{font-size:12px;color:var(--text-3);margin-top:6px;}
+
+  /* Chart rows */
+  .chart-row{display:flex;gap:20px;margin-bottom:20px;}
+  .chart-row .chart-main{flex:6;}
+  .chart-row .chart-side{flex:4;}
+  .chart-container{width:100%;height:360px;}
+
+  @media(max-width:1024px){
+    .stat-grid{grid-template-columns:repeat(2,1fr);}
+    .chart-row{flex-direction:column;}
+    .chart-row .chart-main,.chart-row .chart-side{flex:1;}
+  }
+  @media(max-width:640px){
+    .stat-grid{grid-template-columns:1fr;}
+  }
+
+  .toast-host{position:fixed;top:20px;right:20px;z-index:99;display:flex;flex-direction:column;gap:10px;pointer-events:none;}
+  .toast{padding:12px 20px;border-radius:var(--r-sm);background:var(--dark);color:#fff;font-size:14px;font-weight:500;opacity:0;transform:translateX(40px);transition:opacity .25s ease,transform .25s ease;box-shadow:0 8px 24px rgba(0,0,0,.15);}
+  .toast.show{opacity:1;transform:translateX(0);}
+  .toast.success{background:var(--success);} .toast.danger{background:var(--danger);}
+
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:none;font-weight:600;cursor:pointer;transition:all .2s cubic-bezier(.4,0,.2,1);letter-spacing:.2px;white-space:nowrap;}
+  .btn-sm{height:36px;padding:0 16px;font-size:13px;border-radius:8px;}
+  .btn-md{height:44px;padding:0 24px;font-size:14px;border-radius:10px;}
+  .btn-primary{background:linear-gradient(135deg,#4f46e5 0%,#7c3aed 100%);color:#fff;box-shadow:0 2px 8px rgba(79,70,229,.3);}
+  .btn:hover{transform:translateY(-1px);filter:brightness(1.05);}
+  .btn:active{transform:scale(.97);filter:brightness(.95);}
+
+  .loading-mask{display:flex;align-items:center;justify-content:center;padding:60px 0;color:var(--text-3);font-size:14px;}
+  .loading-mask .spinner{width:24px;height:24px;border:3px solid var(--border);border-top-color:var(--pri);border-radius:50%;animation:spin .6s linear infinite;margin-right:10px;}
+  @keyframes spin{to{transform:rotate(360deg);}}
+</style>
+</head>
+<body>
+<div class="toast-host" id="toastHost"></div>
+<div class="layout">
+  <div class="sidebar" id="sidebar">
+    <div class="brand"><div class="logo">🏢</div><h1>宜必购物业<span>Property Admin</span></h1></div>
+    <nav>
+      <div class="nav-section">概览</div>
+      <a href="dashboard.html" class="active"><span class="icon">📊</span>工作台</a>
+      <a href="index.html"><span class="icon">🏠</span>首页看板</a>
+      <div class="nav-section">业务管理</div>
+      <a href="owners.html"><span class="icon">👥</span>业主管理</a>
+      <a href="bills.html"><span class="icon">🧾</span>账单管理</a>
+      <a href="splits.html"><span class="icon">💰</span>分账流水</a>
+      <a href="merchant-bindings.html"><span class="icon">🔗</span>商家绑定</a>
+      <a href="activity-audit.html"><span class="icon">✅</span>活动审核</a>
+      <a href="facilities.html"><span class="icon">🏟️</span>场地预约</a>
+      <div class="nav-section">安防通行</div>
+      <a href="access.html"><span class="icon">🚪</span>门禁管理</a>
+      <a href="vehicles.html"><span class="icon">🚗</span>车辆管理</a>
+      <a href="devices.html"><span class="icon">📡</span>IoT设备</a>
+    </nav>
+    <div class="logout-area"><a href="#" id="logoutBtn"><span class="icon">🚪</span>退出登录</a></div>
+  </div>
+  <div class="sidebar-overlay" id="overlay"></div>
+
+  <div class="main">
+    <div class="topbar">
+      <button class="menu-toggle" id="menuToggle">☰</button>
+      <div class="page-title">工作台</div>
+      <button class="btn btn-sm btn-primary" id="btnRefresh">🔄 刷新数据</button>
+    </div>
+    <div class="content-wrap">
+
+      <!-- Loading -->
+      <div id="loadingMask" class="loading-mask"><div class="spinner"></div>加载看板数据...</div>
+
+      <!-- Content (hidden until loaded) -->
+      <div id="dashboardContent" style="display:none;">
+
+        <!-- Overview stat cards -->
+        <div class="stat-grid">
+          <div class="stat-card blue">
+            <div class="stat-icon">👥</div>
+            <div class="stat-label">绑定业主数</div>
+            <div class="stat-value" id="statOwners">--</div>
+            <div class="stat-sub" id="statBindings">绑定关系 --</div>
+          </div>
+          <div class="stat-card green">
+            <div class="stat-icon">💰</div>
+            <div class="stat-label">本月收缴率</div>
+            <div class="stat-value" id="statCollectionRate">--%</div>
+            <div class="stat-sub" id="statBills">已缴 -- / 共 --</div>
+          </div>
+          <div class="stat-card orange">
+            <div class="stat-icon">📈</div>
+            <div class="stat-label">本月分账总额</div>
+            <div class="stat-value" id="statSplitAmount">¥--</div>
+            <div class="stat-sub" id="statSplitCount">共 -- 笔</div>
+          </div>
+          <div class="stat-card red">
+            <div class="stat-icon">🔧</div>
+            <div class="stat-label">待处理工单</div>
+            <div class="stat-value" id="statPendingWo">--</div>
+            <div class="stat-sub" id="statWoTotal">工单总数 --</div>
+          </div>
+        </div>
+
+        <!-- Row 1: Collection trend + Workorder pie -->
+        <div class="chart-row">
+          <div class="card chart-main">
+            <div class="sec"><span class="ic">📈</span>收缴率趋势</div>
+            <div id="chartCollectionTrend" class="chart-container"></div>
+          </div>
+          <div class="card chart-side">
+            <div class="sec"><span class="ic">🔧</span>工单分类分布</div>
+            <div id="chartWorkorderPie" class="chart-container"></div>
+          </div>
+        </div>
+
+        <!-- Row 2: Split bar + Split mode donut -->
+        <div class="chart-row">
+          <div class="card chart-main">
+            <div class="sec"><span class="ic">💰</span>分账金额趋势</div>
+            <div id="chartSplitBar" class="chart-container"></div>
+          </div>
+          <div class="card chart-side">
+            <div class="sec"><span class="ic">🍩</span>分账模式占比</div>
+            <div id="chartSplitDonut" class="chart-container"></div>
+          </div>
+        </div>
+
+      </div><!-- /dashboardContent -->
+    </div><!-- /content-wrap -->
+  </div><!-- /main -->
+</div><!-- /layout -->
+
+<script>
+(function(){
+  var token = localStorage.getItem('property_admin_token');
+  if (!token) { location.href = 'login.html'; return; }
+
+  // Sidebar toggle
+  var sidebar = document.getElementById('sidebar');
+  var overlay = document.getElementById('overlay');
+  document.getElementById('menuToggle').onclick = function(){ sidebar.classList.add('open'); overlay.classList.add('show'); };
+  overlay.onclick = function(){ sidebar.classList.remove('open'); overlay.classList.remove('show'); };
+  document.getElementById('logoutBtn').onclick = function(e){ e.preventDefault(); localStorage.removeItem('property_admin_token'); location.href = 'login.html'; };
+
+  function showToast(msg, type){
+    var host = document.getElementById('toastHost');
+    var el = document.createElement('div');
+    el.className = 'toast ' + (type||'');
+    el.textContent = msg;
+    host.appendChild(el);
+    requestAnimationFrame(function(){ el.classList.add('show'); });
+    setTimeout(function(){ el.classList.remove('show'); setTimeout(function(){ el.remove(); }, 200); }, 2500);
+  }
+
+  function formatMoney(v){
+    var n = parseFloat(v) || 0;
+    return '¥' + n.toLocaleString('zh-CN', {minimumFractionDigits:2, maximumFractionDigits:2});
+  }
+
+  // ECharts instances
+  var chartCollection, chartWorkorder, chartSplitBar, chartSplitDonut;
+
+  function initCharts(){
+    chartCollection = echarts.init(document.getElementById('chartCollectionTrend'));
+    chartWorkorder = echarts.init(document.getElementById('chartWorkorderPie'));
+    chartSplitBar = echarts.init(document.getElementById('chartSplitBar'));
+    chartSplitDonut = echarts.init(document.getElementById('chartSplitDonut'));
+
+    window.addEventListener('resize', function(){
+      chartCollection && chartCollection.resize();
+      chartWorkorder && chartWorkorder.resize();
+      chartSplitBar && chartSplitBar.resize();
+      chartSplitDonut && chartSplitDonut.resize();
+    });
+  }
+
+  function renderDashboard(data){
+    var ov = data.overview || {};
+    var col = data.collection || {};
+    var sp = data.split || {};
+    var wo = data.workorder || {};
+
+    // Stat cards
+    document.getElementById('statOwners').textContent = ov.ownerCount != null ? ov.ownerCount : '--';
+    document.getElementById('statBindings').textContent = '绑定关系 ' + (ov.bindingCount != null ? ov.bindingCount : '--');
+    document.getElementById('statCollectionRate').textContent = (col.collectionRate != null ? col.collectionRate : '--') + '%';
+    document.getElementById('statBills').textContent = '已缴 ' + (col.paidBills != null ? col.paidBills : '--') + ' / 共 ' + (col.totalBills != null ? col.totalBills : '--');
+    document.getElementById('statSplitAmount').textContent = formatMoney(sp.totalAmount);
+    document.getElementById('statSplitCount').textContent = '共 ' + (sp.totalCount != null ? sp.totalCount : '--') + ' 笔';
+    document.getElementById('statPendingWo').textContent = wo.pending != null ? wo.pending : '--';
+    document.getElementById('statWoTotal').textContent = '工单总数 ' + (wo.total != null ? wo.total : '--');
+
+    // 1. Collection trend line chart
+    var colTrend = col.trend || [];
+    chartCollection.setOption({
+      tooltip: { trigger:'axis', formatter: function(p){ return p[0].name + '<br/>收缴率: ' + p[0].value + '%'; } },
+      grid: { left:'3%', right:'4%', bottom:'3%', top:'12%', containLabel:true },
+      xAxis: { type:'category', data: colTrend.map(function(t){return t.month;}), axisLine:{lineStyle:{color:'#e2e8f0'}}, axisLabel:{color:'#64748b',fontSize:12} },
+      yAxis: { type:'value', max:100, axisLabel:{formatter:'{value}%',color:'#64748b',fontSize:12}, splitLine:{lineStyle:{color:'#f1f5f9'}} },
+      series:[{
+        name:'收缴率',
+        type:'line',
+        smooth:true,
+        symbol:'circle',
+        symbolSize:8,
+        data: colTrend.map(function(t){return t.rate;}),
+        itemStyle:{color:'#4f46e5'},
+        areaStyle:{color:new echarts.graphic.LinearGradient(0,0,0,1,[{offset:0,color:'rgba(79,70,229,.25)'},{offset:1,color:'rgba(79,70,229,.02)'}])},
+        lineStyle:{width:3}
+      }]
+    });
+
+    // 2. Workorder category pie
+    var woCat = wo.categoryDistribution || [];
+    chartWorkorder.setOption({
+      tooltip: { trigger:'item', formatter:'{b}: {c} ({d}%)' },
+      legend: { orient:'vertical', right:'5%', top:'center', textStyle:{color:'#64748b',fontSize:12} },
+      color:['#4f46e5','#10b981','#f59e0b','#ef4444','#8b5cf6','#06b6d4','#ec4899'],
+      series:[{
+        name:'工单分类',
+        type:'pie',
+        radius:['40%','70%'],
+        center:['35%','50%'],
+        avoidLabelOverlap:false,
+        label:{show:false},
+        emphasis:{label:{show:true,fontSize:14,fontWeight:'bold'}},
+        data: woCat.map(function(c){return {name:c.name,value:c.value};})
+      }]
+    });
+
+    // 3. Split amount bar chart
+    var spTrend = sp.trend || [];
+    chartSplitBar.setOption({
+      tooltip: { trigger:'axis', formatter: function(p){ return p[0].name + '<br/>分账金额: ¥' + (parseFloat(p[0].value)||0).toLocaleString('zh-CN',{minimumFractionDigits:2}); } },
+      grid: { left:'3%', right:'4%', bottom:'3%', top:'12%', containLabel:true },
+      xAxis: { type:'category', data: spTrend.map(function(t){return t.month;}), axisLine:{lineStyle:{color:'#e2e8f0'}}, axisLabel:{color:'#64748b',fontSize:12} },
+      yAxis: { type:'value', axisLabel:{color:'#64748b',fontSize:12}, splitLine:{lineStyle:{color:'#f1f5f9'}} },
+      series:[{
+        name:'分账金额',
+        type:'bar',
+        barWidth:'40%',
+        data: spTrend.map(function(t){return t.amount;}),
+        itemStyle:{
+          borderRadius:[6,6,0,0],
+          color: new echarts.graphic.LinearGradient(0,0,0,1,[{offset:0,color:'#7c3aed'},{offset:1,color:'#4f46e5'}])
+        }
+      }]
+    });
+
+    // 4. Split mode donut
+    var spMode = sp.modeDistribution || [];
+    chartSplitDonut.setOption({
+      tooltip: { trigger:'item', formatter:'{b}<br/>¥{c} ({d}%)' },
+      legend: { orient:'vertical', right:'5%', top:'center', textStyle:{color:'#64748b',fontSize:12} },
+      color:['#4f46e5','#f59e0b'],
+      series:[{
+        name:'分账模式',
+        type:'pie',
+        radius:['45%','72%'],
+        center:['35%','50%'],
+        avoidLabelOverlap:false,
+        label:{show:false},
+        emphasis:{label:{show:true,fontSize:14,fontWeight:'bold'}},
+        data: spMode.map(function(m){return {name:m.name,value:m.value};})
+      }]
+    });
+  }
+
+  function loadDashboard(){
+    document.getElementById('loadingMask').style.display = 'flex';
+    document.getElementById('dashboardContent').style.display = 'none';
+
+    // Default companyId=1 for now; in production read from admin profile
+    var companyId = 1;
+
+    fetch('/api/property/admin/dashboard/stats?companyId=' + companyId, {
+      headers: { 'X-Property-Token': token }
+    })
+    .then(function(r){ return r.json(); })
+    .then(function(res){
+      if (res.code !== 0) {
+        showToast(res.msg || '加载失败', 'danger');
+        document.getElementById('loadingMask').innerHTML = '<span style="color:var(--danger)">加载失败: ' + (res.msg||'未知错误') + '</span>';
+        return;
+      }
+      if (!chartCollection) initCharts();
+      renderDashboard(res.data || {});
+      document.getElementById('loadingMask').style.display = 'none';
+      document.getElementById('dashboardContent').style.display = 'block';
+      // Resize after display
+      setTimeout(function(){
+        chartCollection && chartCollection.resize();
+        chartWorkorder && chartWorkorder.resize();
+        chartSplitBar && chartSplitBar.resize();
+        chartSplitDonut && chartSplitDonut.resize();
+      }, 100);
+    })
+    .catch(function(err){
+      showToast('网络异常', 'danger');
+      document.getElementById('loadingMask').innerHTML = '<span style="color:var(--danger)">网络异常，请检查连接</span>';
+    });
+  }
+
+  document.getElementById('btnRefresh').onclick = loadDashboard;
+
+  // Initial load
+  loadDashboard();
+})();
+</script>
+</body>
+</html>

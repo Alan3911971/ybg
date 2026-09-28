@@ -1,6 +1,6 @@
 宜必购（ybg）采坑日志
 ========================================
-最后更新：2026-09-18（业主在线缴纳物业费闭环 + 支付侧两个现存bug修复）
+最后更新：2026-09-28（AOCI 索引建立：641条 aligned）
 
 【G01】scp/ssh 脱敏问题
 - 现象：命令中密钥/密码被日志记录
@@ -1061,3 +1061,41 @@ G71 | %s | 浏览器/curl访问生产页面被豆包翻译器注入 <script src=
 3. 分账流程：会员手机号 → 查业主 → 查商家分账开关 → 查业主绑定的 companyId → 分账给该物业
 4. 物业负责把会员手机号录入系统建立业主绑定关系（PropertyOwner + PropertyBindRelation）
 5. 验证：测试业主 13851918986 (owner_id=1) 已绑定 companyId=1（宜必购物业）
+
+
+【G69】AOCI init 目标仓库选错
+- 现象：用户要 ybg-master 项目装 AOCI，却在会话目录（new-chat）执行了 init，建了 4 条错误索引
+- 根因：未确认目标仓库，默认在 cwd 初始化
+- 解决：init 前先确认 --repo/目录目标；误建产物已整体清理（.aoci/.codex/aoci*.txt/.gitattributes/.mcp.json/AGENTS.md）
+- 预防：任何 init/扫描前先列出目标目录确认
+
+【G70】update-entry 强校验 source-sha256
+- 现象：update-entry 不带 --source-sha256 报 bad_args
+- 解决：每条候选先读文件算 sha256（hashlib），随 --source-sha256 提交
+- 预防：批量脚本统一先算 sha 再 preview
+
+【G71】AOCI 标签字典违规（tag_dictionary_violation）
+- 现象：entry 用 [UG3T] 报 impact_candidate_tag_dictionary_violation，preview 失败
+- 根因：U 是 Module 层标签不是 Layer 层；HTML 页面必须 A=E(入口边界)+B=U(用户交互)=[EU3T]；SX/LX 组合也不合法（文档=SZ、第三方库=LZ）
+- 解决：先读 aoci.meta.txt 字典再写标签
+- 预防：新标签组合先对照字典
+
+【G72】PowerShell 传中文参数失败
+- 现象：PowerShell 直接传中文 entry 文本报编码错误/解析失败
+- 解决：所有中文条目写入用 Python subprocess 脚本（脚本文件 UTF-8），PowerShell 只负责 python xxx.py
+- 预防：固化批处理脚本模式
+
+【G73】临时脚本污染 missing
+- 现象：_aoci_batch*.py 放仓库根后 verify 报 code_missing/unbaselined
+- 解决：批处理脚本统一放 D:\workspace-java\ 下（仓库外），用完保留即可
+- 预防：仓库根不落任何辅助脚本
+
+【G74】E 规模档位错配（warning）
+- 现象：511 行文件标 M，报"E规模档位错配，应为L"
+- 解决：E 档位按行数：T<100、S100-200、M200-400、L>400
+- 预防：写条目前 wc 行数
+
+【G75】AOCI 命令兼容性
+- 现象：index agent plan / index update --dry-run / status --deep 报"不支持修改 Volumes v1正式认知"
+- 解决：可用通道只有 init/scan/status/verify/update-entry/index agent guide；authoring 阶段用 update-entry 批量
+- 预防：不要尝试已确认不可用的命令

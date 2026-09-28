@@ -1,6 +1,6 @@
 宜必购（ybg）项目规矩文档
 ========================================
-最后更新：2026-09-18（G31换电脑环境恢复指南）
+最后更新：2026-09-28（G32 AOCI索引维护规范）
 
 【G00 项目与代码位置】
 | 项目 | 仓库 | 本地代码 | 类型 |
@@ -282,3 +282,23 @@ G20 | %s | 修改bug更新服务器后必须实际操作演示给用户看；演
 3. 复制 SSH 密钥到 C:\Users\<新用户>\.ssh\
 4. 按本指南验证：SSH 生产 → mvn 打包 → bu 打开物业后台
 5. 读四文档（本文件 + shared-memory.json + 知识图谱.md + 采坑日志.txt）了解最新状态
+
+
+【G32 AOCI 仓库认知索引维护规范（2026-09-28 起强制执行）】
+1. 工具：AOCI CLI 已安装 D:\tools\aoci\bin\aoci.exe（v0.1.0-rc15，2026-09-25 构建；D:\tools\aoci 下有 zip/SHA256SUMS/provenance）
+2. 本项目索引已建立（2026-09-28）：641 条条目，aoci verify → governance_aligned=true
+   - 索引资产：D:\workspace-java\ybg-master\aoci.txt（总索引）/ aoci.code.txt（条目）/ aoci.meta.txt（标签字典）/ .aoci\（baseline 753 文件、ledger、config）
+   - MCP 配置：.mcp.json 与 .codex\config.toml（aoci server 指向 D:/tools/aoci/bin/aoci.exe --repo D:/workspace-java/ybg-master mcp）
+3. 使用流程（每轮会话）：
+   ① 新会话先调 aoci_rules 取得运行合同；需要全貌时 aoci_overview 恢复认知
+   ② 修改受管对象（代码/文档/配置）后：aoci maintain → 基于机器候选创作条目 → aoci update-entry（绑定 source-sha256）→ aoci verify 收尾
+   ③ verify 目标：governance_aligned=true、missing/orphan/stale 全部为 0
+4. 硬性约束：
+   - 条目语义必须来自对真实文件的读取理解，禁止按文件名/路径模板批量编造
+   - update-entry 必须带 --source-sha256（缺失报 bad_args）；目录前缀条目会归一为裸文件名
+   - 标签必须查 aoci.meta.txt 字典：HTML 页面=EU+数字+T/S（A=E入口边界，B=U用户交互）；文档=SZ；测试=TG；备份=ZZ；实体=PD；脚本=XG；第三方库=LZ；SX/LX 等组合非法会报 tag_dictionary_violation
+   - E 规模档位按行数：T<100、S 100-200、M 200-400、L>400
+   - 临时脚本（_aoci_batch*.py 等）一律放 D:\workspace-java\ 下，禁止留在仓库根（会成为 missing 污染 verify）
+   - PowerShell 不能可靠传递中文参数/管道，所有含中文的条目写入必须用 Python subprocess 脚本
+5. 换电脑恢复（G31 补充）：拷贝 D:\tools\aoci 与 D:\workspace-java\ybg-master 即可；索引资产随项目目录走，无需重新 init
+6. 与 G12 关系：四文档本身也是 AOCI 受管对象，更新四文档后须同步维护对应 AOCI 条目（sha 变化会 stale）

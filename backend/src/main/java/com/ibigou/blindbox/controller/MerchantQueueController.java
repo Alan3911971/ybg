@@ -52,12 +52,19 @@ public class MerchantQueueController {
 
     // ---------- 叫号操作 ----------
 
-    /** 叫下一位（按取号时间最早的等待号） */
+    /** 叫下一位（按取号时间最早的等待号，可选桌型） */
     @PostMapping("/call-next")
-    public Result<MerchantQueueTicket> callNext(@RequestParam String merchantNo) {
-        MerchantQueueTicket t = ticketRepository
-                .findFirstByMerchantNoAndStatusOrderByCreateTimeAsc(merchantNo, 0).orElse(null);
-        if (t == null) return Result.fail("没有等待中的号");
+    public Result<MerchantQueueTicket> callNext(@RequestParam String merchantNo, @RequestParam(required = false) Integer seats) {
+        MerchantQueueTicket t;
+        if(seats != null){
+            t = ticketRepository
+                    .findFirstByMerchantNoAndStatusAndSeatsOrderByCreateTimeAsc(merchantNo, 0, seats).orElse(null);
+            if (t == null) return Result.fail("没有" + seats + "人桌等待中的号");
+        } else {
+            t = ticketRepository
+                    .findFirstByMerchantNoAndStatusOrderByCreateTimeAsc(merchantNo, 0).orElse(null);
+            if (t == null) return Result.fail("没有等待中的号");
+        }
         t.setStatus(1);
         t.setCallTime(LocalDateTime.now());
         ticketRepository.save(t);

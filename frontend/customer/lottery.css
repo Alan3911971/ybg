@@ -1,0 +1,417 @@
+/* ============================================================
+ * lottery.css  · YBG-C-FLOW-001-SPARK-001
+ * 6 大中奖品类动效样式（CSS3-only + 关键帧）
+ * 包体积预算: gzip 后 <= 8KB
+ * ============================================================ */
+
+/* 通用：抽奖动效覆盖层 */
+.spark-stage {
+  position: fixed; inset: 0; z-index: 9999;
+  background: rgba(8, 6, 16, 0.92);
+  display: flex; align-items: center; justify-content: center;
+  flex-direction: column; overflow: hidden;
+  -webkit-tap-highlight-color: transparent; user-select: none;
+  opacity: 0;
+  animation: spark-stage-in .25s ease-out forwards;
+}
+.spark-stage[data-leaving="1"] { animation: spark-stage-out .35s ease-in forwards; }
+@keyframes spark-stage-in  { from { opacity: 0; } to { opacity: 1; } }
+@keyframes spark-stage-out { from { opacity: 1; } to { opacity: 0; } }
+
+/* 跳过按钮 */
+.spark-skip {
+  position: absolute; top: env(safe-area-inset-top, 12px); right: 12px;
+  padding: 6px 12px; font-size: 12px;
+  background: rgba(255,255,255,0.18); color: #fff;
+  border: 1px solid rgba(255,255,255,0.3); border-radius: 999px;
+  cursor: pointer; backdrop-filter: blur(6px); opacity: .7;
+}
+.spark-skip:hover { opacity: 1; }
+
+/* FREEME 交互额外按钮：长按保存/分享 */
+.spark-extra {
+  position: absolute; bottom: 100px; left: 50%;
+  transform: translateX(-50%);
+  display: flex; gap: 12px; z-index: 5;
+  opacity: 0; animation: spark-extra-in .6s 2.8s ease-out forwards;
+}
+.spark-extra button {
+  padding: 8px 16px; border-radius: 999px;
+  background: rgba(0,0,0,0.4); color: #fff;
+  border: 1px solid rgba(255,210,76,0.6);
+  font-size: 13px; cursor: pointer;
+  backdrop-filter: blur(6px);
+}
+@keyframes spark-extra-in {
+  from { opacity: 0; transform: translate(-50%, 20px); }
+  to   { opacity: 1; transform: translate(-50%, 0); }
+}
+
+/* 增强可读性 */
+.spark-stage:focus-within { outline: 2px solid rgba(246,211,101,.6); outline-offset: -4px; }
+.spark-num, .spark-title { -webkit-text-stroke: .5px rgba(0,0,0,.2); }
+
+/* 静音切换 */
+.spark-mute {
+  position: absolute; top: env(safe-area-inset-top, 12px); left: 12px;
+  width: 36px; height: 36px; line-height: 34px;
+  text-align: center; border-radius: 50%;
+  background: rgba(255,255,255,0.18); color: #fff;
+  border: 1px solid rgba(255,255,255,0.3); cursor: pointer;
+  backdrop-filter: blur(6px); font-size: 14px;
+}
+
+/* 主数字 */
+.spark-num {
+  font-size: 18vw; font-weight: 900; line-height: 1;
+  letter-spacing: -.02em; font-feature-settings: "tnum";
+  text-align: center; position: relative; z-index: 2;
+}
+
+/* 主标题 */
+.spark-title {
+  font-size: 28px; font-weight: 800; letter-spacing: .04em;
+  margin-top: 18px; text-align: center; z-index: 2;
+  text-shadow: 0 2px 8px rgba(0,0,0,.4);
+}
+.spark-sub {
+  font-size: 15px; opacity: .9; margin-top: 8px;
+  text-align: center; z-index: 2;
+}
+
+/* CTA 按钮 */
+.spark-cta {
+  margin-top: 36px; padding: 14px 32px; border-radius: 999px;
+  border: 0; cursor: pointer; font-size: 16px; font-weight: 700;
+  color: #fff;
+  background: linear-gradient(135deg, #ff5b3e, #ff8a3d);
+  box-shadow: 0 8px 24px rgba(255,91,62,.4); z-index: 2;
+}
+.spark-cta--gold { background: linear-gradient(135deg, #d4af37, #f6d365); box-shadow: 0 8px 24px rgba(212,175,55,.5); color: #2b1500;}
+.spark-cta--red  { background: linear-gradient(135deg, #ff2d55, #ff5e3a); box-shadow: 0 8px 24px rgba(255,45,85,.5);}
+
+/* 方案 1 · 谢谢参与 */
+.spark-thanks { background: radial-gradient(ellipse at center, #2a2440 0%, #0a0612 80%); }
+.spark-thanks .spark-num {
+  font-size: 14vw; color: #d4af37; opacity: 0;
+  text-shadow: 0 0 24px rgba(212,175,55,.6);
+  animation: thanks-rise 1.6s cubic-bezier(.2,.7,.3,1) forwards;
+}
+.spark-thanks .spark-title { color: #e8d8b8; }
+.spark-thanks .spark-sub { color: #b5a985; }
+@keyframes thanks-rise {
+  0%   { opacity: 0; transform: translateY(20px) scale(.85); filter: blur(6px); }
+  60%  { opacity: 1; transform: translateY(-4px) scale(1.02); filter: blur(0); }
+  100% { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); }
+}
+.thanks-particle {
+  position: absolute; width: 6px; height: 6px; border-radius: 50%;
+  background: radial-gradient(circle, #f6d365, #b8860b);
+  opacity: 0;
+  animation: thanks-particle 1.6s ease-out forwards;
+  pointer-events: none;
+}
+@keyframes thanks-particle {
+  0%   { opacity: 0; transform: translate(0,0) scale(.5); }
+  30%  { opacity: 1; }
+  100% { opacity: 0; transform: translate(var(--dx,0), var(--dy,0)) scale(.2); }
+}
+
+/* 方案 2 · 折扣券 */
+.spark-discount { background: radial-gradient(ellipse at center, #3a1810 0%, #0a0612 80%); }
+.spark-discount .spark-num {
+  font-size: 22vw; color: #fff;
+  background: linear-gradient(180deg, #ffd58a 0%, #ff7a2c 60%, #c0320a 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  filter: drop-shadow(0 0 24px rgba(255,122,44,.65));
+  opacity: 0; transform: scale(.4);
+  animation: discount-burst 1.6s cubic-bezier(.2,1.4,.4,1) forwards;
+}
+.spark-discount .spark-title { color: #ffb877; }
+.spark-discount .spark-sub { color: #ffd9b0; }
+@keyframes discount-burst {
+  0%   { opacity: 0; transform: scale(.4) rotate(-6deg); }
+  50%  { opacity: 1; transform: scale(1.1) rotate(2deg); }
+  100% { opacity: 1; transform: scale(1) rotate(0); }
+}
+.discount-flame {
+  position: absolute; left: 50%; top: 50%;
+  width: 60vw; height: 60vw;
+  transform: translate(-50%,-50%);
+  border-radius: 50%;
+  background: conic-gradient(from 0deg, transparent, #ff7a2c 30%, transparent 60%, #ffd58a 90%, transparent);
+  filter: blur(20px); opacity: 0;
+  animation: flame-spin 1.8s linear forwards;
+  pointer-events: none;
+}
+@keyframes flame-spin {
+  0%   { opacity: 0; transform: translate(-50%,-50%) rotate(0) scale(.4); }
+  40%  { opacity: .8; }
+  100% { opacity: .25; transform: translate(-50%,-50%) rotate(360deg) scale(1.4); }
+}
+.discount-spark {
+  position: absolute; width: 4px; height: 14px;
+  background: linear-gradient(180deg, #ffd58a, #ff7a2c, transparent);
+  border-radius: 2px; opacity: 0;
+  animation: discount-spark-up 1.5s ease-out forwards;
+  pointer-events: none;
+}
+@keyframes discount-spark-up {
+  0%   { opacity: 0; transform: translate(0,0); }
+  30%  { opacity: 1; }
+  100% { opacity: 0; transform: translate(var(--dx,0), var(--dy,-200px)); }
+}
+
+/* 方案 3 · 立减券 */
+.spark-cash { background: radial-gradient(ellipse at center, #2a2010 0%, #0a0612 80%); }
+.spark-cash .spark-num {
+  font-size: 22vw; color: #f6d365;
+  text-shadow: 0 0 28px rgba(246,211,101,.7);
+  animation: cash-flicker 1.5s ease-in-out forwards;
+}
+.spark-cash .spark-title { color: #f6d365; }
+@keyframes cash-flicker {
+  0%   { opacity: 0; transform: scale(.5); filter: blur(10px); }
+  20%  { opacity: 1; transform: scale(1.08); filter: blur(0); }
+  35%  { opacity: .6; transform: scale(1); }
+  45%  { opacity: 1; }
+  60%  { opacity: .8; }
+  100% { opacity: 1; transform: scale(1); }
+}
+.cash-coin {
+  position: absolute; width: 22px; height: 22px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, #f6d365, #b8860b 70%, #6e5108);
+  box-shadow: 0 0 8px rgba(246,211,101,.5);
+  opacity: 0;
+  animation: cash-coin-fall 1.5s cubic-bezier(.4,.2,.6,1) forwards;
+  pointer-events: none;
+}
+.cash-coin::after {
+  content: '\xa5'; position: absolute; inset: 0;
+  display: flex; align-items: center; justify-content: center;
+  color: #6e5108; font-weight: 900; font-size: 12px;
+}
+@keyframes cash-coin-fall {
+  0%   { opacity: 0; transform: translate(var(--sx,0), var(--sy,-30vh)) rotate(0); }
+  15%  { opacity: 1; }
+  85%  { opacity: 1; }
+  100% { opacity: 0; transform: translate(var(--ex,0), var(--ey,60vh)) rotate(var(--rot,720deg)); }
+}
+
+/* 方案 4 · 实物奖品 */
+.spark-goods { background: radial-gradient(ellipse at center, #1a1442 0%, #0a0612 80%); }
+.spark-goods .spark-goods-img {
+  width: 60vw; max-width: 280px; aspect-ratio: 1;
+  border-radius: 16px;
+  background: linear-gradient(135deg, #6c4cff, #ff5cd0);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 64px;
+  opacity: 0;
+  animation: goods-rotate-in 1.8s cubic-bezier(.2,.7,.3,1) forwards;
+  box-shadow: 0 0 48px rgba(108,76,255,.4);
+  position: relative; z-index: 2;
+}
+@keyframes goods-rotate-in {
+  0%   { opacity: 0; transform: scale(.3) rotateY(-180deg); filter: brightness(2); }
+  30%  { opacity: 1; filter: brightness(2); }
+  100% { opacity: 1; transform: scale(1) rotateY(0deg); filter: brightness(1); }
+}
+.spark-goods .spark-title { color: #d6c5ff; }
+.spark-goods .spark-sub { color: #b8a8e8; }
+.goods-rays {
+  position: absolute; inset: 0;
+  background: conic-gradient(from 0deg,
+    transparent 0deg, rgba(255,255,255,.15) 20deg, transparent 40deg,
+    rgba(255,255,255,.15) 80deg, transparent 100deg,
+    rgba(255,255,255,.15) 140deg, transparent 160deg,
+    rgba(255,255,255,.15) 200deg, transparent 220deg,
+    rgba(255,255,255,.15) 260deg, transparent 280deg,
+    rgba(255,255,255,.15) 320deg, transparent 340deg);
+  opacity: 0;
+  animation: goods-rays-out 2s ease-out forwards;
+  pointer-events: none;
+}
+@keyframes goods-rays-out {
+  0%   { opacity: 0; transform: scale(.4); }
+  20%  { opacity: .9; }
+  100% { opacity: 0; transform: scale(1.6); }
+}
+
+/* 方案 5 · 大额余额 */
+.spark-bigmoney { background: radial-gradient(ellipse at center, #1f1408 0%, #0a0612 80%); }
+.spark-bigmoney .spark-num {
+  font-size: 24vw; color: #f6d365;
+  text-shadow: 0 0 36px rgba(246,211,101,.85);
+  opacity: 0;
+  animation: bigmoney-burst 1.5s cubic-bezier(.2,1.4,.4,1) forwards;
+}
+@keyframes bigmoney-burst {
+  0%   { opacity: 0; transform: scale(.2); filter: blur(20px); }
+  40%  { opacity: 1; transform: scale(1.15); filter: blur(0); }
+  60%  { transform: scale(.95); }
+  100% { opacity: 1; transform: scale(1); filter: blur(0); }
+}
+.spark-bigmoney.shaking { animation: bigmoney-shake .2s linear; }
+@keyframes bigmoney-shake {
+  0%,100% { transform: translate(0,0); }
+  25%     { transform: translate(-5px, 2px); }
+  50%     { transform: translate(5px, -2px); }
+  75%     { transform: translate(-3px, 3px); }
+}
+.bigmoney-rain {
+  position: absolute; inset: 0;
+  background:
+    radial-gradient(circle at 10% 0%,  rgba(246,211,101,.4) 0, transparent 4px),
+    radial-gradient(circle at 30% 10%, rgba(246,211,101,.3) 0, transparent 3px),
+    radial-gradient(circle at 60% 0%,  rgba(246,211,101,.4) 0, transparent 4px),
+    radial-gradient(circle at 85% 5%,  rgba(246,211,101,.3) 0, transparent 3px),
+    radial-gradient(circle at 50% 20%, rgba(246,211,101,.4) 0, transparent 4px);
+  background-size: 100% 200%;
+  animation: rain-fall 2s linear infinite;
+  opacity: .7; pointer-events: none;
+}
+@keyframes rain-fall {
+  0%   { background-position: 0 -50%; }
+  100% { background-position: 0 150%; }
+}
+
+/* 方案 6 · 免单 */
+.spark-freeme { background: #000; }
+.spark-freeme.shaking { animation: freeme-shake .3s linear; }
+@keyframes freeme-shake {
+  0%,100% { transform: translate(0,0); }
+  20%     { transform: translate(-10px, 5px); }
+  40%     { transform: translate(10px, -8px); }
+  60%     { transform: translate(-8px, 6px); }
+  80%     { transform: translate(8px, -4px); }
+}
+.freeme-black {
+  position: absolute; inset: 0;
+  background: #000; opacity: 0;
+  animation: freeme-black-fade .5s linear forwards;
+}
+@keyframes freeme-black-fade {
+  0%,100% { opacity: 0; }
+  50%     { opacity: 1; }
+}
+.freeme-blast {
+  position: absolute; left: 50%; top: 50%;
+  width: 8px; height: 8px; border-radius: 50%;
+  background: radial-gradient(circle, #fff, #f6d365 40%, transparent 70%);
+  box-shadow: 0 0 80px 40px rgba(246,211,101,.85);
+  transform: translate(-50%,-50%); opacity: 0;
+  animation: freeme-blast-out 1s ease-out forwards;
+}
+@keyframes freeme-blast-out {
+  0%   { opacity: 0; transform: translate(-50%,-50%) scale(.5); }
+  20%  { opacity: 1; }
+  100% { opacity: .25; transform: translate(-50%,-50%) scale(80); }
+}
+.freeme-fall {
+  position: absolute; inset: -20% 0 -20% 0;
+  background: linear-gradient(180deg,
+    transparent 0%, rgba(246,211,101,.05) 10%,
+    rgba(246,211,101,.55) 45%, rgba(255,200,80,.85) 55%,
+    rgba(246,211,101,.55) 65%, transparent 100%);
+  opacity: 0;
+  animation: freeme-fall-in 1s ease-out forwards;
+  pointer-events: none;
+}
+@keyframes freeme-fall-in {
+  0%   { opacity: 0; transform: translateY(-100%); }
+  60%  { opacity: 1; transform: translateY(0); }
+  100% { opacity: 0; transform: translateY(20%); }
+}
+.spark-freeme .spark-num {
+  font-size: 26vw; color: #fff;
+  text-shadow: 0 0 24px rgba(246,211,101,.95), 0 0 60px rgba(255,200,80,.7);
+  background: linear-gradient(180deg, #fff7d6, #ffd24c 50%, #c08800);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  opacity: 0; transform: scale(.2);
+  animation: freeme-num-burst 1s .6s cubic-bezier(.2,1.6,.4,1) forwards;
+  z-index: 3;
+}
+@keyframes freeme-num-burst {
+  0%   { opacity: 0; transform: scale(.2) rotate(-8deg); filter: blur(14px); }
+  60%  { opacity: 1; transform: scale(1.2) rotate(3deg); filter: blur(0); }
+  100% { opacity: 1; transform: scale(1) rotate(0); }
+}
+.freeme-strike {
+  position: absolute; left: 50%; top: 50%;
+  font-size: 7vw; color: #ff3b30; font-weight: 900;
+  transform: translate(-50%, calc(-50% + 5vw)) rotate(-12deg);
+  opacity: 0; animation: freeme-strike-in .5s 1.4s ease-out forwards;
+  z-index: 2;
+}
+.freeme-strike::before, .freeme-strike::after {
+  content: ''; position: absolute; left: -10%; right: -10%; top: 50%;
+  height: 3px; background: #ff3b30;
+}
+.freeme-strike::before { transform: rotate(-12deg); }
+.freeme-strike::after  { transform: rotate(12deg); }
+@keyframes freeme-strike-in {
+  0%   { opacity: 0; } 100% { opacity: .85; }
+}
+.freeme-confetti {
+  position: absolute; inset: 0; pointer-events: none;
+}
+.freeme-confetti span {
+  position: absolute; width: 10px; height: 14px;
+  opacity: 0;
+  animation: freeme-confetti-fall 2.4s linear forwards;
+}
+@keyframes freeme-confetti-fall {
+  0%   { opacity: 0; transform: translate(0,-10vh) rotate(0); }
+  15%  { opacity: 1; }
+  100% { opacity: 0; transform: translate(var(--dx,0), 110vh) rotate(var(--rot,720deg)); }
+}
+.spark-freeme .spark-title {
+  font-size: 34px; font-weight: 900; color: #ffd24c;
+  text-shadow: 0 0 16px rgba(246,211,101,.9), 0 2px 0 #6e5108, 0 4px 12px rgba(0,0,0,.6);
+  opacity: 0;
+  animation: freeme-title-in 1s 2s cubic-bezier(.2,1.3,.4,1) forwards;
+}
+.spark-freeme .spark-sub { color: #ffe9a8; }
+@keyframes freeme-title-in {
+  0%   { opacity: 0; transform: rotateY(-90deg) scale(.5); }
+  60%  { transform: rotateY(20deg) scale(1.05); }
+  100% { opacity: 1; transform: rotateY(0) scale(1); }
+}
+.freeme-ring {
+  position: absolute; left: 50%; top: 30%;
+  width: 70vw; max-width: 360px; aspect-ratio: 1;
+  transform: translate(-50%,-50%);
+  border-radius: 50%;
+  background: conic-gradient(from 0deg,
+    transparent, rgba(246,211,101,.6), transparent 30%,
+    transparent 60%, rgba(246,211,101,.4), transparent 90%);
+  opacity: 0;
+  animation: freeme-ring-appear .6s 2s ease-out forwards, freeme-ring-spin 8s 2.6s linear infinite;
+  pointer-events: none;
+}
+@keyframes freeme-ring-appear {
+  0%   { opacity: 0; transform: translate(-50%,-50%) scale(.4); }
+  100% { opacity: .65; transform: translate(-50%,-50%) scale(1); }
+}
+@keyframes freeme-ring-spin {
+  0%   { transform: translate(-50%,-50%) rotate(0); }
+  100% { transform: translate(-50%,-50%) rotate(360deg); }
+}
+.spark-freeme .spark-cta {
+  background: linear-gradient(135deg, #ff2d55, #ff5e3a);
+  box-shadow: 0 12px 36px rgba(255,45,85,.6);
+  font-size: 18px; padding: 16px 40px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .spark-stage, [class*="spark-"] * { animation-duration: .001s !important; animation-iteration-count: 1 !important; }
+}
+.spark-stage[data-lowend="1"] .thanks-particle,
+.spark-stage[data-lowend="1"] .discount-spark,
+.spark-stage[data-lowend="1"] .cash-coin,
+.spark-stage[data-lowend="1"] .freeme-confetti span { display: none; }

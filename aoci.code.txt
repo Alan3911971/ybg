@@ -1,0 +1,794 @@
+#AOCI-CODE-VOLUME: 1
+
+===D:/workspace-java/ybg-master/===
+AGENTS.md[SG7S]: F:项目AI协作纪律文档:绝对路径铁律、AOCI治理区块、多AI协作规则 | R:code:.aoci/config.json | A:- | S:AOCI治理区块由init追加勿删;路径以实际工作区为准
+README.md[SG5T]: F:宜必购盲盒系统总览:盲盒抽奖+商家端+物业模块,技术栈与目录结构 | R:- | A:- | S:后端SpringBoot+MySQL,前端H5直放
+规矩文档.txt[SG6M]: F:项目铁律文档:操作演示、完整闭环、四文档强制更新、G11双向备份、G32 AOCI索引规范等G系列规则 | R:- | A:- | S:改bug/更新后必须操作演示;换电脑先读G31
+采坑日志.txt[SG6L]: F:项目踩坑记录:G78换电脑恢复要点、G69-G75 AOCI使用坑 | R:- | A:- | S:换电脑/新会话必读
+shared-memory.json[SG6L]: F:项目共享记忆:环境路径、生产服务器、账号、备份状态、toolchain、aoci配置 | R:- | A:- | S:密钥脱敏;勿写明文token/密码
+知识图谱.md[SG6L]: F:项目知识图谱:架构模块、环境工具链、GitHub/NAS对接、AOCI索引G94 | R:- | A:- | S:换电脑必读环境与工具链章节
+api.js[IG5M]: F:顾客端/商家端API封装:登录、支付、抽奖等接口调用 | R:- | A:- | S:测试环境验证码123456;生产域名ybgtc.com
+choose.html[EU5T]: F:顾客端角色/商家选择入口页 | R:- | A:按merchantNo参数进入商家 | S:-
+.env.example[FC4T]: F:环境变量模板(数据库/支付等配置项示例) | R:- | A:- | S:模板非真实值,真实值见生产.env
+.env.prod.example[FC4T]: F:生产环境变量模板 | R:code:.env.example | A:- | S:生产配置参考,勿提交真实密钥
+.gitattributes[FV3T]: F:强制仓库文本文件以LF换行检出,保证AOCI baseline字节级一致 | R:- | A:- | S:字节精确是baseline前提;autocrlf会致全树stale
+.gitignore[FV3T]: F:Git忽略清单:构建产物、日志、IDE、备份及AOCI host集成文件 | R:- | A:- | S:.codex/config.toml必须ignore;aoci.txt绝不能ignore
+.mcp.json[FE4T]: F:MCP server注册表:aoci(本仓MCP) | R:- | A:aoci指向D:/tools/aoci/bin/aoci.exe --repo 本仓 mcp | S:aoci路径绑定本机绝对路径,换机需同步更新
+docker-compose.yml[OV3T]: F:容器编排配置(可选部署方式) | R:- | A:- | S:生产实际用jar+start.sh直启
+Dockerfile[OV3T]: F:后端镜像多阶段构建配置 | R:- | A:- | S:参考配置,生产以jar部署为主
+deploy-prod.sh[OV3T]: F:生产部署脚本:构建+上传+重启流程 | R:- | A:- | S:部署流程参考,实际以SFTP+start.sh为准
+draw.html[EU4T]: F:根级抽奖页(旧版) | R:- | A:- | S:根级页面
+draw.js[DB4M]: F:抽奖逻辑(旧版) | R:- | A:- | S:旧版根级脚本
+login.html[EU4T]: F:根级登录页(旧版) | R:- | A:- | S:根级页面
+login.js[DB4M]: F:登录逻辑(旧版) | R:- | A:- | S:旧版根级脚本
+merchant.html[EU4T]: F:根级商家页(旧版) | R:- | A:- | S:根级页面
+pay.html[EU4T]: F:根级支付页(旧版) | R:- | A:- | S:根级页面
+pay.js[DB4M]: F:支付逻辑(旧版) | R:- | A:- | S:旧版根级脚本
+queue.html[EU4T]: F:根级排队页(旧版) | R:- | A:- | S:根级页面
+tv.html[EU4T]: F:电视展示页 | R:- | A:- | S:根级页面
+tts.js[MM4M]: F:语音播报封装 | R:- | A:- | S:-
+wallet.html[EU4T]: F:根级钱包页(旧版) | R:- | A:- | S:根级页面
+api_live.js[IG4M]: F:线上调试API封装 | R:- | A:- | S:调试用
+choose.js[DB4M]: F:角色选择逻辑 | R:- | A:- | S:旧版根级脚本
+admin_index_live.html[EU4T]: F:后台主页线上版 | R:- | A:- | S:根级页面
+admin_index_live2.html[EU4T]: F:后台主页线上版2 | R:- | A:- | S:根级页面
+admin_login_live.html[EU4T]: F:后台登录线上版 | R:- | A:- | S:根级页面
+merchant_index_live.html[EU4T]: F:商家主页线上版 | R:- | A:- | S:根级页面
+merchant_login_live.html[EU4T]: F:商家登录线上版 | R:- | A:- | S:根级页面
+task_board.ibigou.json[ZZ3T]: F:任务看板数据 | R:- | A:- | S:数据文件
+uploaded_file[ZZ3T]: F:上传文件记录 | R:- | A:- | S:数据文件
+CHANGES_NOTES_2026-08-17_codex-d1_V2.1.md[SZ3T]: F:历史变更记录 | R:- | A:- | S:历史阶段产物
+CHANGES_NOTES_2026-08-17_codex-d1_V2.md[SZ3T]: F:历史变更记录 | R:- | A:- | S:历史阶段产物
+CHANGES_NOTES_2026-08-17_d1.md[SZ3T]: F:历史变更记录 | R:- | A:- | S:历史阶段产物
+CHANGES_NOTES_2026-08-19_codex-d1_C-FLOW.md[SZ3T]: F:历史变更记录 | R:- | A:- | S:历史阶段产物
+CHANGES_NOTES_2026-08-25_codex-d1_V2.4.md[SZ3T]: F:历史变更记录 | R:- | A:- | S:历史阶段产物
+draw.html.bak_before_unshell_20260829[ZZ3T]: F:历史备份 | R:- | A:- | S:勿删勿改
+merchant.html.bak_20260902-1817[ZZ3T]: F:历史备份 | R:- | A:- | S:勿删勿改
+merchant.html.bak_20260904-chat[ZZ3T]: F:历史备份 | R:- | A:- | S:勿删勿改
+wallet.html.bak_20260903[ZZ3T]: F:历史备份 | R:- | A:- | S:勿删勿改
+wallet.html.bak_20260903-mine[ZZ3T]: F:历史备份 | R:- | A:- | S:勿删勿改
+_analyze_live.py[ZZ3T]: F:诊断/调试脚本 | R:- | A:- | S:工具性文件,非业务资产
+_check_admin.py[ZZ3T]: F:诊断/调试脚本 | R:- | A:- | S:工具性文件,非业务资产
+_debug_admin.py[ZZ3T]: F:诊断/调试脚本 | R:- | A:- | S:工具性文件,非业务资产
+_deploy_admin_index.py[ZZ3T]: F:诊断/调试脚本 | R:- | A:- | S:工具性文件,非业务资产
+_diff_live.py[ZZ3T]: F:诊断/调试脚本 | R:- | A:- | S:工具性文件,非业务资产
+_fix_admin_index.py[ZZ3T]: F:诊断/调试脚本 | R:- | A:- | S:工具性文件,非业务资产
+_inspect_admin.py[ZZ3T]: F:诊断/调试脚本 | R:- | A:- | S:工具性文件,非业务资产
+_inspect_admin2.py[ZZ3T]: F:诊断/调试脚本 | R:- | A:- | S:工具性文件,非业务资产
+_inspect_boot.py[ZZ3T]: F:诊断/调试脚本 | R:- | A:- | S:工具性文件,非业务资产
+_inspect_merchant_index.py[ZZ3T]: F:诊断/调试脚本 | R:- | A:- | S:工具性文件,非业务资产
+_inspect_queue_tab.py[ZZ3T]: F:诊断/调试脚本 | R:- | A:- | S:工具性文件,非业务资产
+_inspect_static2.py[ZZ3T]: F:诊断/调试脚本 | R:- | A:- | S:工具性文件,非业务资产
+_inspect_static_merchant.py[ZZ3T]: F:诊断/调试脚本 | R:- | A:- | S:工具性文件,非业务资产
+_query_admin_api.py[ZZ3T]: F:诊断/调试脚本 | R:- | A:- | S:工具性文件,非业务资产
+_query_alerts.py[ZZ3T]: F:诊断/调试脚本 | R:- | A:- | S:工具性文件,非业务资产
+_test_merchant_api.py[ZZ3T]: F:诊断/调试脚本 | R:- | A:- | S:工具性文件,非业务资产
+_test_merchant_form.py[ZZ3T]: F:诊断/调试脚本 | R:- | A:- | S:工具性文件,非业务资产
+_test_merchant_phone.py[ZZ3T]: F:诊断/调试脚本 | R:- | A:- | S:工具性文件,非业务资产
+
+===D:/workspace-java/ybg-master/.codex/===
+config.toml[XG3T]: F:Codex项目级MCP配置:注册aoci MCP server | R:code:.mcp.json | A:command=D:/tools/aoci/bin/aoci.exe;args=--repo 本仓 mcp | S:由aoci init写入;Codex仅对受信任项目加载
+
+===D:/workspace-java/ybg-master/nginx/conf/===
+ybgtc.com.conf[OC3T]: F:生产nginx站点配置:域名路由/h5静态目录/后端代理 | R:- | A:站点根/www/wwwroot/ybgtc.com | S:改配置需reload nginx
+
+===D:/workspace-java/ybg-master/property/admin/===
+access.html[EU3T]: F:门禁管理页:开锁记录/权限管理 | R:- | A:- | S:物业后台页面,窄屏防变形CSS已注入
+activity-audit.html[EU3T]: F:活动审核页:抽奖活动审核 | R:- | A:- | S:物业后台页面,窄屏防变形CSS已注入
+bills.html[EU3T]: F:物业费账单管理:年度批量生成、收款、收费模式 | R:- | A:- | S:物业后台页面,窄屏防变形CSS已注入
+buildings.html[EU3T]: F:楼栋/单元/房间管理(20栋1单元601式) | R:- | A:- | S:物业后台页面,窄屏防变形CSS已注入
+dashboard.html[EU3T]: F:物业后台驾驶舱:统计概览 | R:- | A:- | S:物业后台页面,窄屏防变形CSS已注入
+devices.html[EU3T]: F:设备管理:门禁等设备 | R:- | A:- | S:物业后台页面,窄屏防变形CSS已注入
+face-audit.html[EU3T]: F:人脸审核页 | R:- | A:- | S:物业后台页面,窄屏防变形CSS已注入
+facilities.html[EU3T]: F:设施报修管理页 | R:- | A:- | S:物业后台页面,窄屏防变形CSS已注入
+index.html[EU3T]: F:物业后台主框架:侧边栏导航(含楼栋房间入口) | R:- | A:- | S:物业后台页面,窄屏防变形CSS已注入
+inspection.html[EU3T]: F:巡检管理页 | R:- | A:- | S:物业后台页面,窄屏防变形CSS已注入
+login.html[EU3T]: F:物业后台登录页 | R:- | A:- | S:物业后台页面,窄屏防变形CSS已注入
+merchant-bindings.html[EU3T]: F:商家绑定管理页 | R:- | A:- | S:物业后台页面,窄屏防变形CSS已注入
+owners.html[EU3T]: F:业主管理页 | R:- | A:- | S:物业后台页面,窄屏防变形CSS已注入
+prizes.html[EU3T]: F:奖品池管理页 | R:- | A:- | S:物业后台页面,窄屏防变形CSS已注入
+splits.html[EU3T]: F:分账管理页 | R:- | A:- | S:物业后台页面,窄屏防变形CSS已注入
+temp-parking.html[EU3T]: F:临停管理页 | R:- | A:- | S:物业后台页面,窄屏防变形CSS已注入
+vehicles.html[EU3T]: F:车辆管理页 | R:- | A:- | S:物业后台页面,窄屏防变形CSS已注入
+visitor-vehicles.html[EU3T]: F:访客车辆管理页 | R:- | A:- | S:物业后台页面,窄屏防变形CSS已注入
+vs-orders.html[EU3T]: F:访客订单管理页 | R:- | A:- | S:物业后台页面,窄屏防变形CSS已注入
+workorders.html[EU3T]: F:工单管理页 | R:- | A:- | S:物业后台页面,窄屏防变形CSS已注入
+
+===D:/workspace-java/ybg-master/property/customer/===
+access.html[EU4T]: F:业主端门禁页 | R:- | A:- | S:业主端H5页面,绑定成功即合并状态
+auto-pay.html[EU4T]: F:自动缴费设置页 | R:- | A:- | S:业主端H5页面,绑定成功即合并状态
+bills.html[EU4T]: F:业主账单页:物业费查询/缴纳 | R:- | A:- | S:业主端H5页面,绑定成功即合并状态
+bind.html[EU4T]: F:房屋绑定页:业主扫码绑定房间 | R:- | A:- | S:业主端H5页面,绑定成功即合并状态
+draw-pay.html[EU4T]: F:盲盒抽奖支付页(物业场景) | R:- | A:- | S:业主端H5页面,绑定成功即合并状态
+draw.html[EU4T]: F:抽奖页(物业盲盒) | R:- | A:- | S:业主端H5页面,绑定成功即合并状态
+face.html[EU4T]: F:人脸录入页 | R:- | A:- | S:业主端H5页面,绑定成功即合并状态
+family-bind.html[EU4T]: F:家人扫码绑定落地页:填手机号+姓名+关系 | R:- | A:- | S:业主端H5页面,绑定成功即合并状态
+family.html[EU4T]: F:家庭成员管理页:生成绑定二维码+成员列表 | R:- | A:- | S:业主端H5页面,绑定成功即合并状态
+index.html[EU4T]: F:业主端首页:服务大厅入口+家庭成员显示 | R:- | A:- | S:业主端H5页面,绑定成功即合并状态
+login.html[EU4T]: F:业主登录页:手机号+验证码 | R:- | A:- | S:业主端H5页面,绑定成功即合并状态
+pay-confirm.html[EU4T]: F:缴费确认页 | R:- | A:- | S:业主端H5页面,绑定成功即合并状态
+pay.html[EU4T]: F:缴费支付页:微信/支付宝/余额 | R:- | A:- | S:业主端H5页面,绑定成功即合并状态
+reservation.html[EU4T]: F:预约服务页 | R:- | A:- | S:业主端H5页面,绑定成功即合并状态
+services.html[EU4T]: F:服务大厅页:物业服务入口 | R:- | A:- | S:业主端H5页面,绑定成功即合并状态
+vehicles.html[EU4T]: F:业主车辆管理页 | R:- | A:- | S:业主端H5页面,绑定成功即合并状态
+visitor-parking.html[EU4T]: F:访客停车页 | R:- | A:- | S:业主端H5页面,绑定成功即合并状态
+wallet.html[EU4T]: F:业主钱包页:余额/明细 | R:- | A:- | S:业主端H5页面,绑定成功即合并状态
+workorder.html[EU4T]: F:我的工单页 | R:- | A:- | S:业主端H5页面,绑定成功即合并状态
+
+===D:/workspace-java/ybg-master/property/merchant/===
+reservation.html[EU3T]: F:商家预约页(物业相关商家预约) | R:- | A:- | S:-
+
+===D:/workspace-java/ybg-master/customer/===
+api.js[IG5M]: F:顾客端API封装:登录/支付/抽奖/钱包等接口 | R:- | A:- | S:测试环境验证码123456
+chat.html[EU4T]: F:顾客端聊天页 | R:- | A:- | S:-
+choose.html[EU4T]: F:顾客端角色/商家选择页 | R:- | A:按merchantNo进入商家 | S:-
+draw.html[EU4T]: F:顾客端抽奖页(盲盒开奖) | R:- | A:- | S:开奖触发结算
+draw.html.bak_before_unshell_20260829[ZZ3T]: F:抽奖页历史备份 | R:code:customer/draw.html | A:- | S:勿删勿改
+draw.html.bak_newver_20260829-1330[ZZ3T]: F:抽奖页新版备份 | R:code:customer/draw.html | A:- | S:勿删勿改
+draw.js[DB4M]: F:抽奖逻辑:开奖动画/结果处理 | R:code:customer/draw.html | A:- | S:-
+ibigou.html[EU4T]: F:顾客端主页(宜必购) | R:- | A:- | S:-
+index.html[EU5T]: F:顾客端首页:商家信息展示/活动入口 | R:- | A:- | S:首页含商家抽屉卡片
+lottery.css[EU3T]: F:抽奖动效样式 | R:code:customer/lottery.js | A:- | S:-
+lottery.js[KB4M]: F:抽奖动效脚本:转盘/动画 | R:code:customer/draw.html | A:- | S:-
+main.html[EU4T]: F:顾客端主框架页 | R:- | A:- | S:-
+pay.html[EU4T]: F:顾客端支付页:微信/支付宝/余额 | R:- | A:- | S:金额为0显示完成按钮
+pay.js[DB4M]: F:支付逻辑:拉起支付/回调处理 | R:code:customer/pay.html | A:- | S:-
+tts.js[MM4M]: F:语音播报封装(文本转语音) | R:- | A:- | S:商家端开奖/支付播报复用
+wallet.html[EU4T]: F:顾客端钱包页:余额/明细 | R:- | A:- | S:-
+wallet.html.bak_20260903[ZZ3T]: F:钱包页备份 | R:code:customer/wallet.html | A:- | S:勿删勿改
+wallet.html.bak_20260903-mine[ZZ3T]: F:钱包页备份(个人版) | R:code:customer/wallet.html | A:- | S:勿删勿改
+
+===D:/workspace-java/ybg-master/backend/src/main/java/com/ibigou/blindbox/controller/===
+AdminController.java[AG8M]: F:管理后台API:登录/统计/配置管理 | R:- | A:- | S:对外HTTP契约,改动需同步前端api.js
+CustomerController.java[AG8M]: F:顾客端API:首页/商家/抽奖/订单 | R:- | A:- | S:对外HTTP契约,改动需同步前端api.js
+CustomerPayController.java[AG8M]: F:顾客支付API:下单/拉起支付 | R:- | A:- | S:对外HTTP契约,改动需同步前端api.js
+MapController.java[AG8M]: F:地图/定位API:商家位置/导航 | R:- | A:- | S:对外HTTP契约,改动需同步前端api.js
+MerchantConfigController.java[AG8M]: F:商家配置API:收款码/打印/语音设置 | R:- | A:- | S:对外HTTP契约,改动需同步前端api.js
+MerchantController.java[AG8M]: F:商家端API:核销/订单/开奖 | R:- | A:- | S:对外HTTP契约,改动需同步前端api.js
+MerchantQueueController.java[AG8M]: F:商家排队API:取号/叫号 | R:- | A:- | S:对外HTTP契约,改动需同步前端api.js
+PayNotifyController.java[AG8M]: F:支付回调API:微信/支付宝异步通知 | R:- | A:- | S:对外HTTP契约,改动需同步前端api.js
+PropertyAdminController.java[AG8M]: F:物业后台API:楼栋/业主/账单/收费 | R:- | A:- | S:对外HTTP契约,改动需同步前端api.js
+PropertyAdminP1Controller.java[AG8M]: F:物业后台一期API | R:- | A:- | S:对外HTTP契约,改动需同步前端api.js
+PropertyIotWebhookController.java[AG8M]: F:物业IoT设备webhook:门禁事件上报 | R:- | A:- | S:对外HTTP契约,改动需同步前端api.js
+PropertyMerchantExtController.java[AG8M]: F:物业商家扩展API:预约/收费 | R:- | A:- | S:对外HTTP契约,改动需同步前端api.js
+PropertyOwnerController.java[AG8M]: F:业主端API:绑定/家庭成员/账单/缴费 | R:- | A:- | S:对外HTTP契约,改动需同步前端api.js
+PropertyOwnerP1Controller.java[AG8M]: F:业主端一期API | R:- | A:- | S:对外HTTP契约,改动需同步前端api.js
+PropertyPayQrController.java[AG8M]: F:物业收款码API:获取二维码/轮询 | R:- | A:- | S:对外HTTP契约,改动需同步前端api.js
+TtsController.java[AG8M]: F:语音播报API:合成文本语音 | R:- | A:- | S:对外HTTP契约,改动需同步前端api.js
+TvQueueController.java[AG8M]: F:电视排队展示API | R:- | A:- | S:对外HTTP契约,改动需同步前端api.js
+UploadController.java[AG8M]: F:文件上传API:图片/收款码 | R:- | A:- | S:对外HTTP契约,改动需同步前端api.js
+WalletApiController.java[AG8M]: F:钱包API:余额/充值/明细 | R:- | A:- | S:对外HTTP契约,改动需同步前端api.js
+WxOAuthController.java[AG8M]: F:微信OAuth登录API | R:- | A:- | S:对外HTTP契约,改动需同步前端api.js
+WxSplitNotifyController.java[AG8M]: F:微信分账回调API | R:- | A:- | S:对外HTTP契约,改动需同步前端api.js
+README.md[SZ3T]: F:controller层说明 | R:- | A:- | S:-
+
+===D:/workspace-java/ybg-master/backend/src/main/java/com/ibigou/blindbox/service/===
+AdminAuthService.java[DG8M]: F:管理后台认证:登录态/权限 | R:- | A:- | S:领域逻辑层,由controller调用
+AdminService.java[DG8M]: F:管理后台业务:统计/配置 | R:- | A:- | S:领域逻辑层,由controller调用
+AlertService.java[DG8M]: F:告警服务:设备/账单异常提醒 | R:- | A:- | S:领域逻辑层,由controller调用
+AlipayService.java[DG8M]: F:支付宝支付对接 | R:- | A:- | S:领域逻辑层,由controller调用
+AnnounceService.java[DG8M]: F:开奖播报服务:语音合成与推送 | R:- | A:- | S:领域逻辑层,由controller调用
+AuditLogService.java[DG8M]: F:审计日志服务 | R:- | A:- | S:领域逻辑层,由controller调用
+BalanceService.java[DG8M]: F:余额服务:充值/扣减/流水 | R:- | A:- | S:领域逻辑层,由controller调用
+ChatService.java[DG8M]: F:聊天消息服务 | R:- | A:- | S:领域逻辑层,由controller调用
+ConfigCryptoService.java[DG8M]: F:配置加密解密服务 | R:- | A:- | S:领域逻辑层,由controller调用
+CouponService.java[DG8M]: F:优惠券服务:立减券/核销 | R:- | A:- | S:领域逻辑层,由controller调用
+CustomerAuthService.java[DG8M]: F:顾客端认证:验证码/登录态 | R:- | A:- | S:领域逻辑层,由controller调用
+DrawResult.java[DG8M]: F:抽奖结果模型 | R:- | A:- | S:领域逻辑层,由controller调用
+DrawService.java[DG8M]: F:抽奖服务:开奖/概率/中奖结算 | R:- | A:- | S:领域逻辑层,由controller调用
+DynamicQrService.java[DG8M]: F:动态收款码服务:时效轮换 | R:- | A:- | S:领域逻辑层,由controller调用
+FlowCloseService.java[DG8M]: F:流程收尾服务 | R:- | A:- | S:领域逻辑层,由controller调用
+GlobalConfigService.java[DG8M]: F:全局配置服务 | R:- | A:- | S:领域逻辑层,由controller调用
+GroupRecordService.java[DG8M]: F:分组记录服务 | R:- | A:- | S:领域逻辑层,由controller调用
+IbigouService.java[DG8M]: F:宜必购核心业务服务 | R:- | A:- | S:领域逻辑层,由controller调用
+IdentityQrService.java[DG8M]: F:身份码服务:业主/成员扫码 | R:- | A:- | S:领域逻辑层,由controller调用
+JobService.java[DG8M]: F:定时任务服务:结算/对账 | R:- | A:- | S:领域逻辑层,由controller调用
+ManualService.java[DG8M]: F:人工核销服务 | R:- | A:- | S:领域逻辑层,由controller调用
+MemberService.java[DG8M]: F:会员服务:等级/积分 | R:- | A:- | S:领域逻辑层,由controller调用
+MerchantAuthService.java[DG8M]: F:商家端认证 | R:- | A:- | S:领域逻辑层,由controller调用
+MerchantConfigService.java[DG8M]: F:商家配置服务:收款码/打印/播报 | R:- | A:- | S:领域逻辑层,由controller调用
+MerchantWalletService.java[DG8M]: F:商家钱包服务 | R:- | A:- | S:领域逻辑层,由controller调用
+MessageService.java[DG8M]: F:消息推送服务 | R:- | A:- | S:领域逻辑层,由controller调用
+OfflineOrderService.java[DG8M]: F:离线订单服务 | R:- | A:- | S:领域逻辑层,由controller调用
+OrderCalcService.java[DG8M]: F:订单计价服务:金额计算/优惠 | R:- | A:- | S:领域逻辑层,由controller调用
+PropertyBillPaymentService.java[DG8M]: F:物业费支付服务 | R:- | A:- | S:领域逻辑层,由controller调用
+PropertyCarryOverService.java[DG8M]: F:物业费结转服务:年度批量生成 | R:- | A:- | S:领域逻辑层,由controller调用
+PropertyDashboardService.java[DG8M]: F:物业驾驶舱统计服务 | R:- | A:- | S:领域逻辑层,由controller调用
+PropertyDeductEngineService.java[DG8M]: F:物业扣款引擎:收费/开盲盒 | R:- | A:- | S:领域逻辑层,由controller调用
+PropertyDeviceAlertService.java[DG8M]: F:物业设备告警服务 | R:- | A:- | S:领域逻辑层,由controller调用
+PropertyInspectionService.java[DG8M]: F:物业巡检服务 | R:- | A:- | S:领域逻辑层,由controller调用
+PropertyReservationService.java[DG8M]: F:物业预约服务 | R:- | A:- | S:领域逻辑层,由controller调用
+PropertySplitTriggerService.java[DG8M]: F:物业分账触发服务 | R:- | A:- | S:领域逻辑层,由controller调用
+PropertyTempParkingService.java[DG8M]: F:物业临停服务 | R:- | A:- | S:领域逻辑层,由controller调用
+PropertyValueServiceOrderService.java[DG8M]: F:物业增值服务订单服务 | R:- | A:- | S:领域逻辑层,由controller调用
+PropertyWorkorderService.java[DG8M]: F:物业工单服务 | R:- | A:- | S:领域逻辑层,由controller调用
+ReportService.java[DG8M]: F:报表服务 | R:- | A:- | S:领域逻辑层,由controller调用
+SmsService.java[DG8M]: F:短信服务:验证码 | R:- | A:- | S:领域逻辑层,由controller调用
+UserMessageService.java[DG8M]: F:用户消息服务 | R:- | A:- | S:领域逻辑层,由controller调用
+WalletService.java[DG8M]: F:钱包核心服务:余额/流水/冻结 | R:- | A:- | S:领域逻辑层,由controller调用
+WechatSplitService.java[DG8M]: F:微信分账服务 | R:- | A:- | S:领域逻辑层,由controller调用
+WxPayService.java[DG8M]: F:微信支付对接:JSAPI/扫码/退款 | R:- | A:- | S:领域逻辑层,由controller调用
+WxTemplateService.java[DG8M]: F:微信模板消息服务 | R:- | A:- | S:领域逻辑层,由controller调用
+README.md[SZ3T]: F:service层说明 | R:- | A:- | S:-
+
+===D:/workspace-java/ybg-master/backend/src/main/java/com/ibigou/blindbox/entity/===
+AdminUser.java[PD6T]: F:管理后台账号实体 | R:- | A:映射表admin_user | S:JPA实体,字段与表列一致
+AnnounceLog.java[PD6T]: F:开奖播报日志实体 | R:- | A:映射表announce_log | S:JPA实体,字段与表列一致
+AuditLog.java[PD6T]: F:审计日志实体 | R:- | A:映射表audit_log | S:JPA实体,字段与表列一致
+BoxGroupPoolConfig.java[PD6T]: F:分组池配置实体 | R:- | A:映射表box_group_pool_config | S:JPA实体,字段与表列一致
+BoxGroupPrizePool.java[PD6T]: F:分组奖品池实体 | R:- | A:映射表box_group_prize_pool | S:JPA实体,字段与表列一致
+BoxPrizeLimitStat.java[PD6T]: F:奖品限领统计实体 | R:- | A:映射表box_prize_limit_stat | S:JPA实体,字段与表列一致
+BoxPrizePool.java[PD6T]: F:奖品池实体 | R:- | A:映射表box_prize_pool | S:JPA实体,字段与表列一致
+BoxPublicPool.java[PD6T]: F:公共池实体 | R:- | A:映射表box_public_pool | S:JPA实体,字段与表列一致
+ChatMessage.java[PD6T]: F:聊天消息实体 | R:- | A:映射表chat_message | S:JPA实体,字段与表列一致
+CustomerSession.java[PD6T]: F:顾客会话实体 | R:- | A:映射表customer_session | S:JPA实体,字段与表列一致
+DailyDeductQuota.java[PD6T]: F:每日扣减配额实体 | R:- | A:映射表daily_deduct_quota | S:JPA实体,字段与表列一致
+IbigouGoods.java[PD6T]: F:商品实体 | R:- | A:映射表ibigou_goods | S:JPA实体,字段与表列一致
+IbigouOrder.java[PD6T]: F:订单实体 | R:- | A:映射表ibigou_order | S:JPA实体,字段与表列一致
+MemberAppointment.java[PD6T]: F:会员预约实体 | R:- | A:映射表member_appointment | S:JPA实体,字段与表列一致
+MemberGift.java[PD6T]: F:会员赠品实体 | R:- | A:映射表member_gift | S:JPA实体,字段与表列一致
+MemberOrder.java[PD6T]: F:会员订单实体 | R:- | A:映射表member_order | S:JPA实体,字段与表列一致
+MemberProfile.java[PD6T]: F:会员档案实体 | R:- | A:映射表member_profile | S:JPA实体,字段与表列一致
+MemberVisit.java[PD6T]: F:会员到访实体 | R:- | A:映射表member_visit | S:JPA实体,字段与表列一致
+MemberWallet.java[PD6T]: F:会员钱包实体 | R:- | A:映射表lc_member_wallet | S:JPA实体,字段与表列一致
+Merchant.java[PD6T]: F:商家实体 | R:- | A:映射表merchant | S:JPA实体,字段与表列一致
+MerchantAd.java[PD6T]: F:商家广告实体 | R:- | A:映射表merchant_ad | S:JPA实体,字段与表列一致
+MerchantMemberType.java[PD6T]: F:商家会员类型实体 | R:- | A:映射表merchant_member_type | S:JPA实体,字段与表列一致
+MerchantMessage.java[PD6T]: F:商家消息实体 | R:- | A:映射表merchant_message | S:JPA实体,字段与表列一致
+MerchantPropertyBinding.java[PD6T]: F:商家物业绑定实体 | R:- | A:映射表merchant_property_binding | S:JPA实体,字段与表列一致
+MerchantQueueConfig.java[PD6T]: F:排队配置实体 | R:- | A:映射表merchant_queue_config | S:JPA实体,字段与表列一致
+MerchantQueueTicket.java[PD6T]: F:排队票号实体 | R:- | A:映射表merchant_queue_ticket | S:JPA实体,字段与表列一致
+MerchantSession.java[PD6T]: F:商家会话实体 | R:- | A:映射表merchant_session | S:JPA实体,字段与表列一致
+OfflineOrder.java[PD6T]: F:离线订单实体 | R:- | A:映射表offline_order | S:JPA实体,字段与表列一致
+PropertyAccessCredential.java[PD6T]: F:门禁凭证实体 | R:- | A:映射表property_access_credential | S:JPA实体,字段与表列一致
+PropertyAccessLog.java[PD6T]: F:门禁日志实体 | R:- | A:映射表property_access_log | S:JPA实体,字段与表列一致
+PropertyActivityAudit.java[PD6T]: F:物业活动审核实体 | R:- | A:映射表property_activity_audit | S:JPA实体,字段与表列一致
+PropertyAdmin.java[PD6T]: F:物业管理员实体 | R:- | A:映射表property_admin | S:JPA实体,字段与表列一致
+PropertyAdminSession.java[PD6T]: F:物业管理员会话实体 | R:- | A:映射表property_admin_session | S:JPA实体,字段与表列一致
+PropertyAlertRule.java[PD6T]: F:物业告警规则实体 | R:- | A:映射表property_alert_rule | S:JPA实体,字段与表列一致
+PropertyAutoPayBinding.java[PD6T]: F:物业自动缴费绑定实体 | R:- | A:映射表property_auto_pay_bindding | S:JPA实体,字段与表列一致
+PropertyBill.java[PD6T]: F:物业账单(年度批量生成)实体 | R:- | A:映射表property_bill | S:JPA实体,字段与表列一致
+PropertyBindRelation.java[PD6T]: F:房屋绑定关系实体 | R:- | A:映射表property_bind_relation | S:JPA实体,字段与表列一致
+PropertyBuilding.java[PD6T]: F:楼栋实体 | R:- | A:映射表property_building | S:JPA实体,字段与表列一致
+PropertyCommunity.java[PD6T]: F:小区实体 | R:- | A:映射表property_community | S:JPA实体,字段与表列一致
+PropertyCompany.java[PD6T]: F:物业公司实体 | R:- | A:映射表property_company | S:JPA实体,字段与表列一致
+PropertyDeductLog.java[PD6T]: F:物业扣款日志实体 | R:- | A:映射表property_deduct_log | S:JPA实体,字段与表列一致
+PropertyDevice.java[PD6T]: F:物业设备(门禁等)实体 | R:- | A:映射表property_device | S:JPA实体,字段与表列一致
+PropertyDeviceAlert.java[PD6T]: F:设备告警实体 | R:- | A:映射表property_device_alert | S:JPA实体,字段与表列一致
+PropertyFaceInfo.java[PD6T]: F:人脸信息实体 | R:- | A:映射表property_face_info | S:JPA实体,字段与表列一致
+PropertyFacility.java[PD6T]: F:设施实体 | R:- | A:映射表property_facility | S:JPA实体,字段与表列一致
+PropertyFamilyMember.java[PD6T]: F:家庭成员(扫码绑定)实体 | R:- | A:映射表property_family_member | S:JPA实体,字段与表列一致
+PropertyInspectionPlan.java[PD6T]: F:巡检计划实体 | R:- | A:映射表property_inspection_plan | S:JPA实体,字段与表列一致
+PropertyInspectionRecord.java[PD6T]: F:巡检记录实体 | R:- | A:映射表property_inspection_record | S:JPA实体,字段与表列一致
+PropertyOwner.java[PD6T]: F:业主实体 | R:- | A:映射表property_owner | S:JPA实体,字段与表列一致
+PropertyParkingFee.java[PD6T]: F:停车费实体 | R:- | A:映射表property_parking_fee | S:JPA实体,字段与表列一致
+PropertyPayment.java[PD6T]: F:物业缴费实体 | R:- | A:映射表property_payment | S:JPA实体,字段与表列一致
+PropertyPrizePool.java[PD6T]: F:物业奖品池实体 | R:- | A:映射表property_prize_pool | S:JPA实体,字段与表列一致
+PropertyReservation.java[PD6T]: F:预约实体 | R:- | A:映射表property_reservation | S:JPA实体,字段与表列一致
+PropertyRoom.java[PD6T]: F:房间(20栋1单元601式)实体 | R:- | A:映射表property_room | S:JPA实体,字段与表列一致
+PropertySplitRecord.java[PD6T]: F:分账记录实体 | R:- | A:映射表property_split_record | S:JPA实体,字段与表列一致
+PropertyTempParkingPayment.java[PD6T]: F:临停缴费实体 | R:- | A:映射表property_temp_parking_payment | S:JPA实体,字段与表列一致
+PropertyValueService.java[PD6T]: F:增值服务实体 | R:- | A:映射表property_value_service | S:JPA实体,字段与表列一致
+PropertyVehicle.java[PD6T]: F:车辆实体 | R:- | A:映射表property_vehicle | S:JPA实体,字段与表列一致
+PropertyVehicleLog.java[PD6T]: F:车辆日志实体 | R:- | A:映射表property_vehicle_log | S:JPA实体,字段与表列一致
+PropertyVisitorVehicle.java[PD6T]: F:访客车辆实体 | R:- | A:映射表property_visitor_vehicle | S:JPA实体,字段与表列一致
+PropertyVsOrder.java[PD6T]: F:访客订单实体 | R:- | A:映射表property_vs_order | S:JPA实体,字段与表列一致
+PropertyWallet.java[PD6T]: F:物业钱包实体 | R:- | A:映射表property_wallet | S:JPA实体,字段与表列一致
+PropertyWoLog.java[PD6T]: F:工单日志实体 | R:- | A:映射表property_wo_log | S:JPA实体,字段与表列一致
+PropertyWorkorder.java[PD6T]: F:工单实体 | R:- | A:映射表property_workorder | S:JPA实体,字段与表列一致
+SysAlert.java[PD6T]: F:系统告警实体 | R:- | A:映射表sys_alert | S:JPA实体,字段与表列一致
+SysGlobalConfig.java[PD6T]: F:全局配置实体 | R:- | A:映射表sys_global_config | S:JPA实体,字段与表列一致
+ThirdGroupVerifyRecord.java[PD6T]: F:第三方核销记录实体 | R:- | A:映射表third_group_verify_record | S:JPA实体,字段与表列一致
+UserAccount.java[PD6T]: F:用户账号实体 | R:- | A:映射表user_account | S:JPA实体,字段与表列一致
+UserBalanceFlow.java[PD6T]: F:余额流水实体 | R:- | A:映射表user_balance_flow | S:JPA实体,字段与表列一致
+UserCoupon.java[PD6T]: F:用户优惠券实体 | R:- | A:映射表user_coupon | S:JPA实体,字段与表列一致
+UserMessage.java[PD6T]: F:用户消息实体 | R:- | A:映射表user_message | S:JPA实体,字段与表列一致
+WxUserOpenid.java[PD6T]: F:微信openid映射实体 | R:- | A:映射表wx_user_openid | S:JPA实体,字段与表列一致
+
+===D:/workspace-java/ybg-master/backend/src/main/java/com/ibigou/blindbox/repository/===
+AdminUserRepository.java[PD6T]: F:AdminUser实体的数据访问层 | R:code:backend/src/main/java/com/ibigou/blindbox/entity/AdminUser.java | A:- | S:JPA Repository,含自定义查询
+AnnounceLogRepository.java[PD6T]: F:AnnounceLog实体的数据访问层 | R:code:backend/src/main/java/com/ibigou/blindbox/entity/AnnounceLog.java | A:- | S:JPA Repository,含自定义查询
+AuditLogRepository.java[PD6T]: F:AuditLog实体的数据访问层 | R:code:backend/src/main/java/com/ibigou/blindbox/entity/AuditLog.java | A:- | S:JPA Repository,含自定义查询
+BoxGroupPoolConfigRepository.java[PD6T]: F:BoxGroupPoolConfig实体的数据访问层 | R:code:backend/src/main/java/com/ibigou/blindbox/entity/BoxGroupPoolConfig.java | A:- | S:JPA Repository,含自定义查询
+BoxGroupPrizePoolRepository.java[PD6T]: F:BoxGroupPrizePool实体的数据访问层 | R:code:backend/src/main/java/com/ibigou/blindbox/entity/BoxGroupPrizePool.java | A:- | S:JPA Repository,含自定义查询
+BoxPrizeLimitStatRepository.java[PD6T]: F:BoxPrizeLimitStat实体的数据访问层 | R:code:backend/src/main/java/com/ibigou/blindbox/entity/BoxPrizeLimitStat.java | A:- | S:JPA Repository,含自定义查询
+BoxPrizePoolRepository.java[PD6T]: F:BoxPrizePool实体的数据访问层 | R:code:backend/src/main/java/com/ibigou/blindbox/entity/BoxPrizePool.java | A:- | S:JPA Repository,含自定义查询
+BoxPublicPoolRepository.java[PD6T]: F:BoxPublicPool实体的数据访问层 | R:code:backend/src/main/java/com/ibigou/blindbox/entity/BoxPublicPool.java | A:- | S:JPA Repository,含自定义查询
+ChatMessageRepository.java[PD6T]: F:ChatMessage实体的数据访问层 | R:code:backend/src/main/java/com/ibigou/blindbox/entity/ChatMessage.java | A:- | S:JPA Repository,含自定义查询
+CustomerSessionRepository.java[PD6T]: F:CustomerSession实体的数据访问层 | R:code:backend/src/main/java/com/ibigou/blindbox/entity/CustomerSession.java | A:- | S:JPA Repository,含自定义查询
+DailyDeductQuotaRepository.java[PD6T]: F:DailyDeductQuota实体的数据访问层 | R:code:backend/src/main/java/com/ibigou/blindbox/entity/DailyDeductQuota.java | A:- | S:JPA Repository,含自定义查询
+IbigouGoodsRepository.java[PD6T]: F:IbigouGoods实体的数据访问层 | R:code:backend/src/main/java/com/ibigou/blindbox/entity/IbigouGoods.java | A:- | S:JPA Repository,含自定义查询
+IbigouOrderRepository.java[PD6T]: F:IbigouOrder实体的数据访问层 | R:code:backend/src/main/java/com/ibigou/blindbox/entity/IbigouOrder.java | A:- | S:JPA Repository,含自定义查询
+MemberAppointmentRepository.java[PD6T]: F:MemberAppointment实体的数据访问层 | R:code:backend/src/main/java/com/ibigou/blindbox/entity/MemberAppointment.java | A:- | S:JPA Repository,含自定义查询
+MemberGiftRepository.java[PD6T]: F:MemberGift实体的数据访问层 | R:code:backend/src/main/java/com/ibigou/blindbox/entity/MemberGift.java | A:- | S:JPA Repository,含自定义查询
+MemberOrderRepository.java[PD6T]: F:MemberOrder实体的数据访问层 | R:code:backend/src/main/java/com/ibigou/blindbox/entity/MemberOrder.java | A:- | S:JPA Repository,含自定义查询
+MemberProfileRepository.java[PD6T]: F:MemberProfile实体的数据访问层 | R:code:backend/src/main/java/com/ibigou/blindbox/entity/MemberProfile.java | A:- | S:JPA Repository,含自定义查询
+MemberVisitRepository.java[PD6T]: F:MemberVisit实体的数据访问层 | R:code:backend/src/main/java/com/ibigou/blindbox/entity/MemberVisit.java | A:- | S:JPA Repository,含自定义查询
+MemberWalletRepository.java[PD6T]: F:MemberWallet实体的数据访问层 | R:code:backend/src/main/java/com/ibigou/blindbox/entity/MemberWallet.java | A:- | S:JPA Repository,含自定义查询
+MerchantAdRepository.java[PD6T]: F:MerchantAd实体的数据访问层 | R:code:backend/src/main/java/com/ibigou/blindbox/entity/MerchantAd.java | A:- | S:JPA Repository,含自定义查询
+MerchantMemberTypeRepository.java[PD6T]: F:MerchantMemberType实体的数据访问层 | R:code:backend/src/main/java/com/ibigou/blindbox/entity/MerchantMemberType.java | A:- | S:JPA Repository,含自定义查询
+MerchantMessageRepository.java[PD6T]: F:MerchantMessage实体的数据访问层 | R:code:backend/src/main/java/com/ibigou/blindbox/entity/MerchantMessage.java | A:- | S:JPA Repository,含自定义查询
+MerchantPropertyBindingRepository.java[PD6T]: F:MerchantPropertyBinding实体的数据访问层 | R:code:backend/src/main/java/com/ibigou/blindbox/entity/MerchantPropertyBinding.java | A:- | S:JPA Repository,含自定义查询
+MerchantQueueConfigRepository.java[PD6T]: F:MerchantQueueConfig实体的数据访问层 | R:code:backend/src/main/java/com/ibigou/blindbox/entity/MerchantQueueConfig.java | A:- | S:JPA Repository,含自定义查询
+MerchantQueueTicketRepository.java[PD6T]: F:MerchantQueueTicket实体的数据访问层 | R:code:backend/src/main/java/com/ibigou/blindbox/entity/MerchantQueueTicket.java | A:- | S:JPA Repository,含自定义查询
+MerchantRepository.java[PD6T]: F:Merchant实体的数据访问层 | R:code:backend/src/main/java/com/ibigou/blindbox/entity/Merchant.java | A:- | S:JPA Repository,含自定义查询
+MerchantSessionRepository.java[PD6T]: F:MerchantSession实体的数据访问层 | R:code:backend/src/main/java/com/ibigou/blindbox/entity/MerchantSession.java | A:- | S:JPA Repository,含自定义查询
+OfflineOrderRepository.java[PD6T]: F:OfflineOrder实体的数据访问层 | R:code:backend/src/main/java/com/ibigou/blindbox/entity/OfflineOrder.java | A:- | S:JPA Repository,含自定义查询
+PropertyAccessCredentialRepository.java[PD6T]: F:PropertyAccessCredential实体的数据访问层 | R:code:backend/src/main/java/com/ibigou/blindbox/entity/PropertyAccessCredential.java | A:- | S:JPA Repository,含自定义查询
+PropertyAccessLogRepository.java[PD6T]: F:PropertyAccessLog实体的数据访问层 | R:code:backend/src/main/java/com/ibigou/blindbox/entity/PropertyAccessLog.java | A:- | S:JPA Repository,含自定义查询
+PropertyActivityAuditRepository.java[PD6T]: F:PropertyActivityAudit实体的数据访问层 | R:code:backend/src/main/java/com/ibigou/blindbox/entity/PropertyActivityAudit.java | A:- | S:JPA Repository,含自定义查询
+PropertyAdminRepository.java[PD6T]: F:PropertyAdmin实体的数据访问层 | R:code:backend/src/main/java/com/ibigou/blindbox/entity/PropertyAdmin.java | A:- | S:JPA Repository,含自定义查询
+PropertyAdminSessionRepository.java[PD6T]: F:PropertyAdminSession实体的数据访问层 | R:code:backend/src/main/java/com/ibigou/blindbox/entity/PropertyAdminSession.java | A:- | S:JPA Repository,含自定义查询
+PropertyAlertRuleRepository.java[PD6T]: F:PropertyAlertRule实体的数据访问层 | R:code:backend/src/main/java/com/ibigou/blindbox/entity/PropertyAlertRule.java | A:- | S:JPA Repository,含自定义查询
+PropertyAutoPayBindingRepository.java[PD6T]: F:PropertyAutoPayBinding实体的数据访问层 | R:code:backend/src/main/java/com/ibigou/blindbox/entity/PropertyAutoPayBinding.java | A:- | S:JPA Repository,含自定义查询
+PropertyBillRepository.java[PD6T]: F:PropertyBill实体的数据访问层 | R:code:backend/src/main/java/com/ibigou/blindbox/entity/PropertyBill.java | A:- | S:JPA Repository,含自定义查询
+PropertyBindRelationRepository.java[PD6T]: F:PropertyBindRelation实体的数据访问层 | R:code:backend/src/main/java/com/ibigou/blindbox/entity/PropertyBindRelation.java | A:- | S:JPA Repository,含自定义查询
+PropertyBuildingRepository.java[PD6T]: F:PropertyBuilding实体的数据访问层 | R:code:backend/src/main/java/com/ibigou/blindbox/entity/PropertyBuilding.java | A:- | S:JPA Repository,含自定义查询
+PropertyCommunityRepository.java[PD6T]: F:PropertyCommunity实体的数据访问层 | R:code:backend/src/main/java/com/ibigou/blindbox/entity/PropertyCommunity.java | A:- | S:JPA Repository,含自定义查询
+PropertyCompanyRepository.java[PD6T]: F:PropertyCompany实体的数据访问层 | R:code:backend/src/main/java/com/ibigou/blindbox/entity/PropertyCompany.java | A:- | S:JPA Repository,含自定义查询
+PropertyDeductLogRepository.java[PD6T]: F:PropertyDeductLog实体的数据访问层 | R:code:backend/src/main/java/com/ibigou/blindbox/entity/PropertyDeductLog.java | A:- | S:JPA Repository,含自定义查询
+PropertyDeviceAlertRepository.java[PD6T]: F:PropertyDeviceAlert实体的数据访问层 | R:code:backend/src/main/java/com/ibigou/blindbox/entity/PropertyDeviceAlert.java | A:- | S:JPA Repository,含自定义查询
+PropertyDeviceRepository.java[PD6T]: F:PropertyDevice实体的数据访问层 | R:code:backend/src/main/java/com/ibigou/blindbox/entity/PropertyDevice.java | A:- | S:JPA Repository,含自定义查询
+PropertyFaceInfoRepository.java[PD6T]: F:PropertyFaceInfo实体的数据访问层 | R:code:backend/src/main/java/com/ibigou/blindbox/entity/PropertyFaceInfo.java | A:- | S:JPA Repository,含自定义查询
+PropertyFacilityRepository.java[PD6T]: F:PropertyFacility实体的数据访问层 | R:code:backend/src/main/java/com/ibigou/blindbox/entity/PropertyFacility.java | A:- | S:JPA Repository,含自定义查询
+PropertyFamilyMemberRepository.java[PD6T]: F:PropertyFamilyMember实体的数据访问层 | R:code:backend/src/main/java/com/ibigou/blindbox/entity/PropertyFamilyMember.java | A:- | S:JPA Repository,含自定义查询
+PropertyInspectionPlanRepository.java[PD6T]: F:PropertyInspectionPlan实体的数据访问层 | R:code:backend/src/main/java/com/ibigou/blindbox/entity/PropertyInspectionPlan.java | A:- | S:JPA Repository,含自定义查询
+PropertyInspectionRecordRepository.java[PD6T]: F:PropertyInspectionRecord实体的数据访问层 | R:code:backend/src/main/java/com/ibigou/blindbox/entity/PropertyInspectionRecord.java | A:- | S:JPA Repository,含自定义查询
+PropertyOwnerRepository.java[PD6T]: F:PropertyOwner实体的数据访问层 | R:code:backend/src/main/java/com/ibigou/blindbox/entity/PropertyOwner.java | A:- | S:JPA Repository,含自定义查询
+PropertyParkingFeeRepository.java[PD6T]: F:PropertyParkingFee实体的数据访问层 | R:code:backend/src/main/java/com/ibigou/blindbox/entity/PropertyParkingFee.java | A:- | S:JPA Repository,含自定义查询
+PropertyPaymentRepository.java[PD6T]: F:PropertyPayment实体的数据访问层 | R:code:backend/src/main/java/com/ibigou/blindbox/entity/PropertyPayment.java | A:- | S:JPA Repository,含自定义查询
+PropertyPrizePoolRepository.java[PD6T]: F:PropertyPrizePool实体的数据访问层 | R:code:backend/src/main/java/com/ibigou/blindbox/entity/PropertyPrizePool.java | A:- | S:JPA Repository,含自定义查询
+PropertyReservationRepository.java[PD6T]: F:PropertyReservation实体的数据访问层 | R:code:backend/src/main/java/com/ibigou/blindbox/entity/PropertyReservation.java | A:- | S:JPA Repository,含自定义查询
+PropertyRoomRepository.java[PD6T]: F:PropertyRoom实体的数据访问层 | R:code:backend/src/main/java/com/ibigou/blindbox/entity/PropertyRoom.java | A:- | S:JPA Repository,含自定义查询
+PropertySplitRecordRepository.java[PD6T]: F:PropertySplitRecord实体的数据访问层 | R:code:backend/src/main/java/com/ibigou/blindbox/entity/PropertySplitRecord.java | A:- | S:JPA Repository,含自定义查询
+PropertyTempParkingPaymentRepository.java[PD6T]: F:PropertyTempParkingPayment实体的数据访问层 | R:code:backend/src/main/java/com/ibigou/blindbox/entity/PropertyTempParkingPayment.java | A:- | S:JPA Repository,含自定义查询
+PropertyValueServiceRepository.java[PD6T]: F:PropertyValueService实体的数据访问层 | R:code:backend/src/main/java/com/ibigou/blindbox/entity/PropertyValueService.java | A:- | S:JPA Repository,含自定义查询
+PropertyVehicleLogRepository.java[PD6T]: F:PropertyVehicleLog实体的数据访问层 | R:code:backend/src/main/java/com/ibigou/blindbox/entity/PropertyVehicleLog.java | A:- | S:JPA Repository,含自定义查询
+PropertyVehicleRepository.java[PD6T]: F:PropertyVehicle实体的数据访问层 | R:code:backend/src/main/java/com/ibigou/blindbox/entity/PropertyVehicle.java | A:- | S:JPA Repository,含自定义查询
+PropertyVisitorVehicleRepository.java[PD6T]: F:PropertyVisitorVehicle实体的数据访问层 | R:code:backend/src/main/java/com/ibigou/blindbox/entity/PropertyVisitorVehicle.java | A:- | S:JPA Repository,含自定义查询
+PropertyVsOrderRepository.java[PD6T]: F:PropertyVsOrder实体的数据访问层 | R:code:backend/src/main/java/com/ibigou/blindbox/entity/PropertyVsOrder.java | A:- | S:JPA Repository,含自定义查询
+PropertyWalletRepository.java[PD6T]: F:PropertyWallet实体的数据访问层 | R:code:backend/src/main/java/com/ibigou/blindbox/entity/PropertyWallet.java | A:- | S:JPA Repository,含自定义查询
+PropertyWoLogRepository.java[PD6T]: F:PropertyWoLog实体的数据访问层 | R:code:backend/src/main/java/com/ibigou/blindbox/entity/PropertyWoLog.java | A:- | S:JPA Repository,含自定义查询
+PropertyWorkorderRepository.java[PD6T]: F:PropertyWorkorder实体的数据访问层 | R:code:backend/src/main/java/com/ibigou/blindbox/entity/PropertyWorkorder.java | A:- | S:JPA Repository,含自定义查询
+SysAlertRepository.java[PD6T]: F:SysAlert实体的数据访问层 | R:code:backend/src/main/java/com/ibigou/blindbox/entity/SysAlert.java | A:- | S:JPA Repository,含自定义查询
+SysGlobalConfigRepository.java[PD6T]: F:SysGlobalConfig实体的数据访问层 | R:code:backend/src/main/java/com/ibigou/blindbox/entity/SysGlobalConfig.java | A:- | S:JPA Repository,含自定义查询
+ThirdGroupVerifyRecordRepository.java[PD6T]: F:ThirdGroupVerifyRecord实体的数据访问层 | R:code:backend/src/main/java/com/ibigou/blindbox/entity/ThirdGroupVerifyRecord.java | A:- | S:JPA Repository,含自定义查询
+UserAccountRepository.java[PD6T]: F:UserAccount实体的数据访问层 | R:code:backend/src/main/java/com/ibigou/blindbox/entity/UserAccount.java | A:- | S:JPA Repository,含自定义查询
+UserBalanceFlowRepository.java[PD6T]: F:UserBalanceFlow实体的数据访问层 | R:code:backend/src/main/java/com/ibigou/blindbox/entity/UserBalanceFlow.java | A:- | S:JPA Repository,含自定义查询
+UserCouponRepository.java[PD6T]: F:UserCoupon实体的数据访问层 | R:code:backend/src/main/java/com/ibigou/blindbox/entity/UserCoupon.java | A:- | S:JPA Repository,含自定义查询
+UserMessageRepository.java[PD6T]: F:UserMessage实体的数据访问层 | R:code:backend/src/main/java/com/ibigou/blindbox/entity/UserMessage.java | A:- | S:JPA Repository,含自定义查询
+WxUserOpenidRepository.java[PD6T]: F:WxUserOpenid实体的数据访问层 | R:code:backend/src/main/java/com/ibigou/blindbox/entity/WxUserOpenid.java | A:- | S:JPA Repository,含自定义查询
+
+===D:/workspace-java/ybg-master/backend/src/main/java/com/ibigou/blindbox/enums/===
+CouponStatus.java[DD6T]: F:优惠券状态枚举 | R:- | A:- | S:枚举常量,勿随意改值
+FlowType.java[DD6T]: F:余额流水类型枚举 | R:- | A:- | S:枚举常量,勿随意改值
+GroupChannel.java[DD6T]: F:分组渠道枚举 | R:- | A:- | S:枚举常量,勿随意改值
+LimitCycle.java[DD6T]: F:限领周期枚举 | R:- | A:- | S:枚举常量,勿随意改值
+LimitScope.java[DD6T]: F:限领范围枚举 | R:- | A:- | S:枚举常量,勿随意改值
+PoolType.java[DD6T]: F:池类型枚举 | R:- | A:- | S:枚举常量,勿随意改值
+PrizeType.java[DD6T]: F:奖品类型枚举 | R:- | A:- | S:枚举常量,勿随意改值
+RefundStatus.java[DD6T]: F:退款状态枚举 | R:- | A:- | S:枚举常量,勿随意改值
+VerifyType.java[DD6T]: F:核销类型枚举 | R:- | A:- | S:枚举常量,勿随意改值
+
+===D:/workspace-java/ybg-master/backend/src/main/java/com/ibigou/blindbox/common/===
+BizException.java[CG6T]: F:业务异常:统一抛出业务错误 | R:- | A:- | S:全后端共用
+GlobalExceptionHandler.java[CG6T]: F:全局异常处理:统一错误响应 | R:- | A:- | S:全后端共用
+QrSvgUtil.java[CG6T]: F:二维码SVG生成工具 | R:- | A:- | S:全后端共用
+Result.java[CG6T]: F:统一响应包装:code/msg/data | R:- | A:- | S:全后端共用
+
+===D:/workspace-java/ybg-master/backend/src/main/java/com/ibigou/blindbox/config/===
+AdminAuthInterceptor.java[CG6T]: F:后台登录拦截器 | R:- | A:- | S:拦截器改动影响全端认证
+CustomerAuthInterceptor.java[CG6T]: F:顾客端登录拦截器 | R:- | A:- | S:拦截器改动影响全端认证
+MerchantAuthInterceptor.java[CG6T]: F:商家端登录拦截器 | R:- | A:- | S:拦截器改动影响全端认证
+WebConfig.java[CG6T]: F:Web配置:拦截器注册/静态资源 | R:- | A:- | S:拦截器改动影响全端认证
+
+===D:/workspace-java/ybg-master/backend/===
+pom.xml[CV7T]: F:Maven构建配置:依赖/插件/打包 | R:- | A:- | S:SpringBoot多模块依赖
+cp.txt[ZZ3T]: F:classpath记录文本 | R:- | A:- | S:排查依赖用
+property-schema.sql[PD7T]: F:物业模块建表SQL | R:- | A:- | S:物业表结构依据
+
+===D:/workspace-java/ybg-master/backend/src/main/java/com/ibigou/blindbox/===
+IbigouBlindboxApplication.java[AG8T]: F:SpringBoot启动类 | R:- | A:- | S:应用入口
+
+===D:/workspace-java/ybg-master/backend/src/main/resources/===
+application.yml[FC8T]: F:主配置:数据源/Redis/MyBatis/支付 | R:- | A:- | S:环境变量覆盖生产值
+application-prod.yml[FC8T]: F:生产配置:prod profile | R:code:backend/src/main/resources/application.yml | A:- | S:生产密钥勿外泄
+
+===D:/workspace-java/ybg-master/backend/src/main/resources/db/migration/===
+V1__baseline.sql[PD7T]: F:基线建表SQL:盲盒核心表 | R:- | A:- | S:Flyway迁移链起点
+V2__ybg_bug003_ensure_draw_batch_cols.sql[PD7T]: F:抽奖批次字段补充SQL | R:- | A:- | S:修复bug003
+V3__ybg_c_return_cols.sql[PD7T]: F:顾客端回传字段SQL | R:- | A:- | S:-
+V4__lc_member_wallet.sql[PD7T]: F:会员钱包表SQL | R:- | A:- | S:-
+V5__prize_expire_time.sql[PD7T]: F:奖品过期时间字段SQL | R:- | A:- | S:-
+V6__chat_message.sql[PD7T]: F:聊天消息表SQL | R:- | A:- | S:-
+V7__customer_pay_mode.sql[PD7T]: F:顾客支付方式字段SQL | R:- | A:- | S:-
+V8__member_crm.sql[PD7T]: F:会员CRM表SQL | R:- | A:- | S:-
+V9__member_gift.sql[PD7T]: F:会员赠品表SQL | R:- | A:- | S:-
+V10__member_profile_birthday.sql[PD7T]: F:会员生日字段SQL | R:- | A:- | S:-
+V11__member_name_gender.sql[PD7T]: F:会员姓名性别字段SQL | R:- | A:- | S:-
+V12__member_type.sql[PD7T]: F:会员类型表SQL | R:- | A:- | S:-
+V13__merchant_member_type.sql[PD7T]: F:商家会员类型表SQL | R:- | A:- | S:-
+V14__property_p0_tables.sql[PD7T]: F:物业P0期表SQL:楼栋/业主/账单 | R:- | A:- | S:-
+V15__property_p1_tables.sql[PD7T]: F:物业P1期表SQL:车辆/临停/访客 | R:- | A:- | S:-
+V16__merchant_split_refactor.sql[PD7T]: F:商家分账重构SQL | R:- | A:- | S:-
+V17__facility_reservation.sql[PD7T]: F:设施预约表SQL | R:- | A:- | S:-
+V18__iot_device_alert.sql[PD7T]: F:IoT设备告警表SQL | R:- | A:- | S:-
+
+===D:/workspace-java/ybg-master/backend/src/main/resources/static/h5/===
+README.md[SZ3T]: F:h5静态资源说明 | R:- | A:- | S:-
+api.js[IG5M]: F:打包进jar的前端API封装 | R:code:api.js | A:- | S:与根目录api.js同步
+tts.js[MM4M]: F:语音播报(打包版) | R:- | A:- | S:-
+设计规范.md[SZ3T]: F:H5设计规范(打包版) | R:- | A:- | S:-
+
+===D:/workspace-java/ybg-master/backend/src/main/resources/static/h5/admin/===
+index.html[EU3T]: F:管理后台主页(打包版) | R:- | A:- | S:-
+login.html[EU3T]: F:管理后台登录页(打包版) | R:- | A:- | S:-
+
+===D:/workspace-java/ybg-master/backend/src/main/resources/static/h5/customer/===
+api.js[IG5M]: F:顾客端API(打包版) | R:code:customer/api.js | A:- | S:-
+chat.html[EU4T]: F:顾客聊天页(打包版) | R:- | A:- | S:-
+choose.html[EU4T]: F:顾客角色选择页(打包版) | R:- | A:- | S:-
+draw.html[EU4T]: F:顾客抽奖页(打包版) | R:- | A:- | S:-
+draw.js[DB4M]: F:抽奖逻辑(打包版) | R:- | A:- | S:-
+ibigou.html[EU4T]: F:顾客主页(打包版) | R:- | A:- | S:-
+index.html[EU5T]: F:顾客首页(打包版) | R:- | A:- | S:含商家抽屉卡片
+jweixin-1.6.0.js[LZ3T]: F:微信JSSDK库 | R:- | A:- | S:第三方库勿改
+login.html[EU4T]: F:顾客登录页(打包版) | R:- | A:- | S:-
+lottery.css[EU3T]: F:抽奖样式(打包版) | R:- | A:- | S:-
+lottery.js[KB4M]: F:抽奖动效(打包版) | R:- | A:- | S:-
+main.html[EU4T]: F:顾客主框架(打包版) | R:- | A:- | S:-
+merchants.html[EU4T]: F:商家列表页(打包版) | R:- | A:- | S:-
+my-orders.html[EU4T]: F:我的订单页(打包版) | R:- | A:- | S:-
+order-detail.html[EU4T]: F:订单详情页(打包版) | R:- | A:- | S:-
+pay.html[EU4T]: F:顾客支付页(打包版) | R:- | A:- | S:金额0显示完成按钮
+pay.js[DB4M]: F:支付逻辑(打包版) | R:- | A:- | S:-
+tts.js[MM4M]: F:语音播报封装(打包版) | R:- | A:- | S:-
+wallet.html[EU4T]: F:顾客钱包页(打包版) | R:- | A:- | S:-
+api.js.bak.before-formfix-20260829[ZZ3T]: F:历史备份文件 | R:- | A:- | S:勿删勿改
+draw.html.bak_before_unshell_20260829[ZZ3T]: F:历史备份文件 | R:- | A:- | S:勿删勿改
+draw.html.bak_newver_20260829-1330[ZZ3T]: F:历史备份文件 | R:- | A:- | S:勿删勿改
+ibigou.html.bak_20260903[ZZ3T]: F:历史备份文件 | R:- | A:- | S:勿删勿改
+index.html.bak_20260903[ZZ3T]: F:历史备份文件 | R:- | A:- | S:勿删勿改
+login.html.bak.before-apifix-20260829[ZZ3T]: F:历史备份文件 | R:- | A:- | S:勿删勿改
+wallet.html.bak_20260903[ZZ3T]: F:历史备份文件 | R:- | A:- | S:勿删勿改
+wallet.html.bak_20260903-mine[ZZ3T]: F:历史备份文件 | R:- | A:- | S:勿删勿改
+
+===D:/workspace-java/ybg-master/backend/src/main/resources/static/h5/merchant/===
+api.js[IG5M]: F:商家端API(打包版) | R:- | A:- | S:-
+index.html[EU5T]: F:商家端主页(打包版) | R:- | A:- | S:收款码/开奖/播报
+login.html[EU4T]: F:商家登录页(打包版) | R:- | A:- | S:-
+merchant.html[EU4T]: F:商家信息页(打包版) | R:- | A:- | S:-
+register.html[EU4T]: F:商家注册页(打包版) | R:- | A:- | S:-
+api.js.bak.before-formfix-20260829[ZZ3T]: F:历史备份文件 | R:- | A:- | S:勿删勿改
+index.html.bak_20260903-sync[ZZ3T]: F:历史备份文件 | R:- | A:- | S:勿删勿改
+index.html.bak_20260917[ZZ3T]: F:历史备份文件 | R:- | A:- | S:勿删勿改
+
+===D:/workspace-java/ybg-master/backend/src/main/resources/static/h5/static/===
+jsQR.js[LZ3T]: F:二维码识别库 | R:- | A:- | S:第三方库勿改
+
+===D:/workspace-java/ybg-master/backend/src/test/java/com/ibigou/blindbox/===
+GenDdl.java[TG5T]: F:DDL生成测试工具 | R:- | A:- | S:测试辅助
+GenHash.java[TG5T]: F:哈希生成测试工具 | R:- | A:- | S:测试辅助
+
+===D:/workspace-java/ybg-master/backend/src/test/java/com/ibigou/blindbox/service/===
+CouponServiceTest.java[TG5T]: F:优惠券服务测试 | R:- | A:- | S:-
+OrderCalcServiceTest.java[TG5T]: F:订单计价服务测试 | R:- | A:- | S:-
+PropertyDashboardServiceTest.java[TG5T]: F:物业驾驶舱服务测试 | R:- | A:- | S:-
+PropertyDeviceAlertServiceTest.java[TG5T]: F:设备告警服务测试 | R:- | A:- | S:-
+PropertyReservationServiceTest.java[TG5T]: F:预约服务测试 | R:- | A:- | S:-
+
+===D:/workspace-java/ybg-master/backend/src/main/resources/static/h5/customer/.bak_20260828-211401/===
+draw.html[ZZ3T]: F:历史备份文件 | R:- | A:- | S:勿删勿改
+draw.js[ZZ3T]: F:历史备份文件 | R:- | A:- | S:勿删勿改
+pay.html[ZZ3T]: F:历史备份文件 | R:- | A:- | S:勿删勿改
+pay.js[ZZ3T]: F:历史备份文件 | R:- | A:- | S:勿删勿改
+
+===D:/workspace-java/ybg-master/backend/src/main/resources/static/h5/customer/.bak_20260828-221455/===
+ibigou.html[ZZ3T]: F:历史备份文件 | R:- | A:- | S:勿删勿改
+index.html[ZZ3T]: F:历史备份文件 | R:- | A:- | S:勿删勿改
+wallet.html[ZZ3T]: F:历史备份文件 | R:- | A:- | S:勿删勿改
+
+===D:/workspace-java/ybg-master/backend/src/main/resources/static/h5/customer/assets/lottery/===
+README.md[ZZ3T]: F:历史备份文件 | R:- | A:- | S:勿删勿改
+
+===D:/workspace-java/ybg-master/docs/===
+DEPLOY-PROD.md[SG5M]: F:生产部署手册:服务器/nginx/jar部署 | R:- | A:- | S:项目文档,历史阶段产物
+DEPLOY.md[SG5M]: F:部署说明文档 | R:- | A:- | S:项目文档,历史阶段产物
+YBG-C-FLOW-001-20260818.md[SG5M]: F:C流程设计文档 | R:- | A:- | S:项目文档,历史阶段产物
+专业评审与提升建议.md[SG5M]: F:专业评审与提升建议 | R:- | A:- | S:项目文档,历史阶段产物
+交给Hermes的统一交接单.md[SG5M]: F:交给Hermes的交接单 | R:- | A:- | S:项目文档,历史阶段产物
+前端美化任务单-for-codex-d1.md[SG5M]: F:前端美化任务单 | R:- | A:- | S:项目文档,历史阶段产物
+前端重设计任务单-for-codex-d1-V2.md[SG5M]: F:前端重设计任务单V2 | R:- | A:- | S:项目文档,历史阶段产物
+差距分析-最终定稿.md[SG5M]: F:差距分析最终稿 | R:- | A:- | S:项目文档,历史阶段产物
+微信支付联调指引.md[SG5M]: F:微信支付联调指引 | R:- | A:- | S:项目文档,历史阶段产物
+抽奖炫酷动效设计-20260818.md[SG5M]: F:抽奖动效设计文档 | R:- | A:- | S:项目文档,历史阶段产物
+生产JAR更新手册-20260819.md[SG5M]: F:生产JAR更新手册 | R:- | A:- | S:项目文档,历史阶段产物
+知识图谱.json[SG5M]: F:知识图谱JSON数据 | R:- | A:- | S:项目文档,历史阶段产物
+知识图谱.md[SG5M]: F:知识图谱Markdown版 | R:- | A:- | S:项目文档,历史阶段产物
+系统交付总结报告-2026-08-18.md[SG5M]: F:系统交付总结报告 | R:- | A:- | S:项目文档,历史阶段产物
+系统全景交接文档-for-codex-d1.md[SG5M]: F:系统全景交接文档 | R:- | A:- | S:项目文档,历史阶段产物
+给Hermes的报告.md[SG5M]: F:给Hermes的报告 | R:- | A:- | S:项目文档,历史阶段产物
+隐私与合规说明.md[SG5M]: F:隐私与合规说明 | R:- | A:- | S:项目文档,历史阶段产物
+需求规格说明书-V1.4.md[SG5M]: F:需求规格说明书V1.4 | R:- | A:- | S:项目文档,历史阶段产物
+需求规格说明书-V1.5-最终定稿.md[SG5M]: F:需求规格说明书V1.5最终定稿 | R:- | A:- | S:项目文档,历史阶段产物
+验收报告-V2.4-部署-2026-08-26.md[SG5M]: F:验收报告V2.4部署 | R:- | A:- | S:项目文档,历史阶段产物
+验收报告-前端重设计V2-2026-08-18.md[SG5M]: F:验收报告前端重设计V2 | R:- | A:- | S:项目文档,历史阶段产物
+
+===D:/workspace-java/ybg-master/inbox/===
+YBG-C-FLOW-001-20260818.md[SG5M]: F:inbox收件箱C流程文档 | R:- | A:- | S:项目文档,历史阶段产物
+
+===D:/workspace-java/ybg-master/frontend/===
+README.md[SZ3T]: F:frontend目录说明 | R:- | A:- | S:-
+api.js[IG5M]: F:前端统一API封装 | R:- | A:- | S:-
+设计规范.md[SZ3T]: F:前端设计规范 | R:- | A:- | S:-
+
+===D:/workspace-java/ybg-master/frontend/customer/assets/lottery/===
+README.md[SZ3T]: F:抽奖资源说明 | R:- | A:- | S:-
+
+===D:/workspace-java/ybg-master/frontend/customer/===
+chat.html[EU4T]: F:顾客聊天页 | R:- | A:- | S:前端页面
+ibigou.html[EU4T]: F:顾客主页 | R:- | A:- | S:前端页面
+index.html[EU4T]: F:顾客首页(商家抽屉卡片) | R:- | A:- | S:前端页面
+lottery.css[EU3T]: F:抽奖样式 | R:- | A:- | S:-
+wallet.html[EU4T]: F:顾客钱包页 | R:- | A:- | S:前端页面
+wallet.html.bak_20260903[ZZ3T]: F:历史备份 | R:- | A:- | S:勿删勿改
+wallet.html.bak_20260903-mine[ZZ3T]: F:历史备份 | R:- | A:- | S:勿删勿改
+lottery.js[KB4M]: F:抽奖动效脚本(前端版) | R:- | A:- | S:与customer/lottery.js同步
+
+===D:/workspace-java/ybg-master/frontend/merchant/===
+index.html[EU4T]: F:商家端主页 | R:- | A:- | S:前端页面
+login.html[EU4T]: F:商家登录页 | R:- | A:- | S:前端页面
+index.html.bak_20260902-1817[ZZ3T]: F:历史备份 | R:- | A:- | S:勿删勿改
+index.html.bak_20260904-chat[ZZ3T]: F:历史备份 | R:- | A:- | S:勿删勿改
+
+===D:/workspace-java/ybg-master/frontend/static/===
+jsQR.js[LZ3T]: F:jsQR二维码库 | R:- | A:- | S:第三方库勿改
+
+===D:/workspace-java/ybg-master/frontend/admin/===
+access.html[EU3T]: F:物业后台页(frontend版):access | R:- | A:- | S:与property/admin同步
+activity-audit.html[EU3T]: F:物业后台页(frontend版):activity-audit | R:- | A:- | S:与property/admin同步
+bills.html[EU3T]: F:物业后台页(frontend版):bills | R:- | A:- | S:与property/admin同步
+dashboard.html[EU3T]: F:物业后台页(frontend版):dashboard | R:- | A:- | S:与property/admin同步
+devices.html[EU3T]: F:物业后台页(frontend版):devices | R:- | A:- | S:与property/admin同步
+face-audit.html[EU3T]: F:物业后台页(frontend版):face-audit | R:- | A:- | S:与property/admin同步
+facilities.html[EU3T]: F:物业后台页(frontend版):facilities | R:- | A:- | S:与property/admin同步
+index.html[EU3T]: F:物业后台页(frontend版):index | R:- | A:- | S:与property/admin同步
+inspection.html[EU3T]: F:物业后台页(frontend版):inspection | R:- | A:- | S:与property/admin同步
+login.html[EU3T]: F:物业后台页(frontend版):login | R:- | A:- | S:与property/admin同步
+merchant-bindings.html[EU3T]: F:物业后台页(frontend版):merchant-bindings | R:- | A:- | S:与property/admin同步
+owners.html[EU3T]: F:物业后台页(frontend版):owners | R:- | A:- | S:与property/admin同步
+splits.html[EU3T]: F:物业后台页(frontend版):splits | R:- | A:- | S:与property/admin同步
+temp-parking.html[EU3T]: F:物业后台页(frontend版):temp-parking | R:- | A:- | S:与property/admin同步
+vehicles.html[EU3T]: F:物业后台页(frontend版):vehicles | R:- | A:- | S:与property/admin同步
+visitor-vehicles.html[EU3T]: F:物业后台页(frontend版):visitor-vehicles | R:- | A:- | S:与property/admin同步
+vs-orders.html[EU3T]: F:物业后台页(frontend版):vs-orders | R:- | A:- | S:与property/admin同步
+workorders.html[EU3T]: F:物业后台页(frontend版):workorders | R:- | A:- | S:与property/admin同步
+
+===D:/workspace-java/ybg-master/merchant/===
+ads.html[EU3T]: F:商家广告页 | R:- | A:- | S:商家端H5
+index.html[EU5T]: F:商家主页(收款/开奖/播报) | R:- | A:- | S:商家端H5
+login.html[EU4T]: F:商家登录页 | R:- | A:- | S:商家端H5
+queue-config.html[EU3T]: F:排队配置页 | R:- | A:- | S:商家端H5
+queue.html[EU3T]: F:排队管理页 | R:- | A:- | S:商家端H5
+api.js[IG5M]: F:商家端API封装 | R:- | A:- | S:-
+
+===D:/workspace-java/ybg-master/admin/===
+index.html[EU3T]: F:管理后台主页 | R:- | A:- | S:-
+login.html[EU3T]: F:管理后台登录页 | R:- | A:- | S:-
+
+===D:/workspace-java/ybg-master/db/===
+schema.sql[PD7T]: F:核心库建表SQL(基线) | R:- | A:- | S:SQL脚本
+property_payment.sql[PD6T]: F:物业缴费相关SQL | R:- | A:- | S:SQL脚本
+property_prize_pool.sql[PD6T]: F:物业奖品池SQL | R:- | A:- | S:SQL脚本
+property_reservation_merchant.sql[PD6T]: F:物业预约商家SQL | R:- | A:- | S:SQL脚本
+property_wallet.sql[PD6T]: F:物业钱包SQL | R:- | A:- | S:SQL脚本
+
+===D:/workspace-java/ybg-master/.github/skills/speckit-analyze/===
+SKILL.md[XG3T]: F:Speckit 分析 Skill定义 | R:- | A:- | S:AI工作流工具链
+
+===D:/workspace-java/ybg-master/.github/skills/speckit-checklist/===
+SKILL.md[XG3T]: F:Speckit 清单 Skill定义 | R:- | A:- | S:AI工作流工具链
+
+===D:/workspace-java/ybg-master/.github/skills/speckit-clarify/===
+SKILL.md[XG3T]: F:Speckit 澄清 Skill定义 | R:- | A:- | S:AI工作流工具链
+
+===D:/workspace-java/ybg-master/.github/skills/speckit-constitution/===
+SKILL.md[XG3T]: F:Speckit 宪法 Skill定义 | R:- | A:- | S:AI工作流工具链
+
+===D:/workspace-java/ybg-master/.github/skills/speckit-converge/===
+SKILL.md[XG3T]: F:Speckit 收敛 Skill定义 | R:- | A:- | S:AI工作流工具链
+
+===D:/workspace-java/ybg-master/.github/skills/speckit-implement/===
+SKILL.md[XG3T]: F:Speckit 实现 Skill定义 | R:- | A:- | S:AI工作流工具链
+
+===D:/workspace-java/ybg-master/.github/skills/speckit-plan/===
+SKILL.md[XG3T]: F:Speckit 计划 Skill定义 | R:- | A:- | S:AI工作流工具链
+
+===D:/workspace-java/ybg-master/.github/skills/speckit-specify/===
+SKILL.md[XG3T]: F:Speckit 规格 Skill定义 | R:- | A:- | S:AI工作流工具链
+
+===D:/workspace-java/ybg-master/.github/skills/speckit-tasks/===
+SKILL.md[XG3T]: F:Speckit 任务 Skill定义 | R:- | A:- | S:AI工作流工具链
+
+===D:/workspace-java/ybg-master/.github/skills/speckit-taskstoissues/===
+SKILL.md[XG3T]: F:Speckit 任务转Issue Skill定义 | R:- | A:- | S:AI工作流工具链
+
+===D:/workspace-java/ybg-master/.specify/===
+.gitignore[XG3T]: F:Specify git忽略 | R:- | A:- | S:Speckit工具链
+init-options.json[XG3T]: F:初始化选项 | R:- | A:- | S:Speckit工具链
+integration.json[XG3T]: F:集成配置 | R:- | A:- | S:Speckit工具链
+
+===D:/workspace-java/ybg-master/.specify/integrations/===
+copilot.manifest.json[XG3T]: F:Copilot集成清单 | R:- | A:- | S:Speckit工具链
+speckit.manifest.json[XG3T]: F:Speckit集成清单 | R:- | A:- | S:Speckit工具链
+
+===D:/workspace-java/ybg-master/.specify/memory/===
+.constitution-template.json[XG3T]: F:宪法模板JSON | R:- | A:- | S:Speckit工具链
+constitution.md[XG3T]: F:宪法文档 | R:- | A:- | S:Speckit工具链
+
+===D:/workspace-java/ybg-master/.specify/scripts/powershell/===
+check-prerequisites.ps1[XG3T]: F:前置检查脚本 | R:- | A:- | S:Speckit工具链
+common.ps1[XG3T]: F:通用脚本 | R:- | A:- | S:Speckit工具链
+create-new-feature.ps1[XG3T]: F:新建功能脚本 | R:- | A:- | S:Speckit工具链
+resolve-template.ps1[XG3T]: F:模板解析脚本 | R:- | A:- | S:Speckit工具链
+setup-plan.ps1[XG3T]: F:计划初始化脚本 | R:- | A:- | S:Speckit工具链
+setup-tasks.ps1[XG3T]: F:任务初始化脚本 | R:- | A:- | S:Speckit工具链
+
+===D:/workspace-java/ybg-master/.specify/templates/===
+checklist-template.md[XG3T]: F:清单模板 | R:- | A:- | S:Speckit工具链
+constitution-template.md[XG3T]: F:宪法模板 | R:- | A:- | S:Speckit工具链
+plan-template.md[XG3T]: F:计划模板 | R:- | A:- | S:Speckit工具链
+spec-template.md[XG3T]: F:规格模板 | R:- | A:- | S:Speckit工具链
+tasks-template.md[XG3T]: F:任务模板 | R:- | A:- | S:Speckit工具链
+
+===D:/workspace-java/ybg-master/.specify/workflows/speckit/===
+workflow.yml[XG3T]: F:工作流定义 | R:- | A:- | S:Speckit工具链
+
+===D:/workspace-java/ybg-master/.specify/workflows/===
+workflow-registry.json[XG3T]: F:工作流注册表 | R:- | A:- | S:Speckit工具链
+
+===D:/workspace-java/ybg-master/scripts/===
+api-mock-server.js[TG3T]: F:API mock服务器 | R:- | A:- | S:联调辅助
+gen-frontend-skeleton.py[XG3T]: F:前端骨架生成脚本 | R:- | A:- | S:开发脚本
+gen_frontend_v2.py[XG3T]: F:前端生成脚本V2 | R:- | A:- | S:开发脚本
+gen_frontend_v3.py[XG3T]: F:前端生成脚本V3 | R:- | A:- | S:开发脚本
+gen_knowledge_graph.py[XG3T]: F:知识图谱生成脚本 | R:- | A:- | S:开发脚本
+reset_test_data.sql[PD6T]: F:测试数据重置SQL | R:- | A:- | S:SQL脚本
+run_failed_smokes.py[TG3T]: F:重跑失败smoke | R:- | A:- | S:测试脚本
+run_ybg_smoke_with_timeout.py[TG3T]: F:带超时smoke | R:- | A:- | S:测试脚本
+smoke_advanced.py[TG3T]: F:进阶smoke | R:- | A:- | S:测试脚本
+smoke_job.py[TG3T]: F:任务smoke | R:- | A:- | S:测试脚本
+smoke_job_wait.py[TG3T]: F:任务等待smoke | R:- | A:- | S:测试脚本
+smoke_v15_announce.py[TG3T]: F:播报smoke | R:- | A:- | S:测试脚本
+smoke_v15_deduct.py[TG3T]: F:扣款smoke | R:- | A:- | S:测试脚本
+smoke_v15_manualverify.py[TG3T]: F:人工核销smoke | R:- | A:- | S:测试脚本
+smoke_v15_member.py[TG3T]: F:会员smoke | R:- | A:- | S:测试脚本
+smoke_v15_modeb.py[TG3T]: F:模式B smoke | R:- | A:- | S:测试脚本
+smoke_v15_p0.py[TG3T]: F:P0 smoke | R:- | A:- | S:测试脚本
+smoke_v15_p1.py[TG3T]: F:P1 smoke | R:- | A:- | S:测试脚本
+smoke_v15_p2.py[TG3T]: F:P2 smoke | R:- | A:- | S:测试脚本
+smoke_v15_return.py[TG3T]: F:退货smoke | R:- | A:- | S:测试脚本
+smoke_v15_revoke.py[TG3T]: F:撤销smoke | R:- | A:- | S:测试脚本
+verify-prod.sh[OV3T]: F:生产验证脚本 | R:- | A:- | S:运维脚本
+wallet_test_004.py[TG3T]: F:钱包测试脚本 | R:- | A:- | S:测试脚本
+
+===D:/workspace-java/ybg-master/scripts/_templates/admin/===
+index.html[XG3T]: F:后台主页模板 | R:- | A:- | S:生成模板
+login.html[XG3T]: F:后台登录模板 | R:- | A:- | S:生成模板
+
+===D:/workspace-java/ybg-master/scripts/_templates/customer/===
+ibigou.html[XG3T]: F:顾客主页模板 | R:- | A:- | S:生成模板
+index.html[XG3T]: F:顾客首页模板 | R:- | A:- | S:生成模板
+wallet.html[XG3T]: F:钱包页模板 | R:- | A:- | S:生成模板
+
+===D:/workspace-java/ybg-master/scripts/_templates/merchant/===
+index.html[XG3T]: F:商家主页模板 | R:- | A:- | S:生成模板
+login.html[XG3T]: F:商家登录模板 | R:- | A:- | S:生成模板
+
+===D:/workspace-java/ybg-master/scripts/_templates/static/===
+jsQR.js[LZ3T]: F:jsQR模板 | R:- | A:- | S:第三方库
+
+===D:/workspace-java/ybg-master/_restore/===
+check_record.py[ZZ3T]: F:恢复/提取辅助文件 | R:- | A:- | S:工具性文件,非业务资产
+extract_and_sync.py[ZZ3T]: F:恢复/提取辅助文件 | R:- | A:- | S:工具性文件,非业务资产
+ibigou_javap.txt[ZZ3T]: F:恢复/提取辅助文件 | R:- | A:- | S:工具性文件,非业务资产
+parse_cp.py[ZZ3T]: F:恢复/提取辅助文件 | R:- | A:- | S:工具性文件,非业务资产
+patch_ibigou.py[ZZ3T]: F:恢复/提取辅助文件 | R:- | A:- | S:工具性文件,非业务资产
+patch_speak.py[ZZ3T]: F:恢复/提取辅助文件 | R:- | A:- | S:工具性文件,非业务资产
+read_btspeak.py[ZZ3T]: F:恢复/提取辅助文件 | R:- | A:- | S:工具性文件,非业务资产
+read_ibigou.py[ZZ3T]: F:恢复/提取辅助文件 | R:- | A:- | S:工具性文件,非业务资产
+read_ibigou2.py[ZZ3T]: F:恢复/提取辅助文件 | R:- | A:- | S:工具性文件,非业务资产
+read_poll.py[ZZ3T]: F:恢复/提取辅助文件 | R:- | A:- | S:工具性文件,非业务资产
+update_log.py[ZZ3T]: F:恢复/提取辅助文件 | R:- | A:- | S:工具性文件,非业务资产
+verify_speak.py[ZZ3T]: F:恢复/提取辅助文件 | R:- | A:- | S:工具性文件,非业务资产
+verify_sync.py[ZZ3T]: F:恢复/提取辅助文件 | R:- | A:- | S:工具性文件,非业务资产
+
+===D:/workspace-java/ybg-master/_restore/extract/BOOT-INF/classes/===
+application-prod.yml[ZZ3T]: F:恢复/提取辅助文件 | R:- | A:- | S:工具性文件,非业务资产
+application.yml[ZZ3T]: F:恢复/提取辅助文件 | R:- | A:- | S:工具性文件,非业务资产
+
+===D:/workspace-java/ybg-master/_restore/extract/BOOT-INF/classes/db/migration/===
+V1__baseline.sql[ZZ3T]: F:恢复/提取辅助文件 | R:- | A:- | S:工具性文件,非业务资产
+V2__ybg_bug003_ensure_draw_batch_cols.sql[ZZ3T]: F:恢复/提取辅助文件 | R:- | A:- | S:工具性文件,非业务资产
+V3__ybg_c_return_cols.sql[ZZ3T]: F:恢复/提取辅助文件 | R:- | A:- | S:工具性文件,非业务资产
+V4__lc_member_wallet.sql[ZZ3T]: F:恢复/提取辅助文件 | R:- | A:- | S:工具性文件,非业务资产
+V5__prize_expire_time.sql[ZZ3T]: F:恢复/提取辅助文件 | R:- | A:- | S:工具性文件,非业务资产
+V6__chat_message.sql[ZZ3T]: F:恢复/提取辅助文件 | R:- | A:- | S:工具性文件,非业务资产
+V7__customer_pay_mode.sql[ZZ3T]: F:恢复/提取辅助文件 | R:- | A:- | S:工具性文件,非业务资产
+
+===D:/workspace-java/ybg-master/_restore/extract/BOOT-INF/classes/static/h5/===
+README.md[ZZ3T]: F:恢复/提取辅助文件 | R:- | A:- | S:工具性文件,非业务资产
+api.js[ZZ3T]: F:恢复/提取辅助文件 | R:- | A:- | S:工具性文件,非业务资产
+tts.js[ZZ3T]: F:恢复/提取辅助文件 | R:- | A:- | S:工具性文件,非业务资产
+设计规范.md[ZZ3T]: F:恢复/提取辅助文件 | R:- | A:- | S:工具性文件,非业务资产
+
+===D:/workspace-java/ybg-master/_restore/extract/BOOT-INF/classes/static/h5/admin/===
+index.html[ZZ3T]: F:恢复/提取辅助文件 | R:- | A:- | S:工具性文件,非业务资产
+login.html[ZZ3T]: F:恢复/提取辅助文件 | R:- | A:- | S:工具性文件,非业务资产
+
+===D:/workspace-java/ybg-master/_restore/extract/BOOT-INF/classes/static/h5/customer/.bak_20260828-211401/===
+draw.html[ZZ3T]: F:恢复/提取辅助文件 | R:- | A:- | S:工具性文件,非业务资产
+draw.js[ZZ3T]: F:恢复/提取辅助文件 | R:- | A:- | S:工具性文件,非业务资产
+pay.html[ZZ3T]: F:恢复/提取辅助文件 | R:- | A:- | S:工具性文件,非业务资产
+pay.js[ZZ3T]: F:恢复/提取辅助文件 | R:- | A:- | S:工具性文件,非业务资产
+
+===D:/workspace-java/ybg-master/_restore/extract/BOOT-INF/classes/static/h5/customer/.bak_20260828-221455/===
+ibigou.html[ZZ3T]: F:恢复/提取辅助文件 | R:- | A:- | S:工具性文件,非业务资产
+index.html[ZZ3T]: F:恢复/提取辅助文件 | R:- | A:- | S:工具性文件,非业务资产
+wallet.html[ZZ3T]: F:恢复/提取辅助文件 | R:- | A:- | S:工具性文件,非业务资产
+
+===D:/workspace-java/ybg-master/_restore/extract/BOOT-INF/classes/static/h5/customer/===
+api.js[ZZ3T]: F:恢复/提取辅助文件 | R:- | A:- | S:工具性文件,非业务资产
+api.js.bak.before-formfix-20260829[ZZ3T]: F:恢复/提取辅助文件 | R:- | A:- | S:工具性文件,非业务资产
+chat.html[ZZ3T]: F:恢复/提取辅助文件 | R:- | A:- | S:工具性文件,非业务资产
+choose.html[ZZ3T]: F:恢复/提取辅助文件 | R:- | A:- | S:工具性文件,非业务资产
+draw.html[ZZ3T]: F:恢复/提取辅助文件 | R:- | A:- | S:工具性文件,非业务资产
+draw.html.bak_before_unshell_20260829[ZZ3T]: F:恢复/提取辅助文件 | R:- | A:- | S:工具性文件,非业务资产
+draw.html.bak_newver_20260829-1330[ZZ3T]: F:恢复/提取辅助文件 | R:- | A:- | S:工具性文件,非业务资产
+draw.js[ZZ3T]: F:恢复/提取辅助文件 | R:- | A:- | S:工具性文件,非业务资产
+ibigou.html[ZZ3T]: F:恢复/提取辅助文件 | R:- | A:- | S:工具性文件,非业务资产
+ibigou.html.bak_20260903[ZZ3T]: F:恢复/提取辅助文件 | R:- | A:- | S:工具性文件,非业务资产
+index.html[ZZ3T]: F:恢复/提取辅助文件 | R:- | A:- | S:工具性文件,非业务资产
+index.html.bak_20260903[ZZ3T]: F:恢复/提取辅助文件 | R:- | A:- | S:工具性文件,非业务资产
+login.html[ZZ3T]: F:恢复/提取辅助文件 | R:- | A:- | S:工具性文件,非业务资产
+login.html.bak.before-apifix-20260829[ZZ3T]: F:恢复/提取辅助文件 | R:- | A:- | S:工具性文件,非业务资产
+lottery.css[ZZ3T]: F:恢复/提取辅助文件 | R:- | A:- | S:工具性文件,非业务资产
+lottery.js[ZZ3T]: F:恢复/提取辅助文件 | R:- | A:- | S:工具性文件,非业务资产
+main.html[ZZ3T]: F:恢复/提取辅助文件 | R:- | A:- | S:工具性文件,非业务资产
+my-orders.html[ZZ3T]: F:恢复/提取辅助文件 | R:- | A:- | S:工具性文件,非业务资产
+order-detail.html[ZZ3T]: F:恢复/提取辅助文件 | R:- | A:- | S:工具性文件,非业务资产
+pay.html[ZZ3T]: F:恢复/提取辅助文件 | R:- | A:- | S:工具性文件,非业务资产
+pay.js[ZZ3T]: F:恢复/提取辅助文件 | R:- | A:- | S:工具性文件,非业务资产
+tts.js[ZZ3T]: F:恢复/提取辅助文件 | R:- | A:- | S:工具性文件,非业务资产
+wallet.html[ZZ3T]: F:恢复/提取辅助文件 | R:- | A:- | S:工具性文件,非业务资产
+wallet.html.bak_20260903[ZZ3T]: F:恢复/提取辅助文件 | R:- | A:- | S:工具性文件,非业务资产
+wallet.html.bak_20260903-mine[ZZ3T]: F:恢复/提取辅助文件 | R:- | A:- | S:工具性文件,非业务资产
+
+===D:/workspace-java/ybg-master/_restore/extract/BOOT-INF/classes/static/h5/customer/assets/lottery/===
+README.md[ZZ3T]: F:恢复/提取辅助文件 | R:- | A:- | S:工具性文件,非业务资产
+
+===D:/workspace-java/ybg-master/_restore/extract/BOOT-INF/classes/static/h5/merchant/===
+api.js[ZZ3T]: F:恢复/提取辅助文件 | R:- | A:- | S:工具性文件,非业务资产
+api.js.bak.before-formfix-20260829[ZZ3T]: F:恢复/提取辅助文件 | R:- | A:- | S:工具性文件,非业务资产
+index.html[ZZ3T]: F:恢复/提取辅助文件 | R:- | A:- | S:工具性文件,非业务资产
+index.html.bak_20260903-sync[ZZ3T]: F:恢复/提取辅助文件 | R:- | A:- | S:工具性文件,非业务资产
+login.html[ZZ3T]: F:恢复/提取辅助文件 | R:- | A:- | S:工具性文件,非业务资产
+merchant.html[ZZ3T]: F:恢复/提取辅助文件 | R:- | A:- | S:工具性文件,非业务资产
+register.html[ZZ3T]: F:恢复/提取辅助文件 | R:- | A:- | S:工具性文件,非业务资产
+
+===D:/workspace-java/ybg-master/_restore/extract/BOOT-INF/classes/static/h5/static/===
+jsQR.js[ZZ3T]: F:恢复/提取辅助文件 | R:- | A:- | S:工具性文件,非业务资产
+
+===D:/workspace-java/ybg-master/_restore/extract/BOOT-INF/===
+classpath.idx[ZZ3T]: F:恢复/提取辅助文件 | R:- | A:- | S:工具性文件,非业务资产
+layers.idx[ZZ3T]: F:恢复/提取辅助文件 | R:- | A:- | S:工具性文件,非业务资产
+
+===D:/workspace-java/ybg-master/_restore/extract/META-INF/===
+MANIFEST.MF[ZZ3T]: F:恢复/提取辅助文件 | R:- | A:- | S:工具性文件,非业务资产
+
+===D:/workspace-java/ybg-master/_restore/extract/META-INF/maven/com.ibigou/ibigou-blindbox/===
+pom.properties[ZZ3T]: F:恢复/提取辅助文件 | R:- | A:- | S:工具性文件,非业务资产
+pom.xml[ZZ3T]: F:恢复/提取辅助文件 | R:- | A:- | S:工具性文件,非业务资产
+
+===D:/workspace-java/ybg-master/_restore/extract/META-INF/services/===
+java.nio.file.spi.FileSystemProvider[ZZ3T]: F:恢复/提取辅助文件 | R:- | A:- | S:工具性文件,非业务资产

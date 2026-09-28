@@ -38,6 +38,10 @@ public class MerchantQueueConfig {
     @Column(columnDefinition = "TEXT")
     private String seatConfig;
 
+    /** 叫号播报自定义文字，如"请您用餐了" */
+    @Column(length = 100)
+    private String callText = "请您用餐了";
+
     @Column(nullable = false, updatable = false)
     private LocalDateTime createTime;
 

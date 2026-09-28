@@ -1,7 +1,7 @@
 {
   "project": "宜必购盲盒系统 (ybgtc.com)",
-  "last_updated": "2026-09-18",
-  "note": "业主在线缴纳物业费闭环+支付侧两个现存bug修复",
+  "last_updated": "2026-09-28",
+  "note": "AOCI 仓库认知索引已建立（641条 aligned）",
   "environment": {
     "code_root": "D:\\workspace-java\\ybg-master",
     "backend_root": "D:\\workspace-java\\ybg-master\\backend",
@@ -865,6 +865,37 @@
       "property/customer/pay.html",
       "property/customer/draw.html",
       "property/customer/pay-confirm.html"
+    ]
+  },
+  "aoci": {
+    "cli": "D:\\tools\\aoci\\bin\\aoci.exe",
+    "cli_version": "v0.1.0-rc15 (2026-09-25 build, D:\\tools\\aoci)",
+    "index_root": "D:\\workspace-java\\ybg-master",
+    "assets": {
+      "aoci_txt": "D:\\workspace-java\\ybg-master\\aoci.txt",
+      "code_txt": "D:\\workspace-java\\ybg-master\\aoci.code.txt",
+      "meta_txt": "D:\\workspace-java\\ybg-master\\aoci.meta.txt",
+      "dot_aoci": "D:\\workspace-java\\ybg-master\\.aoci",
+      "mcp_json": "D:\\workspace-java\\ybg-master\\.mcp.json",
+      "codex_config": "D:\\workspace-java\\ybg-master\\.codex\\config.toml"
+    },
+    "status": {
+      "entries": 641,
+      "baseline_files": 753,
+      "governance_aligned": true,
+      "verified_date": "2026-09-28"
+    },
+    "usage": {
+      "rules": "aoci_rules (会话运行合同)",
+      "overview": "aoci_overview (恢复全仓认知)",
+      "maintain": "aoci_maintain (变化后维护)",
+      "update_entry": "aoci update-entry --path --entry --source-sha256",
+      "verify": "aoci verify (对齐校验)"
+    },
+    "notes": [
+      "临时脚本放 D:\\workspace-java\\ 下，禁止放仓库根",
+      "中文条目写入必须用 Python subprocess，PowerShell 传参不可靠",
+      "换电脑拷贝 D:\\tools\\aoci + 项目目录即可，无需重新 init"
     ]
   }
 }

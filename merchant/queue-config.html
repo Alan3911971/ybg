@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>排队配置</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:#f8fafc;}
+.topbar{background:#fff;padding:16px 20px;box-shadow:0 1px 3px rgba(0,0,0,0.05);display:flex;justify-content:space-between;align-items:center;}
+.topbar h1{font-size:18px;font-weight:700;}
+.topbar a{color:#4f46e5;text-decoration:none;font-size:14px;}
+.card{margin:16px;padding:20px;background:#fff;border-radius:12px;}
+.card h2{font-size:16px;font-weight:700;margin-bottom:16px;}
+.form-group{margin-bottom:14px;}
+.form-group label{display:block;font-size:14px;color:#64748b;margin-bottom:6px;}
+.form-group input,.form-group select{width:100%;padding:10px;border:1px solid #e2e8f0;border-radius:8px;font-size:14px;}
+.btn{padding:12px 24px;background:#4f46e5;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;}
+.seats-row{display:flex;gap:10px;align-items:center;margin-bottom:10px;}
+.seats-row input{flex:1;}
+.seats-row button{padding:8px 16px;background:#ef4444;color:#fff;border:none;border-radius:6px;cursor:pointer;}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <h1>排队配置</h1>
+  <a href="queue.html">← 叫号面板</a>
+</div>
+
+<div class="card">
+  <h2>基本设置</h2>
+  <div class="form-group">
+    <label>叫号前缀（如 A/B/C）</label>
+    <input type="text" id="prefix" value="A" maxlength="2">
+  </div>
+  <div class="form-group">
+    <label>窗口数</label>
+    <input type="number" id="windowCount" value="1" min="1" max="10">
+  </div>
+  <div class="form-group">
+    <label>预计等待时间（分钟）</label>
+    <input type="number" id="estWaitMin" value="10" min="1" max="120">
+  </div>
+  <div class="form-group">
+    <label>是否启用排队</label>
+    <select id="enabled">
+      <option value="1">启用</option>
+      <option value="0">关闭</option>
+    </select>
+  </div>
+</div>
+
+<div class="card">
+  <h2>桌型配置（餐饮用，可留空）</h2>
+  <div id="seatList"></div>
+  <button class="btn" style="background:#10b981;margin-bottom:16px;" onclick="addSeat()">+ 添加桌型</button>
+</div>
+
+<button class="btn" style="width:calc(100% - 32px);margin:0 16px 20px;" onclick="save()">保存配置</button>
+
+<script>
+var merchantNo = new URLSearchParams(location.search).get('merchantNo') || 'M001';
+function api(path, method){return fetch(path,{method:method||'GET'}).then(function(r){return r.json();});}
+
+function load(){
+  api('/api/merchant/queue/config?merchantNo='+merchantNo).then(function(res){
+    if(res.code!==0 || !res.data) return;
+    var c = res.data;
+    document.getElementById('prefix').value = c.prefix || 'A';
+    document.getElementById('windowCount').value = c.windowCount || 1;
+    document.getElementById('estWaitMin').value = c.estWaitMin || 10;
+    document.getElementById('enabled').value = c.enabled || 1;
+    // 桌型
+    if(c.seatConfig){
+      var seats = JSON.parse(c.seatConfig);
+      seats.forEach(function(s){ addSeat(s.seats, s.tables); });
+    }
+  });
+}
+function addSeat(seats, tables){
+  var div = document.createElement('div');
+  div.className = 'seats-row';
+  div.innerHTML = '<input type="number" class="seat-input" placeholder="人数" value="'+(seats||'')+'" min="1" max="20">'+
+    '<input type="number" class="tables-input" placeholder="桌数" value="'+(tables||'')+'" min="1" max="50">'+
+    '<button onclick="this.parentElement.remove()">删除</button>';
+  document.getElementById('seatList').appendChild(div);
+}
+function save(){
+  var prefix = document.getElementById('prefix').value;
+  var windowCount = document.getElementById('windowCount').value;
+  var estWaitMin = document.getElementById('estWaitMin').value;
+  var enabled = document.getElementById('enabled').value;
+  // 桌型配置
+  var seats = [];
+  document.querySelectorAll('.seats-row').forEach(function(row){
+    var s = row.querySelector('.seat-input').value;
+    var t = row.querySelector('.tables-input').value;
+    if(s && t) seats.push({seats: parseInt(s), tables: parseInt(t)});
+  });
+  var seatConfig = seats.length ? JSON.stringify(seats) : null;
+  var url = '/api/merchant/queue/config?merchantNo='+merchantNo+'&prefix='+prefix+
+    '&windowCount='+windowCount+'&estWaitMin='+estWaitMin+'&enabled='+enabled;
+  if(seatConfig) url += '&seatConfig='+encodeURIComponent(seatConfig);
+  api(url, 'POST').then(function(res){
+    if(res.code!==0){alert(res.msg);return;}
+    alert('保存成功');
+  });
+}
+load();
+</script>
+</body>
+</html>
