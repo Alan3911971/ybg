@@ -3,47 +3,61 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>电视叫号屏</title>
+<title>宜必购共享营销系统 · 电视大屏</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;}
-body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:#0f172a;color:#fff;overflow:hidden;height:100vh;}
-/* 整体布局：顶部条56 + 主区(1080-56-56) + 底部字幕56，比例协调 */
-.header{height:56px;display:flex;justify-content:space-between;align-items:center;padding:0 28px;background:#1e293b;}
-.header h1{font-size:22px;font-weight:700;}
-.header .time{font-size:15px;color:#94a3b8;}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Microsoft YaHei",sans-serif;background:#0b1220;color:#fff;overflow:hidden;height:100vh;}
+/* ===== 整体布局：顶栏56 + 主区 + 底部字幕56 ===== */
+.header{height:56px;display:flex;justify-content:space-between;align-items:center;padding:0 24px;background:#111c33;border-bottom:2px solid #1e3a5f;}
+.header h1{font-size:22px;font-weight:800;color:#38bdf8;}
+.header .merchant-no{font-size:13px;color:#64748b;background:#1e293b;border-radius:6px;padding:3px 10px;margin-left:12px;}
+.header .right-group{display:flex;align-items:center;}
+.header .wait-total{font-size:14px;color:#94a3b8;margin-right:16px;}
+.header .time{font-size:18px;font-weight:700;color:#e2e8f0;}
+.header .btn{margin-left:12px;}
 .main{display:flex;height:calc(100vh - 56px - 56px);}
-/* 底部字幕：56px细条 + 22px小字，静态居中（4.4不依赖动画） */
-.ticker{position:fixed;bottom:0;left:0;right:0;height:56px;background:#1e293b;display:flex;align-items:center;justify-content:center;overflow:hidden;border-top:1px solid #334155;z-index:60;}
-.ticker-inner{white-space:nowrap;font-size:22px;color:#e2e8f0;font-weight:500;}
-.left{width:33%;display:flex;flex-direction:column;background:#1e293b;}
-.left .qr-area{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:80px 0 40px 0;}
-.left .call-area{flex:0 0 auto;display:flex;flex-direction:column;justify-content:center;align-items:center;padding:22px 0 14px 0;}
-.left .call-area .label{font-size:18px;color:#94a3b8;margin-bottom:14px;letter-spacing:4px;}
-.left .call-area .ticket{font-size:110px;font-weight:900;background:linear-gradient(135deg,#4f46e5,#7c3aed);-webkit-background-clip:text;-webkit-text-fill-color:transparent;line-height:1;-webkit-animation:breathe 2s ease-in-out infinite;animation:breathe 2s ease-in-out infinite;}
-@-webkit-keyframes breathe{0%,100%{-webkit-transform:scale(1);opacity:1;}50%{-webkit-transform:scale(1.05);opacity:0.9;}}
-@keyframes breathe{0%,100%{transform:scale(1);opacity:1;}50%{transform:scale(1.05);opacity:0.9;}}
-.left .call-area .call-info{font-size:20px;color:#e2e8f0;margin-top:10px;text-align:center;}
-.left .call-area .waiting-count{font-size:15px;color:#94a3b8;margin-top:6px;}
-.left .queue-area{flex:1;background:#0f172a;padding:12px;overflow:hidden;position:relative;border-top:1px solid #334155;}
-.queue-header{display:flex;margin-bottom:10px;}
-.queue-header .col-label{flex:1;text-align:center;font-size:14px;color:#94a3b8;background:#1e293b;padding:6px 0;border-radius:6px;margin-right:10px;}
-.queue-header .col-label:last-child{margin-right:0;}
-.queue-cols{display:flex;height:calc(100% - 40px);}
-.queue-col{flex:1;overflow:hidden;position:relative;margin-right:10px;}
-.queue-col:last-child{margin-right:0;}
-.queue-col-inner{-webkit-animation:scrollUp 10s linear infinite;animation:scrollUp 10s linear infinite;}
+/* ===== 左区 60%：当前叫号横幅 + 队列 ===== */
+.left{width:60%;display:flex;flex-direction:column;padding:12px 0 12px 16px;}
+.call-area{flex:0 0 168px;background:linear-gradient(135deg,#7c2d12,#9a3412);border-radius:10px;display:flex;align-items:center;padding:0 26px;margin-bottom:12px;position:relative;overflow:hidden;}
+.call-area .call-label{font-size:16px;color:#fed7aa;margin-right:20px;letter-spacing:2px;flex-shrink:0;}
+.call-area .ticket{font-size:82px;font-weight:900;color:#fff;line-height:1;letter-spacing:2px;-webkit-animation:breathe 2s ease-in-out infinite;animation:breathe 2s ease-in-out infinite;flex-shrink:0;}
+.call-area .call-info{font-size:28px;color:#ffedd5;font-weight:700;margin-left:22px;}
+.call-area .no-call{color:#7f1d1d;font-size:64px;flex-shrink:0;}
+@-webkit-keyframes breathe{0%,100%{-webkit-transform:scale(1);opacity:1;}50%{-webkit-transform:scale(1.05);opacity:0.92;}}
+@keyframes breathe{0%,100%{transform:scale(1);opacity:1;}50%{transform:scale(1.05);opacity:0.92;}}
+.queue-area{flex:1;background:#0f1b2e;border:1px solid #1e3a5f;border-radius:10px;padding:12px;overflow:hidden;position:relative;}
+/* 5 列用 inline-block + 百分比宽度（Android 4.4 WebView 对 flex:1 均分不可靠，曾出现只渲染 3 列） */
+.queue-header{display:block;margin-bottom:10px;font-size:0;}
+.queue-header .col-label{display:inline-block;vertical-align:top;width:19.4%;margin-right:0.75%;text-align:center;font-size:14px;font-weight:800;color:#fff;padding:6px 0;border-radius:6px;}
+.queue-header .col-label:last-child{margin-right:0;width:19.4%;}
+.queue-cols{display:block;height:calc(100% - 46px);font-size:0;}
+.queue-col{display:inline-block;vertical-align:top;width:19.4%;margin-right:0.75%;overflow:hidden;position:relative;font-size:0;}
+.queue-col:last-child{margin-right:0;width:19.4%;}
+.queue-col-inner{-webkit-animation:scrollUp 12s linear infinite;animation:scrollUp 12s linear infinite;}
 @-webkit-keyframes scrollUp{0%{-webkit-transform:translateY(0);}100%{-webkit-transform:translateY(-50%);}}
 @keyframes scrollUp{0%{transform:translateY(0);}100%{transform:translateY(-50%);}}
-.queue-col .ticket-item{font-size:16px;padding:5px 10px;background:#334155;border-radius:6px;text-align:center;margin-bottom:6px;}
-.right{width:67%;background:#0f172a;position:relative;display:flex;align-items:center;justify-content:center;border-left:2px solid #334155;}
-.right img{width:100%;height:100%;object-fit:cover;transition:opacity 0.5s;}
-.right video{max-width:100%;max-height:100%;object-fit:contain;}
+.queue-col .ticket-item{font-size:24px;font-weight:700;padding:6px 10px;background:#16233a;border:1px solid #1e3a5f;border-radius:8px;text-align:center;margin-bottom:8px;}
+/* 列头与号码按桌型分色 */
+.col-A{background:#1d4ed8;} .ticket-A{color:#93c5fd;}
+.col-B{background:#059669;} .ticket-B{color:#6ee7b7;}
+.col-C{background:#b45309;} .ticket-C{color:#fcd34d;}
+.col-D{background:#7e22ce;} .ticket-D{color:#d8b4fe;}
+.col-E{background:#be185d;} .ticket-E{color:#f9a8d4;}
+/* ===== 右区 40%：广告 + 最近中奖 ===== */
+.right{width:40%;background:#0b1220;position:relative;display:flex;flex-direction:column;padding:12px 16px 12px 12px;}
+.ad-wrap{flex:1;background:#0f1b2e;border:1px solid #1e3a5f;border-radius:10px;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;}
+.ad-wrap img{width:100%;height:100%;object-fit:cover;transition:opacity 0.5s;}
+.ad-wrap video{max-width:100%;max-height:100%;object-fit:contain;}
 .ad-fade{opacity:0;}
 .ad-show{opacity:1;-webkit-transition:opacity 0.5s;transition:opacity 0.5s;}
-.queue .label{font-size:20px;color:#94a3b8;width:80px;flex-shrink:0;}
-.queue .tickets{display:flex;gap:16px;flex-wrap:wrap;}
-.queue .ticket-item{font-size:22px;padding:6px 16px;background:#334155;border-radius:8px;}
-.no-call{color:#475569;font-size:120px;}
+.wins-area{flex:0 0 128px;background:#0f1b2e;border:1px solid #1e3a5f;border-radius:10px;margin-top:12px;padding:10px 14px;overflow:hidden;position:relative;}
+.wins-area .wins-title{font-size:13px;color:#f59e0b;font-weight:700;margin-bottom:6px;}
+.wins-area .win-line{font-size:15px;color:#e2e8f0;line-height:1.8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.wins-area .win-line b{color:#fbbf24;}
+/* ===== 底部字幕 56px ===== */
+.ticker{position:fixed;bottom:0;left:0;right:0;height:56px;background:#1a2744;display:flex;align-items:center;justify-content:center;overflow:hidden;border-top:2px solid #1e3a5f;z-index:60;}
+.ticker-inner{white-space:nowrap;font-size:22px;color:#38bdf8;font-weight:700;}
+/* ===== 中奖全屏动画 ===== */
 .win-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.85);display:none;align-items:center;justify-content:center;z-index:9999;}
 .win-overlay.show{display:flex;-webkit-animation:fadeIn 0.5s;animation:fadeIn 0.5s;}
 .win-box{text-align:center;color:#fff;}
@@ -58,36 +72,47 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;backgrou
 </head>
 <body>
 <div class="header">
-  <h1 id="merchantName">加载中...</h1>
   <div style="display:flex;align-items:center;">
-    <button onclick="toggleMute()" id="muteBtn" style="background:rgba(0,0,0,0.5);color:#fff;padding:5px 12px;border:none;border-radius:6px;font-size:13px;cursor:pointer;margin-right:12px;">🔊 声音开</button>
-    <button onclick="enterFullscreen()" style="background:rgba(0,0,0,0.5);color:#fff;padding:5px 12px;border:none;border-radius:6px;font-size:13px;cursor:pointer;margin-right:12px;">📺 全屏</button>
-    <div class="time" id="clock"></div>
+    <h1 id="merchantName">加载中...</h1>
+    <span class="merchant-no" id="merchantNoLabel"></span>
+  </div>
+  <div class="right-group">
+    <span class="wait-total" id="waitTotal">等待中：--</span>
+    <button onclick="toggleMute()" id="muteBtn" style="background:rgba(0,0,0,0.5);color:#fff;padding:5px 12px;border:none;border-radius:6px;font-size:13px;cursor:pointer;">🔊 声音开</button>
+    <button onclick="enterFullscreen()" style="background:rgba(0,0,0,0.5);color:#fff;padding:5px 12px;border:none;border-radius:6px;font-size:13px;cursor:pointer;">📺 全屏</button>
+    <div class="time" id="clock" style="margin-left:14px;"></div>
   </div>
 </div>
+
 <div class="main">
+  <!-- 左区：当前叫号横幅 + 队列 -->
   <div class="left">
     <div class="call-area">
-      <div class="label">当前叫号</div>
+      <div class="call-label">当前叫号</div>
       <div id="callingTicket" class="no-call">--</div>
       <div id="callingInfo" class="call-info"></div>
-      <div id="waitingCount" class="waiting-count"></div>
     </div>
     <div class="queue-area" id="queueArea"></div>
   </div>
-  <div class="right" id="adArea">
-    <div style="position:absolute;top:10px;right:10px;background:rgba(0,0,0,0.5);color:#94a3b8;padding:4px 10px;border-radius:6px;font-size:12px;z-index:10;">广告</div>
-    <div style="color:#475569;font-size:24px;">暂无广告</div>
+  <!-- 右区：广告 + 最近中奖（右下角留白，二维码由 APK 原生层显示） -->
+  <div class="right">
+    <div class="ad-wrap" id="adArea">
+      <div style="position:absolute;top:10px;right:10px;background:rgba(0,0,0,0.5);color:#94a3b8;padding:4px 10px;border-radius:6px;font-size:12px;z-index:10;">广告</div>
+      <div style="color:#475569;font-size:24px;">暂无广告</div>
+    </div>
+    <div class="wins-area">
+      <div class="wins-title">🎉 最近中奖</div>
+      <div id="winsList"><div class="win-line" style="color:#475569;">暂无中奖记录</div></div>
+    </div>
   </div>
 </div>
 
 <!-- 滚动字幕 -->
 <div class="ticker">
-  <div class="ticker-inner" id="tickerText">欢迎光临鲜果时光·宜必购合作店 · 扫码取号排队 · 我们将竭诚为您服务 ·</div>
+  <div class="ticker-inner" id="tickerText">🎁 排队期间扫码抽盲盒，中奖免单/打折 · 欢迎光临 · 我们将竭诚为您服务 ·</div>
 </div>
 
-<!-- 音频激活提示 -->
-<!-- 音频提示（默认隐藏：电视APK走原生播报无需点击，网页版加载时自动初始化） -->
+<!-- 音频提示（电视APK走原生播报，网页版自动初始化） -->
 <div id="audioHint" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.9);display:none;align-items:center;justify-content:center;z-index:99999;cursor:pointer;" onclick="enableAudio()">
   <div style="text-align:center;color:#fff;">
     <div style="font-size:48px;margin-bottom:20px;">🔊</div>
@@ -95,6 +120,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;backgrou
     <div style="font-size:18px;color:#94a3b8;margin-top:10px;">开启后叫号语音播报正常播放</div>
   </div>
 </div>
+
 <div class="win-overlay" id="winOverlay">
   <div class="win-box">
     <div class="trophy">🎉</div>
@@ -102,8 +128,6 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;backgrou
     <div class="desc" id="winDesc">恭喜您抽中奖品</div>
   </div>
 </div>
-
-
 
 <script>
 // ===== 老 WebView（Android 4.4）ES5 polyfill：Promise / URLSearchParams / fetch =====
@@ -114,7 +138,6 @@ if(!window.Promise){
       this._state=PENDING; this._value=undefined; this._queue=[];
       var self=this;
       function resolve(v){
-        // thenable 展平：resolve 一个 Promise 时等待其完成（原生 Promise 语义）
         if(v && (typeof v==='object' || typeof v==='function') && typeof v.then==='function'){
           var called=false;
           v.then(
@@ -171,7 +194,6 @@ if(!window.URLSearchParams){
     return this._params[name] !== undefined ? this._params[name] : null;
   };
 }
-// fetch polyfill（兼容 Android 4.4 老 WebView：fetch API 不支持，用 XHR 实现）
 if(!window.fetch){
   window.fetch = function(url, opts){
     opts = opts || {};
@@ -202,7 +224,6 @@ if(!window.fetch){
     });
   };
 }
-// URL 参数解析（兼容 Android 4.4 老 WebView：URLSearchParams 不支持）
 function getQueryParam(name){
   var m = new RegExp('[?&]' + name + '=([^&]*)').exec(location.search);
   return m ? decodeURIComponent(m[1].replace(/\+/g, ' ')) : null;
@@ -214,7 +235,6 @@ var adTimer = null;
 var lastCalledNo = null;
 var lastWinIds = '';
 
-// 全局音频上下文（必须在用户手势里创建/resume）
 var audioCtx = null;
 var muted = false;
 var debugBox = null;
@@ -229,11 +249,9 @@ function dbg(msg){
   console.log('[AUDIO]', msg);
 }
 
-// 开启音频：电视APK走原生播报桥接（无需点击/手势）；网页版自动初始化 AudioContext
 function enableAudio(){
   var hint = document.getElementById('audioHint');
   if(hint) hint.style.display = 'none';
-  // 电视 APK：原生 TTS 通道，无需 AudioContext
   if(window.AndroidTV && typeof AndroidTV.isAvailable === 'function' && AndroidTV.isAvailable()){
     dbg('电视原生播报通道已就绪');
     return;
@@ -248,10 +266,8 @@ function enableAudio(){
   }
 }
 
-// 用 Web Audio API 播放 TTS 音频
 function playTts(text){
   if(muted) { dbg('已静音，跳过: ' + text); return; }
-  // 电视 APK 原生播报桥接（Android 4.2 WebView 无 Web Audio API，走原生 TTS）
   if(window.AndroidTV && typeof AndroidTV.isAvailable === 'function' && AndroidTV.isAvailable()){
     var tvUrl = '/api/tts?text=' + encodeURIComponent(text) + '&spd=3';
     dbg('原生播报: ' + text);
@@ -284,7 +300,6 @@ function playTts(text){
   });
 }
 
-// 叫号语音播报（重复3次，每次间隔8秒）
 function speakCall(ticketNo, windowNo, seats, callText){
   var text = '';
   if(seats) text += seats + '人桌，';
@@ -292,7 +307,6 @@ function speakCall(ticketNo, windowNo, seats, callText){
   if(callText) text += '，' + callText;
   else if(windowNo) text += '，到 ' + windowNo + ' 号窗口';
   text += '。';
-  // 安排3次播报，间隔8秒
   for(var i=0; i<3; i++){
     setTimeout(function(){ playTts(text); }, i * 8000);
   }
@@ -301,12 +315,21 @@ function speakCall(ticketNo, windowNo, seats, callText){
 function clock(){
   var d = new Date();
   var pad = function(n){return n<10?'0'+n:n;};
-  document.getElementById('clock').textContent = d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate())+' '+pad(d.getHours())+':'+pad(d.getMinutes())+':'+pad(d.getSeconds());
+  var el = document.getElementById('clock');
+  if(el) el.textContent = d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate())+' '+pad(d.getHours())+':'+pad(d.getMinutes())+':'+pad(d.getSeconds());
 }
 setInterval(clock, 1000); clock();
 
-// 二维码由 APK 原生层显示（页面不再生成，避免双二维码）
+// ===== 桌型与号段字母映射（与后端 prefixBySeats 一致）=====
+var SEAT_META = [
+  {seats:2, prefix:'A', label:'A · 2人桌', colClass:'col-A', ticketClass:'ticket-A'},
+  {seats:4, prefix:'B', label:'B · 4人桌', colClass:'col-B', ticketClass:'ticket-B'},
+  {seats:6, prefix:'C', label:'C · 6人桌', colClass:'col-C', ticketClass:'ticket-C'},
+  {seats:10, prefix:'D', label:'D · 10人桌', colClass:'col-D', ticketClass:'ticket-D'},
+  {seats:12, prefix:'E', label:'E · 12人桌', colClass:'col-E', ticketClass:'ticket-E'}
+];
 
+// 广告渲染（逻辑不变：原生播放器/HTML5 video/图片 + 淡入 + 定时轮播）
 function renderAd(){
   var area = document.getElementById('adArea');
   if(!ads.length){ area.innerHTML = '<div style="color:#475569;font-size:24px;">暂无广告</div>'; return; }
@@ -314,14 +337,11 @@ function renderAd(){
   area.innerHTML = '';
   var el;
   if(ad.type === 'video'){
-    // 电视 APK（含原生播放器桥接）：视频广告交给原生 MediaPlayer 播放（http 直连），
-    // 网页版/无桥接环境仍用 HTML5 video
     if(window.AndroidTV && typeof AndroidTV.playVideo === 'function'){
       var vurl = ad.url;
       if(vurl.indexOf('/') === 0){ vurl = 'http://ybgtc.com' + vurl; }
       else if(vurl.indexOf('https://') === 0){ vurl = 'http://' + vurl.substring(8); }
       console.log('[ad] native playVideo ' + vurl);
-      // 页面加载早期调 JS 接口可能报 NPObject（已由 APK 侧 runOnUiThread 修复），短延迟保险
       setTimeout(function(){ AndroidTV.playVideo(vurl); }, 800);
       var dur2 = (ad.durationSec || 10) * 1000;
       if(adTimer) clearTimeout(adTimer);
@@ -329,8 +349,6 @@ function renderAd(){
       return;
     }
     el = document.createElement('video');
-    // 电视 APK：4.4 视频由系统 MediaPlayer 独立拉流（不走 WebView SSL 放行），
-    // https 证书不被系统信任导致 stalled → 改用 http 直连；网页版仍用原 URL
     var vurl = ad.url;
     if(window.AndroidTV){
       if(vurl.indexOf('/') === 0){ vurl = 'http://ybgtc.com' + vurl; }
@@ -344,7 +362,6 @@ function renderAd(){
     el.setAttribute('playsinline','');
     el.preload = 'auto';
     el.controls = false;
-    // 4.4 老 WebView 内联视频播放不成熟（inLineVideoEnabled=0），长时间未播放回退静态图
     var fbTimer = null;
     var doFallback = function(){
       if(fbTimer){ clearTimeout(fbTimer); fbTimer = null; }
@@ -368,7 +385,6 @@ function renderAd(){
       if(p && typeof p.catch === 'function'){ p.catch(function(e){ console.warn('video play fail', e); }); }
     });
   } else {
-    // 图片广告：电视环境先停掉原生视频播放器（同样短延迟保险）
     if(window.AndroidTV && typeof AndroidTV.stopVideo === 'function'){
       setTimeout(function(){ AndroidTV.stopVideo(); }, 800);
     }
@@ -377,15 +393,30 @@ function renderAd(){
   }
   el.className = 'ad-fade';
   area.appendChild(el);
-  // 淡入
   setTimeout(function(){ el.classList.remove('ad-fade'); el.classList.add('ad-show'); }, 10);
   var dur = (ad.durationSec || 10) * 1000;
   if(adTimer) clearTimeout(adTimer);
   adTimer = setTimeout(function(){ adIdx++; renderAd(); }, dur);
 }
 
-var lastCalledNo = null;
-// 电视屏数据刷新：用原生 XHR（Android 4.4 WebView 最可靠，绕开 fetch/Promise polyfill 链路）
+// 最近中奖列表渲染（新）
+function renderWins(wins){
+  var box = document.getElementById('winsList');
+  if(!box) return;
+  if(!wins || !wins.length){
+    box.innerHTML = '<div class="win-line" style="color:#475569;">暂无中奖记录</div>';
+    return;
+  }
+  var html = '';
+  for(var i=0; i<Math.min(wins.length, 4); i++){
+    var w = wins[i];
+    var who = w.ticketNo ? ' ' + w.ticketNo + ' 号' : '';
+    html += '<div class="win-line">恭喜' + who + '抽中 <b>' + (w.prizeName || '大奖') + '</b></div>';
+  }
+  box.innerHTML = html;
+}
+
+// 电视屏数据刷新：原生 XHR（Android 4.4 最可靠）
 function refresh(){
   var xhr = new XMLHttpRequest();
   xhr.open('GET', '/api/tv/'+merchantNo+'/screen', true);
@@ -396,52 +427,57 @@ function refresh(){
     try { res = JSON.parse(xhr.responseText); } catch(e){ return; }
     if(res.code !== 0) return;
     var d = res.data;
-    document.getElementById('merchantName').textContent = d.merchantName || merchantNo;
+    var nameEl = document.getElementById('merchantName');
+    if(nameEl) nameEl.textContent = d.merchantName || merchantNo;
+    var noEl = document.getElementById('merchantNoLabel');
+    if(noEl) noEl.textContent = '商家号 ' + merchantNo;
+    // 当前叫号
     var c = d.calling;
+    var ct = document.getElementById('callingTicket');
     if(c){
-      document.getElementById('callingTicket').textContent = c.ticketNo;
-      document.getElementById('callingTicket').className = 'ticket';
+      ct.textContent = c.ticketNo;
+      ct.className = 'ticket';
       var info = '';
       if(c.seats) info += c.seats + '人桌';
       if(c.windowNo) info += ' · ' + c.windowNo + '号窗口';
       document.getElementById('callingInfo').textContent = info;
-      // 新叫号才语音播报
       if(lastCalledNo !== c.ticketNo){
         speakCall(c.ticketNo, c.windowNo, c.seats, d.config && d.config.callText);
         lastCalledNo = c.ticketNo;
       }
     } else {
-      document.getElementById('callingTicket').textContent = '--';
-      document.getElementById('callingTicket').className = 'no-call';
+      ct.textContent = '--';
+      ct.className = 'no-call';
       document.getElementById('callingInfo').textContent = '';
       lastCalledNo = null;
     }
-    document.getElementById('waitingCount').textContent = '等待中：' + (d.waiting || []).length + ' 人';
-    // 等待队列：顶部固定横排桌型标题，每列往下滚动
     var waiting = d.waiting || [];
-    var seatTypes = ['2人桌', '4人桌', '6人桌', '10人桌', '12人桌'];
+    var wt = document.getElementById('waitTotal');
+    if(wt) wt.textContent = '等待中：' + waiting.length + ' 桌';
+    // 队列：5 列桌型分色渲染
     var bySeats = {};
     waiting.forEach(function(t){
-      var key = t.seats ? t.seats + '人桌' : '普通';
+      var key = t.seats ? t.seats : 0;
       if(!bySeats[key]) bySeats[key] = [];
       bySeats[key].push(t.ticketNo);
     });
     var html = '<div class="queue-header">';
-    seatTypes.forEach(function(st){
-      var cnt = (bySeats[st] || []).length;
+    SEAT_META.forEach(function(m){
+      var cnt = (bySeats[m.seats] || []).length;
       var waitMin = cnt * (d.config && d.config.estWaitMin || 10);
-      html += '<div class="col-label">'+st+'<div style="font-size:11px;color:#64748b;margin-top:3px;">等待'+cnt+'人</div><div style="font-size:10px;color:#475569;margin-top:2px;">约'+waitMin+'分钟</div></div>';
+      html += '<div class="col-label ' + m.colClass + '">' + m.label +
+              '<div style="font-size:11px;color:rgba(255,255,255,0.75);margin-top:3px;">等待' + cnt + '桌</div>' +
+              '<div style="font-size:10px;color:rgba(255,255,255,0.55);margin-top:2px;">约' + waitMin + '分钟</div></div>';
     });
     html += '</div><div class="queue-cols">';
-    seatTypes.forEach(function(st){
-      var nos = bySeats[st] || [];
-      // 号少（少于5个）静态单份显示，避免滚动复制两份导致看起来像重复数据；号多时复制两份无缝滚动
+    SEAT_META.forEach(function(m){
+      var nos = bySeats[m.seats] || [];
       var needScroll = nos.length >= 5;
       var renderList = needScroll ? nos.concat(nos) : nos;
       html += '<div class="queue-col"><div class="queue-col-inner"' + (needScroll ? '' : ' style="-webkit-animation:none;animation:none;"') + '>';
       if(renderList.length){
         renderList.forEach(function(no){
-          html += '<div class="ticket-item">'+no+'</div>';
+          html += '<div class="ticket-item ' + m.ticketClass + '">' + no + '</div>';
         });
       } else {
         html += '<div class="ticket-item" style="opacity:0.3;">--</div>';
@@ -451,26 +487,26 @@ function refresh(){
     html += '</div>';
     document.getElementById('queueArea').innerHTML = html;
     // 广告
-    console.log('[ad] check ads=' + ads.length + ' dads=' + ((d.ads||[]).length) + ' typeofPlay=' + (window.AndroidTV ? typeof AndroidTV.playVideo : 'noTV'));
     if(JSON.stringify(ads) !== JSON.stringify(d.ads)){
       ads = d.ads || [];
       adIdx = 0;
-      console.log('[ad] renderAd call');
       renderAd();
     }
-    // 中奖动画
+    // 中奖：全屏动画（最新一条）+ 右侧最近中奖列表
     var wins = d.recentWins || [];
     var winIds = wins.map(function(w){return w.winId;}).join(',');
     if(wins.length && winIds !== lastWinIds){
       showWin(wins[0]);
       lastWinIds = winIds;
     }
+    renderWins(wins);
   };
   xhr.send();
 }
 
 function showWin(win){
-  document.getElementById('winDesc').textContent = win.prizeName || '恭喜您抽中奖品';
+  var desc = document.getElementById('winDesc');
+  if(desc) desc.textContent = win.prizeName || '恭喜您抽中奖品';
   var overlay = document.getElementById('winOverlay');
   overlay.classList.add('show');
   playTts('恭喜中奖，' + (win.prizeName || '大奖'));
@@ -481,15 +517,14 @@ function enterFullscreen(){
   var el = document.documentElement;
   if (el.requestFullscreen) el.requestFullscreen();
 }
-var muted = false;
 function toggleMute(){
   muted = !muted;
-  document.getElementById('muteBtn').textContent = muted ? '🔇 声音关' : '🔊 声音开';
+  var btn = document.getElementById('muteBtn');
+  if(btn) btn.textContent = muted ? '🔇 声音关' : '🔊 声音开';
   if(muted && audioCtx) audioCtx.suspend();
   if(!muted && audioCtx) audioCtx.resume();
 }
 enableAudio();
-// 加载后自动播报一次测试音（确认语音通道，仅一次）
 setTimeout(function(){ playTts('声音已开启，叫号语音播报正常'); }, 3000);
 refresh();
 setInterval(refresh, 5000);

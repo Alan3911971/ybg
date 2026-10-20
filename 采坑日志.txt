@@ -1234,3 +1234,9 @@ G98 双数据+ABCD排号修复（2026-10-20）：①双数据根因=旧代码tic
 【G100】未读四文档被用户批评：AGENTS.md 不是规矩文档（2026-10-20）
 用户问'你的规矩文档查的是哪里的规矩文档，路径显示出来'，随后明确'你看AGENTS.md干嘛，删除这个文件'。
 教训：本项目的权威规则在根目录四文档——规矩文档.txt / 采坑日志.txt / shared-memory.json / 知识图谱.md（D:\workspace-java\ybg-master\），AGENTS.md 只是 Codex 助手的工作手册（含旧环境信息 Z盘等，已过时）；每次开工必须先读四文档（规矩文档 G12 user_rules 明确要求'每次开工前先检测知识库'），不得以系统注入文件代替。AGENTS.md 已按用户要求删除。
+
+【G101】电视屏 5 列队列只渲染 3 列：Android 4.4 WebView 的 flex:1 均分不可靠（2026-10-20）
+现象：新版 tv.html 按设计稿改造（左60%当前叫号横幅+5列分色队列 / 右40%广告+最近中奖 / 右下角二维码 / 底部活动条），投影实机截图发现队列只有 A/B/C 三列，D·10人桌、E·12人桌 区域完全空白（像素扫描 x440-767 无任何内容）。
+根因：.queue-header / .queue-cols 用 display:flex + flex:1 均分 5 列，Android 4.4 WebView（旧 WebKit）对 flex 均分计算异常——5 个 flex:1 子项只渲染出前 3 个，第 3 个（C 列）拉伸占满剩余宽度（实测 323-767px）。旧版 tv.html 也是 flex:1 但内容简单未触发，新版 col-label 加了背景色类+嵌套子 div 后暴露。
+修复：改用 display:inline-block + width:19.4% + margin-right:0.75%（5 列合计 19.4%*5+0.75%*4=100%），父容器 font-size:0 消除 inline-block 间隙；实机截图确认 5 列全部渲染（A蓝/B绿/C橙/D紫/E粉），号码 B006/D003 分色正常。
+预防：4.4 WebView 上多列均分布局优先用 inline-block+百分比，不用 flex:1；改 tv.html 后必须投影实机截图验证（本地 Chrome 预览不代表 4.4 实际渲染）。

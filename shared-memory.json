@@ -774,6 +774,21 @@
       ],
       "deployed": false,
       "tested": false
+    },
+    {
+      "date": "2026-10-20",
+      "features": [
+        "电视大屏布局改版（按'叫号为主/营销为辅/转化常驻'设计稿）：当前叫号横幅+5列分色队列(A蓝/B绿/C橙/D紫/E粉)+广告+最近中奖列表+右下二维码+底部活动条",
+        "踩坑：4.4 WebView flex:1 均分 5 列只渲染前 3 列 → 改 inline-block+width:19.4% 后 5 列正常（采坑 G101）",
+        "部署：tv.html 已上传生产（md5 633c4121ca9ccb23b4cdc9a4d20e82bb 本地=服务器），nginx 缓存已清，投影实机截图验证通过"
+      ],
+      "files_changed": [
+        "tv.html（布局重构+SEAT_META分色+最近中奖列表+顶栏等待桌数）",
+        "采坑日志.txt（G101）",
+        "知识图谱.md（电视大屏布局改版小节）"
+      ],
+      "deployed": true,
+      "tested": true
     }
   ],
   "spec_kit": {

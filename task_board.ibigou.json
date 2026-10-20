@@ -1,6 +1,6 @@
 {
   "project": "ibigou 盲盒系统 (ybgtc.com)",
-  "updated_at": "2026-10-20T08:45:00",
+  "updated_at": "2026-10-20T09:35:00",
   "hermes_wake": true,
   "notes": "2026-09-12 修正：IBIGOU-PENDING-001退款按钮已确认删除（见user_rules），已移除；新增商家列表优化提醒。",
   "tasks": [
@@ -63,6 +63,17 @@
       "depends_on": [],
       "priority": "high",
       "notes": "扫码取号双数据修复（前缀最大号+1/synchronized/幂等/唯一索引uk_merchant_ticket）+ABCDE号段排号（2人A/4人B/6人C/10人D/12人E独立001递增）+tv.html队列重复显示修复（号少静态单份）。新jar已部署(PID1412220)，queue.html/tv.html已上线，接口实测+投影截图验证通过。",
+      "waiting": []
+    },
+    {
+      "id": "IBIGOU-TV-20261020-B",
+      "title": "电视大屏布局改版（叫号横幅+5列分色+广告+中奖+活动条）",
+      "bot": "doubao-agent",
+      "status": "completed",
+      "progress": 100,
+      "depends_on": [],
+      "priority": "medium",
+      "notes": "按设计稿重构 tv.html：当前叫号横幅/5列分色队列(A-E)/右区广告+最近中奖/顶栏等待桌数/底部活动条。修复 4.4 flex 只渲染3列问题（改 inline-block）。已部署+实机截图验证。",
       "waiting": []
     }
   ]
