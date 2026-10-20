@@ -1273,3 +1273,5 @@ G98 双数据+ABCD排号修复（2026-10-20）：①双数据根因=旧代码tic
 验证：接口 /api/tv/M90380836/screen 的 recentWins 返回 [8986,8986,8986,1898]；实机 w2.png 最近中奖显示"恭喜尾号8986抽中 5立减券奖品"多行滚动、中奖弹窗正常弹出。
 踩坑：①pkill -f ibigou.jar 会误杀承载命令的 ssh 自身（远程命令行里含 ibigou.jar 字符串）→ ssh 连接 code -1，但前置 cp/md5 已执行成功，不影响部署结果；②nohup bash start.sh & 会挂住 ssh 会话（后台进程继承 stdout 管道）→ 改用 setsid nohup bash start.sh < /dev/null > log 2>&1 & 分离会话；③PowerShell 里 python3 -c 传 base64 代码无效（需在远程解码后执行），查 JSON 片段直接用 grep -o。
 预防：生产重启命令避免在命令行文本中出现被 pkill 匹配的关键字；启动服务用 setsid + </dev/null 分离；SQL 用 base64 管道执行；验证接口用 grep -o 提取 JSON 片段。
+【G105-补】滚动不动的第二根因（2026-10-20）：Android 4.4 WebView 对 JS 设置的无前缀 style.transform/style.transition 不生效（实测 wins 区两帧像素差异 0.0%），CSS 动画必须 -webkit- 双前缀（队列列表 scrollUp 一直用 -webkit-animation + @-webkit-keyframes 所以正常）。修复：wins-track 恢复 CSS animation 并写 -webkit-animation/-webkit-transform 双前缀（@-webkit-keyframes winScroll），JS 重启动画时同时设 box.style.webkitAnimation 和 box.style.animation；5 秒轮询会重建 DOM 重置动画 → renderWins 加 JSON 缓存比较，数据不变直接 return 不动 DOM。验证：连拍三帧 wins 区像素差异 30.9%/33.6%/17.2%（持续滚动+循环）。
+

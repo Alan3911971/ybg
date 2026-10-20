@@ -856,6 +856,19 @@
       ],
       "deployed": true,
       "tested": true
+    },
+    {
+      "date": "2026-10-20",
+      "features": [
+        "最近中奖滚动修复（第二版）：Android 4.4 对 JS 无前缀 style.transform 不生效（实测 0% 差异），改用 -webkit- 双前缀 CSS animation（-webkit-animation + @-webkit-keyframes winScroll + -webkit-transform），并给 renderWins 加 JSON 缓存比较防止 5 秒轮询重建 DOM 重置动画。连拍三帧像素差异 30.9%/33.6% 确认持续滚动",
+        "实机验证：m1_wins.png 显示'恭喜尾号1898抽中 ¥10余额奖品''恭喜尾号8986抽中 ¥5立减券奖品'等滚动列表"
+      ],
+      "files_changed": [
+        "ybg-master\\tv.html（wins-track -webkit- 双前缀 animation + renderWins 缓存比较）",
+        "采坑日志.txt（G105-补）、知识图谱.md"
+      ],
+      "deployed": true,
+      "tested": true
     }
   ],
   "spec_kit": {
