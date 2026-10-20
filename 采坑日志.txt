@@ -1246,3 +1246,10 @@ G98 双数据+ABCD排号修复（2026-10-20）：①双数据根因=旧代码tic
 根因：视频窗口（APK 原生层 TextureView）与页面广告区（WebView CSS 布局）分别定义，布局重构只改了页面，APK 没同步。
 修复：MainActivity 视频窗口参数按新版页面 CSS 换算：vLeft=w*0.60+12d, vTop=68d, vw=w*0.40-28d, vh=h-276d（.header 56 + .right padding 12/16 + .ad-wrap flex:1 + .wins-area 128+margin12）。1280x720(density=1) 实测 adArea=x780,y68,484x444。重新构建 APK 安装后 logcat 确认：drink.mp4 fit 858x560->484x316, video started, rendering start；截图确认视频在广告区内播放、最近中奖区未被遮挡、画面保持比例不变形。
 预防：改 tv.html 布局必须同步核对 APK 视频窗口参数（广告区位置/尺寸），改完实机连拍验证视频与图片窗口一致。
+
+【G103】电视大屏广告框塌陷：Android 4.4 WebView vh/calc 高度失效，图片跑出规划框（2026-10-20）
+现象：用户第4次反馈"轮播图和视频应该在规划的框内、图片没有在框内"。改 .ad-wrap{height:calc(100vh - 276px)} 部署后，实机截图 nb1 显示"最近中奖"标题挤到屏幕顶部（y92）、广告画面与 wins-area 重叠——广告框高度塌陷为 0。
+根因：Android 4.4 WebView 对 calc() 内 vh 单位的解析不可靠（布局视口与屏幕物理尺寸不一致时 100vh 计算错误），.ad-wrap 高度被解析为 0；而 .right 已从 flex column 改为普通 block，wins-area 顶到顶部，图片/视频画面溢出。
+修复：不再依赖 CSS vh/calc 定广告框高度。新增 layoutTV()：JS 用 window.innerHeight 实测屏幕高，直接设置 .main 内联高度 = h-112px、#adArea 内联高度 = h-276px（1280x720 下 444px，与 APK 原生视频窗口 vh=h-276d 严格一致）。.right 恢复 display:flex;flex-direction:column；.ad-wrap 高度由 JS 内联覆盖。图片 object-fit:contain（完整显示不裁剪），视频 APK fit 保持比例居中。
+验证：部署后实机连拍 ckn4-ckn8：new1.jpg 新品海报完整在广告框内（y103-483，框 y68-512），vip.jpg 会员海报完整在框内，"最近中奖"回到底部（y534-552），布局正确。
+预防：电视大屏关键容器高度禁用 CSS vh/calc（4.4 不可靠），一律 JS 实测 innerHeight 设内联 px；广告框统一尺寸 484x444@1280x720（图片 contain、视频 fit，窗口一致）。

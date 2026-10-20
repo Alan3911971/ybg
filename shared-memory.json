@@ -805,6 +805,21 @@
       ],
       "deployed": true,
       "tested": true
+    },
+    {
+      "date": "2026-10-20",
+      "features": [
+        "电视大屏广告框修复：4.4 WebView vh/calc 失效导致 ad-wrap 高度塌陷、图片跑出规划框；改 JS layoutTV() 实测 innerHeight 设置 .main=h-112、#adArea=h-276 内联 px，与 APK 视频窗口 vh=h-276d 严格一致",
+        "图片 object-fit:contain 完整显示不裁剪；实机验证 new1.jpg/vip.jpg 海报完整在框内（y103-483）、最近中奖回到底部（y534-552）",
+        "TV 页面关键容器高度禁止 CSS vh/calc，一律 JS 实测设内联 px（采坑 G103）"
+      ],
+      "files_changed": [
+        "ybg-master\\tv.html（layoutTV JS + ad-wrap 高度内联 + img contain）",
+        "采坑日志.txt（G103）",
+        "知识图谱.md（广告框统一尺寸）"
+      ],
+      "deployed": true,
+      "tested": true
     }
   ],
   "spec_kit": {

@@ -1,6 +1,6 @@
 {
   "project": "ibigou 盲盒系统 (ybgtc.com)",
-  "updated_at": "2026-10-20T10:00:00",
+  "updated_at": "2026-10-20T10:22:00",
   "hermes_wake": true,
   "notes": "2026-09-12 修正：IBIGOU-PENDING-001退款按钮已确认删除（见user_rules），已移除；新增商家列表优化提醒。",
   "tasks": [
@@ -87,6 +87,19 @@
       ],
       "priority": "high",
       "notes": "APK MainActivity 视频窗口参数从旧右67%全高改为与新版页面广告区一致（0.60w+12d / 68d / 0.40w-28d / h-276d），重建APK安装，logcat+实机连拍验证视频在广告区播放、不遮挡最近中奖、比例不变形。",
+      "waiting": []
+    },
+    {
+      "id": "IBIGOU-TV-20261020-D",
+      "title": "电视大屏广告框统一尺寸：图片/视频严格在规划框内（4.4 vh/calc 失效修复）",
+      "bot": "doubao-agent",
+      "status": "completed",
+      "progress": 100,
+      "depends_on": [
+        "IBIGOU-TV-20261020-C"
+      ],
+      "priority": "high",
+      "notes": "根因：Android 4.4 WebView calc(100vh-276px) 解析失败，.ad-wrap 高度塌陷为0，wins-area 挤到顶部、图片溢出框外。修复：新增 JS layoutTV() 用 window.innerHeight 实测设置 .main=h-112 / #adArea=h-276 内联 px（与 APK 视频窗口 vh=h-276d 一致），.right 恢复 flex column，图片改 object-fit:contain。实机连拍验证 new1.jpg/vip.jpg 完整在框内、最近中奖回底部。",
       "waiting": []
     }
   ]

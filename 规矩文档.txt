@@ -302,3 +302,11 @@ G20 | %s | 修改bug更新服务器后必须实际操作演示给用户看；演
    - PowerShell 不能可靠传递中文参数/管道，所有含中文的条目写入必须用 Python subprocess 脚本
 5. 换电脑恢复（G31 补充）：拷贝 D:\tools\aoci 与 D:\workspace-java\ybg-master 即可；索引资产随项目目录走，无需重新 init
 6. 与 G12 关系：四文档本身也是 AOCI 受管对象，更新四文档后须同步维护对应 AOCI 条目（sha 变化会 stale）
+
+========================================================
+【电视大屏布局硬约束（2026-10-20 补充）】
+1. 广告框统一尺寸：484x444 @1280x720（x780,y68），图片 contain 完整显示、视频 APK fit 保持比例，两者窗口一致、严格在框内
+2. 页面关键容器高度（.main/.adArea）禁用 CSS vh/calc（Android 4.4 解析不可靠），一律 JS layoutTV() 实测 window.innerHeight 设内联 px
+3. .right 保持 flex column，.wins-area 固定 128px + margin-top 12，永远在广告框下方
+4. APK 视频窗口参数 vLeft=0.60w+12d, vTop=68d, vw=0.40w-28d, vh=h-276d 与页面广告框同步，改布局必须同步核对
+========================================================
