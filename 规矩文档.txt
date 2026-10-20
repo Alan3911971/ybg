@@ -310,3 +310,18 @@ G20 | %s | 修改bug更新服务器后必须实际操作演示给用户看；演
 3. .right 保持 flex column，.wins-area 固定 128px + margin-top 12，永远在广告框下方
 4. APK 视频窗口参数 vLeft=0.60w+12d, vTop=68d, vw=0.40w-28d, vh=h-276d 与页面广告框同步，改布局必须同步核对
 ========================================================
+
+========================================================
+【电视大屏数据与显示规矩（2026-10-20 补充）】
+1. "最近中奖"列表口径：announce_log 最近 4 条 eventType=draw（后端 TvQueueController.recentWins），奖品名 briefPrize() 精简提取；前端最多显示 3 条
+2. 页面禁止创建任何调试 DOM（dbg() 只 console.log），大屏不允许调试文字遮挡
+3. 后端构建部署：生产服务器 /tmp/backend-build 下 mvn clean package -DskipTests → 替换 /www/wwwroot/ybgtc-app/ibigou.jar（先备份）→ bash start.sh 重启；本地 JDK C:\tools\jdk-17.0.12+7 已损坏不可用
+========================================================
+
+========================================================
+【电视大屏最近中奖展示规矩（2026-10-20 补充）】
+1. 中奖全屏动画停留 10 秒（tv.html showWin setTimeout 10000）
+2. "最近中奖"列表必须显示手机尾号（后端 recentWins 返回 phoneTail，无 phone 返 null 前端显示"顾客"）；新中奖随播报写入 announce_log.phone
+3. "最近中奖"列表带滚动：最多 6 条、向上无缝循环（wins-track CSS animation winScroll），不得静态堆叠
+4. 生产重启服务用 setsid nohup bash start.sh < /dev/null > log 2>&1 & 分离会话；pkill 关键字不要出现在承载命令的 ssh 命令行文本里（会误杀自身）
+========================================================

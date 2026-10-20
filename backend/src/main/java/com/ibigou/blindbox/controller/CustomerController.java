@@ -279,10 +279,11 @@ public class CustomerController {
         }
         String prizeName = body.get("prizeName");
         if (prizeName == null || prizeName.isEmpty()) prizeName = "神秘礼品";
+        String phone = body.get("phone");
         long seq = statRepository.countByMerchantNo(merchantNo);
         String content = "宜必购便民生活圈，恭喜您！您是本店第" + seq
                 + "位顾客，恭喜您开出" + prizeName + "奖品，请问商家本次商品金额，输入金额即可享受抵扣结算。";
-        announceService.record(merchantNo, "draw", content);
+        announceService.record(merchantNo, "draw", content, phone);
         return Result.ok();
     }
 

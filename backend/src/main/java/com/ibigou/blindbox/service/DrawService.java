@@ -213,7 +213,7 @@ public class DrawService {
                     : "余额" + result.prizeValue() + "元";
             // 第一段：立即播报中奖内容
             String firstContent = "恭喜您的盲盒开中了" + prizeTxt + "。";
-            announceService.record(merchantNo, "draw", firstContent);
+            announceService.record(merchantNo, "draw", firstContent, userPhone);
         } catch (Exception e) {
             // 播报失败不影响主流程
         }

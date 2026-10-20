@@ -22,6 +22,12 @@ public class AnnounceService {
 
     @Transactional
     public AnnounceLog record(String merchantNo, String eventType, String content) {
+        return record(merchantNo, eventType, content, null);
+    }
+
+    /** 带手机号的播报记录（电视"最近中奖"展示手机尾号） */
+    @Transactional
+    public AnnounceLog record(String merchantNo, String eventType, String content, String phone) {
         if (merchantNo == null || "PLATFORM".equals(merchantNo)) {
             return null; // 无门店上下文不播报
         }
@@ -29,6 +35,7 @@ public class AnnounceService {
         log.setMerchantNo(merchantNo);
         log.setEventType(eventType);
         log.setContent(content);
+        log.setPhone(phone);
         log.setCreateTime(LocalDateTime.now());
         return announceRepository.save(log);
     }

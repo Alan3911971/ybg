@@ -820,6 +820,42 @@
       ],
       "deployed": true,
       "tested": true
+    },
+    {
+      "date": "2026-10-20",
+      "features": [
+        "电视大屏最近中奖列表修复：后端 recentWins 从'30秒内'改为最近4条 draw 事件（announce_log 有121条），briefPrize() 提取精简奖品名；前端显示3条。接口已验返回4条，实机 w1.png 显示'恭喜抽中 ¥5立减券奖品'等",
+        "绿色'原生播报'调试文字已删：tv.html dbg() 不再创建 DOM 调试框，只 console.log",
+        "后端部署通道确立：生产服务器 mvn 构建（本地 JDK 损坏/NAS 无工程），jar 已替换并重启（Spring Boot 8.9s 启动成功，备份 ibigou.jar.bak-20261020-recentwins）"
+      ],
+      "files_changed": [
+        "ybg-master\\backend\\src\\main\\java\\com\\ibigou\\blindbox\\controller\\TvQueueController.java（recentWins+briefPrize）",
+        "ybg-master\\tv.html（dbg 删调试框 + renderWins 3条）",
+        "生产 ibigou.jar（已构建部署重启）",
+        "采坑日志.txt（G104）、知识图谱.md"
+      ],
+      "deployed": true,
+      "tested": true
+    },
+    {
+      "date": "2026-10-20",
+      "features": [
+        "电视大屏最近中奖三项体验完成：①中奖全屏动画停留 5s→10s（tv.html showWin setTimeout 10000）；②最近中奖显示手机尾号（announce_log 加 phone 列 + record 带 phone + 历史 121 条从 user_balance_flow/user_coupon 15秒时间窗回填，recentWins 返回 phoneTail，实机显示'恭喜尾号8986抽中'）；③列表滚动（wins-viewport 100px + CSS animation 无缝循环，最多6条）",
+        "新 jar 已构建部署：生产 mvn 构建（102MB），备份 ibigou.jar.bak-20261020-phone，重启 PID 2007679 8085 LISTEN；接口 recentWins 验证返回 [8986,8986,8986,1898]；tv.html md5 f1ea23aa 已部署+nginx reload+清缓存；实机 w2.png 验证通过",
+        "生产部署踩坑：pkill -f ibigou.jar 误杀 ssh 自身（命令行含关键字，code -1 但前置 cp 成功）；nohup 启动挂 ssh 会话改用 setsid nohup < /dev/null"
+      ],
+      "files_changed": [
+        "ybg-master\\backend\\src\\main\\java\\com\\ibigou\\blindbox\\entity\\AnnounceLog.java（+phone 字段）",
+        "ybg-master\\backend\\src\\main\\java\\com\\ibigou\\blindbox\\service\\AnnounceService.java（record 带 phone 重载）",
+        "ybg-master\\backend\\src\\main\\java\\com\\ibigou\\blindbox\\service\\DrawService.java（announceDraw 传 userPhone）",
+        "ybg-master\\backend\\src\\main\\java\\com\\ibigou\\blindbox\\controller\\CustomerController.java（announcePrize 取 body phone）",
+        "ybg-master\\backend\\src\\main\\java\\com\\ibigou\\blindbox\\controller\\TvQueueController.java（recentWins 加 phoneTail）",
+        "ybg-master\\tv.html（showWin 10s + renderWins 尾号滚动 + wins-viewport/track）",
+        "生产 announce_log 表（+phone 列+回填）、ibigou.jar（已构建部署）、tv.html（md5 f1ea23aa）",
+        "采坑日志.txt（G105）、知识图谱.md"
+      ],
+      "deployed": true,
+      "tested": true
     }
   ],
   "spec_kit": {

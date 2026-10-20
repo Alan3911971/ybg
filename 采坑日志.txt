@@ -1253,3 +1253,23 @@ G98 双数据+ABCD排号修复（2026-10-20）：①双数据根因=旧代码tic
 修复：不再依赖 CSS vh/calc 定广告框高度。新增 layoutTV()：JS 用 window.innerHeight 实测屏幕高，直接设置 .main 内联高度 = h-112px、#adArea 内联高度 = h-276px（1280x720 下 444px，与 APK 原生视频窗口 vh=h-276d 严格一致）。.right 恢复 display:flex;flex-direction:column；.ad-wrap 高度由 JS 内联覆盖。图片 object-fit:contain（完整显示不裁剪），视频 APK fit 保持比例居中。
 验证：部署后实机连拍 ckn4-ckn8：new1.jpg 新品海报完整在广告框内（y103-483，框 y68-512），vip.jpg 会员海报完整在框内，"最近中奖"回到底部（y534-552），布局正确。
 预防：电视大屏关键容器高度禁用 CSS vh/calc（4.4 不可靠），一律 JS 实测 innerHeight 设内联 px；广告框统一尺寸 484x444@1280x720（图片 contain、视频 fit，窗口一致）。
+
+【G104】电视大屏"最近中奖"列表一直为空 + 绿色"原生播报"调试文字遮挡（2026-10-20）
+现象：用户反馈两点——①右侧"最近中奖"显示"暂无中奖记录"但数据库明明有 121 条 draw 中奖记录；②右下角出现绿色"原生播报:10人桌"调试文字。
+根因：①后端 TvQueueController.recentWins() 只返回"最近 30 秒内"的 draw 事件（注释"电视弹动画用"），列表复用了该接口导致平时永远为空；②前端 dbg() 调试函数会创建 fixed 定位的绿色调试框（bottom:90px;right:10px），每次 playTts 都更新文字"原生播报: ..."，遮挡大屏画面。
+修复：①后端 recentWins() 去掉 30 秒过滤，改为返回最近 4 条 draw 事件（announceService.list 已倒序），新增 briefPrize() 从播报内容提取精简奖品名（"恭喜您的盲盒开中了立减5.00元券。"→"立减5.00元券"）；前端 renderWins 最多显示 3 条防溢出。②前端 dbg() 改为只 console.log，不创建 DOM 调试框。
+部署：后端在**生产服务器**用系统 mvn 构建（本地 JDK 损坏 C:\tools\jdk-17.0.12+7 启动失败；NAS 无后端工程；生产有 mvn+java17），替换 ibigou.jar（备份 .bak-20261020-recentwins）后 bash start.sh 重启，Spring Boot 8.9s 启动成功。前端 scp 到 /www/wwwroot/ybgtc.com/h5/tv.html。
+验证：接口 recentWins 返回 4 条（¥5 立减券奖品/立减5.00元券）；实机截图 w1.png 最近中奖显示 3 条真实记录、绿色调试文字消失、图片广告在框内。
+预防：电视大屏列表类接口不要用"近30秒事件"口径；页面禁止创建调试 DOM（dbg 只进 console）。
+
+【G105】电视大屏"最近中奖"三项体验：停留10秒 + 手机尾号 + 列表滚动（2026-10-20）
+现象：用户要求三点——①中奖全屏动画停留 5 秒改 10 秒；②"最近中奖"要显示顾客手机尾号；③"最近中奖"列表要带滚动效果。
+根因：①showWin() 的 setTimeout 是 5000ms；②announce_log 表没有手机号字段，draw 播报只存了 content（"恭喜您的盲盒开中了立减5.00元券。"），recentWins 拿不到尾号；③前端 renderWins 静态显示 3 条，无滚动。
+修复：
+①tv.html showWin setTimeout 5000→10000（停留 10 秒）。
+②后端链路：AnnounceLog 实体加 phone 字段 → AnnounceService.record 增加带 phone 重载（旧签名保留）→ DrawService.announceDraw 调用传 userPhone → CustomerController.announcePrize 从 body 取 phone → TvQueueController.recentWins map 加 phoneTail（phone 后 4 位，无 phone 返 null）。生产 SQL：ALTER TABLE announce_log ADD COLUMN phone varchar(20) NULL AFTER content（备份表 announce_log_bak_20261020），回填 UPDATE 从 user_balance_flow（merchant_no/user_phone/create_time）和 user_coupon（source_merchant_no/user_phone/create_time）按 15 秒时间窗取最近手机号 → 121 条 draw 全部回填成功（最新 6 条：8986/8986/8986/1898/1898/1898）。
+③前端滚动：wins-area 内新增 wins-viewport（高 100px，overflow:hidden）+ wins-track，renderWins 渲染最多 6 条（"恭喜尾号XXXX抽中 XX奖品"），内容复制两份，CSS animation winScroll translateY(0→-50%) linear infinite 无缝循环，动画时长 = 条数*5s（最小 15s）；无中奖时显示"暂无中奖记录"。
+部署：生产服务器 mvn 重新构建（102MB jar）→ 备份 ibigou.jar.bak-20261020-phone → 替换重启（PID 2007679，8085 LISTEN，Spring Boot 启动成功）；tv.html scp 部署（md5 f1ea23aa1662e01db48f9ff1453b7d9d）+ nginx -s reload + 清 proxy_cache；adb 重启 com.ibigou.tv 实测。
+验证：接口 /api/tv/M90380836/screen 的 recentWins 返回 [8986,8986,8986,1898]；实机 w2.png 最近中奖显示"恭喜尾号8986抽中 5立减券奖品"多行滚动、中奖弹窗正常弹出。
+踩坑：①pkill -f ibigou.jar 会误杀承载命令的 ssh 自身（远程命令行里含 ibigou.jar 字符串）→ ssh 连接 code -1，但前置 cp/md5 已执行成功，不影响部署结果；②nohup bash start.sh & 会挂住 ssh 会话（后台进程继承 stdout 管道）→ 改用 setsid nohup bash start.sh < /dev/null > log 2>&1 & 分离会话；③PowerShell 里 python3 -c 传 base64 代码无效（需在远程解码后执行），查 JSON 片段直接用 grep -o。
+预防：生产重启命令避免在命令行文本中出现被 pkill 匹配的关键字；启动服务用 setsid + </dev/null 分离；SQL 用 base64 管道执行；验证接口用 grep -o 提取 JSON 片段。

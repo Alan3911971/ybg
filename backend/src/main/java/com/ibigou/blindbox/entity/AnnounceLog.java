@@ -30,6 +30,10 @@ public class AnnounceLog {
     @Column(nullable = false, length = 500)
     private String content;
 
+    /** 顾客手机号（电视"最近中奖"显示尾号用；老数据回填，新数据随播报写入） */
+    @Column(length = 20)
+    private String phone;
+
     @Column(nullable = false, updatable = false)
     private LocalDateTime createTime;
 }

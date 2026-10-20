@@ -1,6 +1,6 @@
 {
   "project": "ibigou 盲盒系统 (ybgtc.com)",
-  "updated_at": "2026-10-20T10:22:00",
+  "updated_at": "2026-10-20T11:05:00",
   "hermes_wake": true,
   "notes": "2026-09-12 修正：IBIGOU-PENDING-001退款按钮已确认删除（见user_rules），已移除；新增商家列表优化提醒。",
   "tasks": [
@@ -100,6 +100,32 @@
       ],
       "priority": "high",
       "notes": "根因：Android 4.4 WebView calc(100vh-276px) 解析失败，.ad-wrap 高度塌陷为0，wins-area 挤到顶部、图片溢出框外。修复：新增 JS layoutTV() 用 window.innerHeight 实测设置 .main=h-112 / #adArea=h-276 内联 px（与 APK 视频窗口 vh=h-276d 一致），.right 恢复 flex column，图片改 object-fit:contain。实机连拍验证 new1.jpg/vip.jpg 完整在框内、最近中奖回底部。",
+      "waiting": []
+    },
+    {
+      "id": "IBIGOU-TV-20261020-E",
+      "title": "电视大屏最近中奖有数据 + 隐藏绿色原生播报调试文字",
+      "bot": "doubao-agent",
+      "status": "completed",
+      "progress": 100,
+      "depends_on": [
+        "IBIGOU-TV-20261020-D"
+      ],
+      "priority": "high",
+      "notes": "后端 recentWins 去掉30秒限制改最近4条 draw（announce_log 121条数据）+ briefPrize 精简奖品名；前端 dbg() 删除固定调试框（绿色原生播报文字）只进 console、renderWins 显示3条。生产服务器 mvn 构建替换 jar 重启成功，接口返4条，实机截图显示最近中奖记录、无绿色调试文字。",
+      "waiting": []
+    },
+    {
+      "id": "IBIGOU-TV-20261020-F",
+      "title": "电视大屏最近中奖：停留10秒+手机尾号+列表滚动",
+      "bot": "doubao-agent",
+      "status": "completed",
+      "progress": 100,
+      "depends_on": [
+        "IBIGOU-TV-20261020-E"
+      ],
+      "priority": "high",
+      "notes": "①showWin 5000→10000；②announce_log 加 phone 列并回填121条（user_balance_flow/user_coupon 15秒窗口），record/调用处/recentWins 全链路带 phone，接口返 phoneTail[8986,8986,8986,1898]；③renderWins 最多6条+尾号+CSS无缝滚动。生产 mvn 重建 jar 部署重启（备份 .bak-20261020-phone），tv.html 部署+清缓存，实机 w2.png 验证通过。",
       "waiting": []
     }
   ]

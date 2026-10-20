@@ -67,19 +67,40 @@ public class TvQueueController {
         return true;
     }
 
-    /** 最近 30 秒内的中奖事件（电视弹动画用） */
+    /** 最近中奖记录（电视右侧"最近中奖"列表 + 新中奖弹动画）：取最近 4 条 draw 事件 */
     private List<Map<String, Object>> recentWins(String merchantNo) {
-        LocalDateTime since = LocalDateTime.now().minusSeconds(30);
         return announceService.list(merchantNo).stream()
                 .filter(l -> "draw".equals(l.getEventType()))
-                .filter(l -> l.getCreateTime().isAfter(since))
+                .limit(4)
                 .map(l -> {
                     Map<String, Object> m = new HashMap<>();
                     m.put("winId", l.getAnnounceId());
-                    m.put("prizeName", l.getContent());
+                    m.put("prizeName", briefPrize(l.getContent()));
+                    String ph = l.getPhone();
+                    m.put("phoneTail", ph != null && ph.length() >= 4 ? ph.substring(ph.length() - 4) : null);
                     return m;
                 })
                 .toList();
+    }
+
+    /** 从中奖播报内容提取精简奖品名（如"恭喜您的盲盒开中了立减5.00元券。"→"立减5.00元券"） */
+    private String briefPrize(String content) {
+        if (content == null || content.isBlank()) return "大奖";
+        String c = content;
+        int idx = c.indexOf("开中了");
+        if (idx >= 0) c = c.substring(idx + 3);
+        else {
+            idx = c.indexOf("开出");
+            if (idx >= 0) c = c.substring(idx + 2);
+        }
+        int end = c.length();
+        for (String sep : new String[]{"。", "，", "、", "！", "！"}) {
+            int p = c.indexOf(sep);
+            if (p >= 0 && p < end) end = p;
+        }
+        String prize = c.substring(0, end).trim();
+        if (prize.length() > 18) prize = prize.substring(0, 18);
+        return prize.isEmpty() ? "大奖" : prize;
     }
 
     private Map<String, Object> adMap(MerchantAd a) {
