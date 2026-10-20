@@ -1,6 +1,6 @@
 {
   "project": "ibigou 盲盒系统 (ybgtc.com)",
-  "updated_at": "2026-10-20T09:35:00",
+  "updated_at": "2026-10-20T10:00:00",
   "hermes_wake": true,
   "notes": "2026-09-12 修正：IBIGOU-PENDING-001退款按钮已确认删除（见user_rules），已移除；新增商家列表优化提醒。",
   "tasks": [
@@ -74,6 +74,19 @@
       "depends_on": [],
       "priority": "medium",
       "notes": "按设计稿重构 tv.html：当前叫号横幅/5列分色队列(A-E)/右区广告+最近中奖/顶栏等待桌数/底部活动条。修复 4.4 flex 只渲染3列问题（改 inline-block）。已部署+实机截图验证。",
+      "waiting": []
+    },
+    {
+      "id": "IBIGOU-TV-20261020-C",
+      "title": "电视大屏视频窗口与广告区对齐（APK 参数同步新版布局）",
+      "bot": "doubao-agent",
+      "status": "completed",
+      "progress": 100,
+      "depends_on": [
+        "IBIGOU-TV-20261020-B"
+      ],
+      "priority": "high",
+      "notes": "APK MainActivity 视频窗口参数从旧右67%全高改为与新版页面广告区一致（0.60w+12d / 68d / 0.40w-28d / h-276d），重建APK安装，logcat+实机连拍验证视频在广告区播放、不遮挡最近中奖、比例不变形。",
       "waiting": []
     }
   ]

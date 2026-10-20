@@ -789,6 +789,22 @@
       ],
       "deployed": true,
       "tested": true
+    },
+    {
+      "date": "2026-10-20",
+      "features": [
+        "电视大屏视频窗口修复：APK NativeVideoPlayer 窗口参数与新版页面广告区对齐（vLeft=0.60w+12d, vTop=68d, vw=0.40w-28d, vh=h-276d）",
+        "验证：logcat drink.mp4 fit 858x560->484x316 started/rendering start；实机截图视频在广告区内播放、最近中奖区未被遮挡、比例不变形",
+        "TV 源码已纳入 ybg-master/backup/tv-apk 随仓库双向备份"
+      ],
+      "files_changed": [
+        "D:\\workspace-java\\ibigou-tv\\app\\src\\main\\java\\com\\ibigou\\tv\\MainActivity.java（视频窗口参数）",
+        "ybg-master\\backup\\tv-apk\\*（TV 源码备份）",
+        "采坑日志.txt（G102）",
+        "知识图谱.md（APK视频窗口同步）"
+      ],
+      "deployed": true,
+      "tested": true
     }
   ],
   "spec_kit": {

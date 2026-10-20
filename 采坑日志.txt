@@ -1240,3 +1240,9 @@ G98 双数据+ABCD排号修复（2026-10-20）：①双数据根因=旧代码tic
 根因：.queue-header / .queue-cols 用 display:flex + flex:1 均分 5 列，Android 4.4 WebView（旧 WebKit）对 flex 均分计算异常——5 个 flex:1 子项只渲染出前 3 个，第 3 个（C 列）拉伸占满剩余宽度（实测 323-767px）。旧版 tv.html 也是 flex:1 但内容简单未触发，新版 col-label 加了背景色类+嵌套子 div 后暴露。
 修复：改用 display:inline-block + width:19.4% + margin-right:0.75%（5 列合计 19.4%*5+0.75%*4=100%），父容器 font-size:0 消除 inline-block 间隙；实机截图确认 5 列全部渲染（A蓝/B绿/C橙/D紫/E粉），号码 B006/D003 分色正常。
 预防：4.4 WebView 上多列均分布局优先用 inline-block+百分比，不用 flex:1；改 tv.html 后必须投影实机截图验证（本地 Chrome 预览不代表 4.4 实际渲染）。
+
+【G102】电视大屏布局改版后视频窗口没跟着改：APK 原生播放器窗口参数与页面广告区脱节（2026-10-20）
+现象：tv.html 新版布局改为左60%队列/右40%广告+最近中奖，但 APK MainActivity 里 NativeVideoPlayer 窗口还是旧参数（vLeft=w*0.33 右67%宽、vTop=56、vh=h-112 几乎全高），导致视频窗口与图片广告窗口大小位置不一致，用户反馈"视频窗口没改、大小不一"。
+根因：视频窗口（APK 原生层 TextureView）与页面广告区（WebView CSS 布局）分别定义，布局重构只改了页面，APK 没同步。
+修复：MainActivity 视频窗口参数按新版页面 CSS 换算：vLeft=w*0.60+12d, vTop=68d, vw=w*0.40-28d, vh=h-276d（.header 56 + .right padding 12/16 + .ad-wrap flex:1 + .wins-area 128+margin12）。1280x720(density=1) 实测 adArea=x780,y68,484x444。重新构建 APK 安装后 logcat 确认：drink.mp4 fit 858x560->484x316, video started, rendering start；截图确认视频在广告区内播放、最近中奖区未被遮挡、画面保持比例不变形。
+预防：改 tv.html 布局必须同步核对 APK 视频窗口参数（广告区位置/尺寸），改完实机连拍验证视频与图片窗口一致。
