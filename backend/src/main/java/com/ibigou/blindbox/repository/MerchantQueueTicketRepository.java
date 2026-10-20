@@ -21,4 +21,7 @@ public interface MerchantQueueTicketRepository extends JpaRepository<MerchantQue
     Optional<MerchantQueueTicket> findByMerchantNoAndTicketNo(String merchantNo, String ticketNo);
 
     long countByMerchantNoAndStatus(String merchantNo, Integer status);
+
+    /** 按号段前缀查当前最大号（如 A 段所有 Axxx 中最大的） */
+    Optional<MerchantQueueTicket> findFirstByMerchantNoAndTicketNoStartingWithOrderByTicketNoDesc(String merchantNo, String prefix);
 }

@@ -7,63 +7,66 @@
 <style>
 *{margin:0;padding:0;box-sizing:border-box;}
 body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:#0f172a;color:#fff;overflow:hidden;height:100vh;}
-.header{display:flex;justify-content:space-between;align-items:center;padding:20px 40px;background:#1e293b;}
-.header h1{font-size:28px;font-weight:700;}
-.header .time{font-size:24px;color:#94a3b8;}
-.main{display:flex;height:calc(100vh - 80px - 80px);}
-/* 滚动字幕 */
-.ticker{height:80px;background:#1e293b;display:flex;align-items:center;overflow:hidden;border-top:2px solid #334155;}
-.ticker-inner{white-space:nowrap;animation:ticker 30s linear infinite;font-size:36px;color:#e2e8f0;font-weight:700;}
-@keyframes ticker{0%{transform:translateX(100%);}100%{transform:translateX(-100%);}}
+/* 整体布局：顶部条56 + 主区(1080-56-56) + 底部字幕56，比例协调 */
+.header{height:56px;display:flex;justify-content:space-between;align-items:center;padding:0 28px;background:#1e293b;}
+.header h1{font-size:22px;font-weight:700;}
+.header .time{font-size:15px;color:#94a3b8;}
+.main{display:flex;height:calc(100vh - 56px - 56px);}
+/* 底部字幕：56px细条 + 22px小字，静态居中（4.4不依赖动画） */
+.ticker{position:fixed;bottom:0;left:0;right:0;height:56px;background:#1e293b;display:flex;align-items:center;justify-content:center;overflow:hidden;border-top:1px solid #334155;z-index:60;}
+.ticker-inner{white-space:nowrap;font-size:22px;color:#e2e8f0;font-weight:500;}
 .left{width:33%;display:flex;flex-direction:column;background:#1e293b;}
 .left .qr-area{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:80px 0 40px 0;}
-.left .call-area{flex:1;display:flex;flex-direction:column;justify-content:center;align-items:center;}
-.left .call-area .label{font-size:24px;color:#94a3b8;margin-bottom:20px;}
-.left .call-area .ticket{font-size:140px;font-weight:900;background:linear-gradient(135deg,#4f46e5,#7c3aed);-webkit-background-clip:text;-webkit-text-fill-color:transparent;line-height:1;animation:breathe 2s ease-in-out infinite;}
+.left .call-area{flex:0 0 auto;display:flex;flex-direction:column;justify-content:center;align-items:center;padding:22px 0 14px 0;}
+.left .call-area .label{font-size:18px;color:#94a3b8;margin-bottom:14px;letter-spacing:4px;}
+.left .call-area .ticket{font-size:110px;font-weight:900;background:linear-gradient(135deg,#4f46e5,#7c3aed);-webkit-background-clip:text;-webkit-text-fill-color:transparent;line-height:1;-webkit-animation:breathe 2s ease-in-out infinite;animation:breathe 2s ease-in-out infinite;}
+@-webkit-keyframes breathe{0%,100%{-webkit-transform:scale(1);opacity:1;}50%{-webkit-transform:scale(1.05);opacity:0.9;}}
 @keyframes breathe{0%,100%{transform:scale(1);opacity:1;}50%{transform:scale(1.05);opacity:0.9;}}
-.left .call-area .call-info{font-size:28px;color:#e2e8f0;margin-top:12px;text-align:center;}
-.left .call-area .waiting-count{font-size:18px;color:#94a3b8;margin-top:8px;}
-.left .queue-area{height:400px;background:#0f172a;padding:16px;overflow:hidden;position:relative;border-top:2px solid #334155;}
-.queue-header{display:flex;gap:12px;margin-bottom:12px;}
-.queue-header .col-label{flex:1;text-align:center;font-size:16px;color:#94a3b8;background:#1e293b;padding:8px 0;border-radius:6px;}
-.queue-cols{display:flex;gap:12px;height:calc(100% - 50px);}
-.queue-col{flex:1;overflow:hidden;position:relative;}
-.queue-col-inner{animation:scrollUp 10s linear infinite;}
+.left .call-area .call-info{font-size:20px;color:#e2e8f0;margin-top:10px;text-align:center;}
+.left .call-area .waiting-count{font-size:15px;color:#94a3b8;margin-top:6px;}
+.left .queue-area{flex:1;background:#0f172a;padding:12px;overflow:hidden;position:relative;border-top:1px solid #334155;}
+.queue-header{display:flex;margin-bottom:10px;}
+.queue-header .col-label{flex:1;text-align:center;font-size:14px;color:#94a3b8;background:#1e293b;padding:6px 0;border-radius:6px;margin-right:10px;}
+.queue-header .col-label:last-child{margin-right:0;}
+.queue-cols{display:flex;height:calc(100% - 40px);}
+.queue-col{flex:1;overflow:hidden;position:relative;margin-right:10px;}
+.queue-col:last-child{margin-right:0;}
+.queue-col-inner{-webkit-animation:scrollUp 10s linear infinite;animation:scrollUp 10s linear infinite;}
+@-webkit-keyframes scrollUp{0%{-webkit-transform:translateY(0);}100%{-webkit-transform:translateY(-50%);}}
 @keyframes scrollUp{0%{transform:translateY(0);}100%{transform:translateY(-50%);}}
-.queue-col .ticket-item{font-size:20px;padding:6px 12px;background:#334155;border-radius:8px;text-align:center;margin-bottom:8px;}
+.queue-col .ticket-item{font-size:16px;padding:5px 10px;background:#334155;border-radius:6px;text-align:center;margin-bottom:6px;}
 .right{width:67%;background:#0f172a;position:relative;display:flex;align-items:center;justify-content:center;border-left:2px solid #334155;}
-.right img,.right video{max-width:100%;max-height:100%;object-fit:contain;transition:opacity 0.5s;}
+.right img{width:100%;height:100%;object-fit:cover;transition:opacity 0.5s;}
+.right video{max-width:100%;max-height:100%;object-fit:contain;}
 .ad-fade{opacity:0;}
-.ad-show{opacity:1;}
+.ad-show{opacity:1;-webkit-transition:opacity 0.5s;transition:opacity 0.5s;}
 .queue .label{font-size:20px;color:#94a3b8;width:80px;flex-shrink:0;}
 .queue .tickets{display:flex;gap:16px;flex-wrap:wrap;}
 .queue .ticket-item{font-size:22px;padding:6px 16px;background:#334155;border-radius:8px;}
 .no-call{color:#475569;font-size:120px;}
-.win-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.85);display:none;align-items:center;justify-content:center;z-index:9999;}
-.win-overlay.show{display:flex;animation:fadeIn 0.5s;}
+.win-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.85);display:none;align-items:center;justify-content:center;z-index:9999;}
+.win-overlay.show{display:flex;-webkit-animation:fadeIn 0.5s;animation:fadeIn 0.5s;}
 .win-box{text-align:center;color:#fff;}
-.win-box .trophy{font-size:120px;margin-bottom:20px;animation:bounce 1s infinite;}
+.win-box .trophy{font-size:120px;margin-bottom:20px;-webkit-animation:bounce 1s infinite;animation:bounce 1s infinite;}
 .win-box .title{font-size:48px;font-weight:900;background:linear-gradient(135deg,#fbbf24,#f59e0b);-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:16px;}
 .win-box .desc{font-size:24px;color:#e2e8f0;}
+@-webkit-keyframes fadeIn{from{opacity:0;}to{opacity:1;}}
 @keyframes fadeIn{from{opacity:0;}to{opacity:1;}}
+@-webkit-keyframes bounce{0%,100%{-webkit-transform:translateY(0);}50%{-webkit-transform:translateY(-20px);}}
 @keyframes bounce{0%,100%{transform:translateY(0);}50%{transform:translateY(-20px);}}
 </style>
 </head>
 <body>
 <div class="header">
   <h1 id="merchantName">加载中...</h1>
-  <div style="display:flex;align-items:center;gap:12px;">
-    <button onclick="toggleMute()" id="muteBtn" style="background:rgba(0,0,0,0.5);color:#fff;padding:8px 14px;border:none;border-radius:8px;font-size:14px;cursor:pointer;">🔊 声音开</button>
-    <button onclick="enterFullscreen()" style="background:rgba(0,0,0,0.5);color:#fff;padding:8px 14px;border:none;border-radius:8px;font-size:14px;cursor:pointer;">📺 全屏</button>
+  <div style="display:flex;align-items:center;">
+    <button onclick="toggleMute()" id="muteBtn" style="background:rgba(0,0,0,0.5);color:#fff;padding:5px 12px;border:none;border-radius:6px;font-size:13px;cursor:pointer;margin-right:12px;">🔊 声音开</button>
+    <button onclick="enterFullscreen()" style="background:rgba(0,0,0,0.5);color:#fff;padding:5px 12px;border:none;border-radius:6px;font-size:13px;cursor:pointer;margin-right:12px;">📺 全屏</button>
     <div class="time" id="clock"></div>
   </div>
 </div>
 <div class="main">
   <div class="left">
-    <div class="qr-area">
-      <img id="qrCode" src="" style="width:180px;height:180px;border-radius:8px;margin-bottom:10px;" alt="扫码取号">
-      <div style="font-size:20px;color:#94a3b8;">扫码取号排队</div>
-    </div>
     <div class="call-area">
       <div class="label">当前叫号</div>
       <div id="callingTicket" class="no-call">--</div>
@@ -84,7 +87,8 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;backgrou
 </div>
 
 <!-- 音频激活提示 -->
-<div id="audioHint" style="position:fixed;inset:0;background:rgba(0,0,0,0.9);display:flex;align-items:center;justify-content:center;z-index:99999;cursor:pointer;" onclick="enableAudio()">
+<!-- 音频提示（默认隐藏：电视APK走原生播报无需点击，网页版加载时自动初始化） -->
+<div id="audioHint" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.9);display:none;align-items:center;justify-content:center;z-index:99999;cursor:pointer;" onclick="enableAudio()">
   <div style="text-align:center;color:#fff;">
     <div style="font-size:48px;margin-bottom:20px;">🔊</div>
     <div style="font-size:28px;font-weight:600;">点击任意位置开启声音</div>
@@ -102,7 +106,108 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;backgrou
 
 
 <script>
-var merchantNo = new URLSearchParams(location.search).get('merchantNo') || 'M001';
+// ===== 老 WebView（Android 4.4）ES5 polyfill：Promise / URLSearchParams / fetch =====
+if(!window.Promise){
+  (function(){
+    var PENDING=0, FULFILLED=1, REJECTED=2;
+    function Promise(executor){
+      this._state=PENDING; this._value=undefined; this._queue=[];
+      var self=this;
+      function resolve(v){
+        // thenable 展平：resolve 一个 Promise 时等待其完成（原生 Promise 语义）
+        if(v && (typeof v==='object' || typeof v==='function') && typeof v.then==='function'){
+          var called=false;
+          v.then(
+            function(val){ if(!called){ called=true; settle(self, FULFILLED, val); } },
+            function(err){ if(!called){ called=true; settle(self, REJECTED, err); } }
+          );
+          return;
+        }
+        settle(self, FULFILLED, v);
+      }
+      function reject(r){ settle(self, REJECTED, r); }
+      try{ executor(resolve, reject); }catch(e){ reject(e); }
+    }
+    function settle(p, state, value){
+      if(p._state!==PENDING) return;
+      p._state=state; p._value=value;
+      var q;
+      while((q=p._queue.shift())){ asap(q[0], q[1], state, value); }
+    }
+    function asap(onFulfilled, onRejected, state, value){
+      setTimeout(function(){
+        var fn = state===FULFILLED ? onFulfilled : onRejected;
+        if(typeof fn!=='function') return;
+        try{ fn(value); }catch(e){ setTimeout(function(){ throw e; }, 0); }
+      }, 0);
+    }
+    Promise.prototype.then = function(onFulfilled, onRejected){
+      var self=this;
+      return new Promise(function(resolve, reject){
+        self._queue.push([
+          function(v){ resolve(onFulfilled ? onFulfilled(v) : v); },
+          function(e){ reject(e); }
+        ]);
+        if(self._state!==PENDING) settle(self, self._state, self._value);
+      });
+    };
+    Promise.prototype['catch'] = function(onRejected){ return this.then(null, onRejected); };
+    Promise.resolve = function(v){ return new Promise(function(res){ res(v); }); };
+    Promise.reject = function(r){ return new Promise(function(res, rej){ rej(r); }); };
+    window.Promise = Promise;
+  })();
+}
+if(!window.URLSearchParams){
+  window.URLSearchParams = function(search){
+    this._params = {};
+    if(typeof search === 'string' && search){
+      search.replace(/^\?/, '').split('&').forEach(function(kv){
+        var p = kv.split('=');
+        this._params[decodeURIComponent(p[0])] = decodeURIComponent((p[1]||'').replace(/\+/g, ' '));
+      }, this);
+    }
+  };
+  window.URLSearchParams.prototype.get = function(name){
+    return this._params[name] !== undefined ? this._params[name] : null;
+  };
+}
+// fetch polyfill（兼容 Android 4.4 老 WebView：fetch API 不支持，用 XHR 实现）
+if(!window.fetch){
+  window.fetch = function(url, opts){
+    opts = opts || {};
+    return new Promise(function(resolve, reject){
+      var xhr = new XMLHttpRequest();
+      xhr.open(opts.method || 'GET', url, true);
+      if(opts.responseType === 'arraybuffer') xhr.responseType = 'arraybuffer';
+      xhr.onreadystatechange = function(){
+        if(xhr.readyState !== 4) return;
+        if(xhr.status >= 200 && xhr.status < 300){
+          resolve({
+            ok: true,
+            status: xhr.status,
+            arrayBuffer: function(){ return Promise.resolve(xhr.response || new ArrayBuffer(0)); },
+            json: function(){
+              try { return Promise.resolve(JSON.parse(xhr.responseText)); }
+              catch(e){ return Promise.reject(e); }
+            },
+            text: function(){ return Promise.resolve(xhr.responseText); }
+          });
+        } else {
+          console.log('[XHR] HTTP ' + xhr.status + ' url=' + url);
+          reject(new Error('HTTP ' + xhr.status));
+        }
+      };
+      xhr.onerror = function(){ console.log('[XHR] network error url=' + url); reject(new Error('network error')); };
+      xhr.send(opts.body || null);
+    });
+  };
+}
+// URL 参数解析（兼容 Android 4.4 老 WebView：URLSearchParams 不支持）
+function getQueryParam(name){
+  var m = new RegExp('[?&]' + name + '=([^&]*)').exec(location.search);
+  return m ? decodeURIComponent(m[1].replace(/\+/g, ' ')) : null;
+}
+var merchantNo = getQueryParam('merchantNo') || 'M001';
 var ads = [];
 var adIdx = 0;
 var adTimer = null;
@@ -124,16 +229,20 @@ function dbg(msg){
   console.log('[AUDIO]', msg);
 }
 
-// 开启音频（用户手势触发）
+// 开启音频：电视APK走原生播报桥接（无需点击/手势）；网页版自动初始化 AudioContext
 function enableAudio(){
-  document.getElementById('audioHint').style.display = 'none';
+  var hint = document.getElementById('audioHint');
+  if(hint) hint.style.display = 'none';
+  // 电视 APK：原生 TTS 通道，无需 AudioContext
+  if(window.AndroidTV && typeof AndroidTV.isAvailable === 'function' && AndroidTV.isAvailable()){
+    dbg('电视原生播报通道已就绪');
+    return;
+  }
   try{
     var AC = window.AudioContext || window.webkitAudioContext;
     audioCtx = new AC();
     if(audioCtx.state === 'suspended') audioCtx.resume();
     dbg('AudioContext state=' + audioCtx.state);
-    // 立即播报一段测试音，确认出声
-    playTts('声音已开启，叫号语音播报正常');
   }catch(e){
     dbg('初始化失败: ' + e.message);
   }
@@ -142,6 +251,13 @@ function enableAudio(){
 // 用 Web Audio API 播放 TTS 音频
 function playTts(text){
   if(muted) { dbg('已静音，跳过: ' + text); return; }
+  // 电视 APK 原生播报桥接（Android 4.2 WebView 无 Web Audio API，走原生 TTS）
+  if(window.AndroidTV && typeof AndroidTV.isAvailable === 'function' && AndroidTV.isAvailable()){
+    var tvUrl = '/api/tts?text=' + encodeURIComponent(text) + '&spd=3';
+    dbg('原生播报: ' + text);
+    AndroidTV.speakUrl(tvUrl);
+    return;
+  }
   if(!audioCtx){ dbg('AudioContext 未初始化'); return; }
   if(audioCtx.state === 'suspended') audioCtx.resume();
   var url = '/api/tts?text=' + encodeURIComponent(text) + '&spd=3';
@@ -189,9 +305,7 @@ function clock(){
 }
 setInterval(clock, 1000); clock();
 
-// 生成取号二维码
-var queueUrl = location.origin + '/h5/queue.html?merchantNo=' + merchantNo;
-document.getElementById('qrCode').src = 'https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=' + encodeURIComponent(queueUrl);
+// 二维码由 APK 原生层显示（页面不再生成，避免双二维码）
 
 function renderAd(){
   var area = document.getElementById('adArea');
@@ -200,8 +314,29 @@ function renderAd(){
   area.innerHTML = '';
   var el;
   if(ad.type === 'video'){
+    // 电视 APK（含原生播放器桥接）：视频广告交给原生 MediaPlayer 播放（http 直连），
+    // 网页版/无桥接环境仍用 HTML5 video
+    if(window.AndroidTV && typeof AndroidTV.playVideo === 'function'){
+      var vurl = ad.url;
+      if(vurl.indexOf('/') === 0){ vurl = 'http://ybgtc.com' + vurl; }
+      else if(vurl.indexOf('https://') === 0){ vurl = 'http://' + vurl.substring(8); }
+      console.log('[ad] native playVideo ' + vurl);
+      // 页面加载早期调 JS 接口可能报 NPObject（已由 APK 侧 runOnUiThread 修复），短延迟保险
+      setTimeout(function(){ AndroidTV.playVideo(vurl); }, 800);
+      var dur2 = (ad.durationSec || 10) * 1000;
+      if(adTimer) clearTimeout(adTimer);
+      adTimer = setTimeout(function(){ adIdx++; renderAd(); }, dur2);
+      return;
+    }
     el = document.createElement('video');
-    el.src = ad.url;
+    // 电视 APK：4.4 视频由系统 MediaPlayer 独立拉流（不走 WebView SSL 放行），
+    // https 证书不被系统信任导致 stalled → 改用 http 直连；网页版仍用原 URL
+    var vurl = ad.url;
+    if(window.AndroidTV){
+      if(vurl.indexOf('/') === 0){ vurl = 'http://ybgtc.com' + vurl; }
+      else if(vurl.indexOf('https://') === 0){ vurl = 'http://' + vurl.substring(8); }
+    }
+    el.src = vurl;
     el.autoplay = true;
     el.loop = true;
     el.muted = true;
@@ -209,10 +344,34 @@ function renderAd(){
     el.setAttribute('playsinline','');
     el.preload = 'auto';
     el.controls = false;
+    // 4.4 老 WebView 内联视频播放不成熟（inLineVideoEnabled=0），长时间未播放回退静态图
+    var fbTimer = null;
+    var doFallback = function(){
+      if(fbTimer){ clearTimeout(fbTimer); fbTimer = null; }
+      var img = document.createElement('img');
+      var poster = ad.poster || ad.url.replace(/\.mp4$/i, '.jpg');
+      if(window.AndroidTV && poster.indexOf('/') === 0){ poster = 'http://ybgtc.com' + poster; }
+      img.src = poster;
+      area.innerHTML = '';
+      img.className = 'ad-fade';
+      area.appendChild(img);
+      setTimeout(function(){ img.classList.remove('ad-fade'); img.classList.add('ad-show'); }, 10);
+    };
+    el.addEventListener('playing', function(){ console.log('[video] playing ' + vurl); if(fbTimer){ clearTimeout(fbTimer); fbTimer = null; } });
+    el.addEventListener('error', function(){ console.log('[video] error ' + vurl); doFallback(); });
+    el.addEventListener('stalled', function(){ console.log('[video] stalled'); });
+    fbTimer = setTimeout(function(){
+      if(el.readyState < 3){ console.log('[video] fallback to image (no play in 3s)'); doFallback(); }
+    }, 3000);
     el.addEventListener('canplay', function(){
-      el.play().catch(function(e){ console.warn('video play fail', e); });
+      var p = el.play();
+      if(p && typeof p.catch === 'function'){ p.catch(function(e){ console.warn('video play fail', e); }); }
     });
   } else {
+    // 图片广告：电视环境先停掉原生视频播放器（同样短延迟保险）
+    if(window.AndroidTV && typeof AndroidTV.stopVideo === 'function'){
+      setTimeout(function(){ AndroidTV.stopVideo(); }, 800);
+    }
     el = document.createElement('img');
     el.src = ad.url;
   }
@@ -226,8 +385,15 @@ function renderAd(){
 }
 
 var lastCalledNo = null;
+// 电视屏数据刷新：用原生 XHR（Android 4.4 WebView 最可靠，绕开 fetch/Promise polyfill 链路）
 function refresh(){
-  fetch('/api/tv/'+merchantNo+'/screen').then(function(r){return r.json();}).then(function(res){
+  var xhr = new XMLHttpRequest();
+  xhr.open('GET', '/api/tv/'+merchantNo+'/screen', true);
+  xhr.onreadystatechange = function(){
+    if(xhr.readyState !== 4) return;
+    if(xhr.status !== 200) return;
+    var res;
+    try { res = JSON.parse(xhr.responseText); } catch(e){ return; }
     if(res.code !== 0) return;
     var d = res.data;
     document.getElementById('merchantName').textContent = d.merchantName || merchantNo;
@@ -253,7 +419,7 @@ function refresh(){
     document.getElementById('waitingCount').textContent = '等待中：' + (d.waiting || []).length + ' 人';
     // 等待队列：顶部固定横排桌型标题，每列往下滚动
     var waiting = d.waiting || [];
-    var seatTypes = ['2人桌', '4人桌', '6人桌', '10人桌'];
+    var seatTypes = ['2人桌', '4人桌', '6人桌', '10人桌', '12人桌'];
     var bySeats = {};
     waiting.forEach(function(t){
       var key = t.seats ? t.seats + '人桌' : '普通';
@@ -264,27 +430,32 @@ function refresh(){
     seatTypes.forEach(function(st){
       var cnt = (bySeats[st] || []).length;
       var waitMin = cnt * (d.config && d.config.estWaitMin || 10);
-      html += '<div class="col-label">'+st+'<div style="font-size:12px;color:#64748b;margin-top:4px;">等待'+cnt+'人</div><div style="font-size:11px;color:#475569;margin-top:2px;">约'+waitMin+'分钟</div></div>';
+      html += '<div class="col-label">'+st+'<div style="font-size:11px;color:#64748b;margin-top:3px;">等待'+cnt+'人</div><div style="font-size:10px;color:#475569;margin-top:2px;">约'+waitMin+'分钟</div></div>';
     });
     html += '</div><div class="queue-cols">';
     seatTypes.forEach(function(st){
       var nos = bySeats[st] || [];
-      html += '<div class="queue-col"><div class="queue-col-inner">';
-      // 复制两份做无缝滚动
-      for(var r=0; r<2; r++){
-        nos.forEach(function(no){
+      // 号少（少于5个）静态单份显示，避免滚动复制两份导致看起来像重复数据；号多时复制两份无缝滚动
+      var needScroll = nos.length >= 5;
+      var renderList = needScroll ? nos.concat(nos) : nos;
+      html += '<div class="queue-col"><div class="queue-col-inner"' + (needScroll ? '' : ' style="-webkit-animation:none;animation:none;"') + '>';
+      if(renderList.length){
+        renderList.forEach(function(no){
           html += '<div class="ticket-item">'+no+'</div>';
         });
-        if(!nos.length) html += '<div class="ticket-item" style="opacity:0.3;">--</div>';
+      } else {
+        html += '<div class="ticket-item" style="opacity:0.3;">--</div>';
       }
       html += '</div></div>';
     });
     html += '</div>';
     document.getElementById('queueArea').innerHTML = html;
     // 广告
+    console.log('[ad] check ads=' + ads.length + ' dads=' + ((d.ads||[]).length) + ' typeofPlay=' + (window.AndroidTV ? typeof AndroidTV.playVideo : 'noTV'));
     if(JSON.stringify(ads) !== JSON.stringify(d.ads)){
       ads = d.ads || [];
       adIdx = 0;
+      console.log('[ad] renderAd call');
       renderAd();
     }
     // 中奖动画
@@ -294,7 +465,8 @@ function refresh(){
       showWin(wins[0]);
       lastWinIds = winIds;
     }
-  });
+  };
+  xhr.send();
 }
 
 function showWin(win){
@@ -316,6 +488,9 @@ function toggleMute(){
   if(muted && audioCtx) audioCtx.suspend();
   if(!muted && audioCtx) audioCtx.resume();
 }
+enableAudio();
+// 加载后自动播报一次测试音（确认语音通道，仅一次）
+setTimeout(function(){ playTts('声音已开启，叫号语音播报正常'); }, 3000);
 refresh();
 setInterval(refresh, 5000);
 </script>

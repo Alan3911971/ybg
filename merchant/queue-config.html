@@ -59,8 +59,13 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;backgrou
 <button class="btn" style="width:calc(100% - 32px);margin:0 16px 20px;" onclick="save()">保存配置</button>
 
 <script>
-var merchantNo = new URLSearchParams(location.search).get('merchantNo') || 'M001';
-function api(path, method){return fetch(path,{method:method||'GET'}).then(function(r){return r.json();});}
+function cleanNo(v){ return (v||'').replace(/"/g,'').trim(); }
+var merchantNo = cleanNo(new URLSearchParams(location.search).get('merchantNo')) || cleanNo(localStorage.getItem('ibigou_merchant_no')) || 'M001';
+function api(path, method){
+  var headers = {};
+  try{ var tk = localStorage.getItem('ibigou_merchant_token'); if(tk) headers['X-Merchant-Token'] = tk; }catch(e){}
+  return fetch(path, {method: method||'GET', headers: headers}).then(function(r){return r.json();});
+}
 
 function load(){
   api('/api/merchant/queue/config?merchantNo='+merchantNo).then(function(res){

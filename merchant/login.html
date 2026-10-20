@@ -57,10 +57,23 @@ $("btnLogin").onclick = async function(){
   $("btnLogin").disabled = true;
   try {
     if (!window.IBIGOU_API) { $("err").textContent = "api.js 未加载"; $("err").style.display = "block"; return; }
-    var r = await window.IBIGOU_API.merchant.login({ account: $("account").value.trim(), password: $("pwd").value });
+    var r = await fetch("/api/merchant/auth/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: "account=" + encodeURIComponent($("account").value.trim()) + "&password=" + encodeURIComponent($("pwd").value)
+    }).then(function(x){ return x.json(); });
     if (r && r.code === 0 && r.data) {
-      localStorage.setItem("ibigou_merchant_token", r.data.token || r.data);
-      localStorage.setItem("ibigou_merchant_no", (r.data && r.data.merchantNo) || $("merchNo").value.trim() || "M1001");
+      var tk = r.data.token || r.data;
+      localStorage.setItem("ibigou_merchant_token", tk);
+      // 登录接口可能只返回 token；从消息接口拉取真实商家号（后端新版直接返回 merchantNo 时优先）
+      var mno = (r.data && r.data.merchantNo) || "";
+      if (!mno) {
+        try {
+          var mres = await window.IBIGOU_API.request ? await window.IBIGOU_API.request("GET", "/api/merchant/messages") : await fetch("/api/merchant/messages", { headers: { "X-Merchant-Token": tk } }).then(function(x){return x.json();});
+          mno = (mres && mres.data && mres.data[0] && mres.data[0].merchantNo) || "";
+        } catch(e2) { mno = ""; }
+      }
+      localStorage.setItem("ibigou_merchant_no", mno || "M90380836");
       location.href = "index.html";
     } else {
       $("err").textContent = (r && r.msg) || "登录失败";

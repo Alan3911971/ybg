@@ -55,6 +55,12 @@ public class MerchantQueueController {
     /** 叫下一位（按取号时间最早的等待号，可选桌型） */
     @PostMapping("/call-next")
     public Result<MerchantQueueTicket> callNext(@RequestParam String merchantNo, @RequestParam(required = false) Integer seats) {
+        // 当前有未处理的叫号，必须先完成或过号
+        Optional<MerchantQueueTicket> current = ticketRepository
+                .findFirstByMerchantNoAndStatusOrderByCreateTimeAsc(merchantNo, 1);
+        if (current.isPresent()) {
+            return Result.fail("当前叫号 " + current.get().getTicketNo() + " 未完成，请先完成或过号");
+        }
         MerchantQueueTicket t;
         if(seats != null){
             t = ticketRepository

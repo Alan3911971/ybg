@@ -1117,3 +1117,120 @@ G71 | %s | 浏览器/curl访问生产页面被豆包翻译器注入 <script src=
 - 现象：POST /git/blobs 大文件（>5MB）持续 "The write operation timed out"（GET 正常、小 POST 正常）
 - 解决：排除大文件（_restore jar）；脚本加 60s 超时 + 5 次指数退避重试 + 本地断点缓存（_gh_blob_cache.json 记录已推 sha，重跑跳过）
 - 预防：推送脚本固化重试与缓存；大文件（jar/媒体）用 SFTP 或单独通道，不走 Git Data API
+
+【G79】Android 4.2（API 17）WebView 老设备兼容
+- 现象：电视APK（ibigou-tv）要兼容安卓4.2，直接复用商家壳代码会崩/无声：
+  - WebView.evaluateJavascript 是 API 19+，4.2 用 loadUrl("javascript:...")
+  - WebSettings.setMixedContentMode 是 API 21+，4.2 无此方法需跳过
+  - MediaPlayer/TextToSpeech 的 setAudioAttributes 是 API 21+，4.2 用 setAudioStreamType(STREAM_MUSIC)
+  - tts.speak 四参版本（带 UtteranceId）是 API 21+，4.2 用三参 speak(text, QUEUE_FLUSH, null)
+  - Android 4.2 WebView 无 AudioContext/Web Audio API、speechSynthesis 不可靠 → 页面播报必须走原生 TTS 桥接（JS 接口 speakUrl/speak）
+  - evaluateJavascript 直接引用会 NoSuchMethodError；AudioAttributes 类直接 new 会 NoClassDefFoundError（即使 try-catch 也拦不住类加载），必须 Build.VERSION.SDK_INT 版本判断
+- 解决：全部 API 差异点做版本判断；tv.html playTts 增加 window.AndroidTV 原生桥接分支（无 AndroidTV 环境走原 Web Audio 逻辑，网页版不受影响）
+- 预防：新 Android 工程明确最低版本后，先查 API level 表再写 WebView/Media/TTS 相关代码；老设备 TLS 需服务器开 TLSv1/1.1（ybgtc.com 已开，验证 302 正常）
+- 附加：用户约束"安装任何文件代码必须去 D 盘" → Gradle 用户缓存 GRADLE_USER_HOME=D:\workspace-java\.gradle-home，tmpdir 也指 D 盘，C 盘零写入
+
+【G80】Android 4.4 WebView 数据渲染链（Promise polyfill thenable + XHR send 漏掉）
+- 现象：ibigou-tv APK 在极米投影（Android 4.4.2）上页面骨架正常（标题/时钟/二维码），但商家名/叫号/队列/广告不渲染。逐层排查：
+  1) URLSearchParams is not defined（4.4 Chromium 30 无）→ 正则 getQueryParam()
+  2) fetch is not defined → XHR polyfill
+  3) Promise is not defined → ES5 手写 polyfill
+  4) fetch 200 但 r.json() 后 res.code=undefined，r.text() 显示 [object Object]
+     → 根因：Promise polyfill 的 resolve() 收到一个 Promise/thenable 时没有等待其解包，
+       直接把 Promise 对象作为值传给下一环（原生 Promise 会展平）。修复 resolve 加 thenable 分支：
+       if(v && (typeof v==='object'||typeof v==='function') && typeof v.then==='function'){ v.then(...); return; }
+  5) 数据链最终改为 4.4 原生 XHR（onreadystatechange + JSON.parse），彻底绕开 polyfill 链
+  6) 【最终根因】XHR 版 refresh() 初始化 xhr 后漏写 xhr.send()，请求从未发出，
+     onreadystatechange 永远不触发，页面一直"加载中"。补 xhr.send(); 后立即正常。
+  7) el.play().catch(...) 在 4.4 抛 TypeError（play() 返回 undefined 无 .catch）→ 改 p && typeof p.catch==='function' 判断
+- 验证：probe 显示 MERCHANT=鲜果时光·宜必购合作店、WAIT=等待中：4 人、webmediaplayer 激活（广告视频在播）
+- 预防：老 WebView 上优先用原生 XHR（最可靠），fetch/Promise polyfill 只做兜底；
+  polyfill 必须实现 thenable 展平；写完 XHR 先自查 send() 是否调用；
+  4.4 截图（screencap）对硬件加速 WebView 全黑是假象，验证靠 logcat 的 onConsoleMessage/page probe
+
+【G81】Android 4.4 WebView 不支持内联视频播放（广告视频黑屏/卡住）
+- 现象：电视APK 广告视频（<video> autoplay muted）在极米投影（Android 4.4.2）上不播放。逐层排查：
+  1) 视频编码 H.265（hvc1/hvcC）→ 4.4 无 HEVC 解码，确诊后 ffmpeg 转码 H.264 Main（libx264 -profile:v main -level 3.1 -pix_fmt yuv420p -movflags +faststart）→ 仍不播
+  2) https 证书：4.4 video 由系统 MediaPlayer 独立拉流（media_player_bridge），不走 WebView onReceivedSslError 放行 → 改 http 直连（页面允许 mixed content，仅警告）→ 仍不播
+  3) 最终根因：Android 4.4 WebView 的 HTML5 video 内联播放未启用（日志 inLineVideoEnabled[0]），系统级限制，autoplay 永远 stalled，无法绕过
+- 解决：tv.html renderAd 视频广告加 3 秒超时回退——未 playing 则替换为静态首帧图（ffmpeg -frames:v 1 提取 drink.jpg/product.jpg 上传 /h5/ad/，ad.url 同名 .jpg 兜底）；现代浏览器/新安卓盒子照常播视频
+- 验证：logcat 见 [video] fallback to image + product.jpg 加载成功，广告区正常显示
+- 预防：Android 4.4 项目里的 <video> 一律按"不能内联播放"设计，直接给 poster/首帧图兜底；视频素材统一 H.264（H.265 老设备必然黑屏）
+
+【G82】4.4 WebView JS 桥接调原生 View 操作必须回主线程（2026-10-19）
+现象：JS 调 AndroidTV.playVideo/stopVideo 报 CONSOLE: Uncaught Error: Error calling method on NPObject（误导性错误），原生侧日志 playVideo err: CalledFromWrongThreadException: Only the original thread that created a view hierarchy can touch its views. at SurfaceView.setVisibility。
+根因：Android 4.4 的 addJavascriptInterface 回调运行在 Chromium 的 HandlerThread（子线程），不是主线程；SurfaceView/任何 View 操作在子线程执行即抛 CalledFromWrongThreadException。错误被 Chromium 桥包装成 NPObject 错误抛回 JS。NativeTTS.speakUrl 之所以一直正常，是因为 MediaPlayer 不是 View 操作、不检查线程。
+修复：MainActivity 桥接方法内 runOnUiThread 包裹 VideoPlayer 调用（playVideo/stopVideo 均如此）。注意：延迟调用（1200ms/3000ms）不能解决，跟调用时机无关，是线程问题。
+另：4.4 SurfaceView 默认 z 序在 Window 底层（BEHIND_WINDOW），会被全屏 WebView 盖住 → 必须 surfaceView.setZOrderOnTop(true) 才能显示视频画面。
+验证：screencap 抓不到 SurfaceView 内容（独立 surface，截图空白/黑），肉眼可见；确定性验证靠 logcat 的 native video started / native video rendering start（MEDIA_INFO_VIDEO_RENDERING_START）。
+补充结论（G82 续）：SurfaceView/VideoView 的独立 surface 在极米 4.4 ROM 会被硬件加速 WebView 的 layer 盖住，setZOrderOnTop(true) 与 setZOrderMediaOverlay（VideoView 内置）均实测失效——MediaPlayer 正常渲染（日志 rendering start）但画面不可见（录屏右侧为页面背景色 #0F172A）。最终方案：TextureView（普通 View，随 View 层级合成）+ MediaPlayer.setSurface(new Surface(surfaceTexture))，4.4 硬件加速下与 WebView 同层合成，视频画面成功显示（录屏可见动态视频帧）。验证方法升级：screencap 抓不到 SurfaceView 但能抓到 TextureView；最终用 adb screenrecord 录屏抽帧逐帧分析右侧广告区像素（视频帧颜色逐帧变化、图片广告帧完全静态、空白帧为背景色）作为铁证。
+
+【G83】广告视频变形 + 无声（2026-10-19）
+变形根因：素材为竖屏 720x1280（9:16），被 TextureView 直接拉伸到横屏广告区 858x560（1.53:1）→ 严重横向变形。无声根因：实现时默认广告静音（setVolume 0f），用户明确要声音。
+修复：①素材层 ffmpeg 转横版 858x560 模糊背景填充（split[bg][fg];[bg]scale=858:560,boxblur=20:5[bgc];[fg]scale=-1:560[fgs];overlay 居中），服务器竖屏版备份 drink.mp4.portrait.bak/product.mp4.portrait.bak；②代码层 NativeVideoPlayer 恢复声音（setVolume 1f）+ onVideoSizeChanged/onPrepared 按视频原始比例 fit 居中（fitVideoSize，兜底防变形）。
+验证：logcat native video fit 858x560 -> 857x559（满广告区无变形）；录屏帧画面比例正常。
+
+【G84】二维码永久漂浮 + 广告声音实锤（2026-10-19）
+二维码漂浮：页面 .qr-float 位置（右下 bottom:110px）与 TextureView 广告区（y 80-640）部分重叠，视频时段页面二维码会被盖。修复：MainActivity 增加原生二维码层 ImageView（FrameLayout 最后 addView，永远最顶）+ 后台线程 http 下载 qrserver 二维码图（4.4 不信任其 https 证书，必须 http 直连）。验证：录屏逐帧像素分析右下角白色块恒存在（视频/图片时段均 15-23 行白块），视频时段帧右下角二维码清晰可见。
+广告声音：此前实现默认 setVolume(0f) 静音（担心盖过叫号播报），用户明确要求有声 → 恢复 setVolume(1f,1f)。同时投影系统媒体音量未设置（可能为 0）→ adb settings put system volume_music 15。铁证：logcat 视频播放时 [init_omx_aud_decoder] mime: audio/raw + audio_start_delay 递减序列（音视频同步），证明音频解码输出正常。
+
+【G85】底部字幕黑屏 + 取号人数必选 + 二维码提示文字（2026-10-19, v1.2.7）
+底部字幕黑屏根因（两个叠加）：①ticker-inner 滚动动画起点 translateX(100%) 在屏幕外，4.4 动画 30s 周期大部分时间文字不在屏内 → 观感黑屏；②ticker 在页面正常流底部，页面总高超过 720 视口被挤出。修复：ticker 改 position:fixed;bottom:0;left:0;right:0（4.4 支持 fixed，同 .qr-float）+ 高度 80→140px + 删动画改静态居中显示，字幕永远可见。
+取号人数必选：queue.html 桌型选择原本 display:none（仅商家 cfg.seatConfig 存在才显示，M90380836 无此配置→不输人数也能取号）。修复：seatGroup 始终显示 + select 加空选项'请选择人数' + take() 校验 seats 非空否则 alert('请选择就餐人数') + url 恒带 &seats=。后端 /api/tv/{merchantNo}/take 本就支持 seats 参数，无需改后端。
+二维码提示文字：原生二维码层（白底 ImageView）下方新增 TextView'扫码取号排队'（白底黑字，置于二维码卡片下方 4px）。
+补充：用户反馈出现两个二维码（页面 .qr-float 悬浮二维码 + APK 原生二维码层并存，图片广告时段均可见）。修复：tv.html 删除页面二维码全部代码（CSS .qr-float、HTML div.qr-float、JS qrCode 赋值与 queueUrl），只保留 APK 原生二维码层（视频/图片时段均永久漂浮）。
+
+【G86】图片广告与视频窗口大小统一（2026-10-19）
+用户反馈：图片广告与视频广告窗口大小不一。根因：图片素材全为竖屏（new1/vip.jpg 1024x1820、drink/product.jpg 720x1280），页面 .right img 用 object-fit:contain 等比留白显示 → 竖屏图在 858x560 横窗只占 315x560（36%），左右大量留白；视频（858x560 横版素材）填满全窗 → 大小不一。修复：.right img 改 object-fit:cover + width/height 100%（等比放大填满窗口、裁剪超出部分、不变形），与视频窗口一致。验证：截图图片广告铺满整个右窗（858x560），与视频 857x559 一致。
+
+【G87】整体页面布局重排（2026-10-19, v1.2.8）
+用户反馈：底部字幕字太大（36px/140px），整体不协调。重排：顶部条 56px（店名22px/时间15px/按钮13px）；主区 calc(100vh-56-56)；底部字幕 56px 细条 + 22px 小字；左侧叫号区：号牌 140→110px、标签 24→18px、信息 28→20px、等待 18→15px；等待队列 flex:1 自适应（去掉固定400px），列头 16→14px、编号 20→16px；右侧广告区 858x608。MainActivity 视频窗口几何同步：vTop 80→56、vh h-160→h-112（对齐页面顶部条+底部字幕）。验证：录屏图片时段/视频时段均布局协调，视频窗口与广告区对齐。
+
+【G88】二维码=顾客扫码取号入口确认 + 加大（2026-10-19, v1.2.9）
+用户强调右下角二维码应为顾客扫码取号入口。验证：①用 zxingcpp 本地解码投影截图中二维码 → 内容=https://ybgtc.com/h5/queue.html?merchantNo=m90380836（取号页入口，商家号正确）；②后端接口 /api/tv/{商家号}/screen 大小写兼容（m90380836 小写与 M90380836 大写均返回正常）；③queue.html 人数必选已部署生效。优化：二维码尺寸 120→160 density（加大，顾客远距离更易扫）。
+
+【G89】扫码直达取号页 + 遥控器退出（2026-10-19, v1.3.3）
+二维码跳转：queue.html 原先 if(isWeChat() && !openid) 强制跳微信 OAuth 授权（open.weixin.qq.com），微信扫码体验是'跳到别处'。修复：注释掉强制跳转（wxAuth 函数保留但不再自动执行），扫码直接显示取号表单。验证注意：检测是否还有跳转必须去掉 // 注释行，否则注释代码误报。
+遥控器退出：极米 ROM 在系统层消费 KEYCODE_BACK（logcat 实证 injectKeyEvent 已发但 app 收不到，onKeyDown/onBackPressed 均不触发），Back 键无法退出。可行退出：①Home 键（keyevent 3）实测回桌面（resumed=com.xgimi.launcher）；②菜单键 → 绑定界面 → 新增'退出应用'按钮（遥控器方向键+OK 点击 finish+moveTaskToBack）。
+
+【G90】取号去掉手机号只填人数（2026-10-19）
+用户要求取号不填手机号只填人数。实测后端：/api/tv/{商家号}/take 必须 POST（GET 500），且 phone 为必填参数（MissingServletRequestParameterException）。方案：前端隐藏手机号输入框，取号时自动生成唯一虚拟号 vphone='1'+Date.now().slice(-10)（11位符合校验），POST 提交带 vphone&seats；进度查询 /my 用 vphone。后端无需改动。
+
+【G91】人数1-12 + 自动匹配桌型（2026-10-19）
+用户要求取号人数不能只2/4/6/8，必须1-12自由选择，且选完自动匹配桌型。后端实测 /take 的 seats 参数接受任意值（1/12 均成功，A014/A015）。实现：①queue.html 人数下拉1-12，onchange 实时提示'已自动匹配 X 人桌'（映射：1-2→2人桌，3-4→4人桌，5-6→6人桌，7-10→10人桌，11-12→12人桌），提交时 seats 传桌型容量值；②tv.html 等待队列 seatTypes 从4类扩为5类['2人桌','4人桌','6人桌','10人桌','12人桌']，CSS flex:1 自动平分5列。部署后需重启投影 App（am force-stop+start）让 WebView 加载新版 tv.html。
+
+【G92】商家后台叫号'请先登录'修复 + 电视前端后台联通（2026-10-19）
+现象：商家后台登录后点'叫下一位'提示没有登录。根因：WebConfig 注册 MerchantAuthInterceptor 拦截 /api/merchant/**（除 auth/login），要求 header X-Merchant-Token；商家登录后 token 存 localStorage.ibigou_merchant_token（login.html 写入），但 merchant/queue.html、queue-config.html、ads.html 的 api()/fetch 全部裸请求不带 header → requireMerchant(null) 抛'请先登录'。实测：无 token 调 /api/merchant/queue/call-next 返回 {'code':-1,'msg':'请先登录'}。修复：3 个页面所有请求（含 ads 上传/上架/删除）加 X-Merchant-Token header（从 localStorage 读取，与 api.js 标准一致）；商家面板桌型筛选补 12 人桌。电视屏 /api/tv/** 不在拦截范围（公开读），叫号→DB→电视轮询显示即联通。
+
+【G93】点下一位没叫号：面板商家号不对（2026-10-19）
+用户：电视屏点下一位没叫号。nginx access log 实证：用户多次 POST /api/merchant/queue/call-next?merchantNo=M001（21:32/22:12），响应仅 71/83 字节=错误响应；而电视屏绑定商家是 M90380836（鲜果时光，等待 15 号）。根因：queue.html?merchantNo= 参数为空时 JS 默认 'M001'，用户直接进面板（或旧参数空）→ 操作 M001 空队列 → '没有等待中的号'，电视屏（M90380836）当然无叫号。修复：merchantNo 取值改为 URL 参数 || localStorage.ibigou_merchant_no（登录时后端返回的真实商家号）|| 'M001'，queue.html/queue-config.html/ads.html 三处同步。排查技巧：nginx /www/wwwlogs/ybgtc.com.log 可按 call-next 过滤看用户实际操作商家号与响应字节（成功含 ticket 数据>150 字节，错误 50-90 字节）。
+
+【G94】电视屏登录页 + 商家后台登录自动拉真实商家号（2026-10-19）
+①电视屏登录页：v1.3.5 起把绑定界面改为登录页（输入商家号→点'登录并进入'→checkMerchant 调 /api/tv/{no}/screen 验证 code==0→保存 SharedPreferences 自动记住→进电视屏）。4.4 踩坑：HttpURLConnection 走 https 报 checkMerchant err（4.4 老 TLS 证书信任问题），改用 http://ybgtc.com 成功（与 loadQr http 策略一致）。焦点坑：软键盘弹出时 keyevent 导航无效，需 input keyevent 4 关键盘 + tap 坐标（登录按钮千分比 449-549,526-566 → 像素 575,379）。
+②商家后台登录存错商家号：后端 /api/merchant/auth/login 只返回 token 字符串，login.html 原兜底存 ibigou_merchant_no='M1001' → 叫号面板操作 M1001 空队列→'没有等待中的号'→电视屏无叫号。用户账号 13851918986 实测登录→DB 查 merchant 表确认 merchant_no=M90380836（鲜果时光，与电视屏一致）。修复：login.html 登录后调 /api/merchant/messages（带 token，返回 data[0].merchantNo）存真实商家号；后端 MerchantController.login 已改为返回 {token, merchantNo}（代码已改，待 rejar 部署）。
+③nginx 缓存坑：login.html 直出 location 已加但公网无参 URL 仍返回 jar 内旧版（proxy_cache cache_one 缓存 1 天），清 /www/server/nginx/proxy_cache_dir/* + reload 后生效。验证技巧：带 ?x=随机 参数可绕过缓存层判断新旧。
+
+【G95】电视屏登录页严格校验：空输入/输错都不能登录（2026-10-19）
+用户要求：没有输入商家编号、或没输对商家编号都不能登录。发现后端 /api/tv/{no}/screen 对任意商家号都返回 code=0（不存在时 data.config=null、merchantName=输入的编号本身）→ 原 checkMerchant 只判断 code==0 导致输错也能进（实测 M00000000 也进了电视屏）。修复：checkMerchant 增加严格判定——data.config 非空（真实商家有配置：merchantNo/prefix/enabled 等）或 data.merchantName 为真实商家名（不等于输入编号）才算有效。v1.3.8 实测三场景：①空输入点登录→Toast 请输入商家编号不进入 ✓ ②输错 M00000000→Toast 商家编号不存在不进入 ✓ ③输对 M90380836→进入电视屏（鲜果时光）✓。
+另外踩坑：①build 被用户消息打断导致装到投影的是旧代码版本，改码后必须重新构建再装；②极米 ROM keyevent 4(BACK) 在部分界面会退出/最小化 App，测试避免用 BACK；③logcat -d 在 4.4 缓冲大可能超时，用 -t N 限制行数。
+
+【G96】商家后台登录失败根因：JSON body 与后端 form 参数不兼容（2026-10-19）
+用户报'手机app无法登陆'。排查：新版 login.html 引 api.js，其 merchant.login 用 request() 发 Content-Type:application/json + JSON.stringify body；但后端 /api/merchant/auth/login 是 @RequestParam（只收 form）→ 实测 JSON body 返回 500 MissingServletRequestParameterException 'account'，form（?account=&password=）返回 code=0 token。修复：login.html 登录请求改为 fetch POST application/x-www-form-urlencoded（body=account=..&password=..），messages 拉商家号走 api.js request（GET 无 body 不受影响）。部署+清 proxy 缓存后公网验证：①form 登录 code=0 ②带 token GET messages 返回 M90380836 ③/h5/api.js HTTP 200。提醒：改 api.js 的登录封装或用 @RequestBody 改后端需同步两边格式。
+
+【G97】叫号提示'没有等待中的叫号'根因：商家号被存成带引号（2026-10-19）
+用户登录成功但点叫下一位提示'没有等待中的叫号'。电视屏明明有 14 个等待号、后端带 token 调 call-next(M90380836) 也成功。
+查 nginx 日志铁证：用户请求 /api/merchant/queue/call-next?merchantNo=%22M90380836%22（URL 编码带双引号）→ 后端查商家号 '"M90380836"' 不存在 → 空队列。
+根因：localStorage.ibigou_merchant_no 被旧代码以 JSON 字符串形式存成 '"M90380836"'（含双引号），queue.html 直接 getItem 取到带引号值。
+修复：queue.html / queue-config.html / ads.html 读取商家号时 cleanNo（去双引号+trim）。已部署三页面并验证。用户刷新叫号页即生效，无需重新登录。
+
+G98 双数据+ABCD排号修复（2026-10-20）：①双数据根因=旧代码ticketNo用活跃数+1计数，完成后序号回退复用历史号（今早A001撞9月A001）；前端取号无防重复；后端无唯一约束。修复：号段改按前缀最大号+1（不回退）+synchronized并发锁+前端按钮防重+DB唯一索引uk_merchant_ticket。清理A001/A002旧重复各1条。②ABCD排号：2人桌=A/4人桌=B/6人桌=C/10人桌=D/12人桌=E各自独立001递增，取号页显示号段提示。已验证A027/B003/C002/D002/E002+同phone幂等。部署：本地maven打包(D:\workspace-java\maven-3.9.9, settings-m2.xml, m2repo)+scp+kill -9旧进程(3674706)+start_ibigou.sh重启(PID1412220)。
+
+【G99】电视屏队列"重复数据"其实是滚动复制两份（2026-10-20）
+用户报'电视大屏上队列还是重复数据'。先查接口 /api/tv/M90380836/screen 数据无重复（A001/A002/B005 各1条），DB 也无重复 → 数据源没问题。adb 连投影截图实证：2人桌 A001 出现两次、4人桌 B005 出现两次。
+根因：tv.html 用无缝滚动（列表复制两份首尾相接实现连续滚动），号少时（每桌仅1-2个号）两份并排显示，视觉上像重复数据。
+修复：tv.html 增加 needScroll 判断——某桌号少于5个时该列静态单份显示（animation:none），号≥5才复制滚动。部署+清 nginx 缓存+重启 App 后截图确认：2人桌仅 A001、4人桌 A002/B005，无重复。
+教训：用户报'重复数据'先查数据源（DB/接口），再查渲染层；滚动复制是电视屏常见假重复来源。
+
+【G100】未读四文档被用户批评：AGENTS.md 不是规矩文档（2026-10-20）
+用户问'你的规矩文档查的是哪里的规矩文档，路径显示出来'，随后明确'你看AGENTS.md干嘛，删除这个文件'。
+教训：本项目的权威规则在根目录四文档——规矩文档.txt / 采坑日志.txt / shared-memory.json / 知识图谱.md（D:\workspace-java\ybg-master\），AGENTS.md 只是 Codex 助手的工作手册（含旧环境信息 Z盘等，已过时）；每次开工必须先读四文档（规矩文档 G12 user_rules 明确要求'每次开工前先检测知识库'），不得以系统注入文件代替。AGENTS.md 已按用户要求删除。

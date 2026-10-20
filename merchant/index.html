@@ -47,7 +47,8 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;backgrou
 </div>
 
 <script>
-var merchantNo = localStorage.getItem('ibigou_merchant_no') || 'M001';
+function cleanNo(v){ return (v||'').replace(/"/g,'').trim(); }
+var merchantNo = cleanNo(localStorage.getItem('ibigou_merchant_no')) || 'M001';
 // 所有链接加 merchantNo 参数
 document.querySelectorAll('a').forEach(function(a){
   var href = a.getAttribute('href');

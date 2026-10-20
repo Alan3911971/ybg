@@ -55,6 +55,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;backgrou
       <option value="4">4人桌</option>
       <option value="6">6人桌</option>
       <option value="10">10人桌</option>
+      <option value="12">12人桌</option>
     </select>
     <label style="display:flex;align-items:center;gap:6px;font-size:14px;color:#64748b;cursor:pointer;">
       <input type="checkbox" id="autoNext" checked>
@@ -90,10 +91,32 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;backgrou
 </div>
 
 <script>
-var merchantNo = new URLSearchParams(location.search).get('merchantNo') || 'M001';
+function cleanNo(v){ return (v||'').replace(/"/g,'').trim(); }
+var merchantNo = cleanNo(new URLSearchParams(location.search).get('merchantNo')) || cleanNo(localStorage.getItem('ibigou_merchant_no')) || 'M001';
 var currentTicket = null;
+function showMsg(msg, type){
+  try{
+    var el = document.getElementById('toastMsg');
+    if(!el){
+      el = document.createElement('div');
+      el.id = 'toastMsg';
+      el.style.cssText = 'position:fixed;top:12px;left:50%;transform:translateX(-50%);z-index:999;padding:10px 20px;border-radius:8px;font-size:14px;font-weight:600;color:#fff;box-shadow:0 4px 12px rgba(0,0,0,.2);transition:opacity .3s;max-width:80%;text-align:center;';
+      document.body.appendChild(el);
+    }
+    el.style.background = (type==='err') ? '#dc2626' : '#16a34a';
+    el.textContent = msg;
+    el.style.opacity = '1';
+    clearTimeout(el._t);
+    el._t = setTimeout(function(){ el.style.opacity = '0'; }, 2500);
+  }catch(e){}
+}
 function api(path, method){
-  return fetch(path, {method: method||'GET'}).then(function(r){return r.json();});
+  var headers = {};
+  try{
+    var tk = localStorage.getItem('ibigou_merchant_token');
+    if(tk) headers['X-Merchant-Token'] = tk;
+  }catch(e){}
+  return fetch(path, {method: method||'GET', headers: headers}).then(function(r){return r.json();});
 }
 function load(){
   api('/api/merchant/queue/list?merchantNo='+merchantNo).then(function(res){
@@ -134,11 +157,13 @@ function renderList(id, list, tag){
   el.innerHTML = html;
 }
 function callNext(){
+  if(currentTicket){ showMsg('当前叫号 '+currentTicket.ticketNo+' 未完成，请先完成或过号','err'); return; }
   var seats = document.getElementById('callSeats').value;
   var url = '/api/merchant/queue/call-next?merchantNo='+merchantNo;
   if(seats) url += '&seats='+seats;
   api(url,'POST').then(function(res){
-    if(res.code!==0){alert(res.msg);return;}
+    if(res.code!==0){showMsg(res.msg,'err');return;}
+    showMsg('已叫号 ' + ((res.data&&res.data.ticketNo)||''), 'ok');
     playDing();
     load();
   });
@@ -156,13 +181,14 @@ function playDing(){
     osc.stop(ctx.currentTime + 0.5);
   }catch(e){}
 }
-function finish(){ if(!currentTicket) return; api('/api/merchant/queue/finish?merchantNo='+merchantNo+'&ticketNo='+currentTicket.ticketNo,'POST').then(function(){ load(); // 自动叫下一位
+function finish(){ if(!currentTicket) return; api('/api/merchant/queue/finish?merchantNo='+merchantNo+'&ticketNo='+currentTicket.ticketNo,'POST').then(function(res){ if(res.code!==0){showMsg(res.msg,'err');return;} showMsg('已完成 ' + currentTicket.ticketNo, 'ok'); load(); // 自动叫下一位
   if(document.getElementById('autoNext').checked){ setTimeout(callNext, 500); }
 }); }
-function skip(){ if(!currentTicket) return; api('/api/merchant/queue/skip?merchantNo='+merchantNo+'&ticketNo='+currentTicket.ticketNo,'POST').then(load); }
+function skip(){ if(!currentTicket) return; api('/api/merchant/queue/skip?merchantNo='+merchantNo+'&ticketNo='+currentTicket.ticketNo,'POST').then(function(res){ if(res.code!==0){showMsg(res.msg,'err');return;} showMsg('已过号 ' + currentTicket.ticketNo, 'ok'); load(); }); }
 function recall(ticketNo){
   api('/api/merchant/queue/call?merchantNo='+merchantNo+'&ticketNo='+ticketNo,'POST').then(function(res){
-    if(res.code!==0){alert(res.msg);return;}
+    if(res.code!==0){showMsg(res.msg,'err');return;}
+    showMsg('已重呼 ' + ticketNo, 'ok');
     playDing();
     load();
   });

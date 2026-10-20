@@ -13,6 +13,8 @@ import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Map;
+import java.util.HashMap;
 
 /**
  * 商家 H5 后台 API（B 端）：登录、手工核销/扣减、配置只读、用户资产查询。
@@ -51,8 +53,13 @@ public class MerchantController {
     private final ChatService chatService;
 
     @PostMapping("/auth/login")
-    public Result<String> login(@RequestParam String account, @RequestParam String password) {
-        return Result.ok(authService.login(account, password));
+    public Result<Map<String, Object>> login(@RequestParam String account, @RequestParam String password) {
+        String token = authService.login(account, password);
+        // 返回 token + 商家号，前端登录后无需再兜底默认商家（修复叫号面板操作错商家问题）
+        Map<String, Object> m = new HashMap<>();
+        m.put("token", token);
+        m.put("merchantNo", authService.merchantNoByToken(token));
+        return Result.ok(m);
     }
 
     /** F-1 手工核销优惠券（仅发行商家；外来券禁止） */

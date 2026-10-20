@@ -31,24 +31,33 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;backgrou
 
 <div class="card" id="stepForm">
   <h2>填写取号信息</h2>
-  <div class="form-group">
-    <label>手机号</label>
-    <input type="tel" id="phone" placeholder="请输入手机号" maxlength="11">
-  </div>
-  <div class="form-group" id="seatGroup" style="display:none;">
-    <label>人数桌型</label>
-    <select id="seats">
-      <option value="2">2人桌</option>
-      <option value="4" selected>4人桌</option>
-      <option value="6">6人桌</option>
-      <option value="8">8人桌</option>
+  <div class="form-group" id="seatGroup">
+    <label>就餐人数</label>
+    <select id="seats" onchange="matchSeat()">
+      <option value="" selected>请选择人数</option>
+      <option value="1">1人</option>
+      <option value="2">2人</option>
+      <option value="3">3人</option>
+      <option value="4">4人</option>
+      <option value="5">5人</option>
+      <option value="6">6人</option>
+      <option value="7">7人</option>
+      <option value="8">8人</option>
+      <option value="9">9人</option>
+      <option value="10">10人</option>
+      <option value="11">11人</option>
+      <option value="12">12人</option>
     </select>
+  </div>
+  <div class="form-group" id="seatMatch" style="display:none;">
+    <label>匹配桌型</label>
+    <div id="seatMatchTip" style="font-size:16px;color:#0ea5e9;font-weight:600;line-height:44px;"></div>
   </div>
   <div class="form-group" id="windowGroup" style="display:none;">
     <label>窗口号</label>
     <select id="windowNo"></select>
   </div>
-  <button class="btn" onclick="take()">取号</button>
+  <button class="btn" id="takeBtn" onclick="take()">取号</button>
 </div>
 
 <div class="card hidden" id="stepResult">
@@ -64,6 +73,8 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;backgrou
 var merchantNo = new URLSearchParams(location.search).get('merchantNo') || 'M001';
 var openid = new URLSearchParams(location.search).get('openid');
 var cfgEstWait = 10;
+// 不需要手机号：取号时自动生成唯一虚拟号（后端 phone 必填，前端隐藏）
+var vphone = null;
 
 // 微信 OAuth 授权
 function wxAuth(){
@@ -77,11 +88,37 @@ function wxAuth(){
     });
 }
 
-// 检查是否在微信里且没有 openid
-function isWeChat(){ return /MicroMessenger/i.test(navigator.userAgent); }
-if(isWeChat() && !openid){ wxAuth(); }
+// 微信 OAuth：保留函数但不再强制跳转——扫码直接进入取号页（openid 非必填，取号不依赖微信授权）
+// if(isWeChat() && !openid){ wxAuth(); }
 
 function api(path){return fetch(path).then(function(r){return r.json();});}
+function apiPost(path){return fetch(path, {method:'POST'}).then(function(r){return r.json();});}
+
+// 自动匹配桌型（商家桌型容量：2/4/6/10/12）
+function matchSeatType(n){
+  if(n <= 2) return 2;
+  if(n <= 4) return 4;
+  if(n <= 6) return 6;
+  if(n <= 10) return 10;
+  return 12;
+}
+function matchSeat(){
+  var n = parseInt(document.getElementById('seats').value);
+  if(!n){ document.getElementById('seatMatch').style.display = 'none'; return; }
+  var t = matchSeatType(n);
+  var pf = seatPrefix(t);
+  document.getElementById('seatMatch').style.display = '';
+  document.getElementById('seatMatchTip').textContent = '已自动匹配 ' + t + ' 人桌（' + pf + ' 号段）';
+}
+
+// 桌型容量 → 号段字母（与后端一致：2人桌=A、4人桌=B、6人桌=C、10人桌=D、12人桌=E）
+function seatPrefix(t){
+  if(t <= 2) return 'A';
+  if(t <= 4) return 'B';
+  if(t <= 6) return 'C';
+  if(t <= 10) return 'D';
+  return 'E';
+}
 
 // 加载配置
 api('/api/tv/'+merchantNo+'/screen').then(function(res){
@@ -91,7 +128,6 @@ api('/api/tv/'+merchantNo+'/screen').then(function(res){
   var cfg = d.config;
   if(cfg){
     cfgEstWait = cfg.estWaitMin || 10;
-    if(cfg.seatConfig) document.getElementById('seatGroup').style.display = '';
     if(cfg.windowCount > 1){
       document.getElementById('windowGroup').style.display = '';
       var sel = document.getElementById('windowNo');
@@ -104,25 +140,40 @@ api('/api/tv/'+merchantNo+'/screen').then(function(res){
   }
 });
 
+var taking = false;
 function take(){
-  var phone = document.getElementById('phone').value.trim();
-  if(!phone || !/^1\d{10}$/.test(phone)){alert('请输入正确手机号');return;}
-  var seats = document.getElementById('seatGroup').style.display !== 'none' ? document.getElementById('seats').value : null;
+  // 防重复提交：请求中禁用按钮，避免双击产生双数据
+  if(taking){ return; }
+  // 人数必选（1-12 人自由选择）
+  var seatsVal = document.getElementById('seats').value;
+  if(!seatsVal){alert('请选择就餐人数');return;}
+  // 自动匹配到对应桌型容量提交（后端按桌型排队显示）
+  var seats = matchSeatType(parseInt(seatsVal));
+  // 生成唯一虚拟号（隐藏手机号，后端接口 phone 必填）
+  vphone = '1' + String(Date.now()).slice(-10);
   var win = document.getElementById('windowGroup').style.display !== 'none' ? document.getElementById('windowNo').value : null;
-  var url = '/api/tv/'+merchantNo+'/take?phone='+phone;
-  if(seats) url += '&seats='+seats;
+  var url = '/api/tv/'+merchantNo+'/take?phone='+vphone+'&seats='+seats;
   if(win) url += '&windowNo='+win;
   if(openid) url += '&openid='+encodeURIComponent(openid);
-  api(url).then(function(res){
-    if(res.code!==0){alert(res.msg||'取号失败');return;}
+  taking = true;
+  var btn = document.getElementById('takeBtn');
+  btn.disabled = true; btn.textContent = '取号中…';
+  apiPost(url).then(function(res){
+    if(res.code!==0){
+      alert(res.msg||'取号失败');
+      taking = false; btn.disabled = false; btn.textContent = '取号';
+      return;
+    }
     showResult(res.data);
+  }).catch(function(e){
+    taking = false; btn.disabled = false; btn.textContent = '取号';
+    alert('网络异常，请重试');
   });
 }
 
 function refresh(){
-  var phone = document.getElementById('phone').value.trim();
-  if(!phone) return;
-  api('/api/tv/'+merchantNo+'/my?phone='+phone).then(function(res){
+  if(!vphone) return;
+  api('/api/tv/'+merchantNo+'/my?phone='+vphone).then(function(res){
     if(res.code!==0) return;
     showResult(res.data);
   });
@@ -138,9 +189,8 @@ function showResult(d){
   // 自动刷新进度
   clearTimeout(window._refreshTimer);
   window._refreshTimer = setInterval(function(){
-    var phone = document.getElementById('phone').value.trim();
-    if(!phone) return;
-    api('/api/tv/'+merchantNo+'/my?phone='+phone).then(function(res){
+    if(!vphone) return;
+    api('/api/tv/'+merchantNo+'/my?phone='+vphone).then(function(res){
       if(res.code!==0) return;
       var dd = res.data;
       document.getElementById('ticketNo').textContent = dd.ticketNo;

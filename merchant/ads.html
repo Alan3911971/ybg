@@ -87,9 +87,19 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;backgrou
 </div>
 
 <script>
-var merchantNo = new URLSearchParams(location.search).get('merchantNo') || 'M001';
+function cleanNo(v){ return (v||'').replace(/"/g,'').trim(); }
+var merchantNo = cleanNo(new URLSearchParams(location.search).get('merchantNo')) || cleanNo(localStorage.getItem('ibigou_merchant_no')) || 'M001';
 function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
-function api(path, method){return fetch(path,{method:method||'GET'}).then(function(r){return r.json();});}
+function api(path, method){
+  var headers = {};
+  try{ var tk = localStorage.getItem('ibigou_merchant_token'); if(tk) headers['X-Merchant-Token'] = tk; }catch(e){}
+  return fetch(path, {method: method||'GET', headers: headers}).then(function(r){return r.json();});
+}
+function authHeaders(){
+  var headers = {};
+  try{ var tk = localStorage.getItem('ibigou_merchant_token'); if(tk) headers['X-Merchant-Token'] = tk; }catch(e){}
+  return headers;
+}
 function load(){
   api('/api/merchant/queue/ads?merchantNo='+merchantNo).then(function(res){
     if(res.code!==0) return;
@@ -132,7 +142,7 @@ function createAd(){
     var fd = new FormData();
     fd.append('merchantNo', merchantNo);
     fd.append('file', fileInput.files[0]);
-    fetch('/api/merchant/queue/ads/upload', {method:'POST', body: fd})
+    fetch('/api/merchant/queue/ads/upload', {method:'POST', body: fd, headers: authHeaders()})
       .then(function(r){return r.json();})
       .then(function(res){
         if(res.code !== 0){alert(res.msg);return;}
@@ -143,11 +153,11 @@ function createAd(){
   }
 }
 function toggle(id, enabled){
-  fetch('/api/merchant/queue/ads/'+id+'?enabled='+enabled,{method:'PUT'}).then(function(){load();});
+  fetch('/api/merchant/queue/ads/'+id+'?enabled='+enabled,{method:'PUT', headers: authHeaders()}).then(function(){load();});
 }
 function del(id){
   if(!confirm('确认删除？')) return;
-  fetch('/api/merchant/queue/ads/'+id,{method:'DELETE'}).then(function(){load();});
+  fetch('/api/merchant/queue/ads/'+id,{method:'DELETE', headers: authHeaders()}).then(function(){load();});
 }
 function moveSort(id, newSort){
   fetch('/api/merchant/queue/ads/'+id+'?sort='+newSort,{method:'PUT'}).then(function(){load();});

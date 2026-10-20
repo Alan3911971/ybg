@@ -1,6 +1,6 @@
 {
   "project": "宜必购盲盒系统 (ybgtc.com)",
-  "last_updated": "2026-09-28",
+  "last_updated": "2026-10-20",
   "note": "AOCI 仓库认知索引已建立（641条 aligned）",
   "environment": {
     "code_root": "D:\\workspace-java\\ybg-master",
@@ -709,6 +709,60 @@
       ],
       "deployed": true,
       "tested": true
+    },
+    {
+      "date": "2026-10-19",
+      "features": [
+        "电视大屏 APK（ibigou-tv v1.0.0）：Android TV WebView 壳，minSdk 17 兼容安卓4.2，横屏全屏加载 https://ybgtc.com/h5/tv.html?merchantNo=xxx（默认M90380836，Intent extra 可覆盖）",
+        "原生播报桥接：JS 接口 AndroidTV.speakUrl()/speak()（4.2 WebView 无 Web Audio API），云端百度女声优先、失败回退系统 TTS、再失败通知音",
+        "tv.html playTts 增加 AndroidTV 原生桥接分支（网页版无 AndroidTV 时走原逻辑不受影响），已部署生产 /www/wwwroot/ybgtc.com/h5/tv.html",
+        "构建：AGP 8.5.2 + compileSdk 34 + minSdk 17，纯系统 API 无 androidx 依赖，APK 30.6KB debug 签名；leanback-launchable-activity 电视桌面入口",
+        "产出：D:\\workspace-java\\ibigou-tv\\宜必购电视大屏-v1.0.0.apk；工程 D:\\workspace-java\\ibigou-tv",
+        "Gradle 用户缓存重定向 D:\\workspace-java\\.gradle-home（用户约束：安装任何文件代码必须去 D 盘，C 盘禁止）"
+      ],
+      "files_changed": [
+        "tv.html（playTts 原生播报桥接分支）→ 已 scp 部署生产",
+        "新建 D:\\workspace-java\\ibigou-tv\\（settings.gradle/build.gradle/app/build.gradle/gradle.properties/local.properties）",
+        "新建 app/src/main/java/com/ibigou/tv/MainActivity.java、NativeTTS.java（API17 兼容：三参speak/setAudioAttributes版本判断/evaluateJavascript降级loadUrl）",
+        "新建 app/src/main/AndroidManifest.xml（LEANBACK_LAUNCHER+横屏+keepScreenOn）、res 图标/横幅/strings",
+        "shared-memory.json（本记录）"
+      ],
+      "deployed": true,
+      "tested": false
+    },
+    {
+      "date": "2026-10-20",
+      "features": [
+        "电视大屏取号叫号闭环：扫码取号双数据修复 + ABCDE号段排号 + 电视屏队列重复显示修复",
+        "双数据三层防护：①号段改'前缀最大号+1'（旧代码用活跃数计数会回退复用历史号，实测今早A001撞9月A001）②synchronized并发锁+同phone未完成幂等返回原号③前端取号按钮防重+DB唯一索引uk_merchant_ticket",
+        "ABCDE号段：1-2人→A(2人桌)/3-4人→B(4人桌)/5-6人→C(6人桌)/7-10人→D(10人桌)/11-12人→E(12人桌)，各自独立001递增；queue.html选人数提示'已自动匹配X人桌（X号段）'",
+        "tv.html队列渲染修复：号少于5个时静态单份显示（原无缝滚动把每列复制两份，号少时视觉像重复数据），号≥5才滚动",
+        "生产已部署：新jar(PID1412220)+queue.html+tv.html+nginx缓存清空；接口实测A027/B003/C002/D002/E002+同phone幂等+投影截图确认无重复"
+      ],
+      "files_changed": [
+        "backend/src/main/java/com/ibigou/blindbox/controller/TvQueueController.java（take：prefixBySeats+synchronized+唯一索引兜底）",
+        "backend/src/main/java/com/ibigou/blindbox/repository/MerchantQueueTicketRepository.java（findFirstByMerchantNoAndTicketNoStartingWithOrderByTicketNoDesc）",
+        "backend/src/main/java/com/ibigou/blindbox/controller/MerchantController.java（补import java.util.Map/HashMap，编译修复）",
+        "queue.html（take防重复+seatPrefix号段提示）",
+        "tv.html（queue渲染needScroll判断）",
+        "采坑日志.txt（G98）"
+      ],
+      "deployed": true,
+      "tested": true
+    },
+    {
+      "date": "2026-10-20",
+      "features": [
+        "G11 双向备份执行记录：NAS 备份完成（192.168.31.228 /volume1/docker/github-backup/ybg-master，tar 254MB 管道传输，commit 1317aec，1094 files）",
+        "GitHub 备份待办：推送脚本 _push_gh_full.py 需 GH_PAT 环境变量（token 由用户持有，已脱敏），用户提供 token 后立即补推",
+        "四文档已通读+更新：规矩文档.txt(全文G00-G32)、采坑日志.txt(新增G99队列滚动复制假重复/G100未读四文档教训)、shared-memory.json(本轮dev_log)、知识图谱.md(电视大屏2026-10-20小节)、task_board.ibigou.json(IBIGOU-TV-20261020 completed)"
+      ],
+      "files_changed": [
+        "采坑日志.txt（追加 G99/G100）",
+        "shared-memory.json（本轮备份状态）"
+      ],
+      "deployed": false,
+      "tested": false
     }
   ],
   "spec_kit": {

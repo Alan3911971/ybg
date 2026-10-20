@@ -104,12 +104,7 @@ public class TvQueueController {
         if (cfg == null || cfg.getEnabled() != 1) {
             return Result.fail("排队未开启");
         }
-        // 生成下一个号
-        long count = ticketRepository.countByMerchantNoAndStatus(merchantNo, 0)
-                + ticketRepository.countByMerchantNoAndStatus(merchantNo, 1);
-        String prefix = cfg.getPrefix() != null ? cfg.getPrefix() : "A";
-        String ticketNo = prefix + String.format("%03d", count + 1);
-        // 检查是否已取号
+        // 检查是否已取号（同一手机号未完成时直接返回旧号，防重复取号产生双数据）
         List<MerchantQueueTicket> existing = ticketRepository
                 .findByMerchantNoAndPhoneAndStatusInOrderByCreateTimeDesc(merchantNo, phone, List.of(0, 1));
         if (!existing.isEmpty()) {
@@ -123,15 +118,44 @@ public class TvQueueController {
             m.put("ahead", ahead);
             return Result.ok(m);
         }
-        MerchantQueueTicket t = new MerchantQueueTicket();
-        t.setMerchantNo(merchantNo);
-        t.setTicketNo(ticketNo);
-        t.setPhone(phone);
-        t.setSeats(seats);
-        t.setWindowNo(windowNo);
-        t.setStatus(0);
-        t.setCreateTime(LocalDateTime.now());
-        ticketRepository.save(t);
+        // 按人数/桌型分字母号段：2人桌=A、4人桌=B、6人桌=C、10人桌=D、12人桌=E（各自独立排号）
+        String prefix = prefixBySeats(seats);
+        // 生成号：该号段当前最大号 + 1（synchronized 防并发同毫秒撞号）
+        String ticketNo;
+        synchronized (("TVQ-" + merchantNo).intern()) {
+            int seq = 0;
+            Optional<MerchantQueueTicket> last = ticketRepository
+                    .findFirstByMerchantNoAndTicketNoStartingWithOrderByTicketNoDesc(merchantNo, prefix);
+            if (last.isPresent()) {
+                seq = parseSeq(last.get().getTicketNo(), prefix);
+            }
+            ticketNo = prefix + String.format("%03d", seq + 1);
+            MerchantQueueTicket t = new MerchantQueueTicket();
+            t.setMerchantNo(merchantNo);
+            t.setTicketNo(ticketNo);
+            t.setPhone(phone);
+            t.setSeats(seats);
+            t.setWindowNo(windowNo);
+            t.setStatus(0);
+            t.setCreateTime(LocalDateTime.now());
+            try {
+                ticketRepository.save(t);
+            } catch (Exception ex) {
+                // 唯一索引冲突（极端并发）兜底：返回已存在的同号
+                Optional<MerchantQueueTicket> dup = ticketRepository.findByMerchantNoAndTicketNo(merchantNo, ticketNo);
+                if (dup.isPresent()) {
+                    MerchantQueueTicket d = dup.get();
+                    Map<String, Object> m = new HashMap<>();
+                    m.put("ticketNo", d.getTicketNo());
+                    m.put("seats", d.getSeats());
+                    m.put("windowNo", d.getWindowNo());
+                    m.put("status", d.getStatus());
+                    m.put("ahead", ticketRepository.countByMerchantNoAndStatus(merchantNo, 0));
+                    return Result.ok(m);
+                }
+                throw ex;
+            }
+        }
         // 绑定 openid
         if (openid != null && !openid.isBlank()) {
             wxTemplateService.bindOpenid(phone, openid);
@@ -145,6 +169,26 @@ public class TvQueueController {
         m.put("ahead", ahead);
         m.put("estWaitMin", cfg.getEstWaitMin());
         return Result.ok(m);
+    }
+
+    /** 桌型容量 → 字母号段（1-2人→A、3-4人→B、5-6人→C、7-10人→D、11-12人→E） */
+    private String prefixBySeats(Integer seats) {
+        if (seats == null) return "A";
+        return switch (seats) {
+            case 4 -> "B";
+            case 6 -> "C";
+            case 10 -> "D";
+            case 12 -> "E";
+            default -> "A";
+        };
+    }
+
+    private int parseSeq(String ticketNo, String prefix) {
+        try {
+            return Integer.parseInt(ticketNo.substring(prefix.length()));
+        } catch (Exception e) {
+            return 0;
+        }
     }
 
     /** 顾客查排队进度 */
