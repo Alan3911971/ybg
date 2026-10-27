@@ -1,6 +1,6 @@
 {
   "project": "宜必购盲盒系统 (ybgtc.com)",
-  "last_updated": "2026-10-27（G38 副本分叉订正 / jar 路径冲突标注 / pending_tasks 换成真实现期待办 / 音效 12 vs 17 口径）",
+  "last_updated": "2026-10-27 11:00 侧边栏风波后按用户拍板采用老版；V3 后台补全（物业19/平台17/登录4屏）设计稿完成，见 v3_admin_complete_20261027",
   "note": "AOCI 仓库认知索引已建立（641条 aligned）",
   "environment": {
     "code_root": "D:\\workspace-java\\ybg-master",
@@ -243,7 +243,8 @@
       "root_cause": "生产 MySQL 是宿主机原生宝塔（/www/server/mysql:3306），没有 ibigou-mysql docker 容器；部署脚本用 docker exec 跑 ALTER 失败，又被 2>/dev/null + || echo \"已存在\" 吞掉",
       "solution": "改用宿主机 mysql 客户端 + .env 连接信息；用 information_schema 先查后 ALTER 做真幂等；stderr 不要吞",
       "prevention": "_deploy_win_scene.py 的 2.5/5.5 已同步修正；后续迁移一律用宿主机 mysql"
-    }
+    },
+    "V3 改版稿内的「线上形态」注释可能写错（G123）：补页前必须 grep 实测线上 .sidebar/<nav>，以实测为准"
   ],
   "pending_tasks": [
     "【待办】订正四文档 jar 路径矛盾：ps 实测 /www/wwwroot/ybgtc.com vs ybgtc-app 谁是真正跑的，再统一四文档口径",
@@ -1314,5 +1315,20 @@
     "铁律": "说几个音效必须指明口径，否则 12 与 17 永远打架",
     "校验脚本": "_check_win_fx.js 63 项 / _check_win_fx_wav.py 12 个",
     "旧口径已废止": "_check_win_fx.js 35 项 / _check_win_fx_wav.py 5 段（30-26 早先版本，知识图谱 116 行仍停留在此）"
+  },
+  "v3_admin_complete_20261027": {
+    "date": "2026-10-27",
+    "what": "V3 改版稿后台补全：物业 6→19 视图、平台 1→17 视图（形态订正为侧栏后台）、新增 admin-login.html 与 merchant-auth.html",
+    "files": [
+      "_redesign_v3/property-app.html",
+      "_redesign_v3/platform-app.html",
+      "_redesign_v3/admin-login.html",
+      "_redesign_v3/merchant-auth.html",
+      "_redesign_v3/tokens.css",
+      "_redesign_v3/index.html"
+    ],
+    "generators": "D:/workspace-java/_v3_lib.py + _gen_v3_property.py / _gen_v3_platform.py / _gen_v3_auth.py（G39 临时脚本）",
+    "form_correction": "线上平台后台实测是侧栏后台（.sidebar+nav 11 项），旧稿卡片流说法作废；见采坑 G123",
+    "status": "设计稿补全完成，未接入线上（线上 4 个 admin 目录仍是老版）"
   }
 }

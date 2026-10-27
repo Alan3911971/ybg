@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>宜必购改版 v3 · 设计总览</title>
+<link rel="stylesheet" href="tokens.css">
+<style>
+  body { max-width: 900px; margin: 0 auto; padding: 48px 26px 80px; }
+
+  /* ---------- 页头 ---------- */
+  .hero { position: relative; background: linear-gradient(150deg, var(--brand), var(--brand-deep));
+          color: #fff; border-radius: var(--r-xl); padding: 26px 96px 24px 26px;
+          box-shadow: 0 16px 34px -16px rgba(14,122,107,.62); overflow: hidden; }
+  .hero .eyebrow { font-size: 11.5px; letter-spacing: 1.4px; text-transform: uppercase;
+                   color: rgba(255,255,255,.72); font-weight: 600; margin-bottom: 8px; }
+  .hero h1 { font-size: 29px; font-weight: 700; letter-spacing: -.4px; line-height: 1.25; }
+  .hero h1 em { font-style: normal; color: #ffd66b; }
+  .hero p { margin-top: 10px; font-size: 13.5px; line-height: 1.7; color: rgba(255,255,255,.88); max-width: 560px; }
+  .hero .cap-float { position: absolute; right: 20px; top: 16px; width: 56px; height: 56px;
+                     animation: floaty 4.2s var(--ease) infinite; }
+  @keyframes floaty { 0%,100% { transform: translateY(0) rotate(-4deg); } 50% { transform: translateY(-7px) rotate(4deg); } }
+
+  .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin: 16px 0 30px; }
+  .st { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-lg);
+        padding: 13px 14px; box-shadow: var(--sh-1); }
+  .st .n { font-size: 22px; font-weight: 700; color: var(--brand); line-height: 1.1; }
+  .st .n small { font-size: 12px; font-weight: 600; color: var(--ink-3); margin-left: 2px; }
+  .st .l { font-size: 11.5px; color: var(--ink-2); margin-top: 3px; }
+
+  /* ---------- 链路图 ---------- */
+  .flow { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-lg);
+          padding: 18px 18px 16px; margin-bottom: 30px; box-shadow: var(--sh-1); }
+  .flow-t { font-size: 13px; font-weight: 650; margin-bottom: 3px; }
+  .flow-s { font-size: 12px; color: var(--ink-3); margin-bottom: 14px; }
+  .chain { display: flex; align-items: stretch; gap: 0; flex-wrap: wrap; }
+  .node { flex: 1 1 120px; min-width: 104px; text-decoration: none; color: inherit;
+          background: var(--surface-2); border: 1px solid var(--line); border-radius: var(--r-md);
+          padding: 10px 8px 11px; text-align: center; transition: all .18s var(--ease); }
+  .node:hover { background: var(--brand-soft); border-color: var(--brand); transform: translateY(-2px); box-shadow: var(--sh-1); }
+  .node .i { display: block; font-size: 11px; font-weight: 700; color: var(--brand); letter-spacing: .5px; }
+  .node .w { display: block; font-size: 13px; font-weight: 600; margin-top: 3px; }
+  .node .h { display: block; font-size: 11px; color: var(--ink-3); margin-top: 2px; }
+  .node.none { background: #fff; border-style: dashed; }
+  .node.none:hover { background: #fff; border-color: var(--line); transform: none; box-shadow: none; cursor: default; }
+  .arw { flex: 0 0 22px; display: flex; align-items: center; justify-content: center; color: var(--ink-3); font-size: 13px; }
+
+  /* ---------- 分组 ---------- */
+  .sec { display: flex; align-items: center; gap: 9px; margin: 0 0 12px; font-size: 15.5px; font-weight: 650; }
+  .sec .pill { font-size: 11px; font-weight: 600; padding: 2px 9px; border-radius: var(--r-pill); }
+  .pill.new { background: var(--pop-coral-soft); color: #c43b2e; }
+  .pill.toy { background: var(--pop-sun-soft); color: #8a6410; }
+  .pill.rich { background: var(--brand-soft); color: var(--brand-deep); }
+  .pill.keep { background: var(--surface-2); color: var(--ink-2); border: 1px solid var(--line); }
+  .sec .cnt { margin-left: auto; font-size: 12px; font-weight: 500; color: var(--ink-3); }
+
+  .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 11px; margin-bottom: 28px; }
+  .card-link { display: block; position: relative; background: var(--surface); border: 1px solid var(--line);
+               border-radius: var(--r-lg); padding: 14px 16px 13px; text-decoration: none;
+               box-shadow: var(--sh-1); transition: all .18s var(--ease); }
+  .card-link:hover { box-shadow: var(--sh-2); transform: translateY(-2px); border-color: var(--brand); }
+  .card-link .t { font-size: 14.5px; font-weight: 620; display: flex; align-items: center; gap: 6px; }
+  .card-link .d { font-size: 12.5px; color: var(--ink-2); margin-top: 4px; line-height: 1.55; }
+  .card-link .go { font-size: 11.5px; color: var(--brand); font-weight: 600; margin-top: 8px; }
+  .badge { font-size: 10px; font-weight: 700; padding: 1px 6px; border-radius: var(--r-sm); letter-spacing: .2px; }
+  .badge.b-new { background: var(--pop-coral-soft); color: #c43b2e; }
+  .badge.b-rich { background: var(--brand-soft); color: var(--brand-deep); }
+  .badge.b-keep { background: var(--surface-2); color: var(--ink-3); }
+  .badge.b-toy { background: var(--pop-sun-soft); color: #8a6410; }
+
+  /* ---------- 说明 ---------- */
+  .notes { display: grid; grid-template-columns: repeat(2, 1fr); gap: 11px; }
+  .note-b { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-lg);
+            padding: 14px 16px; font-size: 12.5px; line-height: 1.7; color: var(--ink-2); box-shadow: var(--sh-1); }
+  .note-b b { display: block; font-size: 13px; color: var(--ink); margin-bottom: 5px; font-weight: 620; }
+  .note-b.warn { background: var(--pop-sun-soft); border-color: #f3e0b0; color: #7d5a0d; }
+  .note-b.warn b { color: #6b4c09; }
+
+  .foot { margin-top: 30px; padding-top: 15px; border-top: 1px solid var(--line);
+          font-size: 12px; color: var(--ink-3); display: flex; gap: 14px; flex-wrap: wrap; }
+  .foot span b { color: var(--ink-2); font-weight: 600; }
+
+  @media (max-width: 720px) {
+    body { padding: 26px 15px 56px; }
+    .hero { padding: 22px 20px; }
+    .hero .cap-float { width: 42px; height: 42px; right: 12px; top: 12px; opacity: .85; }
+    .stats { grid-template-columns: repeat(2, 1fr); }
+    .grid, .notes { grid-template-columns: 1fr; }
+    .arw { display: none; }
+    .node { flex: 1 1 46%; margin-bottom: 8px; }
+  }
+</style>
+</head>
+<body>
+
+  <div class="hero">
+    <span class="cap-float"><svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="44" fill="#fff" opacity=".93"/><path d="M18 50a32 32 0 0 1 64 0Z" fill="#ffc53d"/><line x1="18" y1="50" x2="82" y2="50" stroke="#e0a91f" stroke-width="3"/><text x="50" y="64" font-size="38" font-weight="800" text-anchor="middle" fill="#0a5f54">?</text></svg></span>
+    <div class="eyebrow">YBG · REDESIGN V3</div>
+    <h1>宜必购全端改版 · <em>克制潮玩</em></h1>
+    <p>v1 太花哨廉价，v2 太冷无趣。v3 取其中：清爽专业的可信底座不动，只把盲盒的「抽 / 开 / 集」做成产品记忆点；收银台与三大后台保持安静。</p>
+  </div>
+
+  <div class="stats">
+    <div class="st"><div class="n">25<small> 页</small></div><div class="l">设计稿总数</div></div>
+    <div class="st"><div class="n">12<small> 页</small></div><div class="l">顾客端（1:1 覆盖生产）</div></div>
+    <div class="st"><div class="n">13<small> 页</small></div><div class="l">商家 / 物业 / 平台后台</div></div>
+    <div class="st"><div class="n">1<small> 套</small></div><div class="l">设计系统 tokens.css</div></div>
+  </div>
+
+  <div class="flow">
+    <div class="flow-t">顾客主链路（与生产真实跳转一致）</div>
+    <div class="flow-s">扫码 → 登录 → 选参与方式 → 抽盒 → 开盒 → 收银台；订单/客服为链路外支线</div>
+    <div class="chain">
+      <a class="node" href="customer-login.html"><span class="i">01</span><span class="w">登录</span><span class="h">验证码</span></a>
+      <span class="arw">→</span>
+      <a class="node" href="customer-choose.html"><span class="i">02</span><span class="w">选参与方式</span><span class="h">到店扫码入口</span></a>
+      <span class="arw">→</span>
+      <a class="node" href="customer-draw.html"><span class="i">03</span><span class="w">抽盲盒</span><span class="h">扭蛋阵列</span></a>
+      <span class="arw">→</span>
+      <a class="node" href="customer-unbox.html"><span class="i">04</span><span class="w">开盒瞬间</span><span class="h">惊喜仪式</span></a>
+      <span class="arw">→</span>
+      <a class="node" href="customer-pay.html"><span class="i">05</span><span class="w">收银台</span><span class="h">券 + 余额</span></a>
+    </div>
+  </div>
+
+  <div class="sec">顾客端 · 账号与入口<span class="pill rich">v3 重做</span><span class="cnt">2 页</span></div>
+  <div class="grid">
+    <a class="card-link" href="customer-login.html"><div class="t">登录 <span class="badge b-new">补齐协议</span></div><div class="d">手机号 + 验证码（测试码 123456）；生产缺用户协议勾选，本版补上</div><div class="go">查看 →</div></a>
+    <a class="card-link" href="customer-merchants.html"><div class="t">商家列表</div><div class="d">行业横滑筛选 + 纯 CSS 手绘地图缩略图（零外部依赖）+ 导航 / 电话 / 进店抽盒</div><div class="go">查看 →</div></a>
+  </div>
+
+  <div class="sec">顾客端 · 抽盒主链路<span class="pill toy">盲盒感</span><span class="cnt">3 页 + 首页</span></div>
+  <div class="grid">
+    <a class="card-link" href="customer-home.html"><div class="t">首页 <span class="badge b-toy">扭蛋 hero</span></div><div class="d">漂浮扭蛋 + 开奖播报条 + 「我的收藏」图鉴进度</div><div class="go">查看 →</div></a>
+    <a class="card-link" href="customer-choose.html"><div class="t">选择参与方式 <span class="badge b-new">链路补全</span></div><div class="d">店铺卡置顶 + 四渠道（本店/美团/饿了么/抖音）+ 余额规则提示</div><div class="go">查看 →</div></a>
+    <a class="card-link" href="customer-draw.html"><div class="t">抽盲盒</div><div class="d">真实扭蛋阵列替换 v2 的线框立方体，浮动 + 选中放大</div><div class="go">查看 →</div></a>
+    <a class="card-link" href="customer-unbox.html"><div class="t">开盒瞬间 <span class="badge b-toy">灵魂页</span></div><div class="d">胶囊弹开 → 碎纸爆发 → 奖品上浮，v2 完全缺失的一页</div><div class="go">查看 →</div></a>
+    <a class="card-link" href="customer-pay.html"><div class="t">收银台</div><div class="d">安静可信：46px 金额 + 逐行明细；中奖券用珊瑚色点出，收钱环节不玩</div><div class="go">查看 →</div></a>
+  </div>
+
+  <div class="sec">顾客端 · 商城与订单<span class="pill new">本轮丰富</span><span class="cnt">4 页</span></div>
+  <div class="grid">
+    <a class="card-link" href="customer-mall.html"><div class="t">商城 <span class="badge b-rich">已丰富</span></div><div class="d">店铺横滑筛选 + 综合/销量/价格排序 + 抵后价前置 + 下单弹窗可选券（满减门槛自动置灰）</div><div class="go">查看 →</div></a>
+    <a class="card-link" href="customer-orders.html"><div class="t">我的订单 <span class="badge b-rich">已丰富</span></div><div class="d">四态筛选（对应 refundStatus 0/1/2）+ 归属商家 + 退款信息行 + 申请退款弹窗</div><div class="go">查看 →</div></a>
+    <a class="card-link" href="customer-order-detail.html"><div class="t">订单详情</div><div class="d">状态头 + 38px 实付主视觉 + 订单/时间/商品分卡 + 底部退款栏</div><div class="go">查看 →</div></a>
+    <a class="card-link" href="customer-chat.html"><div class="t">联系客服</div><div class="d">聊天气泡 + 在线指示灯 + typing 动画 + 快捷问题 chips</div><div class="go">查看 →</div></a>
+  </div>
+
+  <div class="sec">顾客端 · 资产中心<span class="pill rich">v3 重做</span><span class="cnt">1 页</span></div>
+  <div class="grid">
+    <a class="card-link" href="customer-profile.html"><div class="t">我的</div><div class="d">余额主视觉 + 优惠券三段切换（未用/已用/过期）+ 最近订单 + 余额流水 + 到店核销码</div><div class="go">查看 →</div></a>
+  </div>
+
+  <div class="sec">商家端 <span class="pill new">本轮补做</span><span class="cnt">App · 8 屏</span></div>
+  <div class="grid">
+    <a class="card-link" href="merchant-app.html"><div class="t">商家端 · 首页/排队/核销/公告/我的 <span class="badge b-new">新布局 + 排队</span></div><div class="d">头部瘦身 130→76px；10 tab 横滑改底部 5 tab；KPI 改 2×2 大字；补齐生产缺失的排队叫号（五号段 A–E）；我的补齐店铺二维码 + 蓝牙打印 + 播报设备</div><div class="go">查看 →</div></a>
+    <a class="card-link" href="merchant-app2.html"><div class="t">商家端 · 经营四屏 <span class="badge b-new">新布局</span></div><div class="d">商品 / 订单 / 流水 / 会员，组内顶部小 tab 切换；底部 5 tab 保持一致</div><div class="go">查看 →</div></a>
+    <a class="card-link" href="merchant-member.html"><div class="t">商家端 · 会员中心四屏 <span class="badge b-new">本轮新增</span></div><div class="d">会员列表（类型/生日/预约角标）· 会员详情（档案+喜好+预约·回访·赠送三段）· 预约管理（时间轴+顾客留言回复）· 生日关怀（定时任务已上线）</div><div class="go">查看 →</div></a>
+    <a class="card-link" href="merchant-ai.html"><div class="t">商家端 · AI 助手三屏 <span class="badge b-new">按痛点重做</span></div><div class="d">今日（每天几件事排好、草稿写好，商家只做确认）· 对话（带会员/订单/同比上下文，答结论不答报表）· 能力与边界（三条红线、OmniRoute 状态、能力开关、ai_task_log 留痕）</div><div class="go">查看 →</div></a>
+    <a class="card-link" href="merchant-ai-marketing.html"><div class="t">商家端 · AI 营销六屏 <span class="badge b-new">从发起到结算全跑通</span></div><div class="d">发起 4 屏：① 选目标（四个目标用店里的话写，带真实数据）② 看方案（只讲一个动作：发哪 / 长啥样 / 客人怎么来 / 花多少挣多少）③ 点确认（2 件待办，一件已好）④ 看结果（现在不用管，明天看 3 个数）。后续 2 屏：⑤ 第 2 天真数据对比预估，AI 直接说「不是价格问题，是开头没抓住人」，并给 3 个算过代价的做法 ⑥ 第 7 天结算（券 + 加购 − 进货 − 佣金 − 推广 = 到手 ¥377），账外收益也讲，最后存成固定动作、直接推下一个。术语全换白话，每屏一个主按钮</div><div class="go">查看 →</div></a>
+    <a class="card-link" href="merchant-ai-log.html"><div class="t">商家端 · AI 执行日志四屏 <span class="badge b-new">给老板看的那本账</span></div><div class="d">① 日志总览（一屏看完一周 17 件事：17 做 / 12 成功 / 3 没成功 / 2 等你确认，按天排，顶部黑条可「回放这一周」）② 单条详情（15 秒素材可播放可重播 + 6 步留痕含驳回原文 + 一段能直接转给老板的话）③ 效果（三个动作分开算倍数 6.3× / 0.8×，据此得出「生日券 8 元给多了，改 5 元」）④ 没成功的 3 件逐条交代谁在处理、什么时候好，再接接下来 4 件事</div><div class="go">查看 →</div></a>
+    <a class="card-link" href="merchant-profit-plan.html"><div class="t">经营方案 · 引流与利润提升 <span class="badge b-new">可打印 A4</span></div><div class="d">利润公式拆解（3.86 万流水只剩 ¥46 净利）· 四平台分工引流 · 到店转化漏斗与收银三句话 · 毛利 32%→35.5% 五招 · 30 天落地表 · 6 个必看指标 · 平台红线</div><div class="go">查看 →</div></a>
+  </div>
+
+  <div class="sec">商家端 · 网页后台<span class="pill new">与 App 同步</span><span class="cnt">桌面 · 8 视图</span></div>
+  <div class="grid">
+    <a class="card-link" href="merchant-web.html"><div class="t">网页后台 · 同一套数据，换个大屏干重活 <span class="badge b-new">本轮新增</span></div><div class="d">左侧导航 + hash 路由切 7 个视图：工作台（KPI / 今天 5 件事 / 7 日营收 / 排队实时 / 近 5 单）· 排队核销（叫号台 + 核销 + 今日核销记录）· 经营数据（订单 5 笔 + 动销 + 时段分布 + 毛利构成）· 会员（列表 + 该打的 3 个电话 + 分层权益）· AI 助手 · AI 营销（3 个动作 + 渠道三档 + 预算回收 + 发布后 D+0/D+7）· 执行日志（17 条流水 + 没成功的 3 件 + 可播放素材）· 店铺设置（字段与 App「我的」一一对应）</div><div class="go">查看 →</div></a>
+  </div>
+
+  <div class="sec">商家端 · 数据大屏<span class="pill new">1920×1080 等比缩放</span><span class="cnt">1 屏 · 10 个模块</span></div>
+  <div class="grid">
+    <a class="card-link" href="merchant-screen.html"><div class="t">全渠道运营指挥屏 · 一块屏看完生意 <span class="badge b-new">本轮新增</span></div><div class="d">左：本月目标（82.4% + 月底预测）、今日渠道来源（5 个渠道 GMV 环形）、渠道接入健康度（已接通 5 / 待授权 2 / 仅素材 2 + 7 日走势）。中：6 联 KPI、近 14 日营收与订单双轴（标出 10-19 抖音券上线）、全渠道转化漏斗（曝光 → 复购 5 段）、实时订单流水（每 8 秒插一条）。右：商品动销 + 滞销预警、AI 本周执行（17 / 12 / 3 / 2 + ROI 6.3×）、会员结构与现场履约（A003 叫号 / 等待 5 组 / 平均 4'12"）。底：实时播报滚动。全部数字与 App / 网页后台同一口径</div><div class="go">查看 →</div></a>
+    <a class="card-link" href="merchant-screen-kiosk.html"><div class="t">门店广告机版 · 一块能跑在 Android 4.4 上的屏 <span class="badge b-new">本轮新增</span></div><div class="d">给门店那台老广告机（Android 4.4 / Chromium 30）单独出的版本。完整版有 148 处 4.4 跑不了的写法（88 处 CSS 变量、14 处 grid、46 处 gap），所以这版全重写：零变量、零 grid、零 gap，绝对定位 + canvas 画图，<b>DOM 从 603 降到 177</b>。只留 6 块——四个大数字（1,286 / 28 / 45.9 / 32.1%）、近 7 日营收、今日钱从哪来、本月目标 82.4%、今天 AI 做了什么、该处理了、现场叫号（A003），底部滚动播报。正文最小 15px，站两米外能看清。<b>断网不白屏</b>：先用内置数据渲染，联网后每 60 秒拉一次，失败继续显示旧数并让顶栏状态点变黄。单文件、无外链、无 webfont。改数据走生成器 <code>_build_kiosk.py</code> 重出，生成后自动跑 4.4 兼容扫描 —— 致命项必须为 0、JS 语法树里不能有 ES6 节点，否则不落盘</div><div class="go">查看 →</div></a>
+  </div>
+
+  <div class="sec">物业 / 平台后台<span class="pill new">按生产真实形态重做</span><span class="cnt">物业 6 页 · 平台 1 页</span></div>
+  <div class="grid">
+    <a class="card-link" href="property-app.html"><div class="t">物业后台 · 全 19 页 <span class="badge b-new">已补全</span></div><div class="d">生产形态=侧栏+内容区（窄屏折叠），不是手机 App。按线上 20 页补全为 19 个登录后视图（工作台/首页看板/业主/楼宇/账单/分账/商家绑定/活动审核/开奖配置/场地/门禁/车辆/临停/访客/人脸/设备/巡检/维修/维保），字段全部对齐线上接口</div><div class="go">查看 →</div></a>
+    <a class="card-link" href="platform-app.html"><div class="t">平台后台 · 全 18 页 <span class="badge b-new">形态订正 + 补全</span></div><div class="d">实测线上是「侧栏+内容区」（.sidebar + nav 11 项），旧稿「卡片流无侧栏」与生产不符，本版按真实形态重做并补全 17 个登录后视图：会员/结算/分账/绑定/审核/通行/设备/工单全齐</div><div class="go">查看 →</div></a>
+      <a class="card-link" href="admin-login.html"><div class="t">后台登录 · 物业 / 平台 <span class="badge b-new">本轮新增</span></div><div class="d">两端登录统一一套骨架：左品牌面 + 右表单，手机号 + 验证码；物业端回显所属物业，平台端标注审计留痕</div><div class="go">查看 →</div></a>
+      <a class="card-link" href="merchant-auth.html"><div class="t">商家端 · 登录 / 注册 <span class="badge b-new">本轮新增</span></div><div class="d">线上一直未改版的两页：验证码/密码双通道；注册补「所在小区」（决定分账归属）与协议勾选（合规）</div><div class="go">查看 →</div></a>
+  </div>
+
+  <div class="sec">说明与边界</div>
+  <div class="notes">
+    <div class="note-b"><b>排队叫号是生产缺失的功能</b>后端 <code>MerchantQueueController</code> 已实现取号 / 叫下一位 / 叫号 / 完成 / 过号 + 配置（prefix、windowCount、estWaitMin、seatConfig、callText），但 <code>h5/merchant/index.html</code> 里<b>没有排队页面</b>。v3 已补齐，并按号段规则 A(1-2人)/B(3-4人)/C(5-6人)/D(7-10人)/E(11-12人) 独立递增展示。</div>
+    <div class="note-b"><b>数据已核对真实字段</b>商城/订单按 <code>IbigouGoods</code>、<code>IbigouOrder</code> 实体重做。已剔除三处假数据：商品划线原价（实体无原价列）、订单号 <code>IBG2026…</code>（真实为 <code>IBG-</code> + 24 位十六进制）、累计消费口径（生产仅累加 <code>refundStatus=0</code>）。</div>
+    <div class="note-b warn"><b>三端管理页都是手机 H5，不是桌面后台</b>生产 <code>h5/merchant/index.html</code>（10 tab）、<code>property/admin/*</code>（20 页）、<code>h5/admin/index.html</code> 的 viewport 均为手机端。商家端已按手机 App 形态重做（本轮）；物业 / 平台仍是桌面稿，形态待修正。</div>
+    <div class="note-b warn"><b>两块"大屏"不是一回事，别混</b>①<b>门店广告机版</b> <code>merchant-screen-kiosk.html</code> —— 专给那台 Android 4.4 / Chromium 30 的机器：零 CSS 变量、零 grid、零 gap，绝对定位 + canvas，DOM 177 个，单文件无外链，断网先用内置数据顶上。②<b>运营指挥屏</b> <code>merchant-screen.html</code> —— 给电脑 / 新盒子浏览器看的完整版，1920×1080 二十个面板，用了 grid / flex / gap / 动画，老 WebView 跑不了。两块屏共用同一份口径（<code>docs/运营数据口径-V1.md</code>），数字一致。</div>
+    <div class="note-b"><b>网页端与 App 同步的是同一套字段，不是同一套布局</b>手机做现场（扫码核销、叫号、蓝牙打印、播音），电脑做重活（订单明细、动销、时段、毛利构成、批量导出）。店铺信息 / 会员分层 / 营销方案 / AI 待办在两边是同一份数据：网页改字段，手机端即时生效；手机核的券，网页「今日核销记录」立刻能看到是谁核的。<code>merchant-web.html</code> 的 8 个视图就是 App 的 8 屏按桌面习惯重排的结果，没有新造字段。</div>
+  </div>
+
+  <div class="foot">
+    <span><b>阶段</b> 设计稿 · 生产文件未改动</span>
+    <span><b>校验</b> 结构 / 类覆盖 / 链接 / SVG 路径 / 小尺寸文本 / 未定义变量</span>
+    <span><b>下一步</b> 顾客端「登录 → 选参与方式 → 抽盒 → 开盒」灰度落地</span>
+  </div>
+
+</body>
+</html>
