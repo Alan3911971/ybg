@@ -893,7 +893,26 @@
       "result": "后端+大屏页+商家后台开关已上线并通过服务端校验；投影真机实测待办"
     },
     "2026-10-27 GitHub 备份闭环：用户提供 PAT → commit 73435e0（master）；PAT 改走 GH_PAT 环境变量，不落盘",
-    "2026-10-27 立 G37 工作面板机制：规矩文档末尾【工作面板】登记 已完成/未完成，下次开工先读面板接着做"
+    "2026-10-27 立 G37 工作面板机制：规矩文档末尾【工作面板】登记 已完成/未完成，下次开工先读面板接着做",
+    {
+      "date": "2026-10-27",
+      "features": [
+        "顾客端扫码落地页 v3 上线：大屏 activity 二维码指向的 /h5/customer/index.html 由 9 月版「宜必购盒盒」换成 v3 设计（深青主色 + 扭蛋胶囊母题 + 暖黄点缀）",
+        "版式：appbar → 门店卡 → hero（漂浮扭蛋 + 今日好运 badge + 「今天，抽点好的」+ CTA 抽个盲盒）→ 开奖滚动条 → 四宫格 → 奖池预览 → 统计 → 我的奖品 → 全店中奖榜 → 物业卡 → 4tab 底导航",
+        "接口逻辑全部沿用（recent-wins / wallet / 物业 owner lookup / 登录跳转 / propCard），仅统计由 Math.random 假数据改为真实数据"
+      ],
+      "files_changed": [
+        "backend/src/main/resources/static/h5/customer/index.html (v3 重写)",
+        "customer/index.html (同步为同一份)",
+        "生产 /www/wwwroot/ybgtc.com/h5/customer/index.html (磁盘直读，备份 .bak-20261027_224723)",
+        "采坑日志.txt (G129)",
+        "知识图谱.md (新增「顾客端扫码落地页 v3 上线」章节 + 首页条目订正)",
+        "规矩文档.txt (工作面板完成+待办)"
+      ],
+      "deployed": true,
+      "tested": true,
+      "pending": "jar 内旧副本待下次打包同步；抽盒/开盒/选参与方式三页仍是旧版；真机扫码验收待用户"
+    }
   ],
   "spec_kit": {
     "version": "1.0.7.dev0",
@@ -1381,5 +1400,45 @@
       "fact": "DESKTOP-GGR22BK 是本机；共享 ybg-master -> D://workspace-java//ybg-master",
       "impact": "G38 权威副本判定在本项目上无意义（同一份文件）；异地备份只有 GitHub"
     }
+  },
+  "property_customer_p0_20261027": {
+    "date": "2026-10-27",
+    "scope": "按设计稿补齐业主端 P0（对照表 docs/物业AI-设计稿×线上页面对照表.md）",
+    "backend": {
+      "new": "PropertyMallController（goods/nearby/orders/wallet/qr）",
+      "extended": "PropertyReferralController + public/register + public/code-info",
+      "jar_backup": "ibigou.jar.bak-20261027_2225"
+    },
+    "pages": [
+      "referral.html",
+      "merchant-register.html",
+      "mall.html",
+      "nearby.html",
+      "orders.html",
+      "index.html(入口)"
+    ],
+    "e2e": {
+      "script": "_e2e_property_p0.py",
+      "total": 31,
+      "pass": 31,
+      "fail": 0
+    },
+    "shots": [
+      "_shots/p0/referral3.png",
+      "_shots/p0/mall2.png",
+      "_shots/p0/nearby2.png",
+      "_shots/p0/orders2.png"
+    ],
+    "bugs_fixed": [
+      "custom_split_ratio 百分比归一（645→6.45）",
+      "业主端二维码改走 /api/property/mall/qr"
+    ],
+    "pending": [
+      "P1 六页重做",
+      "P2 九页换壳",
+      "P3 五屏确认",
+      "登录页补设计"
+    ],
+    "data_caveat": "商城真实数据仅 1 家商户 4 件卡类商品；距离/步行无数据源，未编造"
   }
 }

@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover">
+<meta name="theme-color" content="#4f46e5">
+<title>我的订单 · 我的物业</title>
+<style>
+:root{--pri:#4f46e5;--pri-grad:linear-gradient(135deg,#4f46e5,#7c3aed);--pri-bg:#eef2ff;--text:#1e293b;--text-2:#64748b;--text-3:#94a3b8;--bg:#f8fafc;--border:#e2e8f0;--shadow-card:0 2px 12px rgba(0,0,0,.04);--r-md:14px;--r-lg:20px;--r-full:999px;--safe-bottom:env(safe-area-inset-bottom,0px);--success:#16a34a;--success-bg:#ecfdf5;--warning:#f59e0b;--warning-bg:#fffbeb;--danger:#dc2626;--danger-bg:#fef2f2;}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+html,body{font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif;color:var(--text);background:var(--bg);-webkit-font-smoothing:antialiased;font-size:15px;}
+body{min-height:100vh;padding-bottom:calc(74px + var(--safe-bottom));max-width:480px;margin:0 auto;}
+a{color:inherit;text-decoration:none;}button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit;}
+.hd{background:var(--pri-grad);color:#fff;padding:calc(18px + env(safe-area-inset-top,0px)) 18px 20px;border-radius:0 0 var(--r-lg) var(--r-lg);position:relative;overflow:hidden;}
+.hd::after{content:"";position:absolute;top:-60px;right:-40px;width:170px;height:170px;background:rgba(255,255,255,.08);border-radius:50%;}
+.hd .row{display:flex;align-items:center;gap:10px;position:relative;z-index:1;}
+.hd .back{width:32px;height:32px;border-radius:50%;background:rgba(255,255,255,.16);display:flex;align-items:center;justify-content:center;font-size:17px;}
+.hd h1{font-size:18px;font-weight:700;flex:1;}
+.hd .meta{font-size:11.5px;opacity:.85;margin-top:7px;position:relative;z-index:1;}
+.wrap{padding:0 16px;}
+.ocard{background:#fff;border-radius:var(--r-md);box-shadow:var(--shadow-card);margin-top:12px;padding:14px;}
+.ocard .top{display:flex;align-items:center;gap:10px;}
+.ocard .mn{font-size:14.5px;font-weight:700;flex:1;}
+.ocard .st{font-size:11px;padding:3px 9px;border-radius:var(--r-full);font-weight:600;background:var(--success-bg);color:var(--success);}
+.ocard .st.refund{background:var(--danger-bg);color:#b91c1c;}
+.ocard .st.unpay{background:var(--warning-bg);color:#b45309;}
+.ocard .no{font-size:11px;color:var(--text-3);margin-top:4px;font-family:ui-monospace,Menlo,Consolas,monospace;}
+.ocard .rows{margin-top:10px;border-top:1px solid var(--border);padding-top:10px;}
+.ocard .r{display:flex;justify-content:space-between;font-size:12.5px;color:var(--text-2);padding:3px 0;}
+.ocard .r b{color:var(--text);font-weight:600;}
+.ocard .r.total b{color:var(--pri);font-size:14px;font-weight:800;}
+.ocard .tm{font-size:11px;color:var(--text-3);margin-top:8px;}
+.empty{text-align:center;padding:44px 20px;color:var(--text-3);font-size:13px;line-height:1.7;}
+.empty .big{font-size:34px;margin-bottom:10px;}
+.tabbar{position:fixed;left:0;right:0;bottom:0;max-width:480px;margin:0 auto;background:#fff;border-top:1px solid var(--border);display:flex;padding:7px 0 calc(7px + var(--safe-bottom));z-index:50;}
+.tabbar a{flex:1;text-align:center;font-size:11px;color:var(--text-3);}
+.tabbar a .ic{font-size:19px;display:block;margin-bottom:2px;}
+.tabbar a.on{color:var(--pri);font-weight:600;}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:92px;background:rgba(17,24,39,.92);color:#fff;font-size:13px;padding:10px 18px;border-radius:var(--r-full);z-index:99;opacity:0;transition:opacity .2s;pointer-events:none;}
+.toast.show{opacity:1;}
+</style>
+</head>
+<body>
+<div class="hd">
+  <div class="row"><a class="back" href="index.html">‹</a><h1>我的订单</h1></div>
+  <div class="meta" id="meta">每单钱去哪了，退款连分账一起回冲</div>
+</div>
+
+<div class="wrap" id="list"><div class="empty">加载中…</div></div>
+
+<div class="tabbar">
+  <a href="index.html"><span class="ic">🏠</span>首页</a>
+  <a href="mall.html"><span class="ic">🛒</span>商城</a>
+  <a href="group.html"><span class="ic">💬</span>消息</a>
+  <a href="orders.html" class="on"><span class="ic">📋</span>订单</a>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+var $=function(id){return document.getElementById(id);};
+function toast(m){var t=$("toast");t.textContent=m;t.classList.add("show");setTimeout(function(){t.classList.remove("show")},2200);}
+var TOKEN=localStorage.getItem("property_owner_token")||"";
+function money(v){return "￥"+(Number(v||0)).toFixed(2);}
+function esc(s){return String(s==null?"":s).replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c];});}
+function fmt(t){if(!t)return "";var d=new Date(String(t).replace(" ","T"));if(isNaN(d))return String(t);
+  return d.getFullYear()+"-"+(d.getMonth()+1)+"-"+d.getDate()+" "+("0"+d.getHours()).slice(-2)+":"+("0"+d.getMinutes()).slice(-2);}
+
+function load(){
+  if(!TOKEN){toast("请先登录");setTimeout(function(){location.href="login.html"},900);return;}
+  fetch("/api/property/mall/orders",{headers:{"X-Owner-Token":TOKEN}}).then(function(r){return r.json();})
+   .then(function(r){
+     if(r.code!==0){$("list").innerHTML='<div class="empty">'+(r.msg||"加载失败")+'</div>';return;}
+     var l=(r.data&&r.data.list)||[];
+     $("meta").textContent="共 "+l.length+" 单 · 每单钱去哪了都写清";
+     if(!l.length){$("list").innerHTML='<div class="empty"><div class="big">🧾</div>还没有订单<br>去小区商城买点什么，8% 会回到物业钱包</div>';return;}
+     var h="";
+     l.forEach(function(o){
+       var refunded=o.refundStatus!=null&&o.refundStatus>0;
+       var st=refunded?'<span class="st refund">已退款 '+money(o.refundAmount)+'</span>'
+             :(o.payTime?'<span class="st">已支付</span>':'<span class="st unpay">待支付</span>');
+       h+='<div class="ocard"><div class="top"><div class="mn">'+esc(o.merchantName)+'</div>'+st+'</div>'
+        +'<div class="no">'+esc(o.orderNo)+'</div><div class="rows">'
+        +'<div class="r"><span>订单金额</span><b>'+money(o.orderAmount)+'</b></div>'
+        +(o.deductBalance?'<div class="r"><span>余额抵扣</span><b>-'+money(o.deductBalance)+'</b></div>':'')
+        +'<div class="r total"><span>实付</span><b>'+money(o.payAmount)+'</b></div>'
+        +'</div><div class="tm">'+(o.payTime?("支付于 "+fmt(o.payTime)):("下单于 "+fmt(o.createTime)))+'</div></div>';
+     });
+     $("list").innerHTML=h;
+   }).catch(function(e){$("list").innerHTML='<div class="empty">网络异常</div>';});
+}
+load();
+</script>
+</body>
+</html>

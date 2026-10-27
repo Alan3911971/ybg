@@ -1493,3 +1493,36 @@ msedge --headless --window-size=420,900 --virtual-time-budget=4000 --screenshot=
 所以 G38 判定出来的"权威副本"与工作副本是同一份物理文件，md5 比对恒等于 SAME，不具校验意义。
 影响：本项目异地备份实际只有 GitHub（外加生产服务器 /tmp/prop_bak_* 的页面备份）；
 所谓 NAS 同步不构成容灾，别拿它当兜底。要真异地备份得另配一台机器或云端。
+
+【G128】真机首验（极米 192.168.31.28）：flex 子项 height:100% 塌陷 + 原生 TextView 重影 + DevTools 调试法（2026-10-27 晚）
+①**离线 Chromium 全绿 ≠ 4.4 真机没问题**：`.blindbox-hero` 写 `height:100%`，新浏览器正常、真机（Chromium 30）塌成 28px，插画 400px 从容器向上溢出（top:-74）被裁成一条金边——离线怎么看都看不出。**修法照 call-area 成功模式：flex column 子项不要 height:100%，用 `flex:1 1 auto` 占主轴 + min-height:0**。布局类改动真机必须过一遍（面板待办 2 从此常态化）。
+②**activity 文字重影根因：原生 TextView 页面根本管不了**：`setQrVisible(false)` 只藏 ImageView，原生「扫码取号」TextView 与页面「扫码抽盲盒」叠加成重影；原生层永远盖在 WebView 之上，页面不透明背景也遮不住。用 DevTools Runtime.evaluate 枚举/探测确认 v1.6.0 接口只有 `setAdVisible/setQrVisible/playFx/speak/isAvailable`——**无 setQrNoteText**。短期方案：activity 下页面 qn 文字 display:none，由原生「扫码取号」承担（码内容正确，语义文字欠账）。**长期待办：APK 补 setQrNoteText(text) 接口**（v1.6.0 源码不在本机，D:/workspace-java/ibigou-tv 是 v1.3.8 旧版无 setQrVisible，需先找到 v1.6.0 源码）。
+③**DevTools 真机调试法（本期最大方法论收益）**：v1.6.0 APK 开了 WebView 调试——①`adb forward tcp:9222 localabstract:webview_devtools_remote_<pid>`（pid 从 /proc/net/unix 找）→ ②`GET http://127.0.0.1:9222/json` 拿 webSocketDebuggerUrl → ③websocket 发 `Runtime.evaluate` 直接在真机页面里跑 JS 拿 getComputedStyle/getBoundingClientRect。比截图猜布局快十倍，脚本 `D:/workspace-java/_tv_inspect_devtools.py`（adb server 随 shell 退出被回收，**forward 必须与 WebSocket 同一进程内做完**）。
+④**本机代理会劫持 127.0.0.1 的 WebSocket**（websocket-client 走环境变量代理 → CONNECT 502）：脚本里 `os.environ['NO_PROXY']='*'` 强制直连。
+⑤**tv_mode 切换的稳法**：远端 mysql 密码含特殊字符，`-p"'$PW'"` 引号组合在嵌套 shell 里必碎——**用 `export MYSQL_PWD="$IBIGOU_DB_PASSWORD"` 环境变量**，密码不进命令行。脚本 `D:/workspace-java/_switch_tv_mode.py activity|call`（UPDATE merchant_queue_config + 接口确认一步到位）。
+
+【G129】顾客端扫码落地页 v3 落地：设计稿≠线上 + 三副本分叉 + Edge 最小窗宽假象（2026-10-27 深夜）
+①**"设计做好了"不等于"页面上线了"**：v3 顾客端设计稿（10-25 完成）只在 `_redesign_v3/customer-home|draw|choose|unbox.html`，是**静态 mockup，未接线、未部署**；生产 `/h5/customer/index.html` 一直是 9 月版「宜必购盒盒」（4 tab / emoji 风 / 橙红配色）。用户扫码看到旧版才发现——**以后凡是"设计稿"必须追问一句"接口接了没、上线了没"，别把稿当产物**。
+②**落地页三副本互不一致（G38 的分叉在 h5 上同样存在）**：生产磁盘版 md5 `660916fa`（19114B，10-14，含物业入口卡 `propCard`）｜仓库根 `customer/index.html` `d848b8a9`（19116B，09-18）｜`backend/src/.../static/h5/customer/index.html` `dab10466`（21217B，09-13）——三份都不同，生产那份比仓库两份都多/少东西。**改之前必须先把生产版拉下来 diff，否则覆盖即丢功能**（本次保留了 propCard 与物业 lookup 逻辑）。改完已把仓库两份同步为同一份（md5 `9f3d3582`）。
+③**Edge headless 在本机有最小窗口宽度 ≈492px**：`--window-size=390,1500` 实测 `window.innerWidth=492`，截图只有 390 宽 → **右侧内容被切，看着像"版式崩了"，其实是截图被裁**。验证手机版式的稳法：外层页面放 `<iframe width=390 height=1500>` 指向预览页，窗口开 420×1500 再截（脚本 `D:/workspace-java/_shot_customer_home.py` + `frame.html`）。别用 390 直出截图判断布局。
+④**行内 `<svg>` 不给显式尺寸在 Chromium 里不渲染**：`.hero .cap-float` 只在父 span 上写 width/height，里面 svg 只有 viewBox 没有 width/height → 扭蛋母题整块不可见。必须补 `.cap-float svg{width:100%;height:100%;display:block}`。
+⑤**nginx 回读校验必须带 Host**：`curl http://127.0.0.1/h5/...` 打的是默认 vhost，会命中旧内容判假阴性；要 `curl -H "Host: ybgtc.com" http://127.0.0.1/h5/...`。
+⑥**顾客端首页改磁盘即可生效**：`location = /h5/customer/index.html` 是 root 直读磁盘（no-cache），不用重打 jar；但 **jar 内的旧副本仍在**，下次打 jar 前必须把 `backend/src/main/resources/static/h5/customer/index.html`（已改）打进去，否则包一覆盖就回退。
+
+【2026-10-27 22:35】custom_split_ratio 是百分比整数，不是小数
+现象：商城页分账额算出 ￥645（商品 ￥129），离谱。
+原因：库里 custom_split_ratio 存 5 表示 5%，代码直接 price×ratio → 129×5=645。
+修法：加 normalizeRatio——比值 >1 视为百分比，除 100 归一成小数；≤1 原样用。修完 129×5% = 6.45 正确。
+教训：任何"比例"字段接入前先查真实数据分布，别猜单位。
+
+【2026-10-27 22:38】/api/customer/qr-svg 要盲盒客户登录态，业主端拿不到
+现象：referral.html 调它生成二维码，返回 {"code":-1,"msg":"请先登录"}，页面卡在"生成中…"。
+原因：它属于 CustomerController（盲盒客户体系），与物业业主 token 是两套登录态。
+修法：在 PropertyMallController 另开 GET /api/property/mall/qr?content=，按 X-Owner-Token 鉴权，复用同一个 QrSvgUtil。
+教训：跨体系复用接口前先确认它属于哪套鉴权。
+
+【2026-10-27 22:47】重启 jar 会让业主/物业 token 全部失效
+现象：刚部署完截图，页面全空，接口返回"登录已过期"。
+原因：PropertyOwnerController.TOKEN_STORE 是静态 ConcurrentHashMap，只在内存里，进程重启即清空。
+影响：任何 jar 重启后，E2E/截图前必须重新登录取 token，否则误判为"接口坏了"。
+（这也是生产上的真实体验问题：每次发版所有业主都要重新登录——后续如需避免，得把 token 持久化到表或 Redis。）

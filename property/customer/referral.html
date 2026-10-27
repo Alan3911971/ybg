@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover">
+<meta name="theme-color" content="#4f46e5">
+<title>邀请商家 · 我的物业</title>
+<style>
+:root{--pri:#4f46e5;--pri-grad:linear-gradient(135deg,#4f46e5,#7c3aed);--pri-bg:#eef2ff;--text:#1e293b;--text-2:#64748b;--text-3:#94a3b8;--bg:#f8fafc;--surface:#fff;--border:#e2e8f0;--shadow-card:0 2px 12px rgba(0,0,0,.04);--r-md:14px;--r-lg:20px;--r-full:999px;--safe-bottom:env(safe-area-inset-bottom,0px);--success:#16a34a;--success-bg:#ecfdf5;--warning:#f59e0b;--warning-bg:#fffbeb;--danger:#dc2626;--danger-bg:#fef2f2;--blue:#3b82f6;--blue-bg:#eff6ff;}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+html,body{font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","PingFang SC","Microsoft YaHei",sans-serif;color:var(--text);background:var(--bg);-webkit-font-smoothing:antialiased;font-size:15px;}
+body{min-height:100vh;padding-bottom:calc(74px + var(--safe-bottom));max-width:480px;margin:0 auto;position:relative;}
+a{color:inherit;text-decoration:none;}
+button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit;}
+
+/* ===== 顶部 ===== */
+.topbar{background:var(--pri-grad);color:#fff;padding:calc(14px + env(safe-area-inset-top,0px)) 16px 16px;position:relative;overflow:hidden;border-radius:0 0 var(--r-lg) var(--r-lg);}
+.topbar .row{display:flex;align-items:center;gap:10px;position:relative;z-index:1;}
+.topbar .back{width:32px;height:32px;border-radius:50%;background:rgba(255,255,255,.16);display:flex;align-items:center;justify-content:center;font-size:17px;}
+.topbar h1{font-size:17px;font-weight:700;flex:1;}
+.topbar .who{font-size:11.5px;opacity:.82;margin-top:8px;position:relative;z-index:1;}
+.topbar::after{content:"";position:absolute;top:-50px;right:-30px;width:160px;height:160px;background:rgba(255,255,255,.08);border-radius:50%;}
+
+/* ===== AI 对话气泡 ===== */
+.chat{padding:14px 16px 0;}
+.bubble{background:#fff;border-radius:14px;padding:12px 14px;box-shadow:var(--shadow-card);font-size:13.5px;line-height:1.65;color:var(--text);}
+.bubble.ai{border-top-left-radius:4px;}
+.bubble.me{background:var(--pri-bg);border-top-right-radius:4px;margin-top:8px;margin-left:36px;}
+.bubble .who{font-size:11px;color:var(--text-3);margin-bottom:5px;display:flex;align-items:center;gap:5px;}
+.bubble .who i{width:6px;height:6px;border-radius:50%;background:var(--success);display:inline-block;}
+.bubble b{color:var(--pri);font-weight:600;}
+
+/* ===== 状态条 ===== */
+.statusbar{margin:12px 16px 0;background:var(--success-bg);border-radius:12px;padding:11px 13px;display:flex;align-items:center;gap:9px;font-size:13px;color:#15803d;font-weight:600;}
+.statusbar.warn{background:var(--warning-bg);color:#b45309;}
+.statusbar .tag{margin-left:auto;font-size:11px;background:#fff;border-radius:var(--r-full);padding:3px 9px;color:#15803d;font-weight:600;}
+.statusbar.warn .tag{color:#b45309;}
+
+/* ===== Tab ===== */
+.tabs{display:flex;gap:8px;padding:14px 16px 0;}
+.tab{flex:1;height:38px;border-radius:var(--r-full);font-size:13.5px;font-weight:600;background:#fff;color:var(--text-2);box-shadow:var(--shadow-card);display:flex;align-items:center;justify-content:center;}
+.tab.active{background:var(--pri-grad);color:#fff;box-shadow:0 4px 14px rgba(79,70,229,.28);}
+
+.wrap{padding:0 16px;}
+
+/* ===== 码卡片 ===== */
+.codecard{margin-top:14px;background:#fff;border-radius:var(--r-lg);box-shadow:var(--shadow-card);overflow:hidden;}
+.codecard .hd{background:var(--pri-grad);color:#fff;padding:16px;text-align:center;}
+.codecard .hd .t{font-size:15px;font-weight:700;}
+.codecard .hd .s{font-size:11.5px;opacity:.85;margin-top:4px;}
+.qrbox{padding:18px 16px 10px;display:flex;flex-direction:column;align-items:center;}
+.qrbox .img{width:200px;height:200px;background:#f8fafc;border-radius:12px;display:flex;align-items:center;justify-content:center;overflow:hidden;}
+.qrbox .img svg{width:100%;height:100%;display:block;}
+.qrbox .img .ph{font-size:12px;color:var(--text-3);}
+.codeno{margin-top:10px;font-size:17px;font-weight:800;letter-spacing:1px;font-family:ui-monospace,Menlo,Consolas,monospace;}
+.scanhint{font-size:11.5px;color:var(--text-3);margin-top:6px;}
+.metaline{display:flex;gap:10px;padding:12px 16px;border-top:1px solid var(--border);font-size:12.5px;}
+.metaline .k{color:var(--text-3);flex:0 0 62px;}
+.metaline .v{color:var(--text);flex:1;font-weight:500;}
+.acts{display:flex;gap:8px;padding:0 16px 16px;}
+.acts button{flex:1;height:38px;border-radius:var(--r-full);font-size:13px;font-weight:600;background:var(--pri-bg);color:var(--pri);}
+.acts button.pri{background:var(--pri-grad);color:#fff;}
+
+/* ===== 通用卡片 ===== */
+.card{background:#fff;border-radius:var(--r-md);box-shadow:var(--shadow-card);margin-top:12px;padding:14px;}
+.card .ct{font-size:14px;font-weight:700;margin-bottom:10px;display:flex;align-items:center;gap:6px;}
+.card .ct .n{margin-left:auto;font-size:11.5px;color:var(--text-3);font-weight:400;}
+
+.give3{display:flex;flex-direction:column;gap:10px;}
+.give3 .it{display:flex;gap:10px;align-items:flex-start;}
+.give3 .ic{width:34px;height:34px;border-radius:9px;background:var(--success-bg);color:var(--success);display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:700;flex:0 0 34px;}
+.give3 .tx{flex:1;font-size:12.5px;line-height:1.6;color:var(--text-2);}
+.give3 .tx b{display:block;color:var(--text);font-size:13.5px;margin-bottom:2px;}
+
+.compare{display:flex;gap:10px;margin-top:4px;}
+.compare .col{flex:1;border-radius:10px;padding:10px;font-size:12px;line-height:1.55;}
+.compare .col.bad{background:var(--danger-bg);color:#b91c1c;}
+.compare .col.good{background:var(--success-bg);color:#15803d;}
+.compare .col b{display:block;font-size:13.5px;margin-bottom:3px;}
+
+/* ===== 时间轴 ===== */
+.tl{margin-top:4px;}
+.tl .step{display:flex;gap:11px;position:relative;padding-bottom:16px;}
+.tl .step:last-child{padding-bottom:0;}
+.tl .dot{width:20px;height:20px;border-radius:50%;flex:0 0 20px;display:flex;align-items:center;justify-content:center;font-size:11px;color:#fff;background:var(--success);margin-top:1px;z-index:1;}
+.tl .step.pending .dot{background:#cbd5e1;}
+.tl .line{position:absolute;left:9.5px;top:22px;bottom:0;width:1.5px;background:#cbd5e1;}
+.tl .step:last-child .line{display:none;}
+.tl .body{flex:1;}
+.tl .tt{font-size:13.5px;font-weight:600;}
+.tl .step.pending .tt{color:var(--text-3);}
+.tl .ds{font-size:12px;color:var(--text-2);margin-top:3px;line-height:1.55;}
+.tl .tm{font-size:11px;color:var(--text-3);margin-top:3px;}
+
+/* ===== 商家卡 ===== */
+.mcard{margin-top:12px;background:#fff;border-radius:var(--r-md);box-shadow:var(--shadow-card);padding:14px;}
+.mcard .nm{font-size:15px;font-weight:700;}
+.mcard .no{font-size:12px;color:var(--text-2);margin-top:4px;}
+.mcard .acc{font-size:11.5px;color:var(--text-3);margin-top:3px;}
+.tags3{display:flex;gap:8px;margin-top:12px;}
+.tags3 .tg{flex:1;background:var(--pri-bg);border-radius:10px;padding:9px 6px;text-align:center;}
+.tags3 .tg b{display:block;font-size:14px;color:var(--pri);font-weight:800;}
+.tags3 .tg span{font-size:10.5px;color:var(--text-2);display:block;margin-top:2px;line-height:1.35;}
+
+/* ===== 输入 ===== */
+.ask{margin:12px 16px 0;display:flex;gap:8px;align-items:center;background:#fff;border-radius:var(--r-full);box-shadow:var(--shadow-card);padding:6px 6px 6px 16px;}
+.ask input{flex:1;border:none;outline:none;font-size:13.5px;background:transparent;height:34px;}
+.ask button{flex:0 0 auto;height:34px;padding:0 16px;border-radius:var(--r-full);background:var(--pri-grad);color:#fff;font-size:13px;font-weight:600;}
+
+.empty{text-align:center;padding:40px 20px;color:var(--text-3);font-size:13px;line-height:1.7;}
+.empty .big{font-size:34px;margin-bottom:10px;}
+
+/* ===== 底部导航 ===== */
+.tabbar{position:fixed;left:0;right:0;bottom:0;max-width:480px;margin:0 auto;background:#fff;border-top:1px solid var(--border);display:flex;padding:7px 0 calc(7px + var(--safe-bottom));z-index:50;}
+.tabbar a{flex:1;text-align:center;font-size:11px;color:var(--text-3);}
+.tabbar a .ic{font-size:19px;display:block;margin-bottom:2px;}
+.tabbar a.on{color:var(--pri);font-weight:600;}
+
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:92px;background:rgba(17,24,39,.92);color:#fff;font-size:13px;padding:10px 18px;border-radius:var(--r-full);z-index:99;opacity:0;transition:opacity .2s;pointer-events:none;max-width:78%;text-align:center;}
+.toast.show{opacity:1;}
+.hidden{display:none !important;}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="row">
+    <a class="back" href="index.html">‹</a>
+    <h1>AI 管家 · 邀请商家</h1>
+  </div>
+  <div class="who" id="who">3-1-201 王先生 · AI 管家在线</div>
+</div>
+
+<div class="chat">
+  <div class="bubble ai">
+    <div class="who"><i></i>AI 管家 · 今天</div>
+    <div id="aiSay">东门巷子口那家水果店，我跟老板聊过了，他说愿意合作。给他一张码就行，剩下他自己弄。</div>
+  </div>
+</div>
+
+<div class="statusbar" id="statusBar">
+  <span id="statusTxt">商家注册通道 · 已开通</span>
+  <span class="tag" id="statusTag">已生成</span>
+</div>
+
+<div class="tabs">
+  <button class="tab active" data-v="code">出一张码</button>
+  <button class="tab" data-v="prog">邀请进度</button>
+</div>
+
+<!-- ============ 视图一：出码 ============ -->
+<div id="vCode">
+  <div class="wrap">
+    <div class="codecard">
+      <div class="hd">
+        <div class="t">阳光花园物业 · 商户合作邀请</div>
+        <div class="s" id="expireS">72 小时有效</div>
+      </div>
+      <div class="qrbox">
+        <div class="img" id="qrBox"><span class="ph">生成中…</span></div>
+        <div class="codeno" id="codeNo">—</div>
+        <div class="scanhint">老板用微信扫一扫 → 商家注册页（不是加微信 / 不是小程序）</div>
+      </div>
+      <div class="metaline"><span class="k">类目名额</span><span class="v" id="quotaTxt">—</span></div>
+      <div class="metaline"><span class="k">邀请人</span><span class="v" id="inviterTxt">房号脱敏，老板看不到你手机号</span></div>
+      <div class="acts">
+        <button class="pri" onclick="lightUp()">亮屏给老板扫</button>
+        <button onclick="saveImg()">存图发微信</button>
+        <button onclick="window.print()">打印</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="ct">老板也能拿到这 3 样他会问的</div>
+      <div class="give3">
+        <div class="it"><div class="ic">0</div><div class="tx"><b>入驻 0 元 · 押金 0 元</b>只按成交让利 8%，不成交不收费</div></div>
+        <div class="it"><div class="ic">章</div><div class="tx"><b>盖章协议 + No.铜牌</b>协议自动发邮箱 · 铜牌物业上门挂</div></div>
+        <div class="it"><div class="ic">位</div><div class="tx"><b>业主端曝光位 + 公众号推文</b>入驻即上「本小区特约商户」</div></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="ct">他算过账才答应的</div>
+      <div class="compare">
+        <div class="col bad"><b>美团抽 2,000</b>同样 1 万流水，一分不回来</div>
+        <div class="col good"><b>这边让利 800</b>这 1,664 户就住他门口 500 米</div>
+      </div>
+      <div class="tx" style="font-size:12.5px;color:var(--text-2);line-height:1.65;margin-top:10px;">
+        你只做一件事：<b style="color:var(--pri)">把码给他</b>。他扫码我通知你，审完 ￥30 直接进余额。
+      </div>
+    </div>
+  </div>
+
+  <div class="ask">
+    <input id="askInput" placeholder="还要邀哪家？说店名，我出码…">
+    <button onclick="askCode()">出码</button>
+  </div>
+</div>
+
+<!-- ============ 视图二：进度 ============ -->
+<div id="vProg" class="hidden">
+  <div class="wrap">
+    <div class="card">
+      <div class="ct">这张码走到哪一步了<span class="n">全程可见</span></div>
+      <div class="tl" id="timeline"></div>
+    </div>
+    <div class="mcard hidden" id="mCard">
+      <div class="nm" id="mName">—</div>
+      <div class="no" id="mNo">—</div>
+      <div class="acc" id="mAcc">—</div>
+      <div class="tags3">
+        <div class="tg"><b>8%</b><span>成交让利</span></div>
+        <div class="tg"><b id="mPlate">—</b><span>铜牌 3 天内挂</span></div>
+        <div class="tg"><b id="mSlot">—</b><span>曝光位已上</span></div>
+      </div>
+      <div style="font-size:12px;color:var(--text-2);line-height:1.65;margin-top:12px;">
+        他那边你不用管：铜牌物业上门挂、协议发他邮箱、对账单他自己下。你只在两件事上收到通知——
+        他首单成交（￥70 到账）、他 90 天内解绑（奖励按规则回收）。
+      </div>
+      <div class="acts" style="padding:12px 0 0;">
+        <button onclick="toast('协议文件会在过审后自动发他邮箱')">看他签的协议</button>
+        <button class="pri" onclick="toast('「哪家有」页面建设中')">去「哪家有」看这家</button>
+      </div>
+    </div>
+    <div class="empty hidden" id="progEmpty">
+      <div class="big">🫥</div>
+      还没有邀请记录。<br>切到「出一张码」，把码给老板就开始了。
+    </div>
+  </div>
+</div>
+
+<div class="tabbar">
+  <a href="index.html"><span class="ic">🏠</span>首页</a>
+  <a href="services.html"><span class="ic">🧰</span>服务</a>
+  <a href="group.html"><span class="ic">💬</span>消息</a>
+  <a href="wallet.html" class="on"><span class="ic">👤</span>我的</a>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+var $ = function(id){ return document.getElementById(id); };
+function toast(m){ var t=$("toast"); t.textContent=m; t.classList.add("show"); setTimeout(function(){t.classList.remove("show")},2200); }
+var TOKEN = localStorage.getItem("property_owner_token") || "";
+var CAT_LIMIT = 2; // 本小区同类目商户上限（设计稿设定，后续可配置）
+
+function hdr(json){ var h = {"X-Owner-Token": TOKEN}; if(json) h["Content-Type"]="application/x-www-form-urlencoded"; return h; }
+function api(path, opt){
+  opt = opt || {};
+  return fetch(path, {method: opt.method||"GET", headers: hdr(opt.body), body: opt.body}).then(function(r){ return r.json(); });
+}
+function fmt(t){ if(!t) return ""; var d=new Date(String(t).replace(" ","T")); if(isNaN(d)) return String(t);
+  return (d.getMonth()+1)+"月"+d.getDate()+"日 "+("0"+d.getHours()).slice(-2)+":"+("0"+d.getMinutes()).slice(-2); }
+
+var MY = null;
+
+// ---- 载入我的邀请 ----
+function load(){
+  if(!TOKEN){ toast("请先登录"); setTimeout(function(){location.href="login.html"},900); return; }
+  api("/api/property/referral/owner/mine").then(function(r){
+    if(r.code!==0){ toast(r.msg||"加载失败"); return; }
+    MY = r.data;
+    render();
+  }).catch(function(e){ toast("网络异常：" + e.message); });
+}
+
+function current(){
+  if(!MY || !MY.list || !MY.list.length) return null;
+  return MY.list[0];
+}
+
+function render(){
+  var c = current();
+  if(!c){
+    $("statusBar").className = "statusbar warn";
+    $("statusTxt").textContent = "还没生成邀请码";
+    $("statusTag").textContent = "待出码";
+    $("codeNo").textContent = "—";
+    $("qrBox").innerHTML = '<span class="ph">说出店名即可出码</span>';
+    $("quotaTxt").textContent = "—";
+  } else {
+    var expired = c.expireTime && new Date(String(c.expireTime).replace(" ","T")) < new Date();
+    $("statusBar").className = expired ? "statusbar warn" : "statusbar";
+    $("statusTxt").textContent = expired ? "邀请码已过期，重新出一张" : "商家注册通道 · 已开通";
+    $("statusTag").textContent = expired ? "已过期" : (c.status>=2 ? "已扫码" : "已生成");
+    $("codeNo").textContent = c.code || "—";
+    $("inviterTxt").textContent = (c.roomNo||"本小区") + " · 房号脱敏，老板看不到你手机号";
+    renderQuota(c);
+    renderQr(c);
+  }
+  renderProgress(c);
+}
+
+function renderQuota(c){
+  var cat = c.category || "未分类";
+  // 本小区该类目已成功入驻数：用自己列表里 status>=2 的同类统计（后端暂无全局名额接口）
+  var used = (MY.list||[]).filter(function(x){ return x.status>=2 && (x.category||"")===cat; }).length;
+  var remain = Math.max(0, CAT_LIMIT - used);
+  $("quotaTxt").textContent = cat + " · 本小区 " + used + "/" + CAT_LIMIT + " 家，还剩 " + remain + " 个";
+}
+
+function renderQr(c){
+  var url = location.origin + "/h5/property/customer/merchant-register.html?code=" + encodeURIComponent(c.code||"");
+  fetch("/api/property/mall/qr?content="+encodeURIComponent(url), {headers:{"X-Owner-Token":TOKEN}})
+    .then(function(r){return r.json()})
+    .then(function(r){
+      if(r.code===0 && r.data && r.data.svg){ $("qrBox").innerHTML = r.data.svg; }
+      else { $("qrBox").innerHTML = '<span class="ph">二维码生成失败：'+(r.msg||"")+'</span>'; }
+    })
+    .catch(function(e){ $("qrBox").innerHTML = '<span class="ph">二维码加载失败</span>'; });
+  $("expireS").textContent = c.expireTime ? ("有效至 " + fmt(c.expireTime)) : "72 小时有效";
+}
+
+function renderProgress(c){
+  if(!c){ $("progEmpty").classList.remove("hidden"); $("mCard").classList.add("hidden"); return; }
+  $("progEmpty").classList.add("hidden");
+  var steps = [
+    {t:"老板扫码", d:"东门底商 · 已定位", tm:c.scanTime, on:!!c.scanTime},
+    {t:"他自己提交注册", d:"执照 OCR 自动识别，他没手填", tm:c.createTime, on:c.status>=1},
+    {t:"物业过审 → ￥30 进你余额", d:"4 项核验全过；已并入余额，下月自动抵扣", tm:c.auditTime, on:c.status>=2 && c.reward30Status==1},
+    {t:"他首单满 ￥100 且 7 天无退款", d:"再补 ￥70 · 到账我通知你，不用你去问", tm:c.reward70Time, on:c.reward70Status==1}
+  ];
+  var html = "";
+  steps.forEach(function(s){
+    html += '<div class="step'+(s.on?"":" pending")+'"><div class="line"></div><div class="dot">'+(s.on?"✓":"")+'</div><div class="body">'
+         +  '<div class="tt">'+s.t+'</div><div class="ds">'+s.d+'</div>'
+         +  '<div class="tm">'+(s.on && s.tm ? fmt(s.tm) : "待发生")+'</div></div></div>';
+  });
+  $("timeline").innerHTML = html;
+
+  if(c.merchantName){
+    $("mCard").classList.remove("hidden");
+    $("mName").textContent = c.merchantName;
+    $("mNo").textContent = "特约商户 · 本小区同款后台";
+    $("mAcc").textContent = "账号为老板手机号 · 已开通商家后台";
+    $("mPlate").textContent = "No." + String(c.referralId||"—");
+    $("mSlot").textContent = "第 1 位";
+  } else {
+    $("mCard").classList.add("hidden");
+  }
+}
+
+// ---- 出码 ----
+function askCode(){
+  var v = ($("askInput").value||"").trim();
+  if(!v){ toast("说一下店名或类目，比如「水果店」"); return; }
+  api("/api/property/referral/owner/codes", {method:"POST", body:"category="+encodeURIComponent(v)}).then(function(r){
+    if(r.code!==0){ toast(r.msg||"出码失败"); return; }
+    toast(r.data && r.data.reused ? "你还有一个有效的邀请码，先把它用掉" : "已生成，把码给老板就行");
+    $("askInput").value = "";
+    load();
+  });
+}
+
+function lightUp(){ toast("把屏幕亮度调高，让老板扫这个码"); }
+function saveImg(){ toast("长按二维码可保存到相册，再发微信给老板"); }
+
+// ---- Tab ----
+document.querySelectorAll(".tab").forEach(function(b){
+  b.addEventListener("click", function(){
+    document.querySelectorAll(".tab").forEach(function(x){ x.classList.remove("active"); });
+    b.classList.add("active");
+    var v = b.dataset.v;
+    $("vCode").classList.toggle("hidden", v!=="code");
+    $("vProg").classList.toggle("hidden", v!=="prog");
+  });
+});
+
+load();
+</script>
+</body>
+</html>

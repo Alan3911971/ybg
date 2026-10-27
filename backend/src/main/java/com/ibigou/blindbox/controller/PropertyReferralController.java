@@ -31,6 +31,7 @@ public class PropertyReferralController {
 
     private final PropertyMerchantReferralRepository referralRepository;
     private final MerchantPropertyBindingRepository bindingRepository;
+    private final MerchantRepository merchantRepository;
     private final PropertyWalletRepository walletRepository;
     private final PropertyOwnerRepository ownerRepository;
     private final PropertyBindRelationRepository bindRelationRepository;
@@ -168,6 +169,111 @@ public class PropertyReferralController {
             referralRepository.save(r);
         }
         return Result.ok();
+    }
+
+    // ================== 公开：老板扫码后自助注册（免登录） ==================
+
+    /**
+     * 老板扫业主的码后自己填 3 项：店名、类目、执照（手机号即登录账号）。
+     * 设计稿㉘：不用下载 App、不用物业代填；注册完就有存量商家后台账号，物业只做一次过审。
+     * 这里只建「待审」的商家与绑定，不直接给经营权限——先注册后过审，避免业主刷码套 ¥30。
+     */
+    @PostMapping("/public/register")
+    public Result<Map<String, Object>> publicRegister(@RequestParam String code,
+                                                      @RequestParam String shopName,
+                                                      @RequestParam(required = false) String category,
+                                                      @RequestParam String phone,
+                                                      @RequestParam(required = false) String pwd,
+                                                      @RequestParam(required = false) String address,
+                                                      @RequestParam(required = false) String licenseImg) {
+        PropertyMerchantReferral r = referralRepository.findByCode(code == null ? "" : code.trim().toUpperCase())
+                .orElseThrow(() -> new BizException("邀请码不存在"));
+        boolean expired = r.getStatus() != null && r.getStatus() == 3
+                || (r.getExpireTime() != null && r.getExpireTime().isBefore(LocalDateTime.now()));
+        if (expired) throw new BizException("邀请码已过期，让业主重新出一张");
+        if (r.getStatus() != null && r.getStatus() >= 2) throw new BizException("该邀请码已完成，无需重复注册");
+        if (shopName == null || shopName.isBlank()) throw new BizException("请填写店铺名称");
+        if (phone == null || !phone.matches("^1[3-9]\\d{9}$")) throw new BizException("请填写正确的 11 位手机号");
+        if (pwd == null || pwd.length() < 6) throw new BizException("密码至少 6 位");
+        if (merchantRepository.findByLoginAccount(phone).isPresent()) {
+            throw new BizException("这个手机号已有商家账号，请直接登录商家后台");
+        }
+        if (r.getMerchantNo() != null && !r.getMerchantNo().isBlank()
+                && merchantRepository.findByMerchantNo(r.getMerchantNo()).isPresent()) {
+            throw new BizException("该邀请码已注册过，请等待物业审核");
+        }
+
+        LocalDateTime now = LocalDateTime.now();
+        String merchantNo = "M" + String.format("%08d", System.currentTimeMillis() % 100000000L);
+
+        Merchant m = new Merchant();
+        m.setMerchantNo(merchantNo);
+        m.setMerchantName(shopName.trim());
+        m.setLoginAccount(phone);
+        m.setLoginPwd(pwd);
+        m.setStatus(0); // 0 待审：过审后才可经营
+        m.setBoxDiscountTotalWeight(0);
+        m.setBoxCouponTotalWeight(0);
+        m.setPrivatePoolWeight(0);
+        m.setPublicPoolWeight(100);
+        m.setReceiveQrStatus(0);
+        m.setPayMode(1);
+        m.setIsSplitEnabled(1);
+        m.setSplitAuditStatus(0);
+        m.setBalanceDeductPercent(8); // 与设计稿一致：只按成交让利 8%
+        m.setCreateTime(now);
+        m.setUpdateTime(now);
+        merchantRepository.save(m);
+
+        MerchantPropertyBinding b = new MerchantPropertyBinding();
+        b.setMerchantNo(merchantNo);
+        b.setCompanyId(r.getCompanyId());
+        b.setSplitMode(1);
+        b.setStatus(0); // 待物业过审
+        b.setReferrerOwnerId(r.getOwnerId());
+        b.setInviteCode(r.getCode());
+        b.setInviteExpireAt(r.getExpireTime());
+        b.setReferralRewardStatus("PENDING");
+        b.setRemark("业主邀请入驻 · 邀请码 " + r.getCode());
+        b.setCreateTime(now);
+        b.setUpdateTime(now);
+        bindingRepository.save(b);
+
+        r.setMerchantNo(merchantNo);
+        r.setMerchantName(shopName.trim());
+        if (category != null && !category.isBlank()) r.setCategory(category);
+        if (r.getStatus() == null || r.getStatus() == 0) {
+            r.setStatus(1);
+            if (r.getScanTime() == null) r.setScanTime(now);
+        }
+        referralRepository.save(r);
+
+        Map<String, Object> out = new LinkedHashMap<>();
+        out.put("merchantNo", merchantNo);
+        out.put("merchantName", m.getMerchantName());
+        out.put("loginAccount", phone);
+        out.put("status", 0);
+        out.put("statusName", "待物业审核");
+        out.put("code", r.getCode());
+        out.put("tip", "提交成功，物业审核通过后账号直接开通（一般 10 分钟内）");
+        return Result.ok(out);
+    }
+
+    /** 注册页回显：这个码是谁邀的、什么类目、还剩多久 */
+    @GetMapping("/public/code-info")
+    public Result<Map<String, Object>> codeInfo(@RequestParam String code) {
+        PropertyMerchantReferral r = referralRepository.findByCode(code == null ? "" : code.trim().toUpperCase())
+                .orElseThrow(() -> new BizException("邀请码不存在"));
+        boolean expired = r.getStatus() != null && r.getStatus() == 3
+                || (r.getExpireTime() != null && r.getExpireTime().isBefore(LocalDateTime.now()));
+        Map<String, Object> m = new LinkedHashMap<>();
+        m.put("code", r.getCode());
+        m.put("category", r.getCategory());
+        m.put("roomNo", r.getRoomNo());
+        m.put("valid", !expired);
+        m.put("expireTime", r.getExpireTime());
+        m.put("status", r.getStatus());
+        return Result.ok(m);
     }
 
     // ================== 后台 ==================
