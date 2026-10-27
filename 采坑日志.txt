@@ -1463,3 +1463,14 @@ G98 双数据+ABCD排号修复（2026-10-20）：①双数据根因=旧代码tic
 ③**公网 GET 大文件超时的验证替代**：本机对 ybgtc.com 的公网 GET 大文件常超时（HEAD 却快），验证部署不要死磕公网下载——**服务器本地 curl 127.0.0.1 + Host 头**拿状态码/大小/md5 最快；真要端到端看渲染，用本地演示页把资源 src 换成线上 URL 再 Edge headless 截图（本次 tv_activity_live_210253.png 一次通过，插画/二维码/字幕全部正确）。
 ④**密钥实际路径订正**：MEMORY 旧记载写 `C://Users//Administrator//.ssh//ybg_key` 已失效——本机当前用户 Alandell，`C://Users//Alandell//.ssh//ybg_key` 才能连通（ssh 客户端对不存在 key 只 warning 不报错，会静默 fallback 到 id_rsa 并报 "error in libcrypto"，容易误判成密钥坏）。
 ⑤**部署证据（2026-10-27 21:00）**：h5/tv.html 92796 B md5 7739ea14 + h5/img/blindbox-hero.jpg 74511 B md5 3780d52a，双端 md5 一致；备份 h5/tv.html.bak-20261027_205941；nginx conf 备份 .bak-20261027_2100；线上图片 200/image/jpeg，页面 200/no-cache。回滚：`cp -f /www/wwwroot/ybgtc.com/h5/tv.html.bak-20261027_205941 /www/wwwroot/ybgtc.com/h5/tv.html`（图片目录整删亦可）。
+
+## 物业操作级三屏 + 微信登录轮（2026-10-27 深夜）
+
+①**栅格 1fr 被表格最小宽度顶开（最隐蔽）**：`grid-template-columns:330px 1fr` 里的 1fr 实际最小宽度 = 内容 min-content，详情面板里的 7 列表格把它顶宽，整页横向溢出，右侧「四因子分数/派单按钮」被裁到屏幕外——浏览器截图看着像"分数没渲染"。必须写 `minmax(0,1fr)` + 面板 `min-width:0` + `padding 容器 overflow-x:auto`。判定方法：页面能滚出横向滚动条就是它，不是渲染 bug。
+②**`<td>` 上的 max-width 在 table-layout:auto 下无效**：审计页「影响面」长文本直接压住右边「撤回」按钮。长文本列一律包一层 `<span class="clip">`（display:block + max-width + ellipsis + title 悬停看全文）。
+③**测试脚本重复 Content-Type 把自己坑了**：先设 form 的 Content-Type，再追加 json 的，curl 发两个头 → 服务端 HttpMediaTypeNotSupportedException，回看起来像"接口 500"。构造请求头要用字典覆盖，不能追加。
+④**接口参数位置（form vs body）必须先看签名**：群发言 `/group/owner/send` 收的是 @RequestParam，E2E 用 JSON 打返回 MissingServletRequestParameterException，脚本把空 data 当成"分流没生效"，差点去改本来没坏的业务代码。新接口写 E2E 前先 grep 方法签名。
+⑤**没有数据就验不动校验**：生产库当时没有一张逾期账单，减免的候选/分级/审批全链路空跑。必须造 due_date 回填的测试账单，且**跑前清 deduct_log**，否则第二次跑重复抵扣、账目对不上。
+⑥**撤回断言要把 status 一起判**：`canUndo` 是「status==1 且未过截止时间」，只比截止时间会把"已撤回"的行误报成 bug（本轮出现过 1 次假失败，改断言后 63/63）。
+⑦**`INSERT ... SELECT` 造测试账号要先看 NOT NULL 无默认列**：property_admin.phone 无默认值，漏了直接 1364，报错在 line 1 看不出是哪列。
+⑧**存量 HTML 同一规则有 6 种写法**：`.main` 在 30 个后台页里有 `margin:0 auto` / `max-width:1200px` / `margin-right:0;max-width:none` 等变体，批量替换前先 `grep -h | sort | uniq -c`，否则只改到一部分页面还以为全改完了。

@@ -1,6 +1,6 @@
 {
   "project": "宜必购盲盒系统 (ybgtc.com)",
-  "last_updated": "2026-10-27 20:10 物业 AI 落地全量上线（8表+5控制器+10页面+E2E 39 项过），见 property_ai_dev_20261027",
+  "last_updated": "2026-10-27 21:35 物业 AI 第二批（操作级三屏 + 微信登录）上线，E2E 63/63，见 property_ai_ops_20261027",
   "note": "AOCI 仓库认知索引已建立（641条 aligned）",
   "environment": {
     "code_root": "D:\\workspace-java\\ybg-master",
@@ -1343,5 +1343,18 @@
     "pitfall": "空 script 壳验收法（script 长度+fetch）见采坑日志本轮 7 条",
     "pending": "GitHub 推送待 GH_PAT（环境变量缺失，_push_gh_tv.py 未跑）；微信登录未接；后台工单四因子打分屏未做",
     "nas": "已同步 NAS commit 787fdc8（tar 管道 + --no-same-permissions，此前 tar 根目录 chmod 失败会中断 && 链）"
+  },
+  "property_ai_ops_20261027": {
+    "date": "2026-10-27 晚",
+    "title": "物业 AI 第二批：操作级三屏（工单四因子/减免分级/执行留痕）+ 业主端微信一键登录",
+    "database": "V25__property_ops.sql（幂等，生产宿主机 mysql 已跑）：property_action_log + property_bill_relief + property_owner.wx_openid(unique)",
+    "backend": "PropertyWorkflowController(/api/property/workflow) · PropertyReliefController(/api/property/relief) · PropertyAuditController(/api/property/audit) · PropertyOwnerWxController(/api/property/owner/wx)",
+    "rules": "四因子=紧急度35+影响面30+时效20+技能难度15，≥80 P0 / 60-79 P1 / <60 P2；减免额度 超管1000·主管500·客服100，超限 status=3 只出证据包不动账；审批人≠申请人；通过才写 bill.deducted + deduct_log source_type=9；撤回窗口 5 分钟，日志不可删",
+    "pages": "property/admin/{workorder-detail,bill-relief,audit-log}.html + 25 页侧栏补入口；property/customer/login.html 微信一键登录",
+    "e2e": "_e2e_property_ops.py（G39）63 项全过；测试数据：业主 13900000099/Test123456、客服账号 e2eops、账单 E2ERELIEF001(120/逾期45天)/E2ERELIEF002(500/逾期100天)，均在公司 1",
+    "deploy": "jar=ibigou.jar（备份 ibigou.jar.bak-20261027_2115）；后台 30 页 + customer/login.html；截图 _shots/pv/v2_*.png",
+    "backup": "GitHub commit d737763（403 文件，base_tree 叠加）· NAS commit 90ecf0a",
+    "cleanup": "验收完可删：DELETE FROM property_bill WHERE bill_no LIKE 'E2ERELIEF%'; DELETE FROM property_bill_relief WHERE bill_id IN (SELECT bill_id FROM property_bill WHERE bill_no LIKE 'E2ERELIEF%'); DELETE FROM property_action_log WHERE create_time>='2026-10-27'; DELETE FROM property_admin WHERE account='e2eops';",
+    "pending": "微信真机需公众号后台把 ybgtc.com 加入网页授权域名（代码已通，配置项不在仓库）"
   }
 }
