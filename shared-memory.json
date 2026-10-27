@@ -1176,19 +1176,27 @@
   },
   "backup_status_20261027": {
     "NAS": {
-      "commit": "ddfd0be",
+      "commits": [
+        "ddfd0be 全量同步",
+        "77800c4 收尾补记",
+        "710854d G116/G117 与 AOCI 条目"
+      ],
       "repo": "/volume1/docker/github-backup/ybg-master",
-      "status": "已完成（含四文档+双模式代码；顺带清理历史嵌套重复目录）"
+      "status": "已完成"
     },
     "GitHub": {
       "status": "已完成",
-      "commit": "73435e0dfd4bde5204cbd65e1e55e1f81e5b6b6d",
+      "commit": "7a3e582d23cfce728a36f8c1fa42b379f141396d",
       "branch": "master",
       "repo": "Alan3911971/ybg",
       "pushed_at": "2026-10-27",
       "scope": "backend 子树 457 文件 + 根目录 8 文件（四文档/tv.html/_build_tv2.py/_deploy_win_scene.py/aoci.code.txt）",
       "verified": "回读校验 12 项命中：V23 迁移、tvQrTarget、tv-mode、tvMode、btnTvCall、applyTvMode、mode-activity、宿主机 mysql、G36、G115、大屏双模式、tv_screen_dual_mode_20261027",
-      "note": "PAT 由用户提供，运行时经 GH_PAT 环境变量传入，未写入任何文档/脚本"
+      "note": "PAT 由用户提供，运行时经 GH_PAT 环境变量传入，未写入任何文档/脚本",
+      "commits": [
+        "73435e0dfd4bde5204cbd65e1e55e1f81e5b6b6d 首次备份 backend+根目录8文件",
+        "7a3e582d23cfce728a36f8c1fa42b379f141396d 补推 G116/G117 与 AOCI 条目"
+      ]
     },
     "AOCI": {
       "updated_entries": 9,
@@ -1198,7 +1206,7 @@
       "orphan": 1,
       "note": "残留为 2026-09-28 索引之后的存量漂移，G32.4 禁止批量编造条目，需逐个补"
     },
-    "闭环": "G11 双向备份已完成：NAS（ddfd0be + 77800c4）+ GitHub（73435e0）"
+    "闭环": "G11 双向备份已完成：NAS 三次提交 + GitHub 两次提交"
   },
   "github_push_method": {
     "token": "运行时由用户经环境变量 GH_PAT 提供；脚本内只读 os.environ，禁止硬编码",
