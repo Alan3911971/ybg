@@ -211,7 +211,7 @@
 【G19】前端/脚本文件改动（含HTML/JS字符串替换）后，必须校验标签/结构完整性（如 <script>/</script> 配对平衡）再上传生产；调试代码一律不得留在正式入口（如确认打印按钮），调试功能单独页面/按钮且不影响主流程
 【G20】修改bug更新服务器后必须实际操作演示给用户看；演示中发现的新bug（如脚本不执行）主动排查解决后再交付
 
-（G19/G20 原行首残留的 "| %s |" 是 2026-09-28 批量写入时的格式化占位符，已于 2026-10-27 清除）
+（G19/G20 原行首残留过一组竖线包裹的格式化占位符，系 2026-09-28 批量写入时留下，已于 2026-10-27 清除）
 
 【2026-09-18 G21】物业系统部署完成：数据库 34 表（snake_case）、后端 jar 含 /api/property/*、前端 h5/property/（nginx 磁盘直放）、admin/admin@2026 登录可用
 【2026-09-18 G22】批量改 Java 禁止用 PowerShell Get-Content/Set-Content（编码损坏+大小写不敏感），统一用 Python 脚本字节级处理
@@ -386,6 +386,11 @@
 12. **改完页面必须重启 App 再验证**：WebView 只在启动时拉一次 tv.html。
 13. **页面来源唯一**：改弹屏改 `_tv_win_fx.py`，由 `_build_tv2.py` 生成 `tv-v2.html`。**禁止直接改 `_redesign_v3/tv-v2.html`**（会被重新生成覆盖）。
 14. **上线前必跑四件套**：`_build_tv2.py`（4.4 兼容性自检，致命项必须 0）｜`_check_win_fx.js`（动效与音效路由，**63 项**）｜`_check_win_fx_wav.py`（12 个音效）｜`_shot_win_scene.py`（12 张 1280×720 截图，肉眼验收，不必接 TV）。
+    **【环境前置 · 2026-10-27 实测】** `_build_tv2.py` 的 ES5 AST 校验层依赖 **esprima**。没装时 `_kiosk_audit.py:193`
+    会把「校验没跑」保守计为致命 +1，输出「致命项 1 处 · 产物不合格 · 不能直接投 4.4」—— **这是假红灯，不是页面真有问题**。
+    跑之前先 `python -m pip install esprima`。装上后本机实测全绿：`_build_tv2.py` 致命 0 / DOM 74；
+    `_check_win_fx.js` 63 通过 0 失败；`_check_win_fx_wav.py` 12 个全过（44.1k/16bit/1ch，峰值 0.84~0.92，尾 30ms 淡出）；
+    `_shot_win_scene.py` 12 张 OK。四件套的四个数字（0 / 63 / 12 / 12）已于 2026-10-27 实跑复核，非记忆。
 15. **上线后必做真机验证**：各场景抓 `screencap`，用 PIL 采样像素确认底色不透明（广告画面区域应读不到高亮像素），并从 logcat 确认 `中奖音效(原生独立通道)` + `FX started` 都出现。
 16. **一次性 CSS 动画的末态若不是初始态，必须写 fill-mode `both`**：`winShock` / `winSheen` / `winBar` 都算（漏写会在播完后弹回初始帧，留下脏灰环 / 常驻白光带 / 空进度槽）。改动画先问「播完停在哪」。
 17. **金额一律用全角 `￥`(U+FFE5)**：老 WebView 字体缺半角 `¥`(U+00A5)，实机渲染成豆腐块 □。页面上禁 emoji（同为豆腐块）。
@@ -420,14 +425,26 @@
 
 【G39 仓库根脚本归置规范（G32.4 实施细则，2026-10-27 起强制执行）】
 1. **仓库根 `_*.py` / `_*.js` 分两类，不可一刀切删移**：
-   - **长期资产（保留仓库根）**：构成生产链、被 MEMORY / 规矩文档引用的一环 ——
-     `_build_tv2.py`、`_tv_win_fx.py`、`_gen_win_fx.py`、`_check_win_fx.js`、`_check_win_fx_wav.py`、
-     `_shot_win_scene.py`、`_verify_tv.py`、`_deploy_win_scene.py`、`_check_tv_geom.py`、`_build_kiosk.py`、`_win_demo.py`
+   - **长期资产（保留仓库根）** —— 以下 12 个，判定依据是**实测 import 依赖链**（2026-10-27 用 grep 全量扫过）：
+     | 脚本 | 被谁 import / 为何是资产 |
+     |------|------|
+     | `_tv_win_fx.py` | 核心：被 `_build_tv2.py` / `_shot_win_scene.py` / `_win_demo.py` 三方 import，弹屏场景引擎唯一源码 |
+     | `_build_tv2.py` | 生成 `tv-v2.html` 的入口，import `_tv_win_fx` + `_kiosk_audit` |
+     | `_kiosk_audit.py` | **被 `_build_tv2.py` import**（曾误判为临时脚本，移走会直接断掉构建链） |
+     | `_gen_win_fx.py` | 生成 12 个中奖 wav 的唯一生成器 |
+     | `_check_win_fx.js` | 场景引擎 63 项离线校验 |
+     | `_check_win_fx_wav.py` | 音效 Goertzel 校验 |
+     | `_shot_win_scene.py` | 12 张截图验收，import `_tv_win_fx` |
+     | `_win_demo.py` | 自包含演示页，import `_tv_win_fx` |
+     | `_check_tv_geom.py` | 大屏几何契约校验 |
+     | `_verify_tv.py` | 投影真机验证 |
+     | `_deploy_win_scene.py` | 生产部署 |
+     | `_build_kiosk.py` | 广告机屏构建 |
    - **临时脚本（一律移 `D:\workspace-java\`）**：一次性探测/调试用途 ——
-     `_inspect_*`、`_debug_*`、`_test_*`、`_tmp_*`、`_live_check*`、`_render_check*`、`_mock_*`、`_query_*`、`_diff_*`、`_analyze_*`、`_sqlcheck.py`、`_fix_*`、`_kiosk_audit.py`、`_backup_local.py` 等
-2. **判定标准（唯一）**：被规矩文档 / MEMORY 列为生产链一环 = 长期资产；其余一次性用途 = 临时脚本。
-3. **移动前必须查引用**：构建链 `_build_tv2.py` 以相对路径读 `_tv_win_fx.py`，二者必须同进同退；被移走的脚本若仍被引用，须先改为绝对路径。移完 `__pycache__` 一并清理。
-4. **现状（2026-10-27 实测）**：仓库根共 41 个 `_*.py` / `_*.js` 未归置，其中长期资产 11 个、临时脚本 30 个 —— 处于违反 G32.4 状态，会成为 AOCI 的 missing 污染源。
+     `_inspect_*`、`_debug_*`、`_test_*`、`_tmp_*`、`_live_check*`、`_render_check*`、`_mock_*`、`_query_*`、`_diff_*`、`_analyze_*`、`_sqlcheck.py`、`_fix_*`、`_backup_local.py` 等
+2. **判定标准（唯一）**：被其他脚本 import、或被规矩文档 / MEMORY 列为生产链一环 = 长期资产；其余一次性用途 = 临时脚本。**不能只看文件名前缀像不像.工具脚本——`_kiosk_audit.py` 名字像工具脚本，实际是构建链的一环。**
+3. **移动前必须 grep 全量引用**：`grep -nE "^\s*(import|from)\s+_" _*.py`，凡是出现在 import 右侧的一律留仓库根。本次实测正是靠这一步把 `_kiosk_audit.py` 从误判里捞回来的。移完 `__pycache__` 一并清理。
+4. **现状（2026-10-27 实测）**：仓库根共 41 个 `_*.py` / `_*.js` 未归置，其中长期资产 12 个、临时脚本 29 个 —— 处于违反 G32.4 状态，会成为 AOCI 的 missing 污染源。
 
 【G37 工作面板机制（2026-10-27 起强制执行）】
 1. **每次工作收尾必须更新文档末尾的【工作面板】章节**，登记两类内容：① 本次完成（带可复核证据）；② 未完成（含阻塞原因与下一步动作）。不写面板视为本次工作未闭环。
@@ -447,13 +464,17 @@
 ■ 已完成（归档，保留证据）
 - [已完成] 2026-10-27 | 大屏双模式（叫号屏 / 盲盒活动屏）+ 商家后台切换开关：后端 `merchant_queue_config.tv_mode` 字段 + V23 迁移 + `screen()` 返回 tvMode + 二维码按模式编码 + 后台 `GET/POST /api/merchant/config/tv-mode`；前端 tv.html 用 `body.mode-call`/`body.mode-activity` 双布局，activity 模式左区盲盒主视觉+大二维码；已上线生产 | 依赖：- | 证据：GitHub 73435e0 / 921136f，NAS 7fe36af；线上 `curl /api/tv/M90380836/screen` 含 `tvMode`、生产库 `tv_mode` 列存在、`actuator/health` = UP
 - [已完成] 2026-10-27 | 本轮双向备份闭环（G11）：NAS 4 次提交 + GitHub 3 次提交 | 依赖：- | 证据：NAS ddfd0be/77800c4/710854d/7fe36af；GitHub 73435e0/7a3e582/921136f
+- [已完成] 2026-10-27 | 弹屏四件套**本机实跑复核**（G35.14 的四个数字由记忆值改为实测值）：`python -m pip install esprima` → `_build_tv2.py` 致命 0 / DOM 74「产物合格·可以试投」→ `_check_win_fx.js` **63 通过 / 0 失败** → `_gen_win_fx.py` 生成 12 个 wav → `_check_win_fx_wav.py` **12 个全过**（44.1k/16bit/1ch，峰值 0.84~0.92，尾 30ms ≈0，t1 2.20s > t2 1.65s > t3 1.20s）→ `_shot_win_scene.py` **12 张 OK** | 依赖：esprima 必须先装，否则 `致命 1 处·产物不合格` 是假红灯 | 证据：四条命令的实际输出，已记入采坑 **G121**
+- [已完成] 2026-10-27 | G39 脚本分类纠错：实扫 import 依赖链后，把 `_kiosk_audit.py` 从「临时脚本」改回「长期资产」（它被 `_build_tv2.py:504` import，移走会断构建链）；长期资产由 11 个修正为 **12 个**，临时脚本 30 → **29 个** | 依赖：- | 证据：`grep -nE "^\s*(import|from)\s+_" _*.py` 全量扫描结果
+- [已完成] 2026-10-27 | 四文档一致性订正 + 跨副本同步（本次）：规矩 G35 按 10-26 场景引擎全文重写；G19/G20 行首格式化占位符清除；**G38 副本分叉判定**（让号避撞 G37 工作面板机制）；G39 仓库根脚本归置规矩；G01 / G18.3 / G31 / G34.6 加「冲突待裁决」标注；采坑新增 G119 副本分叉 / G120 并发编号撞车+音效 12 vs 17；共享记忆 `pending_tasks` 由 2026-09 旧条目换成 8 条真实现期待办 + 新增 `doc_copies_fork_20261027` / `win_fx_count_20261027` 两节；知识图谱 110 / 111 / 116 / 844 / 846 行旧口径订正 | 依赖：- | 证据：UNC→D 盘四文档 md5 全部一致（规矩 06b5ce07 / 采坑 3f2df8b9 / 共享记忆 8abacac1 / 图谱 dd605a22），D 盘旧版各留 `.bak-20261027_083913` 备份；音效数经 `_gen_win_fx.py` 实证 = 4 场景 × 3 档 = 12 个
 
 ■ 未完成（下次开工从这里挑一条继续）
 1. [阻塞] 2026-10-27 | 极米投影真机实测：叫号屏与盲盒活动屏各截一张验收 | 投影息屏/重启后 adb 网络调试不常驻，本机无法远程唤醒（能 ping 通但 5555 连不上） | ① 用户在投影「设置→开发者选项→USB调试/网络调试」手动重开 ② `adb connect <投影IP>:5555` ③ 重启大屏 App 拉新 tv.html ④ screencap 截图 | 依赖：**需用户手动开启 adb** | 命令：`_verify_tv.py`
 2. [阻塞] 2026-10-27 | 盲盒活动屏端到端验收：后台切 activity → 重启 App → 手机扫大屏码应跳 `/h5/customer/index.html?merchantNo=` | 服务端已验证按模式编码，但没真机扫码 | 切模式 → 重启 App → 真扫一次确认落地页 | 依赖：同上（需投影在线） | 后端：`TvQueueController.tvQrTarget`
-3. [待办] 2026-10-27 | 订正四文档三处硬矛盾（不同会话写入口径打架） | 文档间未做一致性校验 | ① **jar 路径**：G01/G31/G36 写 `/www/wwwroot/ybgtc.com/ibigou.jar`，G33.6 写真正跑的是 `/www/wwwroot/ybgtc-app/ibigou.jar` → 以 `ps -eo pid,cmd | grep '[i]bigou.jar'` 实测为准后统一；② **投影 IP**：MEMORY.md 记 192.168.31.27（"注意不是 .28"），知识图谱 G112/G113 记 192.168.31.28 → 实机确认后统一；③ **G35 弹屏口径过时**：仍是老的「4 模式 + detectWinMode 正则 + 5 个 wav + 35 项校验」，已被 2026-10-26 场景引擎取代（prizeType 结构化字段 + 4 场景 12 档 + 17 个 wav + 63 项校验）→ 按现网代码重写 G35 | 依赖：①②需服务器/投影实测 | 原则：以**实测结论**为准，改旧口径不改新结论
+3. [进行中] 2026-10-27 | 订正四文档三处硬矛盾（不同会话写入口径打架） | 文档间未做一致性校验 | **③ 已完成**：规矩 G35 已按 10-26 定版场景引擎全文重写（4 套独立舞台 DOM + prizeType 结构化字段 + 音效 12 个 = 4 场景×3 档 + 63 项校验），并订正了知识图谱 110/111/116 行停留在旧口径的记载；**① ② 仍未闭环** | 依赖：① 需 SSH 到生产跑 `ps -eo pid,cmd | grep '[i]bigou.jar'` —— **本机 SSH 被安全策略拦截（禁 StrictHostKeyChecking=no + root 直连），需用户代跑或另开授权**；② 需投影实机确认 | 已做缓冲：G01 与 G34.6 已加「冲突待裁决」标注，写明未实测前不得照单边口径部署；G35.10 已澄清 12 与 17 是两个口径 | 原则：以**实测结论**为准，改旧口径不改新结论
 4. [待办] 2026-10-27 | AOCI 索引存量漂移清理 | 2026-09-28 建索引后，10-25/26 会话新增/改动的文件未登记 | 逐个读懂真实文件后，用 `aoci source manifest --json` 取该文件 sha256 → `aoci update-entry` 补条目 | 当前残留：missing 123 / stale 19 / orphan 1；**G32.4 禁止按文件名批量编造条目**，只能逐个补 | 依赖：人工逐个读文件，量大
 5. [待确认] — | 任务#14「准备生产建表与回填脚本（待用户确认执行）」是否仍适用 | 该任务早于本轮大屏工作，不确定是否已被后续迁移覆盖 | 先查生产库目标表是否已存在，再决定执行或关闭该任务 | 依赖：**需用户确认**
+6. [待办] 2026-10-27 | 仓库根 41 个 `_*.py` / `_*.js` 归置（**G39 规矩已立，执行尚未做**） | 多年累积未清理，是 AOCI missing 123 的主要来源 | ① 长期资产 11 个留仓库根（`_build_tv2.py`/`_tv_win_fx.py`/`_gen_win_fx.py`/`_check_win_fx.js`/`_check_win_fx_wav.py`/`_shot_win_scene.py`/`_verify_tv.py`/`_deploy_win_scene.py`/`_check_tv_geom.py`/`_build_kiosk.py`/`_win_demo.py`）② 临时脚本 30 个移 `D:\workspace-java\` ③ 移前先 grep 相对路径引用（`_build_tv2.py` 读 `_tv_win_fx.py` 必须同进同退，移散会断掉构建链） | 依赖：**需用户确认哪些算长期资产再动手** | 命令：`cd <repo> && grep -l "_tv_win_fx\|_gen_win_fx\|_shot_win_scene" _*.py`
 
 ■ 面板维护提示
 - 改状态不改历史：进行中/已完成要在原条目上改，已完成的连同证据移入"已完成（归档）"。
