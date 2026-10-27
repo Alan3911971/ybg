@@ -1365,3 +1365,17 @@ G98 双数据+ABCD排号修复（2026-10-20）：①双数据根因=旧代码tic
 ③**发现并清理了历史遗留的嵌套重复目录**：NAS 仓库里此前误提交了一份 `ybg-master/*` 的嵌套副本（约 18 万行重复），本次提交（ddfd0be）顺带将其删除，仓库恢复扁平。解压后务必 `ls -d ybg-master` 确认无嵌套再 `git add -A`。
 ④**AOCI verify 残留属历史遗留**：本次回写 9 条改动文件条目后 stale 由 28→19（我改的 9 个已清零），但仍有 **missing 123 / stale 19 / orphan 1**——这些是 2026-09-28 建索引之后（10-25/26 会话）新增或改动的存量文件。**G32.4 明令"条目语义必须来自对真实文件的读取理解，禁止按文件名/路径模板批量编造"**，因此不能批量补条目凑成 governance_aligned=true，只能逐个读懂后补，列为待办。
 ⑤**本机 AOCI 没有 `maintain` 子命令**：规矩里写的 `aoci maintain` 是 MCP 工具；CLI 可用的是 `aoci source manifest --json`（取 `files[].sha256` 源码指纹）→ `aoci update-entry --path --entry --source-sha256`。含中文的条目必须用 Python subprocess 传参（PowerShell/Bash 传中文不可靠）。
+
+【G116】GitHub 备份闭环：PAT 改用运行时环境变量（2026-10-27）
+①**PAT 不要硬编码进脚本**：旧 `_push_gh.py`/`_push_gh_tv.py` 把 PAT 写在脚本里，一旦失效就要改代码、且脚本随备份同步到 NAS/GitHub 有泄露风险。正确做法：脚本 `PAT = os.environ.get('GH_PAT','')`，推送命令前缀 `GH_PAT='...' python _push_gh_tv.py`。**token 只在运行时存在，不落盘、不写进四文档**。
+②**shared-memory.json 里的 github.pat / github_token 是脱敏占位，不是真 token**：按「文档一律脱敏」规矩故意不存明文，所以备份前若发现 401，只能向用户要新 PAT，不要试图从仓库里找。
+③**推送前先验 token**：`GET /user` 看 `login` 是否 `Alan3911971` + `GET /repos/Alan3911971/ybg` 看 `default_branch`（本项目是 **master**，不是 main），再跑推送；能连通但 401 = 凭据问题，不是网络问题。
+④**Git Data API 推送流程（github.com 443 直连不通、git 命令不可用时）**：取 head commit → 逐个文件创建 blob → 本地拼 tree 递归建子树 → 合并顶层 tree（保留未改动条目原 sha）→ 建 commit（parents=[head]）→ PATCH `/git/refs/heads/master`。本次推了 backend 子树 457 个文件 + 8 个根目录文件。
+⑤**推送后必须回读校验，别只看 commit 成功**：用 `GET /contents/<path>?ref=master` 取 base64 内容，grep 关键字确认真上线（本次校验 12 项）。**注意关键字大小写**：校验 `_deploy_win_scene.py` 时写 `MYSQL` 判 MISS 是假阴性，实际文件里全是小写 `mysql -h`，正确关键字应是 `information_schema` / `tv_mode` / `mysql -h`。
+⑥**本轮 GitHub 备份已闭环**：commit `73435e0`（master，2026-10-27），含 V23 迁移 / TvQueueController.tvQrTarget / MerchantConfigController.tv-mode / MerchantQueueConfig.tvMode / 商家后台 btnTvCall / tv.html applyTvMode / _build_tv2.py mode-activity / _deploy_win_scene.py 宿主机 mysql / 四文档 G36·G114·G115。
+
+【G117】AOCI update-entry 被拒：条目 F 段不能写嵌套括号（2026-10-27）
+①给 `采坑日志.txt` 回写条目时报 `impact_resolution_failed / impact_candidate_fras_invalid`，「认知影响分析无法证明本次更新安全」。排查结论：**F 段里写了嵌套括号**，如 `G114(生产库加列静默失败:docker exec ibigou-mysql不存在,...)`——AOCI 把括号内的编号串当成 FRAS 认知对象引用去解析，解析不出来就整条拒绝。
+②**写法铁律**：条目 `F:` 描述段**只用分号、顿号、斜杠、逗号分隔，**不要出现成对括号**（尤其嵌套括号）；编号后直接跟中文说明，如 `新增G114生产库加列静默失败与G115备份踩坑与G116 GitHub备份闭环`。
+③**降级策略**：长条目被拒时，先换成去掉全部括号的短版本提交成功，再逐步加字试探；不要反复用同一条被拒的长文本重试，冲击分析每次都会以同样原因失败。
+④**含中文必须走 Python subprocess 传参**（G115⑤ 已记），PowerShell/Bash 直接传中文不可靠；回写前先 `aoci source manifest --json` 取该文件当次 `sha256`，指纹过期同样会被拒。

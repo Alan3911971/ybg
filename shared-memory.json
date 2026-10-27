@@ -882,7 +882,8 @@
       "date": "2026-10-27",
       "task": "大屏双模式（叫号屏/盲盒活动屏）",
       "result": "后端+大屏页+商家后台开关已上线并通过服务端校验；投影真机实测待办"
-    }
+    },
+    "2026-10-27 GitHub 备份闭环：用户提供 PAT → commit 73435e0（master）；PAT 改走 GH_PAT 环境变量，不落盘"
   ],
   "spec_kit": {
     "version": "1.0.7.dev0",
@@ -1180,8 +1181,14 @@
       "status": "已完成（含四文档+双模式代码；顺带清理历史嵌套重复目录）"
     },
     "GitHub": {
-      "status": "阻塞：PAT 401 失效，本机无可用的明文 token（shared-memory 中按脱敏规矩只存占位）",
-      "需要": "用户提供新的 GitHub PAT 后重跑 _push_gh_tv.py"
+      "status": "已完成",
+      "commit": "73435e0dfd4bde5204cbd65e1e55e1f81e5b6b6d",
+      "branch": "master",
+      "repo": "Alan3911971/ybg",
+      "pushed_at": "2026-10-27",
+      "scope": "backend 子树 457 文件 + 根目录 8 文件（四文档/tv.html/_build_tv2.py/_deploy_win_scene.py/aoci.code.txt）",
+      "verified": "回读校验 12 项命中：V23 迁移、tvQrTarget、tv-mode、tvMode、btnTvCall、applyTvMode、mode-activity、宿主机 mysql、G36、G115、大屏双模式、tv_screen_dual_mode_20261027",
+      "note": "PAT 由用户提供，运行时经 GH_PAT 环境变量传入，未写入任何文档/脚本"
     },
     "AOCI": {
       "updated_entries": 9,
@@ -1190,6 +1197,16 @@
       "missing": 123,
       "orphan": 1,
       "note": "残留为 2026-09-28 索引之后的存量漂移，G32.4 禁止批量编造条目，需逐个补"
-    }
+    },
+    "闭环": "G11 双向备份已完成：NAS（ddfd0be + 77800c4）+ GitHub（73435e0）"
+  },
+  "github_push_method": {
+    "token": "运行时由用户经环境变量 GH_PAT 提供；脚本内只读 os.environ，禁止硬编码",
+    "script": "D:\\workspace-java\\_push_gh_tv.py",
+    "command": "cd /d/workspace-java/ybg-master && GH_PAT='<pat>' python D:/workspace-java/_push_gh_tv.py",
+    "api": "Git Data API（blob→tree→commit→PATCH refs/heads/master）；github.com 443 直连不通、git 命令不可用",
+    "branch": "master（不是 main）",
+    "precheck": "GET /user 看 login=Alan3911971；GET /repos/Alan3911971/ybg 看 default_branch",
+    "verify": "GET /contents/<path>?ref=master 取 base64 回读 grep 关键字；注意关键字大小写（如 mysql 非 MYSQL）"
   }
 }
