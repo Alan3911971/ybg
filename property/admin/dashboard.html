@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<meta name="theme-color" content="#4f46e5">
+<meta name="theme-color" content="#0e7a6b">
 <title>工作台 · 物业后台 · 宜必购物业</title>
 <link rel="icon" href="data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='80' font-size='90'%3E%F0%9F%8F%A2%3C/text%3E%3C/svg%3E">
 <script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script>
@@ -11,12 +11,12 @@
 </script>
 <style>
   :root{
-    --pri:#4f46e5; --pri-grad:linear-gradient(135deg,#4f46e5 0%,#7c3aed 100%);
+    --pri:#0e7a6b; --pri-grad:linear-gradient(135deg,#0e7a6b 0%,#0d9488 100%);
     --success:#10b981; --danger:#ef4444; --warning:#f59e0b;
     --dark:#0f172a; --text:#1e293b; --text-2:#64748b; --text-3:#94a3b8;
     --bg:#f8fafc; --surface:#ffffff; --border:#e2e8f0; --divider:#f1f5f9;
     --shadow-card:0 1px 3px rgba(0,0,0,.04),0 8px 24px rgba(0,0,0,.04);
-    --r-sm:8px; --r-md:12px; --r-lg:16px; --r-xl:20px; --sidebar-w:272px;
+    --r-sm:10px; --r-md:14px; --r-lg:18px; --r-xl:22px; --sidebar-w:272px;
   }
   *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
   html,body{font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei","Helvetica Neue",Arial,sans-serif;color:var(--text);background:var(--bg);-webkit-font-smoothing:antialiased;height:100%;}
@@ -36,7 +36,7 @@
   .nav-section:first-child{margin-top:0;padding-top:8px;}
   .sidebar nav a{height:44px;padding:0 16px;border-radius:10px;font-size:14px;color:rgba(255,255,255,.55);font-weight:500;transition:all .2s;margin-bottom:2px;display:flex;align-items:center;gap:12px;border-left:none;}
   .sidebar nav a:hover{color:rgba(255,255,255,.9);background:rgba(255,255,255,.06);}
-  .sidebar nav a.active{color:#fff;background:rgba(79,70,229,.15);font-weight:600;border-left:3px solid #818cf8;border-radius:0 10px 10px 0;}
+  .sidebar nav a.active{color:#fff;background:rgba(14,122,107,.15);font-weight:600;border-left:3px solid #14b8a6;border-radius:0 10px 10px 0;}
   .sidebar nav a .icon{font-size:16px;width:22px;text-align:center;flex-shrink:0;}
   .sidebar .logout-area{padding:16px 12px;border-top:1px solid rgba(255,255,255,.08);}
   .sidebar .logout-area a{color:rgba(255,255,255,.5);justify-content:center;border-radius:var(--r-sm);padding:11px 14px;border-left:none;}
@@ -59,7 +59,7 @@
 
   .card{background:var(--surface);border-radius:var(--r-lg);padding:24px;margin-bottom:20px;box-shadow:var(--shadow-card);border:none;}
   .sec{display:flex;align-items:center;gap:10px;font-weight:700;margin:0 0 16px;font-size:15px;color:var(--text);}
-  .sec .ic{width:32px;height:32px;border-radius:var(--r-sm);background:linear-gradient(135deg,rgba(79,70,229,.1) 0%,rgba(124,58,237,.1) 100%);color:var(--pri);display:inline-flex;align-items:center;justify-content:center;font-size:15px;flex:0 0 32px;}
+  .sec .ic{width:32px;height:32px;border-radius:var(--r-sm);background:linear-gradient(135deg,rgba(14,122,107,.1) 0%,rgba(13,148,136,.1) 100%);color:var(--pri);display:inline-flex;align-items:center;justify-content:center;font-size:15px;flex:0 0 32px;}
 
   /* Stat cards grid */
   .stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:20px;margin-bottom:24px;}
@@ -70,7 +70,7 @@
   .stat-card.orange::before{background:linear-gradient(135deg,#f59e0b,#d97706);}
   .stat-card.red::before{background:linear-gradient(135deg,#ef4444,#dc2626);}
   .stat-card .stat-icon{width:48px;height:48px;border-radius:var(--r-md);display:flex;align-items:center;justify-content:center;font-size:24px;margin-bottom:16px;}
-  .stat-card.blue .stat-icon{background:rgba(79,70,229,.1);color:var(--pri);}
+  .stat-card.blue .stat-icon{background:rgba(14,122,107,.1);color:var(--pri);}
   .stat-card.green .stat-icon{background:rgba(16,185,129,.1);color:var(--success);}
   .stat-card.orange .stat-icon{background:rgba(245,158,11,.1);color:var(--warning);}
   .stat-card.red .stat-icon{background:rgba(239,68,68,.1);color:var(--danger);}
@@ -101,7 +101,7 @@
   .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:none;font-weight:600;cursor:pointer;transition:all .2s cubic-bezier(.4,0,.2,1);letter-spacing:.2px;white-space:nowrap;}
   .btn-sm{height:36px;padding:0 16px;font-size:13px;border-radius:8px;}
   .btn-md{height:44px;padding:0 24px;font-size:14px;border-radius:10px;}
-  .btn-primary{background:linear-gradient(135deg,#4f46e5 0%,#7c3aed 100%);color:#fff;box-shadow:0 2px 8px rgba(79,70,229,.3);}
+  .btn-primary{background:linear-gradient(135deg,#0e7a6b 0%,#0d9488 100%);color:#fff;box-shadow:0 2px 8px rgba(14,122,107,.3);}
   .btn:hover{transform:translateY(-1px);filter:brightness(1.05);}
   .btn:active{transform:scale(.97);filter:brightness(.95);}
 
@@ -126,33 +126,98 @@
   .sec{font-size:14px;}
   .page-title{font-size:22px !important;}
 }
+
+/* ===== V3 换壳覆盖层（批量注入 2026-10-27）===== */
+:root{
+  --sidebar-w:220px;
+  --font:"HarmonyOS Sans SC","MiSans","PingFang SC","Microsoft YaHei",system-ui,-apple-system,sans-serif;
+  --ink:#0f1728;--ink-2:#475467;--ink-3:#98a2b3;--line:#ebedf0;--line-2:#e4e7ec;
+  --brand:#0e7a6b;--brand-deep:#0a5f54;--brand-soft:#e9f5f2;--brand-softer:#f3faf8;
+  --sh-1:0 1px 2px rgba(16,24,40,.04);--sh-2:0 1px 2px rgba(16,24,40,.04),0 8px 24px -12px rgba(16,24,40,.12);
+  --ease:cubic-bezier(.2,.7,.3,1);
+  --crumb:'宜必购物业';
+}
+body{font-family:var(--font);}
+/* 侧栏（浅色，V3） */
+.sidebar{background:var(--surface);border-right:1px solid var(--line);box-shadow:none;}
+.sidebar .brand{padding:18px 8px;display:flex;align-items:center;gap:9px;border-bottom:none;}
+.sidebar .brand .mark{width:30px;height:30px;border-radius:9px;background:var(--brand);color:#fff;font-size:14px;font-weight:700;display:flex;align-items:center;justify-content:center;flex:none;box-shadow:none;}
+.sidebar .brand .nm{font-size:14.5px;font-weight:650;letter-spacing:-.1px;color:var(--ink);}
+.sidebar .brand h1{font-size:14.5px;font-weight:650;color:var(--ink);}
+.sidebar nav{padding:0;}
+.sidebar .group{font-size:11px;font-weight:600;color:var(--ink-3);padding:14px 10px 6px;letter-spacing:.4px;text-transform:none;}
+.sidebar nav a{display:flex;align-items:center;gap:10px;height:auto;padding:9px 10px;margin-bottom:2px;border-radius:var(--r-sm);color:var(--ink-2);font-size:13.5px;font-weight:500;border-left:none;background:none;text-decoration:none;transition:background .15s var(--ease);}
+.sidebar nav a svg{width:17px;height:17px;stroke-width:1.7;color:var(--ink-3);flex:none;}
+.sidebar nav a:hover{color:var(--ink);background:var(--surface-2);}
+.sidebar nav a.on,.sidebar nav a.active{color:var(--brand-deep);background:var(--brand-soft);font-weight:600;border-left:none;}
+.sidebar nav a.on svg,.sidebar nav a.active svg{color:var(--brand);}
+.sidebar .logout-area{padding:10px 8px 0;border-top:1px solid var(--line);margin-top:10px;}
+.sidebar .logout-area a{display:flex;align-items:center;justify-content:flex-start;gap:10px;padding:9px 10px;border-radius:var(--r-sm);color:var(--danger);font-size:13.5px;font-weight:500;text-decoration:none;}
+.sidebar .logout-area a svg{width:17px;height:17px;stroke-width:1.7;flex:none;}
+.sidebar .logout-area a:hover{background:var(--danger-soft);}
+.sidebar-overlay,.overlay{background:rgba(16,24,40,.5);}
+/* 顶栏（透明页头，V3） */
+.topbar{background:transparent;border-bottom:none;box-shadow:none;padding:12px 0 18px;}
+.topbar > :last-child{margin-left:auto;}
+.topbar .page-title,.page-header .page-title{font-size:21px;font-weight:650;letter-spacing:-.2px;line-height:1.25;}
+.topbar .page-title::before,.page-header .page-title::before{content:var(--crumb);display:block;font-size:12.5px;font-weight:400;color:var(--ink-3);letter-spacing:0;margin-bottom:2px;}
+/* KPI 卡（V3：去顶部色条，描边卡） */
+.stat-card{border:1px solid var(--line);box-shadow:var(--sh-1);}
+.stat-card::before{display:none;}
+.stat-card .num{font-size:25px;font-weight:650;}
+/* 卡片圆角/阴影走全局 remap 后的 token，无需逐条覆盖 */
+/* 修存量 bug：旧 .main 的 margin:0 auto 在宽屏下把内容居中、左半截压进固定侧栏
+   （旧版探针实测 margin-left=60.5px）。桌面端强制对齐侧栏；≤900px 仍走旧抽屉规则。 */
+@media(min-width:901px){
+  .main{margin-left:var(--sidebar-w);margin-right:0;max-width:none;}
+}
 </style>
 </head>
 <body>
 <div class="toast-host" id="toastHost"></div>
 <div class="layout">
-  <div class="sidebar" id="sidebar">
-    <div class="brand"><div class="logo">🏢</div><h1>宜必购物业<span>Property Admin</span></h1></div>
-    <nav>
-      <div class="nav-section">概览</div>
-      <a href="dashboard.html" class="active"><span class="icon">📊</span>工作台</a>
-      <a href="index.html"><span class="icon">🏠</span>首页看板</a>
-      <div class="nav-section">业务管理</div>
-      <a href="owners.html"><span class="icon">👥</span>业主管理</a>
-      <a href="buildings.html"><span class="icon">🏢</span>楼栋房间</a>
-      <a href="bills.html"><span class="icon">🧾</span>账单管理</a>
-      <a href="splits.html"><span class="icon">💰</span>分账流水</a>
-      <a href="merchant-bindings.html"><span class="icon">🔗</span>商家绑定</a>
-      <a href="activity-audit.html"><span class="icon">✅</span>活动审核</a>
-      <a href="facilities.html"><span class="icon">🏟️</span>场地预约</a>
-      <div class="nav-section">安防通行</div>
-      <a href="access.html"><span class="icon">🚪</span>门禁管理</a>
-      <a href="vehicles.html"><span class="icon">🚗</span>车辆管理</a>
-      <a href="devices.html"><span class="icon">📡</span>IoT设备</a>
-    </nav>
-    <div class="logout-area"><a href="#" id="logoutBtn"><span class="icon">🚪</span>退出登录</a></div>
-  </div>
-  <div class="sidebar-overlay" id="overlay"></div>
+      <aside class="sidebar" id="sidebar">
+      <div class="brand"><div class="mark">物</div><div class="nm">宜必购物业</div></div>
+      <nav>
+      <div class="group">概览</div>
+      <a href="dashboard.html" class="on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>工作台</a>
+      <a href="index.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3 10.5 12 3l9 7.5"/><path d="M5.5 9.5V21h13V9.5"/><path d="M9.5 21v-6h5v6"/></svg>首页看板</a>
+      <div class="group">智能</div>
+<a href="ai-desk.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="4" y="7" width="16" height="12" rx="3"/><path d="M9 12v1M15 12v1M12 3v4M2 13h2M20 13h2"/></svg>AI 值班台</a>
+<a href="ai-ability.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>能力全景</a>
+<a href="audit-log.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M4 5h16M4 12h10M4 19h7"/><circle cx="18" cy="17" r="3"/><path d="M18 15.5V17l1 1"/></svg>执行记录</a>
+<a href="ai-rules.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/></svg>主动规则</a>
+<div class="group">业务管理</div>
+      <a href="owners.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="9" cy="8" r="3.5"/><path d="M2 21v-1.5A5.5 5.5 0 0 1 7.5 14h3A5.5 5.5 0 0 1 16 19.5V21"/><path d="M17 8.5a3 3 0 0 1 0 6"/></svg>业主管理</a>
+      <a href="buildings.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3 21h18M5 21V7l7-4 7 4v14"/><path d="M9 21v-6h6v6"/></svg>楼宇房间</a>
+      <a href="bills.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M6 2h12l2 5v13a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7l2-5z"/><path d="M4 7h16M9 12h6"/></svg>账单管理</a>
+      <a href="bill-relief.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="9"/><path d="M12 8v8M9 11h6M9 14h6"/></svg>减免审批</a>
+      <a href="splits.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="6" cy="6" r="3"/><circle cx="18" cy="18" r="3"/><path d="M9 6h5a4 4 0 0 1 4 4v5"/><path d="M6 9v6"/></svg>分账流水</a>
+      <a href="merchant-bindings.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M10 13a5 5 0 0 0 7 0l2-2a5 5 0 0 0-7-7l-1 1"/><path d="M14 11a5 5 0 0 0-7 0l-2 2a5 5 0 0 0 7 7l1-1"/></svg>商家绑定</a>
+      <a href="referral.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M10 13a5 5 0 0 0 7 0l2-2a5 5 0 0 0-7-7l-1 1"/><path d="M14 11a5 5 0 0 0-7 0l-2 2a5 5 0 0 0 7 7l1-1"/></svg>商家邀请</a>
+<a href="activity-audit.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="9"/><path d="m8 12.5 2.5 2.5L16 9.5"/></svg>活动审核</a>
+      <a href="prizes.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M20 12v9H4v-9"/><path d="M2 7h20v5H2z"/><path d="M12 21V7"/><path d="M12 7S10.5 3 8 3a2.5 2.5 0 0 0 0 5h4zM12 7s1.5-4 4-4a2.5 2.5 0 0 1 0 5h-4z"/></svg>开奖配置</a>
+      <a href="facilities.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="4" width="18" height="17" rx="2.5"/><path d="M8 2v4M16 2v4M3 10h18"/><path d="M8 14h3v3H8z"/></svg>场地预约</a>
+      <div class="group">社区互动</div>
+<a href="group-intake.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="9" cy="8" r="3.2"/><path d="M2.5 20v-1.4A5 5 0 0 1 7.5 13.6h3A5 5 0 0 1 15.5 18.6V20"/><path d="M17 5.5a3 3 0 0 1 0 5.6M18.5 20v-1.2a4 4 0 0 0-1.6-3.2"/></svg>业主群受理</a>
+<a href="mutual-aid.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3 12h4l2-5 3 10 2-5h7"/><path d="M3 19h18"/></svg>邻里互助</a>
+<div class="group">安防通行</div>
+      <a href="access.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M14 3h5a1 1 0 0 1 1 1v16a1 1 0 0 1-1 1h-5"/><path d="M10 8l4 4-4 4"/><path d="M14 12H3"/></svg>门禁管理</a>
+      <a href="vehicles.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3 12h18M5 12l2-5h10l2 5"/><path d="M7 12v6M17 12v6"/><circle cx="7.5" cy="18" r="1.6"/><circle cx="16.5" cy="18" r="1.6"/></svg>车辆管理</a>
+      <a href="parking-exposure.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3 12h18M5 12l2-5h10l2 5"/><path d="M7 12v6M17 12v6"/><circle cx="7.5" cy="18" r="1.6"/><circle cx="16.5" cy="18" r="1.6"/></svg>违停曝光</a>
+<a href="temp-parking.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/></svg>临时停车</a>
+      <a href="visitor-vehicles.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="9" cy="7" r="3"/><path d="M3 20v-1.5A4.5 4.5 0 0 1 7.5 14h3A4.5 4.5 0 0 1 15 18.5V20"/><path d="M17 11h4M19 9v4"/></svg>访客车辆</a>
+      <a href="face-audit.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="9"/><path d="M9 10h.01M15 10h.01"/><path d="M8.5 14.5a4.5 4.5 0 0 0 7 0"/></svg>人脸审核</a>
+      <div class="group">设施与工单</div>
+      <a href="devices.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/></svg>IoT 设备</a>
+      <a href="inspection.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>巡检工单</a>
+      <a href="workorders.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M14.5 3.5a5 5 0 0 0 6 6L10 20H4v-6z"/><path d="M4 4h4"/></svg>维修工单</a>
+      <a href="workorder-detail.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M14.5 3.5a5 5 0 0 0 6 6L10 20H4v-6z"/><path d="M13 8l3 3"/></svg>工单处置</a>
+      <a href="vs-orders.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4V2h6v2"/><path d="M9 11h6M9 15h4"/></svg>维保工单</a>
+      </nav>
+      <div class="logout-area"><a href="#" id="logoutBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5"/><path d="M21 12H9"/></svg>退出登录</a></div>
+    </aside>
+<div class="sidebar-overlay" id="overlay"></div>
 
   <div class="main">
     <div class="topbar">

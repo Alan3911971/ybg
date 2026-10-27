@@ -1399,12 +1399,19 @@ G98 双数据+ABCD排号修复（2026-10-20）：①双数据根因=旧代码tic
 ③**音效数量两套口径**：知识图谱记"`/h5/fx/*.wav` 17 个"，而生成脚本 `_gen_win_fx.py` 明确产出 discount/coupon/balance/free × t1/t2/t3 = **12 个中奖音效**。真相是 17 = **目录文件总数**（含叫号等非中奖音效），12 = **中奖音效数**。说"有几个音效"必须指明口径，否则文档之间永远对不上。
 ④**校验脚本口径也要跟着实现更新**：现网是 `_check_win_fx.js` **63 项** / `_check_win_fx_wav.py` **12 个**；知识图谱 116 行还停留在旧版"35 项 / 5 段"。文档没跟着实现走时，会拿旧数量去做验收。
 
-【G121】四件套实跑：esprima 缺失亮假红灯 + 构建链脚本被误判成临时脚本（2026-10-27）
+【G124】四件套实跑：esprima 缺失亮假红灯 + 构建链脚本被误判成临时脚本（2026-10-27）
 ①**假红灯**：`_build_tv2.py` 跑出「致命项 1 处 · 产物不合格 · 这一版不能直接投到 4.4 广告机，必白屏或掉样式」。逐项看下去 CSS 变量/Grid/gap/const/箭头函数/模板字符串/class 全是 0 处 OK，真正的 1 处致命来自 `JS ES5 AST 校验 跳过 [X] 没装 esprima` —— `_kiosk_audit.py:193` 明写 `fatal += 1  # 校验没跑等于没通过，不能当绿灯`。**根因是本机缺依赖，不是页面不兼容**。
 ②**解法**：`python -m pip install esprima` 后重跑，输出变成「致命项 0 处 · 产物合格：致命 0 / DOM 74 · 可以试投」。
 ③**教训**：校验工具自身的依赖缺失，会被保守策略放大成"产物不合格"，很容易误判成代码有问题、白改一通页面。看到致命项先**逐项看清是哪一行贡献的致命**，再决定改代码还是装依赖（与 G36.4「json.loads 假阴性」是同一类工具误导）。
 ④**链式依赖不能只看文件名**：本次按 G39 给仓库根脚本分类时，把 `_kiosk_audit.py` 归进了"临时脚本"，但它实际被 `_build_tv2.py` import（`_build_tv2.py:504 import _kiosk_audit`），移走会直接断掉构建链。分类前必须 `grep -nE "^\s*(import|from)\s+_" _*.py` 扫一遍引用关系，不能凭名字像工具脚本就判定。实测依赖链：`_tv_win_fx.py` ← `_build_tv2.py` / `_shot_win_scene.py` / `_win_demo.py`；`_kiosk_audit.py` ← `_build_tv2.py`。
 ⑤**四件套实跑复核（本机 2026-10-27）**：`_build_tv2.py` 致命 0 / DOM 74（装 esprima 后）；`_check_win_fx.js` **63 通过 / 0 失败**；`_check_win_fx_wav.py` **12 个全过**（44.1k/16bit/单声道，峰值 0.84~0.92，尾 30ms 峰值≈0，分档 t1=2.20s > t2=1.65s > t3=1.20s）；`_shot_win_scene.py` **12 张 OK**。G35.14 里的 0 / 63 / 12 / 12 四个数字已由实测确认，不再是记忆值。
+【G125】大屏双模式离线演示截图：六个坑（2026-10-27）
+①**Edge headless 在本机偶发启动即退**：`--screenshot` 不出图，exit code 2、**stderr 全空**，无从判断原因。必须加重试（3~4 次）+ `cwd` 设在产物目录。更关键的是**输出路径落在 `D:\workspace-java\` 下必失败**，必须输出到 UNC 产物目录（`\\DESKTOP-GGR22BK\ybg-master\_shots\`）—— 同一条命令换个输出盘就从失败变成功。
+②**进程退出后 PNG 写盘有延迟**：`subprocess.run` 返回后立刻 `os.path.getsize` 拿到 0B，造成"截图失败"假象（几秒后实际是 278KB）。必须轮询等文件 >5000B（最多 15~20 秒）。**判断前还要先删掉旧 PNG**，否则会拿上一轮的旧文件误判 OK —— 本次就因为漏删，看到"大小与上次一模一样"才发现是旧图。
+③**演示数据会自发弹屏遮住常态布局**：mock / 真数据里只要 `recentWins` 非空，`refresh()` 就会 `showWin(wins[0])`，截到的是中奖弹屏而不是页面本身。**要看常态布局必须把 `recentWins` 置空**；想看弹屏则反过来保留。两者是互斥的，别指望一张图同时看全。
+④**视频广告在页面上必然留白**：`ads[].type='video'` 由 APK 原生 TextureView 播放，页面根本不渲染（不是 bug）。离线截图想让广告位有内容可看，把 ads 过滤成 `type='image'` 即可 —— 过滤后截图体积从 278KB 涨到 430KB，肉眼可判断"广告位到底有没有内容"。
+⑤**别忘带 merchantNo**：页面 `merchantNo = getQueryParam('merchantNo') || 'M001'`，用 `file://` 打开不带参数会显示"商家号 M001"，看着像取数错了，其实是默认值。演示 URL 必须带 `?merchantNo=M90380836`。
+⑥**弹屏只弹 `recentWins[0]`，想对照不同场景必须显式挑奖品**：`showWin(wins[0])` 固定取最新一条，所以「多截几张就能看到 4 套舞台」是错觉 —— 不指定就永远是同一个场景。本次做法：call 模式取 `idx=1`（余额10元 → 钱包+金币 `bl-*`）、activity 模式取 `idx=0`（立减5元券 → 票券票根 `cp-*`），两张一对照才验证出"4 套独立舞台 DOM，不是同一张卡换配色"。演示脚本因此加了 `win_idx` 参数。
 
 【G121】AOCI stale 消不掉：源码指纹基线怎么刷新（2026-10-27）
 ①**`update-entry` 改的是索引条目语义，指纹基线靠 `--source-sha256` 顺带写回**：传的 sha 必须是该文件**当下真实**的 sha256。传成旧 manifest 的指纹或空值时，命令照样返回 OK、条目也替换成功，但 `.aoci/baseline.json` 里该文件指纹没跟上，下次 `verify` 仍然报 stale（本轮四文档就是这样残留的）。
@@ -1431,3 +1438,28 @@ G98 双数据+ABCD排号修复（2026-10-20）：①双数据根因=旧代码tic
 ③**解法**：给后台补页/改版前，跑一条形态实测命令：`grep -c "<aside\|class=\"sidebar\"" frontend/admin/index.html`（平台）与 `grep -o '<nav[\s\S]*</nav>'`（菜单项），再对照稿内注释；两边打架以实测为准，并在新稿注释里写明「实测于哪天、证据是什么」。
 ④**V3 后台与线上的页数映射**（补全时用）：平台 18 页 = 登录 + 17 视图（access/activity-audit/bills/dashboard/devices/face-audit/facilities/index/inspection/merchant-bindings/owners/splits/temp-parking/vehicles/visitor-vehicles/vs-orders/workorders）；物业 20 页 = 登录 + 19 视图（多 buildings/prizes 两页）。侧栏分组用 4 组：概览 / 业务管理 / 安防通行 / 设施与工单（巡检/维修/维保三页线上不进侧栏，设计稿归入第四组）。
 ⑤**登录页单独出稿**：admin-login.html（物业/平台共用骨架，分段切换）、merchant-auth.html（手机双屏）。这两个文件是新增，别再当成"线上还没改版的两页"漏掉。
+
+【G126】盲盒活动屏主视觉落地：两个工具链坑 + 设计要点（2026-10-27）
+①**safe-delete 拦 UNC 删除，截图脚本"先删旧图"策略失效**：bash `rm -f` 与 Python `os.remove` 都被 genie-trash 托管，而 trash 对 UNC 路径（\\DESKTOP-GGR22BK\...）直接报 0x80070002 找不到文件，FAIL_CLOSED 中止脚本。**解法不是绕过删除，而是根本不删**：输出文件名带时间戳（tv_activity_193633.png），天然避免"拿旧文件误判 OK"，还顺带保留了历史版本可对比。
+②**bash heredoc 里写含 `\'` 的 Python 替换脚本会 SyntaxError**：`('...content:/'\'...')` 这类引号转义在 heredoc 传输中出错，整个替换静默失败，而后面的生成命令照跑旧版——**替换失败但流程显示成功**，最容易被忽略。含引号/反斜杠的批量替换一律用编辑工具逐处改，不用 heredoc Python。
+③**设计要点（第 2 版定稿）**：activity 左区从竖排「标题→副标→300 码→提示」改为三段式「上带标题 / 主行=箱体+码横排 / 下带奖品池」。二维码 300→216 降为扫码入口（3m 内可扫不变），视觉主体让给 CSS 纯画的盲盒箱体（246×176，盖子开合+扫光+呼吸光晕+3 个浮动奖品标签）。第一版箱体 216×156 偏小、hint 空隙 50px 过大，第 2 版放大到 246×176 并把 hint 贴到箱底（bottom:8）才立得住。**纯 CSS 画箱体**（渐变+伪元素缎带+overflow:hidden 扫光）比贴图好在：无外链依赖、任意分辨率清晰、4.4 兼容（未用 CSS 变量/grid/gap，动画全 transform+opacity）。
+⑤**v3 订正（同日晚）**：用户反馈 CSS 箱体「太丑」——代码画插画天花板确实低（扁平方块+横条盖，像美术作业），改用 AI 生成主视觉插画（开盖金色宝箱+光柱+金币星星，深藏青底与页面融合）：ImageGen 1024² → 裁掉底部 AI 水印（裁 6%）→ 512² JPEG 72KB → 仓库 `h5/img/blindbox-hero.jpg`，页面 `<img class="bb-art">` 引用，保留呼吸缩放动画（transform scale，4.4 安全）。CSS 箱体相关（bb-box/lid/body/shine/mark/float + 3 个 keyframes）全部删除，DOM 92→84。**演示时 /h5/img/ 相对路径在 file:// 下 404**，演示脚本把 src 替换成 base64 内联。⑥**v4 订正（用户拍板）**：二维码横排在左区仍不对——用户明确「二维码还是放回原来的位置，这个窗口应该就是独立的」。最终定稿：**两模式二维码统一右下角原生位**（activity 恢复 `setQrVisible(true)`，页面码只在无原生层时兜底），左区窗口独立放插画主视觉（放大到 400×400）。连带改动：`renderTvQr()` 删 activity 分支统一逻辑；删 `body.mode-activity` 对 qr-zone/ticker/wins-area 的覆盖（让位规则与 call 完全相同）；右下角文案随模式切换「扫码取号/扫码抽盲盒」用双 span + CSS 切换（不动 JS，避免闪烁）；activity 扫码目标由服务端 qr.svg 按 tv_mode 编码，页面不用关心。**教训**：同一个界面元素在两个模式间应该保持同一位置心智（用户习惯了右下角有码），「为了大码牺牲位置一致性」是设计自作主张，用户第一眼就会要求改回去。
+教训：要「插画质感」直接上 AI 图，别用代码硬画；文字类元素（标题/CTA/标签）仍留在 DOM 里保证可编辑与清晰度。
+④**验收口径**：`_build_tv2.py` 致命 0 / DOM 92（新增 18 节点）；`_check_tv_geom.py` 全绿（左区 60%/右区 40%/广告框/底部行几何未动）；`_check_win_fx.js` 63/0（弹屏引擎无波及）；emoji 0。
+
+## 物业 AI 落地轮（2026-10-27 晚）
+
+①**生成器产出空 <script> 页面（最险）**：_gen_property_ai_customer.py 生成的 group/mutual/violation 三页全是空 `<script>`——模板抽取只取了 CSS，业务 JS 段没写进去。页面能打开、样式正常，但零功能，差点当「已落地」交付。**页面级验收必须查 script 内容长度 + 是否有 fetch 调用**，「文件存在+能打开」不算落地。
+②**Hibernate 驼峰转下划线对数字前缀的处理**：实体字段 reward30Status 默认映射成 `reward30status`（数字后整体小写），不是 reward30_status，生产报 Unknown column 500。凡字段名形如 xx<数字>Yyy 的必须显式 `@Column(name="reward30_status")`。
+③**正则批量插代码会插进不该插的方法**：批量插 `companyId = resolveCompany(token, companyId)` 时插进了 9 个没有 companyId 参数的方法，编译期才暴露。批量改代码后必须按方法签名反查一遍。
+④**paramiko exec_command 里跑 nohup java 会 PipeTimeout**：channel 等 stdout EOF 挂死。拆成独立短命令，启动命令 `> log 2>&1 < /dev/null &`，另开连接查 ps/ss/tail。
+⑤**E2E 里「顺带验证幂等」的二次调用会真改数据**：decide create 后再 decide ignore，把 receipt_status 真的改成 3（不打扰），页面回执消失，看似页面 bug 实为测试脚本副作用。测试脚本的每次调用都是真实写操作；验证幂等要用专门造的数据或只读断言。
+⑥**headless 浏览器验收线上登录态**：msedge --headless 无法注入 localStorage。用同域临时壳 _pv.html（URL ?tk= → 写 localStorage → iframe 目标页）+ `--virtual-time-budget=7000`，验完即删。比改产品代码加 token 参数干净。
+⑦**业主端页面生成要先想清楚 JS 从哪来**：从既有页面抽 CSS 骨架最快，但业务 JS 必须整段重新写（req/toast/esc 公共层 + 页面逻辑），生成器骨架阶段就该把 `<script>` 占位写出来，靠「之后补」必忘。
+
+【G127】v4 部署生产：/h5/ 新目录必须加 nginx 静态路由 + 公网大文件 GET 慢的验证替代法（2026-10-27 晚）
+①**/h5/ 不是整目录静态托管**：nginx 对 /h5/ 下每个文件/目录都是**逐条 location =（或 ^~）从磁盘 serve**，未命中规则的路径一律 proxy_pass 给后端 Spring Boot → 新增 /h5/img/ 目录后图片请求打给后端，返回 **HTTP 500 + application/json**（后端没有该资源），页面裂图。**新增 h5 子目录时必须同步加 nginx location**（本次照 /h5/fx/ 抄了 /h5/img/ 规则，root /www/wwwroot/ybgtc.com + no-cache，插在 fx 段后，nginx -t 通过再 reload）。vhost 文件：/www/server/panel/vhost/nginx/ybgtc.com.conf（改前必备份 .bak-日期）。
+②**远端 heredoc 转义在本机 Git Bash 会碎**：ssh 一行命令里嵌 python heredoc，含单引号的字符串被 bash 二次展开直接 SyntaxError（同 G126②，这次换了个姿势又踩）。**稳法**：本地写 .py → paramiko sftp.put 到 /tmp → 远端 python3 执行。
+③**公网 GET 大文件超时的验证替代**：本机对 ybgtc.com 的公网 GET 大文件常超时（HEAD 却快），验证部署不要死磕公网下载——**服务器本地 curl 127.0.0.1 + Host 头**拿状态码/大小/md5 最快；真要端到端看渲染，用本地演示页把资源 src 换成线上 URL 再 Edge headless 截图（本次 tv_activity_live_210253.png 一次通过，插画/二维码/字幕全部正确）。
+④**密钥实际路径订正**：MEMORY 旧记载写 `C://Users//Administrator//.ssh//ybg_key` 已失效——本机当前用户 Alandell，`C://Users//Alandell//.ssh//ybg_key` 才能连通（ssh 客户端对不存在 key 只 warning 不报错，会静默 fallback 到 id_rsa 并报 "error in libcrypto"，容易误判成密钥坏）。
+⑤**部署证据（2026-10-27 21:00）**：h5/tv.html 92796 B md5 7739ea14 + h5/img/blindbox-hero.jpg 74511 B md5 3780d52a，双端 md5 一致；备份 h5/tv.html.bak-20261027_205941；nginx conf 备份 .bak-20261027_2100；线上图片 200/image/jpeg，页面 200/no-cache。回滚：`cp -f /www/wwwroot/ybgtc.com/h5/tv.html.bak-20261027_205941 /www/wwwroot/ybgtc.com/h5/tv.html`（图片目录整删亦可）。

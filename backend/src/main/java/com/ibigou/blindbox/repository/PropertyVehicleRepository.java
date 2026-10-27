@@ -17,4 +17,7 @@ public interface PropertyVehicleRepository extends JpaRepository<PropertyVehicle
     List<PropertyVehicle> findByRoomIdAndStatus(Long roomId, Integer status);
 
     List<PropertyVehicle> findByOwnerIdIn(List<Long> ownerIds);
+
+    /** 违停识别用：同车牌可能多业态（业主/月租/临时），全取再筛 */
+    List<PropertyVehicle> findByPlateNoOrderByStatusDesc(String plateNo);
 }

@@ -15,6 +15,8 @@ public interface PropertyOwnerRepository extends JpaRepository<PropertyOwner, Lo
 
     Optional<PropertyOwner> findByOwnerNo(String ownerNo);
 
+    Optional<PropertyOwner> findByWxOpenid(String wxOpenid);
+
     List<PropertyOwner> findByStatus(Integer status);
 
     List<PropertyOwner> findByStatusAndBalanceGreaterThan(Integer status, BigDecimal balance);

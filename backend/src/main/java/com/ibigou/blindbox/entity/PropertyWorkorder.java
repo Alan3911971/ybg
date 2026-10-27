@@ -44,6 +44,18 @@ public class PropertyWorkorder {
     @Column(columnDefinition = "JSON")
     private String images;
 
+    /** 视频等媒体 [{type,url,cover}]，图片仍走 images */
+    @Column(columnDefinition = "JSON")
+    private String media;
+
+    /** 来源：owner(业主App) / group(业主群) / patrol(巡检) / exposure(违停曝光) / phone */
+    @Column(length = 32)
+    private String source = "owner";
+
+    /** 来源单据ID：群消息ID / 违停ID */
+    @Column(length = 64)
+    private String sourceRef;
+
     private Integer urgency = 1;
 
     @Column(length = 64)

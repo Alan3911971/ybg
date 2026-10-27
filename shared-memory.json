@@ -1,6 +1,6 @@
 {
   "project": "宜必购盲盒系统 (ybgtc.com)",
-  "last_updated": "2026-10-27 11:00 侧边栏风波后按用户拍板采用老版；V3 后台补全（物业19/平台17/登录4屏）设计稿完成，见 v3_admin_complete_20261027",
+  "last_updated": "2026-10-27 20:10 物业 AI 落地全量上线（8表+5控制器+10页面+E2E 39 项过），见 property_ai_dev_20261027",
   "note": "AOCI 仓库认知索引已建立（641条 aligned）",
   "environment": {
     "code_root": "D:\\workspace-java\\ybg-master",
@@ -1330,5 +1330,18 @@
     "generators": "D:/workspace-java/_v3_lib.py + _gen_v3_property.py / _gen_v3_platform.py / _gen_v3_auth.py（G39 临时脚本）",
     "form_correction": "线上平台后台实测是侧栏后台（.sidebar+nav 11 项），旧稿卡片流说法作废；见采坑 G123",
     "status": "设计稿补全完成，未接入线上（线上 4 个 admin 目录仍是老版）"
+  },
+  "property_ai_dev_20261027": {
+    "date": "2026-10-27",
+    "title": "物业 AI 设计稿全部开发落地（业主端3页+后台7页+8表+5控制器全上线）",
+    "database": "V24__property_ai_links.sql（幂等，生产宿主机 mysql 手动跑）：8 新表 + 13 默认 AI 规则 + workorder(source/source_ref/media) + binding(邀请四字段) + chat_group_member.company_id",
+    "backend": "Property{Group,Mutual,Violation,Referral,Ai}Controller + PropertyMediaController；/api/property/{group,mutual,violation,referral,ai,media}；业主报修带图≤10MB/视频≤40MB",
+    "customer_pages": "property/customer/{group,mutual,violation}.html（本轮补齐 JS，此前是空壳）+ index 三入口 + workorder 视频上传",
+    "admin_pages": "property/admin/{ai-desk,ai-ability,ai-rules,group-intake,mutual-aid,parking-exposure,referral}.html + V3 换壳全量上线 + 老 19 页补导航",
+    "e2e": "_e2e_property.py（G39）39 项全过；测试业主 13900000099/Test123456（ownerId=2，公司1）留在生产供验收",
+    "deploy": "jar=ibigou.jar（bak-preaipy/bak-20261027_2002 备份）；页面 32 文件；截图 _shots/pv/ 11 张",
+    "pitfall": "空 script 壳验收法（script 长度+fetch）见采坑日志本轮 7 条",
+    "pending": "GitHub 推送待 GH_PAT（环境变量缺失，_push_gh_tv.py 未跑）；微信登录未接；后台工单四因子打分屏未做",
+    "nas": "已同步 NAS commit 787fdc8（tar 管道 + --no-same-permissions，此前 tar 根目录 chmod 失败会中断 && 链）"
   }
 }

@@ -130,11 +130,22 @@ public class PropertyOwnerController {
 
     @PostMapping("/login")
     public Result<Map<String, Object>> login(@RequestParam String ownerPhone,
-                                             @RequestParam String password) {
+                                             @RequestParam String password,
+                                             @RequestParam(required = false) String wxOpenid) {
         PropertyOwner owner = ownerRepository.findByOwnerPhone(ownerPhone)
                 .orElseThrow(() -> new BizException("账号不存在"));
         if (!PASSWORD_ENCODER.matches(password, owner.getLoginPwd())) {
             throw new BizException("密码错误");
+        }
+        // 微信里进来登录时顺手把 openid 绑上，下次就能一键登录（已绑别人的不覆盖）
+        if (wxOpenid != null && !wxOpenid.isBlank()) {
+            PropertyOwner bound = ownerRepository.findByWxOpenid(wxOpenid).orElse(null);
+            if (bound == null) {
+                owner.setWxOpenid(wxOpenid);
+                ownerRepository.save(owner);
+            } else if (!bound.getOwnerId().equals(owner.getOwnerId())) {
+                log.warn("openid 已绑定其他业主，跳过绑定 openid={}", wxOpenid);
+            }
         }
         String token = UUID.randomUUID().toString();
         TOKEN_STORE.put(token, owner.getOwnerId());
@@ -143,6 +154,7 @@ public class PropertyOwnerController {
         data.put("ownerId", owner.getOwnerId());
         data.put("ownerName", owner.getOwnerName());
         data.put("ownerPhone", owner.getOwnerPhone());
+        data.put("wxBound", owner.getWxOpenid() != null && !owner.getWxOpenid().isBlank());
         log.info("Owner logged in: {}", ownerPhone);
         return Result.ok(data);
     }

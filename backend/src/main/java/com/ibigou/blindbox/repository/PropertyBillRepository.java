@@ -16,6 +16,8 @@ public interface PropertyBillRepository extends JpaRepository<PropertyBill, Long
 
     List<PropertyBill> findByCompanyIdAndBillPeriod(Long companyId, String billPeriod);
 
+    List<PropertyBill> findByCompanyIdOrderByDueDateAsc(Long companyId);
+
     Page<PropertyBill> findByCompanyIdAndBillPeriod(Long companyId, String billPeriod, Pageable pageable);
 
     Page<PropertyBill> findByCompanyId(Long companyId, Pageable pageable);

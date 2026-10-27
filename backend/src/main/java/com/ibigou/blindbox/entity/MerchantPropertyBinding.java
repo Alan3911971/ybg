@@ -46,6 +46,20 @@ public class MerchantPropertyBinding {
     @Column(length = 255)
     private String remark;
 
+    /** 邀请人业主ID（业主出码邀请商家注册时写入） */
+    private Long referrerOwnerId;
+
+    /** 邀请码 */
+    @Column(length = 40)
+    private String inviteCode;
+
+    /** 邀请码过期时间 */
+    private java.time.LocalDateTime inviteExpireAt;
+
+    /** 佣金状态 NONE / R30 / R70 */
+    @Column(length = 16)
+    private String referralRewardStatus;
+
     @Column(nullable = false, updatable = false)
     private LocalDateTime createTime;
 

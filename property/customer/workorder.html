@@ -225,6 +225,9 @@ textarea.input{height:110px;padding:14px 16px;resize:none;font-family:inherit;li
         <input type="file" id="fPhotos" accept="image/*" multiple>
       </div>
       <div class="upload-preview" id="uploadPreview"></div>
+      <div class="upload-area" id="videoArea" style="margin-top:10px;height:72px;">🎬 点击上传视频（最多1个，≤40MB）
+        <input type="file" id="fVideos" accept="video/*">
+      </div>
     </div>
     <button id="btnSubmit" class="btn btn-md btn-primary btn-block">提 交</button>
   </div>
@@ -282,6 +285,16 @@ function getStatusBadge(s){const m=statusMap[s]||{cls:"pending",text:s||"未知"
 
 // Photo upload handling
 let _selectedFiles=[];
+let _selectedVideo=null;
+$("fVideos").addEventListener("change",function(){
+  const f=this.files&&this.files[0];
+  if(!f) return;
+  if(f.size>40*1024*1024){toast("视频不能超过 40MB","warning");this.value="";return}
+  _selectedVideo=f;
+  $("videoArea").classList.add("has-file");
+  $("videoArea").innerHTML='🎬 已选择：'+f.name+'<input type="file" id="fVideos" accept="video/*">';
+  $("fVideos").addEventListener("change",arguments.callee);
+});
 $("fPhotos").addEventListener("change",function(){
   const files=Array.from(this.files).slice(0,3);
   _selectedFiles=files;
@@ -471,12 +484,15 @@ $("btnSubmit").addEventListener("click",async function(){
     fd.append("urgency",urgency);
     if(location)fd.append("location",location);
     _selectedFiles.forEach(f=>fd.append("photos",f));
+    if(_selectedVideo)fd.append("videos",_selectedVideo);
     const r=await postFormData("/p1/workorders",fd);
     if(r.code===0){
       toast("工单提交成功","success");
       $("createMask").classList.remove("show");
       $("fTitle").value="";$("fDesc").value="";$("fLocation").value="";
-      _selectedFiles=[];$("uploadPreview").innerHTML="";
+      _selectedFiles=[];_selectedVideo=null;$("uploadPreview").innerHTML="";
+      $("videoArea").classList.remove("has-file");
+      $("videoArea").innerHTML='🎬 点击上传视频（最多1个，≤40MB）<input type="file" id="fVideos" accept="video/*">';
       $("uploadArea").classList.remove("has-file");
       $("uploadArea").innerHTML='📷 点击上传图片（最多3张）<input type="file" id="fPhotos" accept="image/*" multiple>';
       // Re-bind file input

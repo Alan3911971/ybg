@@ -37,6 +37,10 @@ public class PropertyOwner {
     @Column(length = 255)
     private String avatarUrl;
 
+    /** 微信公众号 openid（snsapi_base 静默授权得到），用于「微信一键登录」 */
+    @Column(length = 64, unique = true)
+    private String wxOpenid;
+
     @Column(precision = 12, scale = 2)
     private BigDecimal balance = BigDecimal.ZERO;
 

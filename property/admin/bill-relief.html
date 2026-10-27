@@ -1,0 +1,689 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#0e7a6b">
+<title>工单管理 · 物业后台 · 宜必购物业</title>
+<link rel="icon" href="data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='80' font-size='90'%3E%F0%9F%8F%A2%3C/text%3E%3C/svg%3E">
+<style>
+  :root{
+    --pri:#0e7a6b;--pri-grad:linear-gradient(135deg,#0e7a6b 0%,#0d9488 100%);
+    --success:#10b981;--danger:#ef4444;--warning:#f59e0b;
+    --dark:#0f172a;--text:#1e293b;--text-2:#64748b;--text-3:#94a3b8;
+    --bg:#f8fafc;--surface:#fff;--border:#e2e8f0;--divider:#f1f5f9;
+    --shadow-card:0 1px 3px rgba(0,0,0,.04),0 8px 24px rgba(0,0,0,.04);
+    --r-sm:10px;--r-md:14px;--r-lg:18px;--r-xl:22px;
+    --sidebar-w:272px;--ease:cubic-bezier(.4,0,.2,1);
+  }
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+  html,body{font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei","Helvetica Neue",Arial,sans-serif;color:var(--text);background:var(--bg);-webkit-font-smoothing:antialiased;height:100%;}
+  a{color:inherit;text-decoration:none;}
+  input,select,button{font-size:16px;font-family:inherit;}
+
+  @keyframes fadeInUp{from{opacity:0;transform:translateY(16px);}to{opacity:1;transform:translateY(0);}}
+  @keyframes modalIn{from{opacity:0;transform:scale(.95) translateY(8px);}to{opacity:1;transform:scale(1) translateY(0);}}
+  @keyframes slideInRight{from{opacity:0;transform:translateX(40px);}to{opacity:1;transform:translateX(0);}}
+
+  .layout{display:flex;min-height:100vh;}
+  .sidebar{width:var(--sidebar-w);background:linear-gradient(180deg,#0f172a 0%,#1e293b 100%);display:flex;flex-direction:column;position:fixed;top:0;left:0;bottom:0;z-index:40;transition:transform .3s var(--ease);}
+  .sidebar .brand{padding:24px 20px;display:flex;align-items:center;gap:14px;border-bottom:1px solid rgba(255,255,255,.08);}
+  .sidebar .brand .logo{width:42px;height:42px;border-radius:var(--r-md);background:var(--pri-grad);color:#fff;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;box-shadow:0 4px 12px rgba(14,122,107,.4);}
+  .sidebar .brand h1{font-size:16px;font-weight:700;line-height:1.3;color:#fff;}
+  .sidebar nav{flex:1;overflow-y:auto;padding:16px 12px;}
+  .nav-section{margin-bottom:8px;}
+  .nav-section-title{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:rgba(255,255,255,.35);padding:8px 12px 6px;margin-top:8px;}
+  .sidebar nav a{height:44px;padding:0 16px;border-radius:10px;font-size:14px;color:rgba(255,255,255,.55);font-weight:500;transition:all .2s;margin-bottom:2px;display:flex;align-items:center;gap:12px;border-left:none;}
+  .sidebar nav a:hover{color:rgba(255,255,255,.9);background:rgba(255,255,255,.06);}
+  .sidebar nav a.active{color:#fff;background:rgba(14,122,107,.15);font-weight:600;border-left:3px solid #14b8a6;border-radius:0 10px 10px 0;}
+  .sidebar nav a .icon{font-size:16px;width:24px;text-align:center;flex-shrink:0;}
+  .sidebar .logout-area{padding:16px;border-top:1px solid rgba(255,255,255,.08);}
+  .sidebar .logout-area a{color:rgba(255,255,255,.5);justify-content:center;border-radius:var(--r-md);padding:10px;}
+  .sidebar .logout-area a:hover{background:rgba(239,68,68,.15);color:var(--danger);}
+
+  .main{margin-left:var(--sidebar-w);flex:1;min-height:100vh;}
+  .topbar{background:var(--surface);border-bottom:1px solid var(--border);padding:16px 28px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:30;backdrop-filter:blur(12px);background:rgba(255,255,255,.85);}
+  .page-header h2{font-size:28px;font-weight:800;letter-spacing:-.5px;line-height:1.2;}
+.page-header .sub{font-size:14px;color:var(--text-2);margin-top:6px;}
+.topbar .page-title{font-size:28px;font-weight:800;color:var(--text);letter-spacing:-.5px;line-height:1.2;}
+  .topbar .menu-toggle{display:none;background:none;border:none;font-size:22px;cursor:pointer;padding:4px 8px;color:var(--text-2);}
+  .main{margin-left:var(--sidebar-w);flex:1;padding:32px 40px;max-width:1280px;margin-right:auto;animation:fadeInUp .5s var(--ease);}
+  .sidebar-overlay{display:none;position:fixed;inset:0;background:rgba(15,23,42,.6);z-index:35;backdrop-filter:blur(4px);}
+
+  @media(max-width:768px){
+    .sidebar{transform:translateX(-100%);}
+    .sidebar.open{transform:translateX(0);}
+    .sidebar-overlay.show{display:block;}
+    .main{margin-left:0;}
+    .topbar .menu-toggle{display:block;}
+  }
+
+  .card{background:var(--surface);border-radius:var(--r-lg);padding:24px;margin-bottom:20px;box-shadow:var(--shadow-card);border:none;}
+  .sec{display:flex;align-items:center;gap:10px;font-weight:700;margin:0 0 16px;font-size:15px;color:var(--text);}
+  .sec .ic{width:32px;height:32px;border-radius:var(--r-sm);background:var(--pri-grad);color:#fff;display:inline-flex;align-items:center;justify-content:center;font-size:15px;flex:0 0 32px;box-shadow:0 2px 8px rgba(14,122,107,.25);}
+
+  .input,.select{height:44px;padding:0 14px;border:1px solid var(--border);border-radius:var(--r-md);font-size:14px;color:var(--text);background:var(--surface);transition:border-color .2s var(--ease),box-shadow .2s var(--ease);-webkit-appearance:none;appearance:none;}
+  .input:focus,.select:focus{outline:none;border-color:var(--pri);box-shadow:0 0 0 4px rgba(14,122,107,.12);}
+    .btn.orange:hover{box-shadow:0 4px 16px rgba(245,158,11,.35);}
+  .btn[disabled]{opacity:.5;cursor:not-allowed;transform:none !important;}
+
+  .filter-bar{display:flex;gap:12px;margin-bottom:16px;flex-wrap:wrap;align-items:center;}
+  .filter-bar .select{min-width:160px;}
+
+  .table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;border-radius:var(--r-md);border:1px solid var(--border);}
+  table{width:100%;border-collapse:collapse;font-size:13px;min-width:900px;}
+  th{text-align:left;padding:14px 16px;background:var(--bg);color:var(--text-2);font-weight:700;font-size:11px;text-transform:uppercase;letter-spacing:.06em;border-bottom:1px solid var(--border);white-space:nowrap;}
+  td{padding:14px 16px;border-bottom:1px solid var(--divider);color:var(--text);white-space:nowrap;}
+  tr.row-main{cursor:pointer;transition:background .15s var(--ease);}
+  tr.row-main:nth-child(4n+1) td{background:var(--surface);}
+  tr.row-main:nth-child(4n+3) td{background:var(--bg);}
+  tr.row-main:hover td{background:rgba(14,122,107,.06) !important;}
+  .badge{display:inline-block;padding:4px 12px;border-radius:999px;font-size:11px;font-weight:600;letter-spacing:.02em;}
+  .badge.green{background:rgba(16,185,129,.12);color:#059669;}
+  .badge.yellow{background:rgba(245,158,11,.12);color:#b45309;}
+  .badge.red{background:rgba(239,68,68,.12);color:#dc2626;}
+  .badge.blue{background:rgba(14,122,107,.1);color:#0e7a6b;}
+  .badge.orange{background:rgba(245,158,11,.12);color:#b45309;}
+  .badge.gray{background:rgba(148,163,184,.12);color:var(--text-2);}
+  .badge.purple{background:rgba(13,148,136,.1);color:#0d9488;}
+  .empty{padding:40px 16px;text-align:center;color:var(--text-3);font-size:14px;}
+
+  /* Expand row */
+  .expand-row td{padding:0;border-bottom:1px solid var(--divider);}
+  .expand-content{padding:20px 24px;background:var(--bg);display:none;border-radius:0 0 var(--r-md) var(--r-md);}
+  .expand-content.show{display:block;animation:fadeInUp .3s var(--ease);}
+  .expand-section{margin-bottom:14px;}
+  .expand-section:last-child{margin-bottom:0;}
+  .expand-section h4{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text-3);margin-bottom:8px;}
+  .expand-section p{font-size:14px;color:var(--text);line-height:1.7;}
+  .img-thumbs{display:flex;gap:10px;flex-wrap:wrap;margin-top:8px;}
+  .img-thumbs img{width:72px;height:72px;object-fit:cover;border-radius:var(--r-sm);border:1px solid var(--border);transition:transform .2s var(--ease);}
+  .img-thumbs img:hover{transform:scale(1.05);}
+  .timeline{position:relative;padding-left:20px;margin-top:8px;}
+  .timeline::before{content:'';position:absolute;left:6px;top:6px;bottom:6px;width:2px;background:var(--border);border-radius:1px;}
+  .timeline-item{position:relative;margin-bottom:12px;font-size:13px;color:var(--text-2);line-height:1.5;}
+  .timeline-item:last-child{margin-bottom:0;}
+  .timeline-item::before{content:'';position:absolute;left:-17px;top:6px;width:10px;height:10px;border-radius:50%;background:var(--pri);border:2px solid var(--surface);box-shadow:0 0 0 2px rgba(14,122,107,.2);}
+  .timeline-item .time{color:var(--text-3);margin-right:10px;font-size:12px;font-weight:500;}
+  .action-btns{display:flex;gap:8px;flex-wrap:wrap;}
+  .log-loading{font-size:13px;color:var(--text-3);padding:12px 0;}
+
+  /* Log Modal */
+  .modal-mask{position:fixed;inset:0;z-index:200;background:rgba(15,23,42,.5);backdrop-filter:blur(8px);display:none;align-items:center;justify-content:center;padding:20px;}
+  .modal-mask.show{display:flex;}
+  .modal{background:var(--surface);border-radius:var(--r-xl);width:100%;max-width:600px;max-height:80vh;overflow-y:auto;padding:28px;box-shadow:0 24px 48px rgba(0,0,0,.12);animation:modalIn .3s var(--ease);}
+  .modal .modal-title{font-size:18px;font-weight:700;margin-bottom:20px;display:flex;align-items:center;justify-content:space-between;color:var(--text);}
+  .modal .modal-close{font-size:20px;color:var(--text-3);cursor:pointer;padding:6px 10px;background:none;border:none;border-radius:var(--r-sm);transition:all .15s var(--ease);}
+  .modal .modal-close:hover{background:var(--bg);color:var(--text);}
+
+  .toast-host{position:fixed;top:20px;right:20px;z-index:300;display:flex;flex-direction:column;gap:10px;pointer-events:none;}
+  .toast{padding:12px 20px;border-radius:var(--r-md);background:var(--dark);color:#fff;font-size:14px;font-weight:500;opacity:0;transform:translateX(40px);transition:opacity .25s var(--ease),transform .25s var(--ease);box-shadow:0 8px 24px rgba(0,0,0,.15);}
+  .toast.show{opacity:1;transform:translateX(0);}
+  .toast.success{background:linear-gradient(135deg,#10b981 0%,#059669 100%);}
+  .toast.danger{background:linear-gradient(135deg,#ef4444 0%,#dc2626 100%);}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:none;font-weight:600;cursor:pointer;transition:all .2s cubic-bezier(.4,0,.2,1);letter-spacing:.2px;white-space:nowrap;}
+.btn-xs{height:28px;padding:0 10px;font-size:12px;border-radius:6px;}
+.btn-sm{height:36px;padding:0 16px;font-size:13px;border-radius:8px;}
+.btn-md{height:44px;padding:0 24px;font-size:14px;border-radius:10px;}
+.btn-lg{height:52px;padding:0 32px;font-size:16px;border-radius:12px;}
+.btn-block{width:100%;}
+.btn-icon{width:44px;height:44px;padding:0;border-radius:12px;}
+.btn-primary{background:linear-gradient(135deg,#0e7a6b 0%,#0d9488 100%);color:#fff;box-shadow:0 2px 8px rgba(14,122,107,.3);}
+.btn-secondary{background:var(--surface);color:var(--text);border:1.5px solid var(--border);}
+.btn-soft{background:var(--pri-bg);color:var(--pri);}
+.btn-ghost{background:transparent;color:var(--pri);}
+.btn-success{background:linear-gradient(135deg,#10b981,#059669);color:#fff;box-shadow:0 2px 8px rgba(16,185,129,.3);}
+.btn-danger{background:linear-gradient(135deg,#ef4444,#dc2626);color:#fff;box-shadow:0 2px 8px rgba(239,68,68,.3);}
+.btn-warning{background:linear-gradient(135deg,#f59e0b,#d97706);color:#fff;box-shadow:0 2px 8px rgba(245,158,11,.3);}
+.btn:hover{transform:translateY(-1px);filter:brightness(1.05);}
+.btn:active{transform:scale(.97);filter:brightness(.95);}
+.btn:focus-visible{outline:2px solid var(--pri);outline-offset:2px;}
+.btn[disabled]{opacity:.45;cursor:not-allowed;transform:none!important;filter:none!important;}
+.btn.loading{pointer-events:none;position:relative;color:transparent!important;}
+.btn.loading::after{content:"";position:absolute;width:18px;height:18px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:btn-spin .6s linear infinite;}
+@keyframes btn-spin{to{transform:rotate(360deg);}}
+.row-actions{display:flex;gap:6px;}
+
+/* ===== 窄屏防变形（统一注入）===== */
+@media(max-width:900px){
+  .sidebar{transform:translateX(-100%);}
+  .sidebar.open{transform:translateX(0);}
+  .sidebar-overlay.show{display:block;}
+  .main,.main-content{margin-left:0 !important;padding:20px 14px !important;min-width:0 !important;max-width:100% !important;}
+  .topbar .menu-toggle{display:block !important;}
+  .card{overflow-x:auto;-webkit-overflow-scrolling:touch;min-width:0 !important;}
+  .topbar{padding:14px 14px;}
+  .tabs{min-width:0 !important;}
+}
+@media(max-width:480px){
+  .main{padding:14px 10px !important;}
+  .card{padding:16px 12px;}
+  .sec{font-size:14px;}
+  .page-title{font-size:22px !important;}
+}
+
+/* ===== V3 换壳覆盖层（批量注入 2026-10-27）===== */
+:root{
+  --sidebar-w:220px;
+  --font:"HarmonyOS Sans SC","MiSans","PingFang SC","Microsoft YaHei",system-ui,-apple-system,sans-serif;
+  --ink:#0f1728;--ink-2:#475467;--ink-3:#98a2b3;--line:#ebedf0;--line-2:#e4e7ec;
+  --brand:#0e7a6b;--brand-deep:#0a5f54;--brand-soft:#e9f5f2;--brand-softer:#f3faf8;
+  --sh-1:0 1px 2px rgba(16,24,40,.04);--sh-2:0 1px 2px rgba(16,24,40,.04),0 8px 24px -12px rgba(16,24,40,.12);
+  --ease:cubic-bezier(.2,.7,.3,1);
+  --crumb:'宜必购物业';
+}
+body{font-family:var(--font);}
+/* 侧栏（浅色，V3） */
+.sidebar{background:var(--surface);border-right:1px solid var(--line);box-shadow:none;}
+.sidebar .brand{padding:18px 8px;display:flex;align-items:center;gap:9px;border-bottom:none;}
+.sidebar .brand .mark{width:30px;height:30px;border-radius:9px;background:var(--brand);color:#fff;font-size:14px;font-weight:700;display:flex;align-items:center;justify-content:center;flex:none;box-shadow:none;}
+.sidebar .brand .nm{font-size:14.5px;font-weight:650;letter-spacing:-.1px;color:var(--ink);}
+.sidebar .brand h1{font-size:14.5px;font-weight:650;color:var(--ink);}
+.sidebar nav{padding:0;}
+.sidebar .group{font-size:11px;font-weight:600;color:var(--ink-3);padding:14px 10px 6px;letter-spacing:.4px;text-transform:none;}
+.sidebar nav a{display:flex;align-items:center;gap:10px;height:auto;padding:9px 10px;margin-bottom:2px;border-radius:var(--r-sm);color:var(--ink-2);font-size:13.5px;font-weight:500;border-left:none;background:none;text-decoration:none;transition:background .15s var(--ease);}
+.sidebar nav a svg{width:17px;height:17px;stroke-width:1.7;color:var(--ink-3);flex:none;}
+.sidebar nav a:hover{color:var(--ink);background:var(--surface-2);}
+.sidebar nav a.on,.sidebar nav a.active{color:var(--brand-deep);background:var(--brand-soft);font-weight:600;border-left:none;}
+.sidebar nav a.on svg,.sidebar nav a.active svg{color:var(--brand);}
+.sidebar .logout-area{padding:10px 8px 0;border-top:1px solid var(--line);margin-top:10px;}
+.sidebar .logout-area a{display:flex;align-items:center;justify-content:flex-start;gap:10px;padding:9px 10px;border-radius:var(--r-sm);color:var(--danger);font-size:13.5px;font-weight:500;text-decoration:none;}
+.sidebar .logout-area a svg{width:17px;height:17px;stroke-width:1.7;flex:none;}
+.sidebar .logout-area a:hover{background:var(--danger-soft);}
+.sidebar-overlay,.overlay{background:rgba(16,24,40,.5);}
+/* 顶栏（透明页头，V3） */
+.topbar{background:transparent;border-bottom:none;box-shadow:none;padding:12px 0 18px;}
+.topbar > :last-child{margin-left:auto;}
+.topbar .page-title,.page-header .page-title{font-size:21px;font-weight:650;letter-spacing:-.2px;line-height:1.25;}
+.topbar .page-title::before,.page-header .page-title::before{content:var(--crumb);display:block;font-size:12.5px;font-weight:400;color:var(--ink-3);letter-spacing:0;margin-bottom:2px;}
+/* KPI 卡（V3：去顶部色条，描边卡） */
+.stat-card{border:1px solid var(--line);box-shadow:var(--sh-1);}
+.stat-card::before{display:none;}
+.stat-card .num{font-size:25px;font-weight:650;}
+/* 卡片圆角/阴影走全局 remap 后的 token，无需逐条覆盖 */
+/* 修存量 bug：旧 .main 的 margin:0 auto 在宽屏下把内容居中、左半截压进固定侧栏
+   （旧版探针实测 margin-left=60.5px）。桌面端强制对齐侧栏；≤900px 仍走旧抽屉规则。 */
+@media(min-width:901px){
+  .main{margin-left:var(--sidebar-w);margin-right:0;max-width:none;}
+}
+</style>
+
+<style>
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:20px;}
+.stat{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-md);padding:18px 20px;box-shadow:var(--shadow-card);}
+.stat .k{font-size:13px;color:var(--text-2);margin-bottom:8px;}
+.stat .v{font-size:26px;font-weight:800;letter-spacing:-.5px;line-height:1.1;}
+.stat .s{font-size:12px;color:var(--text-3);margin-top:6px;}
+.stat.warn .v{color:#b45309}.stat.bad .v{color:#dc2626}.stat.good .v{color:var(--pri)}
+@media(max-width:900px){.stats{grid-template-columns:repeat(2,1fr);}}
+
+.cols{display:grid;grid-template-columns:330px minmax(0,1fr);gap:18px;align-items:start;}
+@media(max-width:1180px){.cols{grid-template-columns:1fr;}}
+.panel{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-md);box-shadow:var(--shadow-card);overflow:hidden;min-width:0;}
+.panel-hd{padding:14px 18px;border-bottom:1px solid var(--divider);font-size:13px;font-weight:700;color:var(--text-2);display:flex;align-items:center;gap:8px;}
+.panel-bd{padding:16px 18px;overflow-x:auto;}
+
+.qitem{padding:12px 16px;border-bottom:1px solid var(--divider);cursor:pointer;transition:background .15s;}
+.qitem:hover{background:#f8fafc;}
+.qitem.on{background:rgba(14,122,107,.06);box-shadow:inset 3px 0 0 var(--pri);}
+.qitem .t{font-size:13.5px;font-weight:600;line-height:1.45;margin-bottom:6px;}
+.qitem .m{font-size:11.5px;color:var(--text-3);display:flex;gap:8px;flex-wrap:wrap;align-items:center;}
+.lv{font-size:10.5px;font-weight:800;padding:2px 6px;border-radius:5px;letter-spacing:.02em;}
+.lv.P0{background:#fee2e2;color:#b91c1c}.lv.P1{background:#fef3c7;color:#b45309}.lv.P2{background:#e0f2fe;color:#0369a1}
+
+.score-hero{display:flex;align-items:center;gap:20px;padding:18px 20px;background:linear-gradient(135deg,#0f172a,#1e293b);border-radius:var(--r-md);color:#fff;margin-bottom:18px;flex-wrap:wrap;}
+.score-hero .big{font-size:44px;font-weight:800;line-height:1;letter-spacing:-2px;}
+.score-hero .big i{font-size:15px;font-weight:600;opacity:.5;font-style:normal;letter-spacing:0;}
+.score-hero .meta{font-size:12.5px;opacity:.75;line-height:1.7;}
+.score-hero .meta b{opacity:1;font-weight:700;}
+.score-hero .badge{font-size:12px;font-weight:800;padding:5px 11px;border-radius:8px;background:rgba(255,255,255,.14);}
+.score-hero .badge.P0{background:#ef4444;color:#fff}
+.score-hero .badge.P1{background:#f59e0b;color:#20160a}
+.score-hero .badge.P2{background:#0ea5e9;color:#fff}
+
+.factor{margin-bottom:16px;}
+.factor:last-child{margin-bottom:0;}
+.factor .fh{display:flex;align-items:baseline;gap:10px;margin-bottom:6px;}
+.factor .nm{font-size:13.5px;font-weight:700;}
+.factor .sc{font-size:13px;font-weight:800;color:var(--pri);margin-left:auto;}
+.factor .sc i{font-size:11px;color:var(--text-3);font-weight:600;font-style:normal;}
+.bar{height:7px;border-radius:4px;background:#f1f5f9;overflow:hidden;}
+.bar i{display:block;height:100%;border-radius:4px;background:var(--pri-grad);transition:width .5s var(--ease);}
+.bar.hot i{background:linear-gradient(90deg,#f59e0b,#ef4444);}
+.factor .rs{font-size:12px;color:var(--text-2);line-height:1.7;margin-top:6px;}
+
+.sug{background:#f0fdfa;border:1px solid #99f6e4;border-radius:var(--r-md);padding:14px 16px;margin-bottom:16px;}
+.sug .k{font-size:12px;color:#0f766e;font-weight:700;margin-bottom:6px;}
+.sug .who{font-size:17px;font-weight:800;color:#115e59;}
+.sug .why{font-size:12.5px;color:#0f766e;line-height:1.7;margin-top:6px;}
+.sug.warn{background:#fffbeb;border-color:#fde68a}
+.sug.warn .k,.sug.warn .why{color:#b45309}
+.sug.warn .who{color:#92400e}
+
+.acts{display:flex;gap:10px;flex-wrap:wrap;align-items:center;}
+.btn{background:var(--pri);color:#fff;border:none;border-radius:9px;padding:10px 18px;font-size:13.5px;font-weight:700;cursor:pointer;}
+.btn:hover{opacity:.9}
+.btn.gh{background:#fff;border:1px solid var(--border);color:var(--text);}
+.btn.gh:hover{border-color:var(--pri);color:var(--pri);}
+.btn.dan{background:#fff;border:1px solid #fecaca;color:#dc2626;}
+.btn:disabled{opacity:.45;cursor:not-allowed;}
+.btn-sm{font-size:12px;padding:5px 11px;border-radius:7px;}
+.tx{background:none;border:none;color:var(--text-3);font-size:12.5px;cursor:pointer;padding:6px 4px;}
+
+.tbl{width:100%;border-collapse:collapse;font-size:13px;}
+.tbl th{text-align:left;font-size:11.5px;font-weight:700;color:var(--text-3);padding:10px 12px;border-bottom:1px solid var(--border);white-space:nowrap;}
+.tbl td{padding:11px 12px;border-bottom:1px solid var(--divider);vertical-align:top;}
+.tbl tr:last-child td{border-bottom:none;}
+.tbl tr:hover td{background:#fafcff;}
+.pill{display:inline-block;font-size:11px;font-weight:700;padding:2px 8px;border-radius:6px;background:#f1f5f9;color:var(--text-2);}
+.pill.g{background:rgba(16,185,129,.12);color:#047857}
+.pill.y{background:#fef3c7;color:#b45309}
+.pill.r{background:#fee2e2;color:#b91c1c}
+.pill.b{background:#e0f2fe;color:#0369a1}
+.pill.v{background:rgba(14,122,107,.1);color:var(--pri)}
+.mono{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px;}
+.clip{display:block;max-width:250px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.muted{color:var(--text-3);font-size:12px;}
+.note{background:#f8fafc;border:1px dashed var(--border);border-radius:var(--r-md);padding:14px 16px;font-size:12.5px;color:var(--text-2);line-height:1.85;}
+.note b{color:var(--text);}
+.note .no{color:#b91c1c;font-weight:700;}
+
+.mask{position:fixed;inset:0;background:rgba(15,23,42,.55);backdrop-filter:blur(3px);z-index:80;display:none;align-items:center;justify-content:center;padding:24px;}
+.mask.show{display:flex;}
+.sheet{background:#fff;border-radius:var(--r-lg);width:640px;max-width:100%;max-height:86vh;display:flex;flex-direction:column;box-shadow:0 24px 64px rgba(15,23,42,.28);animation:modalIn .22s var(--ease);}
+.sheet .sh{padding:18px 22px;border-bottom:1px solid var(--divider);font-size:15px;font-weight:800;display:flex;align-items:center;gap:10px;}
+.sheet .sh .x{margin-left:auto;background:none;border:none;font-size:20px;color:var(--text-3);cursor:pointer;line-height:1;}
+.sheet .sb{padding:20px 22px;overflow-y:auto;font-size:13px;}
+.sheet .sf{padding:14px 22px;border-top:1px solid var(--divider);display:flex;gap:10px;justify-content:flex-end;}
+.fld{margin-bottom:14px;}
+.fld label{display:block;font-size:12.5px;font-weight:700;color:var(--text-2);margin-bottom:6px;}
+.fld input,.fld select,.fld textarea{width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:9px;font-size:14px;font-family:inherit;}
+.fld textarea{min-height:78px;resize:vertical;}
+.hint{font-size:11.5px;color:var(--text-3);margin-top:5px;line-height:1.6;}
+.kv{display:flex;gap:10px;font-size:12.5px;padding:6px 0;border-bottom:1px dashed var(--divider);}
+.kv .k{width:96px;flex-shrink:0;color:var(--text-3);}
+.kv .v{flex:1;color:var(--text);word-break:break-all;}
+pre.json{background:#0f172a;color:#cbd5e1;padding:14px;border-radius:10px;font-size:11.5px;line-height:1.6;overflow:auto;max-height:260px;}
+.evi-sec{margin-bottom:16px;}
+.evi-sec h4{font-size:12.5px;font-weight:800;color:var(--text-2);margin-bottom:8px;}
+.tabs{display:flex;gap:6px;margin-bottom:16px;background:#f1f5f9;padding:4px;border-radius:10px;width:fit-content;}
+.tabs button{border:none;background:none;padding:8px 18px;border-radius:8px;font-size:13px;font-weight:700;color:var(--text-2);cursor:pointer;}
+.tabs button.on{background:#fff;color:var(--pri);box-shadow:0 1px 3px rgba(0,0,0,.06);}
+.chips{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;}
+.chip{font-size:12px;padding:6px 12px;border-radius:16px;border:1px solid var(--border);background:#fff;cursor:pointer;color:var(--text-2);}
+.chip.on{background:var(--pri);border-color:var(--pri);color:#fff;font-weight:700;}
+.empty{padding:48px 20px;text-align:center;color:var(--text-3);font-size:13px;}
+</style>
+</head>
+<body>
+<div class="toast-host" id="toastHost"></div>
+<div class="layout">
+<aside class="sidebar" id="sidebar">
+      <div class="brand"><div class="mark">物</div><div class="nm">宜必购物业</div></div>
+      <nav>
+      <div class="group">概览</div>
+      <a href="dashboard.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>工作台</a>
+      <a href="index.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3 10.5 12 3l9 7.5"/><path d="M5.5 9.5V21h13V9.5"/><path d="M9.5 21v-6h5v6"/></svg>首页看板</a>
+      <div class="group">智能</div>
+<a href="ai-desk.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="4" y="7" width="16" height="12" rx="3"/><path d="M9 12v1M15 12v1M12 3v4M2 13h2M20 13h2"/></svg>AI 值班台</a>
+<a href="ai-ability.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>能力全景</a>
+<a href="audit-log.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M4 5h16M4 12h10M4 19h7"/><circle cx="18" cy="17" r="3"/><path d="M18 15.5V17l1 1"/></svg>执行记录</a>
+<a href="ai-rules.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/></svg>主动规则</a>
+<div class="group">业务管理</div>
+      <a href="owners.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="9" cy="8" r="3.5"/><path d="M2 21v-1.5A5.5 5.5 0 0 1 7.5 14h3A5.5 5.5 0 0 1 16 19.5V21"/><path d="M17 8.5a3 3 0 0 1 0 6"/></svg>业主管理</a>
+      <a href="buildings.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3 21h18M5 21V7l7-4 7 4v14"/><path d="M9 21v-6h6v6"/></svg>楼宇房间</a>
+      <a href="bills.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M6 2h12l2 5v13a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7l2-5z"/><path d="M4 7h16M9 12h6"/></svg>账单管理</a>
+      <a href="bill-relief.html" class="on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="9"/><path d="M12 8v8M9 11h6M9 14h6"/></svg>减免审批</a>
+      <a href="splits.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="6" cy="6" r="3"/><circle cx="18" cy="18" r="3"/><path d="M9 6h5a4 4 0 0 1 4 4v5"/><path d="M6 9v6"/></svg>分账流水</a>
+      <a href="merchant-bindings.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M10 13a5 5 0 0 0 7 0l2-2a5 5 0 0 0-7-7l-1 1"/><path d="M14 11a5 5 0 0 0-7 0l-2 2a5 5 0 0 0 7 7l1-1"/></svg>商家绑定</a>
+      <a href="referral.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M10 13a5 5 0 0 0 7 0l2-2a5 5 0 0 0-7-7l-1 1"/><path d="M14 11a5 5 0 0 0-7 0l-2 2a5 5 0 0 0 7 7l1-1"/></svg>商家邀请</a>
+<a href="activity-audit.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="9"/><path d="m8 12.5 2.5 2.5L16 9.5"/></svg>活动审核</a>
+      <a href="prizes.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M20 12v9H4v-9"/><path d="M2 7h20v5H2z"/><path d="M12 21V7"/><path d="M12 7S10.5 3 8 3a2.5 2.5 0 0 0 0 5h4zM12 7s1.5-4 4-4a2.5 2.5 0 0 1 0 5h-4z"/></svg>开奖配置</a>
+      <a href="facilities.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="4" width="18" height="17" rx="2.5"/><path d="M8 2v4M16 2v4M3 10h18"/><path d="M8 14h3v3H8z"/></svg>场地预约</a>
+      <div class="group">社区互动</div>
+<a href="group-intake.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="9" cy="8" r="3.2"/><path d="M2.5 20v-1.4A5 5 0 0 1 7.5 13.6h3A5 5 0 0 1 15.5 18.6V20"/><path d="M17 5.5a3 3 0 0 1 0 5.6M18.5 20v-1.2a4 4 0 0 0-1.6-3.2"/></svg>业主群受理</a>
+<a href="mutual-aid.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3 12h4l2-5 3 10 2-5h7"/><path d="M3 19h18"/></svg>邻里互助</a>
+<div class="group">安防通行</div>
+      <a href="access.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M14 3h5a1 1 0 0 1 1 1v16a1 1 0 0 1-1 1h-5"/><path d="M10 8l4 4-4 4"/><path d="M14 12H3"/></svg>门禁管理</a>
+      <a href="vehicles.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3 12h18M5 12l2-5h10l2 5"/><path d="M7 12v6M17 12v6"/><circle cx="7.5" cy="18" r="1.6"/><circle cx="16.5" cy="18" r="1.6"/></svg>车辆管理</a>
+      <a href="parking-exposure.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3 12h18M5 12l2-5h10l2 5"/><path d="M7 12v6M17 12v6"/><circle cx="7.5" cy="18" r="1.6"/><circle cx="16.5" cy="18" r="1.6"/></svg>违停曝光</a>
+<a href="temp-parking.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/></svg>临时停车</a>
+      <a href="visitor-vehicles.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="9" cy="7" r="3"/><path d="M3 20v-1.5A4.5 4.5 0 0 1 7.5 14h3A4.5 4.5 0 0 1 15 18.5V20"/><path d="M17 11h4M19 9v4"/></svg>访客车辆</a>
+      <a href="face-audit.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="9"/><path d="M9 10h.01M15 10h.01"/><path d="M8.5 14.5a4.5 4.5 0 0 0 7 0"/></svg>人脸审核</a>
+      <div class="group">设施与工单</div>
+      <a href="devices.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/></svg>IoT 设备</a>
+      <a href="inspection.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>巡检工单</a>
+      <a href="workorders.html" class="on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M14.5 3.5a5 5 0 0 0 6 6L10 20H4v-6z"/><path d="M4 4h4"/></svg>维修工单</a>
+      <a href="workorder-detail.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M14.5 3.5a5 5 0 0 0 6 6L10 20H4v-6z"/><path d="M13 8l3 3"/></svg>工单处置</a>
+      <a href="vs-orders.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4V2h6v2"/><path d="M9 11h6M9 15h4"/></svg>维保工单</a>
+      </nav>
+      <div class="logout-area"><a href="#" id="logoutBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5"/><path d="M21 12H9"/></svg>退出登录</a></div>
+    </aside>
+<div class="sidebar-overlay" id="overlay"></div>
+  <div class="main">
+    <div class="topbar">
+      <button class="menu-toggle" id="menuToggle">☰</button>
+      <div class="page-title">单户账单减免 · 分级审批</div>
+      <div></div>
+    </div>
+    <div class="content">
+
+      <div class="stats">
+        <div class="stat warn"><div class="k">待我审批</div><div class="v" id="sWait">--</div><div class="s">审批人不能是申请人本人</div></div>
+        <div class="stat good"><div class="k">已通过</div><div class="v" id="sOk">--</div><div class="s">通过才动账，写入抵扣流水</div></div>
+        <div class="stat bad"><div class="k">超额度只出证据包</div><div class="v" id="sOver">--</div><div class="s">账目一分不动</div></div>
+        <div class="stat"><div class="k">我的单笔额度</div><div class="v" id="sQuota">--</div><div class="s" id="sRole">按角色分级</div></div>
+      </div>
+
+      <div class="tabs">
+        <button class="on" data-tab="cand">候选户</button>
+        <button data-tab="rec">申请记录</button>
+      </div>
+
+      <div id="tabCand">
+        <div class="panel">
+          <div class="panel-hd">哪些户真该考虑减免 <span class="muted">只列已逾期未结清的账单，按逾期天数排</span></div>
+          <div id="candBody"><div class="empty">加载中…</div></div>
+        </div>
+      </div>
+
+      <div id="tabRec" style="display:none">
+        <div class="chips">
+          <span class="chip on" data-st="">全部</span>
+          <span class="chip" data-st="0">待审批</span>
+          <span class="chip" data-st="1">已通过</span>
+          <span class="chip" data-st="2">已驳回</span>
+          <span class="chip" data-st="3">超额度</span>
+        </div>
+        <div class="panel">
+          <div class="panel-hd">减免申请记录</div>
+          <div id="recBody"><div class="empty">加载中…</div></div>
+        </div>
+      </div>
+
+      <!-- 证据包 -->
+      <div class="mask" id="mEvi">
+        <div class="sheet">
+          <div class="sh">证据包 · 只陈述数据，不含结论<button class="x" data-close="mEvi">×</button></div>
+          <div class="sb" id="eviBody"></div>
+          <div class="sf"><button class="btn gh" data-close="mEvi">关闭</button></div>
+        </div>
+      </div>
+
+      <!-- 发起减免 -->
+      <div class="mask" id="mApply">
+        <div class="sheet" style="width:520px">
+          <div class="sh">发起减免申请<button class="x" data-close="mApply">×</button></div>
+          <div class="sb">
+            <div class="kv"><span class="k">账单</span><span class="v" id="apBill">--</span></div>
+            <div class="kv"><span class="k">未结清</span><span class="v" id="apUnpaid">--</span></div>
+            <div class="kv"><span class="k">我的额度</span><span class="v" id="apQuota">--</span></div>
+            <div style="height:12px"></div>
+            <div class="fld">
+              <label>减免类型</label>
+              <select id="apType">
+                <option value="1">滞纳金</option>
+                <option value="2">本金</option>
+                <option value="3">整单核销</option>
+              </select>
+            </div>
+            <div class="fld">
+              <label>减免金额（￥）</label>
+              <input id="apAmount" type="number" step="0.01" min="0">
+              <div class="hint" id="apHint"></div>
+            </div>
+            <div class="fld">
+              <label>减免理由（必填，会进审计）</label>
+              <textarea id="apReason" placeholder="例如：业主反映 9 月空置未入住，已现场核实水表零走动"></textarea>
+            </div>
+            <div class="note">减免恒为 <b>L3</b>：提交后不动账。额度内进待批，必须<b>第二人审批</b>；超额度只能出证据包。</div>
+          </div>
+          <div class="sf"><button class="btn gh" data-close="mApply">取消</button><button class="btn" id="doApply">提交</button></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+<script>
+(function(){
+
+  var token = localStorage.getItem('property_admin_token');
+  if (!token) { location.href = 'login.html'; }
+
+  var sidebar = document.getElementById('sidebar');
+  var overlay = document.getElementById('overlay');
+  if (document.getElementById('menuToggle')) document.getElementById('menuToggle').onclick = function(){ sidebar.classList.add('open'); overlay.classList.add('show'); };
+  if (overlay) overlay.onclick = function(){ sidebar.classList.remove('open'); overlay.classList.remove('show'); };
+  if (document.getElementById('logoutBtn')) document.getElementById('logoutBtn').onclick = function(e){ e.preventDefault(); localStorage.removeItem('property_admin_token'); location.href = 'login.html'; };
+
+  function showToast(msg, type){
+    var host = document.getElementById('toastHost');
+    var el = document.createElement('div');
+    el.className = 'toast ' + (type || '');
+    el.textContent = msg;
+    host.appendChild(el);
+    requestAnimationFrame(function(){ el.classList.add('show'); });
+    setTimeout(function(){ el.classList.remove('show'); setTimeout(function(){ el.remove(); }, 200); }, 2800);
+  }
+
+  function api(path, opt){
+    opt = opt || {};
+    return fetch(path, {
+      method: opt.method || 'GET',
+      headers: { 'X-Property-Token': token, 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: opt.body || null
+    }).then(function(r){ return r.json(); }).then(function(j){
+      if (j.code !== 0) { throw new Error(j.msg || '请求失败'); }
+      return j.data;
+    });
+  }
+
+  function apiJson(path, obj){
+    return fetch(path, {
+      method: 'POST',
+      headers: { 'X-Property-Token': token, 'Content-Type': 'application/json' },
+      body: JSON.stringify(obj || {})
+    }).then(function(r){ return r.json(); }).then(function(j){
+      if (j.code !== 0) { throw new Error(j.msg || '请求失败'); }
+      return j.data;
+    });
+  }
+
+  function esc(s){ return (s == null ? '' : String(s)).replace(/[&<>"]/g, function(c){
+    return { '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;' }[c]; }); }
+
+  function money(v){ if (v == null) return '--'; return '￥' + Number(v).toFixed(2); }
+
+  function fmt(t){ if (!t) return '--'; return String(t).replace('T',' ').slice(5,16); }
+
+  function fmtMin(m){
+    m = Number(m || 0);
+    if (m < 60) return m + ' 分钟';
+    if (m < 1440) return (m / 60).toFixed(m < 600 ? 1 : 0) + ' 小时';
+    return (m / 1440).toFixed(1) + ' 天';
+  }
+
+  function busy(btn, on, txt){
+    if (!btn) return;
+    if (on) { btn.dataset.old = btn.textContent; btn.textContent = txt || '处理中…'; btn.disabled = true; }
+    else { btn.textContent = btn.dataset.old || btn.textContent; btn.disabled = false; }
+  }
+
+  var CAND = [], CURBILL = null, REC = [];
+
+  function loadCands(){
+    api('/api/property/relief/candidates').then(function(d){
+      CAND = d.rows || [];
+      document.getElementById('sQuota').textContent = money(d.myQuota);
+      document.getElementById('sRole').textContent = d.myRole + ' · 单笔上限';
+      var host = document.getElementById('candBody');
+      if (!CAND.length) { host.innerHTML = '<div class="empty">没有逾期未结清的账单</div>'; return; }
+      var h = '<table class="tbl"><tr><th>房号</th><th>业主</th><th>账期</th><th>未结清</th><th>逾期</th><th>分级</th><th>建议减免</th><th>操作</th></tr>';
+      CAND.forEach(function(r){
+        var gcls = r.grade === 'A' ? 'r' : r.grade === 'B' ? 'y' : 'b';
+        h += '<tr><td><b>' + esc(r.roomLabel || '房号待补') + '</b><div class="muted mono">' + esc(r.billNo) + '</div></td>'
+          + '<td>' + esc(r.ownerName) + '</td><td class="muted">' + esc(r.billPeriod) + '</td>'
+          + '<td><b>' + money(r.unpaid) + '</b></td>'
+          + '<td>' + r.overdueDays + ' 天</td>'
+          + '<td><span class="pill ' + gcls + '">' + esc(r.grade) + '</span><span class="clip muted" style="max-width:230px" title="' + esc(r.gradeNote) + '">' + esc(r.gradeNote) + '</span></td>'
+          + '<td>' + money(r.suggestAmount) + (r.withinQuota ? '' : '<div class="pill r" style="margin-top:4px">超额度</div>') + '</td>'
+          + '<td><button class="btn gh btn-sm" data-evi="' + r.billId + '">证据包</button> '
+          + '<button class="btn btn-sm" data-apply="' + r.billId + '">发起减免</button></td></tr>';
+      });
+      h += '</table>';
+      host.innerHTML = h;
+      Array.prototype.forEach.call(host.querySelectorAll('[data-evi]'), function(b){
+        b.onclick = function(){ openEvi(b.getAttribute('data-evi')); };
+      });
+      Array.prototype.forEach.call(host.querySelectorAll('[data-apply]'), function(b){
+        b.onclick = function(){ openApply(b.getAttribute('data-apply')); };
+      });
+    }).catch(function(e){ showToast(e.message,'err'); });
+  }
+
+  function openEvi(billId){
+    document.getElementById('eviBody').innerHTML = '<div class="empty">生成中…</div>';
+    document.getElementById('mEvi').classList.add('show');
+    api('/api/property/relief/evidence?billId=' + billId).then(function(d){
+      var b = d.bill, html = '';
+      html += '<div class="evi-sec"><h4>① 账单</h4>'
+        + kv('单号', b.billNo) + kv('账期', b.billPeriod) + kv('应收', money(b.amount))
+        + kv('已抵扣', money(b.deducted)) + kv('已缴', money(b.paid)) + kv('未结清', money(b.unpaid))
+        + kv('到期日', b.dueDate) + '</div>';
+      html += '<div class="evi-sec"><h4>② 抵扣流水（' + (d.deducts||[]).length + ' 条）</h4>';
+      html += (d.deducts||[]).length
+        ? (d.deducts||[]).map(function(x){ return kv(x.sourceName + ' · ' + fmt(x.createTime), money(x.deductAmount)); }).join('')
+        : '<div class="muted">无抵扣记录</div>';
+      html += '</div>';
+      html += '<div class="evi-sec"><h4>③ 近 12 期历史</h4><table class="tbl"><tr><th>账期</th><th>应收</th><th>已缴</th><th>抵扣</th><th>状态</th></tr>'
+        + (d.history||[]).map(function(x){
+            return '<tr><td>' + esc(x.billPeriod) + '</td><td>' + money(x.amount) + '</td><td>' + money(x.paid) + '</td><td>' + money(x.deducted) + '</td><td><span class="pill ' + (x.statusName==='已结清'?'g':'r') + '">' + esc(x.statusName) + '</span></td></tr>';
+          }).join('') + '</table></div>';
+      html += '<div class="evi-sec"><h4>④ 同户型对比</h4><div class="muted" style="line-height:1.8">'
+        + esc((d.compare||{}).note || '') + '</div></div>';
+      html += '<div class="evi-sec"><h4>⑤ 该业主历史减免次数</h4><div><b>' + (d.reliefTimes||0) + '</b> 次</div></div>';
+      html += '<div class="note" style="margin-top:10px">' + esc(d.disclaimer) + '</div>';
+      document.getElementById('eviBody').innerHTML = html;
+    }).catch(function(e){ document.getElementById('eviBody').innerHTML = '<div class="empty">' + esc(e.message) + '</div>'; });
+  }
+
+  function kv(k, v){ return '<div class="kv"><span class="k">' + esc(k) + '</span><span class="v">' + esc(v == null ? '--' : v) + '</span></div>'; }
+
+  function openApply(billId){
+    CURBILL = CAND.filter(function(x){ return String(x.billId) === String(billId); })[0];
+    if (!CURBILL) return;
+    document.getElementById('apBill').textContent = CURBILL.billNo + ' · ' + (CURBILL.roomLabel || '房号待补');
+    document.getElementById('apUnpaid').textContent = money(CURBILL.unpaid);
+    document.getElementById('apQuota').textContent = money(CURBILL.quota);
+    document.getElementById('apAmount').value = Number(CURBILL.suggestAmount || 0).toFixed(2);
+    document.getElementById('apReason').value = '';
+    updateHint();
+    document.getElementById('mApply').classList.add('show');
+  }
+
+  function updateHint(){
+    var v = Number(document.getElementById('apAmount').value || 0);
+    var q = Number(CURBILL ? CURBILL.quota : 0);
+    var el = document.getElementById('apHint');
+    if (v > q) el.innerHTML = '<span style="color:#b91c1c;font-weight:700">超过你的额度 ' + money(q) + '</span>，提交后只会生成证据包，账目不动';
+    else el.textContent = '在额度内（' + money(q) + '），提交后进待批，需第二人审批';
+  }
+
+  function loadRec(status){
+    api('/api/property/relief/list' + (status === '' || status == null ? '' : '?status=' + status)).then(function(d){
+      REC = d.rows || [];
+      document.getElementById('sWait').textContent = d.waiting;
+      document.getElementById('sOk').textContent = d.approved;
+      document.getElementById('sOver').textContent = d.overQuota;
+      var host = document.getElementById('recBody');
+      if (!REC.length) { host.innerHTML = '<div class="empty">没有记录</div>'; return; }
+      var h = '<table class="tbl"><tr><th>房号 / 业主</th><th>类型</th><th>金额</th><th>额度</th><th>状态</th><th>申请人</th><th>审批人</th><th>时间</th><th>操作</th></tr>';
+      REC.forEach(function(r){
+        var cls = r.status===1?'g':r.status===0?'y':r.status===3?'r':'';
+        h += '<tr><td><b>' + esc(r.roomLabel||'--') + '</b><div class="muted">' + esc(r.ownerName) + '</div></td>'
+          + '<td>' + ['','滞纳金','本金','整单'][r.reliefType] + '</td>'
+          + '<td><b>' + money(r.applyAmount) + '</b></td><td class="muted">' + money(r.quotaAmount) + '</td>'
+          + '<td><span class="pill ' + cls + '">' + esc(r.statusName) + '</span>'
+          + (r.reason ? '<div class="muted" style="max-width:200px;line-height:1.5;margin-top:3px">' + esc(r.reason) + '</div>' : '') + '</td>'
+          + '<td>' + esc(r.applicantName||'--') + '</td><td>' + esc(r.approverName||'--') + '</td>'
+          + '<td class="muted">' + fmt(r.createTime) + '</td>'
+          + '<td>' + (r.canApprove
+              ? '<button class="btn btn-sm" data-ok="' + r.reliefId + '">通过</button> <button class="btn dan btn-sm" data-no="' + r.reliefId + '">驳回</button>'
+              : (r.status === 0 ? '<span class="muted">待他人审批</span>' : '<span class="muted">—</span>')) + '</td></tr>';
+      });
+      h += '</table>';
+      host.innerHTML = h;
+      Array.prototype.forEach.call(host.querySelectorAll('[data-ok]'), function(b){
+        b.onclick = function(){ decide(b.getAttribute('data-ok'), 'approve', b); };
+      });
+      Array.prototype.forEach.call(host.querySelectorAll('[data-no]'), function(b){
+        b.onclick = function(){ decide(b.getAttribute('data-no'), 'reject', b); };
+      });
+    }).catch(function(e){ showToast(e.message,'err'); });
+  }
+
+  function decide(id, act, btn){
+    var note = act === 'approve' ? prompt('审批意见（可选）', '已核实，同意减免') : prompt('驳回原因（必填）', '需业委会确认');
+    if (note === null) return;
+    busy(btn, true);
+    apiJson('/api/property/relief/' + id + '/' + act, { note: note }).then(function(r){
+      busy(btn, false);
+      showToast(act === 'approve' ? '已通过，账目已更新（5 分钟内可撤回）' : '已驳回，账目未改动');
+      loadRec('');
+      loadCands();
+    }).catch(function(e){ busy(btn, false); showToast(e.message,'err'); });
+  }
+
+  Array.prototype.forEach.call(document.querySelectorAll('[data-tab]'), function(b){
+    b.onclick = function(){
+      Array.prototype.forEach.call(document.querySelectorAll('[data-tab]'), function(x){ x.classList.remove('on'); });
+      b.classList.add('on');
+      var t = b.getAttribute('data-tab');
+      document.getElementById('tabCand').style.display = t === 'cand' ? '' : 'none';
+      document.getElementById('tabRec').style.display = t === 'rec' ? '' : 'none';
+      if (t === 'rec') loadRec('');
+    };
+  });
+
+  Array.prototype.forEach.call(document.querySelectorAll('[data-st]'), function(c){
+    c.onclick = function(){
+      Array.prototype.forEach.call(document.querySelectorAll('[data-st]'), function(x){ x.classList.remove('on'); });
+      c.classList.add('on');
+      loadRec(c.getAttribute('data-st'));
+    };
+  });
+
+  Array.prototype.forEach.call(document.querySelectorAll('[data-close]'), function(el){
+    el.onclick = function(){ document.getElementById(el.getAttribute('data-close')).classList.remove('show'); };
+  });
+
+  document.getElementById('apAmount').oninput = updateHint;
+
+  document.getElementById('doApply').onclick = function(){
+    var amount = Number(document.getElementById('apAmount').value || 0);
+    var reason = document.getElementById('apReason').value.trim();
+    if (amount <= 0) { showToast('金额须大于 0'); return; }
+    if (!reason) { showToast('请填减免理由'); return; }
+    var btn = document.getElementById('doApply'); busy(btn, true);
+    apiJson('/api/property/relief/apply', {
+      billId: CURBILL.billId,
+      reliefType: Number(document.getElementById('apType').value),
+      amount: amount,
+      reason: reason
+    }).then(function(r){
+      busy(btn, false);
+      document.getElementById('mApply').classList.remove('show');
+      showToast(r.message, r.overQuota ? 'err' : '');
+      loadRec('');
+      loadCands();
+    }).catch(function(e){ busy(btn, false); showToast(e.message,'err'); });
+  };
+
+  loadCands();
+  loadRec('');
+
+})();
+</script>
+</body>
+</html>

@@ -45,6 +45,14 @@ input::placeholder{color:var(--text-3);}
 .btn-block{width:100%;}
 .btn-icon{width:44px;height:44px;padding:0;border-radius:12px;}
 .btn-primary{background:linear-gradient(135deg,#4f46e5 0%,#7c3aed 100%);color:#fff;box-shadow:0 4px 14px rgba(79,70,229,.3);}
+  .wx-area{margin-top:18px;width:100%;}
+  .wx-or{display:flex;align-items:center;gap:12px;color:#94a3b8;font-size:12px;margin-bottom:14px;}
+  .wx-or::before,.wx-or::after{content:"";flex:1;height:1px;background:#e2e8f0;}
+  .btn-wx{background:#fff;color:#07c160;border:1px solid #d1fae5;box-shadow:none;display:flex;align-items:center;justify-content:center;gap:8px;}
+  .btn-wx:active{background:#f0fdf4;}
+  .btn-wx .wx-ic{width:20px;height:20px;border-radius:6px;background:#07c160;color:#fff;font-size:11px;display:flex;align-items:center;justify-content:center;font-weight:700;}
+  .wx-hint{font-size:11.5px;color:#94a3b8;line-height:1.7;margin-top:10px;text-align:center;max-width:100%;word-break:break-word;overflow-wrap:anywhere;}
+  .wx-hint b{color:#07c160;}
 .btn-secondary{background:var(--surface);color:var(--text);border:1.5px solid var(--border);}
 .btn-soft{background:var(--pri-bg);color:var(--pri);}
 .btn-ghost{background:transparent;color:var(--pri);}
@@ -113,12 +121,52 @@ input::placeholder{color:var(--text-3);}
       </div>
       <button id="btnRegister" class="btn btn-md btn-primary btn-block">注 册</button>
     </div>
+    <!-- 微信一键登录 -->
+    <div class="wx-area">
+      <div class="wx-or"><span>或</span></div>
+      <button id="btnWx" class="btn btn-md btn-wx btn-block">
+        <span class="wx-ic">微</span>微信一键登录
+      </button>
+      <div class="wx-hint" id="wxHint">微信里打开可免密登录<br>首次使用需手机号登录一次完成绑定</div>
+    </div>
   </div>
 </div>
 <script>
 const $=id=>document.getElementById(id);
 function toast(m,t){const h=$("toastHost");if(!h)return;const e=document.createElement("div");e.className="toast "+(t||"");e.textContent=m;h.appendChild(e);requestAnimationFrame(()=>e.classList.add("show"));setTimeout(()=>{e.classList.remove("show");setTimeout(()=>e.remove(),220)},2600)}
 function validPhone(v){return /^1[3-9]\d{9}$/.test(v)}
+
+// ===== 微信一键登录相关 =====
+const Q = new URLSearchParams(location.search);
+// 微信授权回调已签发 token：直接进首页
+if (Q.get("owner_token")) {
+  localStorage.setItem("property_owner_token", Q.get("owner_token"));
+  const back = Q.get("redirect") || "index.html";
+  location.replace(back.indexOf("http") === 0 ? back : back);
+}
+// 授权失败：把微信侧原话透出来，别用"网络异常"糊过去
+if (Q.get("wx_error")) toast("微信授权失败：" + Q.get("wx_error"), "danger");
+// 首次授权：openid 还没绑，登录一次即自动绑定
+const WX_OPENID = Q.get("wx_openid") || localStorage.getItem("wx_openid") || "";
+if (Q.get("wx_openid")) localStorage.setItem("wx_openid", Q.get("wx_openid"));
+if (WX_OPENID && Q.get("wx_unbound") === "1") {
+  $("wxHint").innerHTML = "已获取微信身份，<b>用手机号登录一次</b>即完成绑定，下次可免密进入";
+}
+$("btnWx").addEventListener("click", async function(){
+  const btn = $("btnWx");
+  btn.disabled = true; btn.innerHTML = '<span class="wx-ic">微</span>正在唤起微信…';
+  try {
+    const target = location.origin + location.pathname.replace(/login\.html.*$/, "index.html");
+    const resp = await fetch("/api/property/owner/wx/oauth-url?redirect=" + encodeURIComponent(target));
+    const r = await resp.json();
+    if (r.code === 0 && r.data && r.data.url) { location.href = r.data.url; return; }
+    throw new Error(r.msg || "无法生成授权链接");
+  } catch (e) {
+    // 未配置公众号 / 不在微信里：明说，不假装失败是网络问题
+    toast("微信登录暂不可用：" + (e.message || "") + "，请用手机号登录", "warning");
+    btn.disabled = false; btn.innerHTML = '<span class="wx-ic">微</span>微信一键登录';
+  }
+});
 
 // Tab switch
 document.querySelectorAll("#authTabs button").forEach(b=>{
@@ -141,7 +189,8 @@ $("btnLogin").addEventListener("click",async function(){
   try{
     const resp=await fetch("/api/property/owner/login",{
       method:"POST",
-      body:"ownerPhone="+encodeURIComponent(phone)+"&password="+encodeURIComponent(pwd),
+      body:"ownerPhone="+encodeURIComponent(phone)+"&password="+encodeURIComponent(pwd)
+        +(WX_OPENID?"&wxOpenid="+encodeURIComponent(WX_OPENID):""),
       headers:{"Content-Type":"application/x-www-form-urlencoded"}
     });
     const r=await resp.json();
@@ -196,7 +245,7 @@ $("btnRegister").addEventListener("click",async function(){
 });
 
 // If already logged in, redirect
-if(localStorage.getItem("property_owner_token")){location.href="index.html"}
+if(!Q.get("owner_token") && localStorage.getItem("property_owner_token")){location.href="index.html"}
 </script>
 </body>
 </html>

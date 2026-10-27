@@ -72,11 +72,59 @@ public class PropertyOwnerP1Controller {
                                                      @RequestParam(required = false) String description,
                                                      @RequestParam(required = false) String images,
                                                      @RequestParam(required = false) Integer urgency,
-                                                     @RequestParam(required = false) String category) {
+                                                     @RequestParam(required = false) String category,
+                                                     @RequestParam(value = "photos", required = false)
+                                                     java.util.List<org.springframework.web.multipart.MultipartFile> photos,
+                                                     @RequestParam(value = "videos", required = false)
+                                                     java.util.List<org.springframework.web.multipart.MultipartFile> videos) {
         Long ownerId = validateOwnerToken(token);
+        // 图片走 images（JSON 数组），视频走 media —— 报修必须能带证据
+        String imagesJson = (photos != null && !photos.isEmpty())
+                ? saveMediaFiles(photos, ownerId, "wo-img", 10L * 1024 * 1024, true)
+                : images;
+        String mediaJson = (videos != null && !videos.isEmpty())
+                ? saveMediaFiles(videos, ownerId, "wo-vid", 40L * 1024 * 1024, false)
+                : null;
         PropertyWorkorder wo = workorderService.createWorkorder(ownerId, companyId, parseWoType(woType),
-                title, description, images, urgency != null ? urgency : 1, category);
+                title, description, imagesJson, urgency != null ? urgency : 1, category);
+        wo.setSource("owner");
+        if (mediaJson != null) {
+            wo.setMedia(mediaJson);
+            workorderRepository.save(wo);
+        }
         return Result.ok(wo);
+    }
+
+    @org.springframework.beans.factory.annotation.Value("${app.upload-dir:./uploads}")
+    private String uploadDir;
+
+    /** 保存业主上传的图片/视频，返回 [{"type","url"}] JSON；单文件超限直接拒收 */
+    private String saveMediaFiles(java.util.List<org.springframework.web.multipart.MultipartFile> files,
+                                  Long ownerId, String prefix, long maxBytes, boolean isImage) {
+        java.util.List<java.util.Map<String, Object>> out = new java.util.ArrayList<>();
+        for (org.springframework.web.multipart.MultipartFile f : files) {
+            if (f == null || f.isEmpty()) continue;
+            if (f.getSize() > maxBytes) {
+                throw new BizException((isImage ? "图片" : "视频") + "不能超过 " + (maxBytes / 1024 / 1024) + "MB");
+            }
+            String orig = f.getOriginalFilename() == null ? "" : f.getOriginalFilename().toLowerCase();
+            String ext = orig.contains(".") ? orig.substring(orig.lastIndexOf('.')) : (isImage ? ".jpg" : ".mp4");
+            try {
+                java.nio.file.Path dir = java.nio.file.Paths.get(uploadDir, "property", String.valueOf(ownerId))
+                        .toAbsolutePath().normalize();
+                java.nio.file.Files.createDirectories(dir);
+                String name = prefix + "-" + System.currentTimeMillis() + "-" + out.size() + ext;
+                f.transferTo(dir.resolve(name));
+                java.util.Map<String, Object> m = new java.util.LinkedHashMap<>();
+                m.put("type", isImage ? "image" : "video");
+                m.put("url", "/uploads/property/" + ownerId + "/" + name);
+                m.put("name", f.getOriginalFilename());
+                out.add(m);
+            } catch (java.io.IOException e) {
+                throw new BizException("上传失败：" + e.getMessage());
+            }
+        }
+        return out.isEmpty() ? null : com.alibaba.fastjson.JSON.toJSONString(out);
     }
 
     /** 工单类型解析：repair/complaint/suggestion/consult → 1/2/3/4，数字原样返回 */
