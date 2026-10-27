@@ -50,6 +50,20 @@ app:
   merchant-path: /h5/merchant
   admin-path: /h5/admin
   upload-dir: ./uploads        # 商家收款码等上传文件目录（生产挂载持久卷）
+  # V19 AI Agent：enabled=false 或未配置 api-key 时自动降级为本地规则引擎，功能照常可用
+  ai:
+    enabled: ${AI_ENABLED:false}   # 生产用环境变量开启，改 .env 重启即可，无需重新打包
+    base-url: ${AI_BASE_URL:}      # OpenAI 兼容地址，如 https://dashscope.aliyuncs.com/compatible-mode
+    api-key: ${AI_API_KEY:}        # 建议生产用环境变量注入，勿写死在配置文件
+    model: ${AI_MODEL:qwen-plus}
+    timeout-ms: 15000
+  # V20 运营数据中台接口（/api/ops/**）：给大屏 / 广告机 / AI 日志页用
+  ops:
+    token: ${OPS_TOKEN:}                  # 空=不校验；配了则 /api/ops/** 需带 X-Ops-Token 或 ?token=
+    source: ${OPS_SOURCE:realtime}        # realtime=直查业务表实时聚合（V20 未上线也能出数）
+                                          # mart=读 V20 汇总表 v_ops_day/channel_daily（需先建表并跑 ETL）
+    default-merchant: ${OPS_MERCHANT:}    # 请求不传 merchantNo 时的兜底商家
+    rebuild-enabled: ${OPS_REBUILD:false} # ETL 定时开关，默认关（多实例部署只能开一个，或用外部 crontab）
 spring.servlet.multipart:
   max-file-size: 5MB
   max-request-size: 10MB

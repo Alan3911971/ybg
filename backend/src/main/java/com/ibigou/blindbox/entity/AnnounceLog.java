@@ -34,6 +34,26 @@ public class AnnounceLog {
     @Column(length = 20)
     private String phone;
 
+    /** 奖品类型（1折扣券 2立减券 3余额 4团购免单 5谢谢参与；NULL=非中奖播报或历史数据） */
+    @Column(name = "prize_type")
+    private Integer prizeType;
+
+    /** 奖品数值：折扣券=折数，立减券/余额=金额 */
+    @Column(name = "prize_value")
+    private java.math.BigDecimal prizeValue;
+
+    /** 本店第几位顾客（= box_prize_limit_stat 该商家累计人次） */
+    @Column(name = "customer_seq")
+    private Integer customerSeq;
+
+    /**
+     * 是否权威开奖记录（1=是）。
+     * 同一次抽奖会落多条 draw 记录（后端开奖段 + 前端结算页触发两次 announce-prize），
+     * 只有一条标记为 1；电视大屏只认它，避免同一次中奖重复弹窗/重复上"最近中奖"列表。
+     */
+    @Column(name = "is_primary")
+    private Integer isPrimary;
+
     @Column(nullable = false, updatable = false)
     private LocalDateTime createTime;
 }

@@ -413,6 +413,27 @@ textarea.input{height:80px;padding:10px 12px;resize:vertical;}
     </div>
   </div>
   <div class="card">
+    <div class="sec"><span class="ic">📺</span>大屏显示模式</div>
+    <div class="desc">店内大屏可切换两种模式（切换后需<b>重启大屏 App</b> 生效）：<br>· <b>叫号屏</b>：展示排队叫号 + 取号二维码；<br>· <b>盲盒活动屏</b>：展示盲盒活动主视觉，顾客扫码参与盲盒抽奖。</div>
+    <div class="field">
+      <label>大屏模式</label>
+      <div style="display:flex;gap:10px;">
+        <button type="button" id="btnTvCall" class="btn btn--ghost" data-mode="call" style="flex:1;">📢 叫号屏</button>
+        <button type="button" id="btnTvActivity" class="btn btn--ghost" data-mode="activity" style="flex:1;">🎁 盲盒活动屏</button>
+      </div>
+    </div>
+    <div id="tvModeInfo" style="display:none;margin-top:10px;padding:12px;border:1px dashed var(--c-border);border-radius:10px;background:#f8f9fb;">
+      <div style="font-size:13px;font-weight:600;margin-bottom:6px;" id="tvModeInfoTitle">—</div>
+      <div style="text-align:center;margin:8px 0;">
+        <img id="tvModeQr" src="" alt="二维码预览" style="width:140px;height:140px;background:#fff;border:1px solid var(--c-border);border-radius:8px;">
+      </div>
+      <div style="font-size:12px;color:var(--c-text-3);word-break:break-all;" id="tvModeInfoUrl">—</div>
+      <div style="font-size:12px;color:var(--c-text-3);margin-top:6px;">该模式下，大屏二维码扫出后跳转到上方地址。</div>
+    </div>
+    <div id="tvModeStatus" style="font-size:12px;color:var(--c-text-3);margin-top:10px;"></div>
+  </div>
+
+  <div class="card">
     <div class="sec"><span class="ic">🚪</span>账号</div>
     <div class="desc">已登录账号：<b id="accountName">--</b></div>
     <div style="margin:10px 0;padding:10px;border:1px solid var(--c-border);border-radius:10px;background:#f8f9fb;">
@@ -1729,6 +1750,70 @@ async function filterOrders(){ /* 占位：调 IBIGOU_API.merchant.orderList 过
       toast("保存异常: " + e.message, "danger");
     }
   });
+
+  // ===== 大屏显示模式（叫号屏 / 盲盒活动屏） =====
+  function setTvModeUI(mode){
+    var call = $("btnTvCall"), act = $("btnTvActivity");
+    if (!call || !act) return;
+    if (mode === "activity") {
+      act.className = "btn btn--primary"; act.style.flex = "1";
+      call.className = "btn btn--ghost"; call.style.flex = "1";
+    } else {
+      call.className = "btn btn--primary"; call.style.flex = "1";
+      act.className = "btn btn--ghost"; act.style.flex = "1";
+    }
+    var info = $("tvModeInfo"), title = $("tvModeInfoTitle");
+    if (info && title) {
+      info.style.display = "block";
+      title.textContent = (mode === "activity") ? "🎁 盲盒活动屏 · 扫码参与盲盒抽奖" : "📢 叫号屏 · 扫码取号";
+    }
+  }
+  async function loadTvMode(){
+    var tk = lsGet("ibigou_merchant_token", "");
+    if (!tk) return;
+    try {
+      var r = await fetch("/api/merchant/config/tv-mode", { headers: { "X-Merchant-Token": tk } });
+      var d = await r.json();
+      if (d && d.code === 0 && d.data) {
+        setTvModeUI(d.data.mode);
+        var url = $("tvModeInfoUrl");
+        if (url && d.data.qrTarget) url.textContent = d.data.qrTarget;
+        var mno = lsGet("ibigou_merchant_no", "");
+        var qrImg = $("tvModeQr");
+        if (qrImg && mno) qrImg.src = "/api/tv/" + mno + "/qr.svg?t=" + Date.now();
+        $("tvModeStatus").textContent = "";
+      } else {
+        $("tvModeStatus").textContent = "读取大屏模式失败：" + (d.msg || "未知错误");
+      }
+    } catch(e) {
+      $("tvModeStatus").textContent = "读取大屏模式异常：" + e.message;
+    }
+  }
+  (function bindTvModeSwitch(){
+    var call = $("btnTvCall"), act = $("btnTvActivity");
+    if (!call || !act) return;
+    [call, act].forEach(function(btn){
+      btn.addEventListener("click", async function(){
+        var mode = btn.dataset.mode;
+        var tk = lsGet("ibigou_merchant_token", "");
+        $("tvModeStatus").textContent = "正在保存…";
+        try {
+          var r = await fetch("/api/merchant/config/tv-mode?mode=" + mode, { method: "POST", headers: { "X-Merchant-Token": tk } });
+          var d = await r.json();
+          if (d && d.code === 0) {
+            setTvModeUI(mode);
+            await loadTvMode();
+            toast(mode === "activity" ? "已切换为盲盒活动屏，请重启大屏 App 生效" : "已切换为叫号屏，请重启大屏 App 生效", "success");
+          } else {
+            $("tvModeStatus").textContent = "保存失败：" + (d.msg || "未知错误");
+          }
+        } catch(e) {
+          $("tvModeStatus").textContent = "保存异常：" + e.message;
+        }
+      });
+    });
+  })();
+  loadTvMode();
 
   $("btnClearOrders").addEventListener("click", function(){
     if (!confirm("清除所有订单？此操作不可恢复")) return;

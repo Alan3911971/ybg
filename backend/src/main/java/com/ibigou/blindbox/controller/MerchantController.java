@@ -51,6 +51,8 @@ public class MerchantController {
     private final com.ibigou.blindbox.repository.MerchantMemberTypeRepository merchantMemberTypeRepository;
     private final com.ibigou.blindbox.repository.MerchantMessageRepository merchantMessageRepository;
     private final ChatService chatService;
+    private final MemberCrmService memberCrmService;
+    private final AiAgentService aiAgentService;
 
     @PostMapping("/auth/login")
     public Result<Map<String, Object>> login(@RequestParam String account, @RequestParam String password) {
@@ -540,6 +542,73 @@ public class MerchantController {
         a.setStatus(((Number) body.get("status")).intValue());
         memberAppointmentRepository.save(a);
         return Result.ok(null);
+    }
+
+    /* ==================== V19 会员 CRM 增强：预约回复 / 生日 / 流失 / AI ==================== */
+
+    /**
+     * 商家回复预约：confirm确认 / reschedule改期 / cancel取消。
+     * 内容为空时由 AI 生成；触达顾客走站内消息（短信为可选项，接入服务商后生效）。
+     */
+    @PostMapping("/appointments/{id}/reply")
+    public Result<java.util.Map<String, Object>> replyAppointment(@RequestHeader("X-Merchant-Token") String token,
+                                                                  @PathVariable Long id,
+                                                                  @RequestBody java.util.Map<String, Object> body) {
+        String merchantNo = authService.merchantNoByToken(token);
+        String operator = str(body.get("operator"), merchantNo);
+        String action = str(body.get("action"), "confirm");
+        String content = str(body.get("content"), null);
+        boolean sendSms = Boolean.parseBoolean(str(body.get("sendSms"), "false"));
+        return Result.ok(memberCrmService.replyAppointment(merchantNo, id, action, content, operator, sendSms));
+    }
+
+    /** 生日临近会员（days 天内，默认 7） */
+    @GetMapping("/members/birthdays")
+    public Result<java.util.List<java.util.Map<String, Object>>> memberBirthdays(
+            @RequestHeader("X-Merchant-Token") String token,
+            @RequestParam(defaultValue = "7") int days) {
+        String merchantNo = authService.merchantNoByToken(token);
+        return Result.ok(memberCrmService.upcomingBirthdays(merchantNo, days));
+    }
+
+    /** 流失预警清单（风险分 + 挽留建议） */
+    @GetMapping("/members/churn")
+    public Result<java.util.List<java.util.Map<String, Object>>> memberChurn(@RequestHeader("X-Merchant-Token") String token) {
+        String merchantNo = authService.merchantNoByToken(token);
+        return Result.ok(memberCrmService.churnList(merchantNo));
+    }
+
+    /** 单个会员：消费统计 + AI 回访话术 */
+    @GetMapping("/members/{phone}/visit-advice")
+    public Result<java.util.Map<String, Object>> memberVisitAdvice(@RequestHeader("X-Merchant-Token") String token,
+                                                                   @PathVariable String phone) {
+        String merchantNo = authService.merchantNoByToken(token);
+        return Result.ok(memberCrmService.visitAdvice(merchantNo, phone));
+    }
+
+    /** AI 生成生日关怀文案 */
+    @PostMapping("/ai/birthday-copy")
+    public Result<java.util.Map<String, Object>> aiBirthdayCopy(@RequestHeader("X-Merchant-Token") String token,
+                                                                @RequestBody java.util.Map<String, Object> body) {
+        String merchantNo = authService.merchantNoByToken(token);
+        String phone = str(body.get("userPhone"), "");
+        String couponDesc = str(body.get("couponDesc"), null);
+        var p = memberProfileRepository.findByMerchantNoAndUserPhone(merchantNo, phone).orElse(null);
+        java.util.Map<String, Object> r = new java.util.HashMap<>();
+        r.put("copy", aiAgentService.birthdayCopy(merchantNo, p, couponDesc));
+        r.put("aiStatus", aiAgentService.status());
+        return Result.ok(r);
+    }
+
+    /** AI 当前状态：是否已接入大模型，还是本地规则模式 */
+    @GetMapping("/ai/status")
+    public Result<java.util.Map<String, Object>> aiStatus(@RequestHeader("X-Merchant-Token") String token) {
+        authService.merchantNoByToken(token);
+        return Result.ok(aiAgentService.status());
+    }
+
+    private static String str(Object o, String def) {
+        return o == null ? def : String.valueOf(o);
     }
 
     /** 商家端：近期预约（待服务，近7天） */

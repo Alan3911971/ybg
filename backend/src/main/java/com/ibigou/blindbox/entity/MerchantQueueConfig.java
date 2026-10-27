@@ -42,6 +42,10 @@ public class MerchantQueueConfig {
     @Column(length = 100)
     private String callText = "请您用餐了";
 
+    /** 大屏显示模式：call=叫号屏（默认） / activity=盲盒活动屏（无叫号，左区改盲盒主视觉+大二维码） */
+    @Column(length = 16, nullable = false)
+    private String tvMode = "call";
+
     @Column(nullable = false, updatable = false)
     private LocalDateTime createTime;
 

@@ -24,6 +24,9 @@ public class TvQueueController {
     private final com.ibigou.blindbox.service.AnnounceService announceService;
     private final com.ibigou.blindbox.service.WxTemplateService wxTemplateService;
 
+    @org.springframework.beans.factory.annotation.Value("${app.domain:https://ybgtc.com}")
+    private String appDomain;
+
     /** 电视大屏：当前叫号 + 等待队列 + 广告 */
     @GetMapping("/{merchantNo}/screen")
     public Result<Map<String, Object>> screen(@PathVariable String merchantNo) {
@@ -34,6 +37,8 @@ public class TvQueueController {
         // 商家名
         Merchant merchant = merchantRepository.findById(merchantNo).orElse(null);
         m.put("merchantName", merchant != null ? merchant.getMerchantName() : merchantNo);
+        // 大屏显示模式：call=叫号屏（默认） / activity=盲盒活动屏
+        m.put("tvMode", cfg != null && cfg.getTvMode() != null ? cfg.getTvMode() : "call");
         // 当前叫号中
         MerchantQueueTicket calling = ticketRepository
                 .findFirstByMerchantNoAndStatusOrderByCreateTimeAsc(merchantNo, 1).orElse(null);
@@ -60,27 +65,98 @@ public class TvQueueController {
         return Result.ok(m);
     }
 
-    private boolean inTimeRange(MerchantAd a) {
-        LocalDateTime now = LocalDateTime.now();
+    /**
+     * 电视大屏取号二维码（PNG，免登录）——给 Android 原生层（ImageView 不支持 SVG）用。
+     * 替换原来 APK 调外网 api.qrserver.com 的做法：不依赖外网、内容由服务端统一决定。
+     */
+    @GetMapping(value = "/{merchantNo}/qr.png", produces = "image/png")
+    public void qrPng(@PathVariable String merchantNo, jakarta.servlet.http.HttpServletResponse resp)
+            throws java.io.IOException {
+        String data = tvQrTarget(merchantNo);
+        byte[] png = com.ibigou.blindbox.common.QrSvgUtil.toPng(data, 300);
+        resp.setContentType("image/png");
+        resp.setContentLength(png.length);
+        resp.getOutputStream().write(png);
+    }
+
+    /**
+     * 电视大屏取号二维码（SVG，免登录）——网页版页面直接内联注入。
+     * 真机（APK 原生层有码）时页面码由 JS 隐藏，因此不会双码。
+     */
+    @GetMapping(value = "/{merchantNo}/qr.svg", produces = "image/svg+xml")
+    public String qrSvg(@PathVariable String merchantNo) {
+        String data = tvQrTarget(merchantNo);
+        return com.ibigou.blindbox.common.QrSvgUtil.toSvg(data, 260);
+    }
+
+    /**
+     * 大屏二维码目标地址：按商家 tv_mode 决定。
+     * activity=盲盒活动屏 -> 顾客端盲盒抽奖主页（扫码参与盲盒）；
+     * call（默认）=叫号屏 -> 取号页。
+     */
+    private String tvQrTarget(String merchantNo) {
+        MerchantQueueConfig cfg = configRepository.findById(merchantNo).orElse(null);
+        String mode = cfg != null && cfg.getTvMode() != null ? cfg.getTvMode() : "call";
+        String base = appDomain;
+        if (base != null && base.endsWith("/")) base = base.substring(0, base.length() - 1);
+        if (base == null || base.isEmpty()) base = "https://ybgtc.com";
+        if ("activity".equals(mode)) {
+            return base + "/h5/customer/index.html?merchantNo=" + merchantNo;
+        }
+        return base + "/h5/queue.html?merchantNo=" + merchantNo;
+    }
+
+    private boolean inTimeRange(MerchantAd a) {        LocalDateTime now = LocalDateTime.now();
         if (a.getStartTime() != null && now.isBefore(a.getStartTime())) return false;
         if (a.getEndTime() != null && now.isAfter(a.getEndTime())) return false;
         return true;
     }
 
-    /** 最近中奖记录（电视右侧"最近中奖"列表 + 新中奖弹动画）：取最近 4 条 draw 事件 */
+    /**
+     * 最近中奖记录（电视右侧"最近中奖"列表 + 新中奖弹动画）。
+     *
+     * <p>只取 is_primary=1 的<b>权威开奖记录</b>：同一次抽奖会落多条 draw 记录
+     * （后端开奖段 + 前端结算页触发 announce-prize），过去全取会让"最近中奖"列表
+     * 出现同一次中奖的重复条目、弹屏也会重复弹。</p>
+     *
+     * <p>结构化输出 prizeType / prizeValue / customerSeq —— 大屏要按"中奖的内容"
+     * 设计场景（免单 / 立减券 / 折扣券 / 余额各自一套舞台），靠正则猜类型会猜错。</p>
+     */
     private List<Map<String, Object>> recentWins(String merchantNo) {
         return announceService.list(merchantNo).stream()
                 .filter(l -> "draw".equals(l.getEventType()))
+                .filter(l -> l.getIsPrimary() != null && l.getIsPrimary() == 1)
                 .limit(4)
                 .map(l -> {
                     Map<String, Object> m = new HashMap<>();
                     m.put("winId", l.getAnnounceId());
-                    m.put("prizeName", briefPrize(l.getContent()));
+                    m.put("prizeType", l.getPrizeType());
+                    m.put("prizeValue", l.getPrizeValue());
+                    m.put("customerSeq", l.getCustomerSeq());
+                    m.put("prizeName", prizeDisplayName(l.getPrizeType(), l.getPrizeValue(), l.getContent()));
                     String ph = l.getPhone();
                     m.put("phoneTail", ph != null && ph.length() >= 4 ? ph.substring(ph.length() - 4) : null);
                     return m;
                 })
                 .toList();
+    }
+
+    /**
+     * 奖品展示名：优先按结构化字段生成（"立减5.00元券"/"9.00折优惠券"/"余额10.00元"），
+     * 拿不到结构化字段时回退到解析自由文本（历史数据）。
+     */
+    private String prizeDisplayName(Integer prizeType, java.math.BigDecimal prizeValue, String content) {
+        if (prizeType != null && prizeValue != null) {
+            return switch (prizeType) {
+                case 1 -> prizeValue.stripTrailingZeros().toPlainString() + "折优惠券";
+                case 2 -> "立减" + prizeValue.stripTrailingZeros().toPlainString() + "元券";
+                case 3 -> "余额" + prizeValue.stripTrailingZeros().toPlainString() + "元";
+                case 4 -> "免单" + prizeValue.stripTrailingZeros().toPlainString() + "元";
+                case 5 -> "谢谢参与";
+                default -> "神秘礼品";
+            };
+        }
+        return briefPrize(content);
     }
 
     /** 从中奖播报内容提取精简奖品名（如"恭喜您的盲盒开中了立减5.00元券。"→"立减5.00元券"） */

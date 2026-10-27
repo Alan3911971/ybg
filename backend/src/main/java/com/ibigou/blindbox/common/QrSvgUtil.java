@@ -44,4 +44,28 @@ public final class QrSvgUtil {
             throw new RuntimeException("二维码生成失败: " + e.getMessage(), e);
         }
     }
+
+    /** 二维码 → PNG 字节（给 Android ImageView 等不支持 SVG 的客户端用，避免它们引 zxing 或依赖外网服务） */
+    public static byte[] toPng(String content, int size) {
+        try {
+            Map<EncodeHintType, Object> hints = new HashMap<>();
+            hints.put(EncodeHintType.CHARACTER_SET, StandardCharsets.UTF_8.name());
+            hints.put(EncodeHintType.ERROR_CORRECTION, ErrorCorrectionLevel.M);
+            hints.put(EncodeHintType.MARGIN, 1);
+            BitMatrix matrix = new MultiFormatWriter().encode(content, BarcodeFormat.QR_CODE, size, size, hints);
+            java.awt.image.BufferedImage img =
+                    new java.awt.image.BufferedImage(matrix.getWidth(), matrix.getHeight(),
+                            java.awt.image.BufferedImage.TYPE_INT_RGB);
+            for (int y = 0; y < matrix.getHeight(); y++) {
+                for (int x = 0; x < matrix.getWidth(); x++) {
+                    img.setRGB(x, y, matrix.get(x, y) ? 0xFF000000 : 0xFFFFFFFF);
+                }
+            }
+            java.io.ByteArrayOutputStream out = new java.io.ByteArrayOutputStream();
+            javax.imageio.ImageIO.write(img, "png", out);
+            return out.toByteArray();
+        } catch (Exception e) {
+            throw new RuntimeException("二维码生成失败: " + e.getMessage(), e);
+        }
+    }
 }

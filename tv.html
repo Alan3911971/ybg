@@ -240,6 +240,9 @@ var adIdx = 0;
 var adTimer = null;
 var lastCalledNo = null;
 var lastWinIds = '';
+/* 中奖弹屏是否正在显示。原生广告 TextureView 在 WebView 之上，弹屏期间
+   必须把原生广告藏掉（否则广告画面直接压在弹屏上），广告轮播也不能再拉起它 */
+var winActive = false;
 
 var audioCtx = null;
 var muted = false;
@@ -247,7 +250,63 @@ var debugBox = null;
 
 function dbg(msg){
   // 调试信息只进 console，不显示到屏幕（避免遮挡大屏画面）
-  console.log('[AUDIO]', msg);
+  // 必须拼成"一个"字符串再 log：Android WebView 的 onConsoleMessage 只取
+  // console.log 的第一个参数，写成 console.log('[AUDIO]', msg) 时，
+  // 设备 logcat 里只会剩下 "[AUDIO]"，内容全丢，白白瞎排查。
+  console.log('[AUDIO] ' + msg);
+}
+
+/* 大屏显示模式切换：call=叫号屏（默认） / activity=盲盒活动屏（无叫号，左区改盲盒主视觉+大二维码） */
+function applyTvMode(mode){
+  var activity = (mode === 'activity');
+  var body = document.body;
+  if(!body) return;
+  body.className = (body.className || '').replace(/mode-\w+/g, '').replace(/\s+/g, ' ').trim()
+    + (activity ? ' mode-activity' : ' mode-call');
+  /* 原生二维码：活动模式隐藏（由页面 hero 二维码承担，避免双码/错位）；叫号模式恢复显示 */
+  try{
+    var nat = window.AndroidTV || (typeof AndroidTV !== 'undefined' ? AndroidTV : null);
+    if(nat && typeof nat.setQrVisible === 'function') nat.setQrVisible(!activity);
+  }catch(e){ dbg('原生二维码显隐失败: ' + e.message); }
+}
+
+/* 大屏二维码：按模式渲染到对应容器（qr.svg 由服务端按 tv_mode 编码目标地址） */
+var _lastQrMode = null;
+function renderTvQr(mode){
+  if(mode === _lastQrMode) return; /* 模式没变不重复拉取 */
+  _lastQrMode = mode;
+  var activity = (mode === 'activity');
+  var fh = document.getElementById('qrFloat');
+  if(fh) fh.style.display = activity ? 'none' : '';
+  /* 活动屏：大二维码在左区 hero，页面渲染（原生码已隐藏） */
+  if(activity){
+    var box = document.getElementById('bbQr');
+    if(!box) return;
+    var xhr = new XMLHttpRequest();
+    xhr.open('GET', '/api/tv/' + merchantNo + '/qr.svg', true);
+    xhr.onreadystatechange = function(){
+      if(xhr.readyState !== 4) return;
+      if(xhr.status === 200 && xhr.responseText.indexOf('<svg') >= 0){
+        box.innerHTML = xhr.responseText;
+      }
+    };
+    xhr.send();
+    return;
+  }
+  /* 叫号屏：原生层有码则页面码让位；否则页面码兜底 */
+  var nativeOn = window.AndroidTV && typeof AndroidTV.isAvailable === 'function' && AndroidTV.isAvailable();
+  if(nativeOn){ if(fh) fh.style.display = 'none'; return; }
+  var box2 = document.getElementById('qrImg');
+  if(!box2) return;
+  var xhr2 = new XMLHttpRequest();
+  xhr2.open('GET', '/api/tv/' + merchantNo + '/qr.svg', true);
+  xhr2.onreadystatechange = function(){
+    if(xhr2.readyState !== 4) return;
+    if(xhr2.status === 200 && xhr2.responseText.indexOf('<svg') >= 0){
+      box2.innerHTML = xhr2.responseText;
+    }
+  };
+  xhr2.send();
 }
 
 function enableAudio(){
@@ -342,8 +401,17 @@ function renderAd(){
       var vurl = ad.url;
       if(vurl.indexOf('/') === 0){ vurl = 'http://ybgtc.com' + vurl; }
       else if(vurl.indexOf('https://') === 0){ vurl = 'http://' + vurl.substring(8); }
-      console.log('[ad] native playVideo ' + vurl);
-      setTimeout(function(){ AndroidTV.playVideo(vurl); }, 800);
+      /* 弹屏期间不拉起原生广告：原生层盖在 WebView 上面，会把弹屏压住。
+         判断必须放在真正调用这一刻 —— renderAd 本身可能比弹屏早几百毫秒执行，
+         而 playVideo 是延后 800ms 才调的，早判会漏掉"弹屏中途才到的广告" */
+      setTimeout(function(){
+        if(winActive){
+          if(window.AndroidTV && typeof AndroidTV.setAdVisible === 'function') AndroidTV.setAdVisible(false);
+          return;
+        }
+        console.log('[ad] native playVideo ' + vurl);
+        AndroidTV.playVideo(vurl);
+      }, 800);
       var dur2 = (ad.durationSec || 10) * 1000;
       if(adTimer) clearTimeout(adTimer);
       adTimer = setTimeout(function(){ adIdx++; renderAd(); }, dur2);
@@ -442,6 +510,12 @@ function refresh(){
     try { res = JSON.parse(xhr.responseText); } catch(e){ return; }
     if(res.code !== 0) return;
     var d = res.data;
+    // 大屏显示模式：call=叫号屏（默认） / activity=盲盒活动屏
+    var tvMode = (d.tvMode || 'call');
+    window.__tvMode = tvMode;
+    var isCall = (tvMode === 'call');
+    if(typeof applyTvMode === 'function') applyTvMode(tvMode);
+    if(typeof renderTvQr === 'function') renderTvQr(tvMode);
     var nameEl = document.getElementById('merchantName');
     if(nameEl) nameEl.textContent = d.merchantName || merchantNo;
     var noEl = document.getElementById('merchantNoLabel');
@@ -456,7 +530,7 @@ function refresh(){
       if(c.seats) info += c.seats + '人桌';
       if(c.windowNo) info += ' · ' + c.windowNo + '号窗口';
       document.getElementById('callingInfo').textContent = info;
-      if(lastCalledNo !== c.ticketNo){
+      if(lastCalledNo !== c.ticketNo && isCall){
         speakCall(c.ticketNo, c.windowNo, c.seats, d.config && d.config.callText);
         lastCalledNo = c.ticketNo;
       }

@@ -1,6 +1,6 @@
 {
   "project": "宜必购盲盒系统 (ybgtc.com)",
-  "last_updated": "2026-10-20",
+  "last_updated": "2026-10-27",
   "note": "AOCI 仓库认知索引已建立（641条 aligned）",
   "environment": {
     "code_root": "D:\\workspace-java\\ybg-master",
@@ -229,7 +229,15 @@
     "/tmp/deploy.sh有BOM头 → sed去BOM",
     "Maven打包必须在backend目录执行",
     "APP WebView自动播放限制导致Audio无声 → 需原生TTS或Web Speech",
-    "生产jar只有.class无.java源码 → 恢复源码需反编译(javap -c)或按字节码重写"
+    "生产jar只有.class无.java源码 → 恢复源码需反编译(javap -c)或按字节码重写",
+    {
+      "id": "G114",
+      "date": "2026-10-27",
+      "title": "生产库加列静默失败（docker exec ibigou-mysql 不存在）",
+      "root_cause": "生产 MySQL 是宿主机原生宝塔（/www/server/mysql:3306），没有 ibigou-mysql docker 容器；部署脚本用 docker exec 跑 ALTER 失败，又被 2>/dev/null + || echo \"已存在\" 吞掉",
+      "solution": "改用宿主机 mysql 客户端 + .env 连接信息；用 information_schema 先查后 ALTER 做真幂等；stderr 不要吞",
+      "prevention": "_deploy_win_scene.py 的 2.5/5.5 已同步修正；后续迁移一律用宿主机 mysql"
+    }
   ],
   "pending_tasks": [
     "补齐D盘IbigouService.java播报改造（模板已还原，待插入代码）",
@@ -869,6 +877,11 @@
       ],
       "deployed": true,
       "tested": true
+    },
+    {
+      "date": "2026-10-27",
+      "task": "大屏双模式（叫号屏/盲盒活动屏）",
+      "result": "后端+大屏页+商家后台开关已上线并通过服务端校验；投影真机实测待办"
     }
   ],
   "spec_kit": {
@@ -1057,5 +1070,126 @@
       "中文条目写入必须用 Python subprocess，PowerShell 传参不可靠",
       "换电脑拷贝 D:\\tools\\aoci + 项目目录即可，无需重新 init"
     ]
+  },
+  "member_crm_v19_ai": {
+    "date": "2026-10-25",
+    "需求": "把设计稿标注的「生产缺失」三块真正实现：预约回复、生日提醒、AI Agent",
+    "迁移脚本": "backend/src/main/resources/db/migration/V19__member_crm_ai.sql（生产已手动执行：member_appointment 加 7 列；新建 birthday_remind_log、ai_task_log）",
+    "新增服务": {
+      "AiAgentService": "可插拔大模型：app.ai.enabled+api-key+base-url 齐全走 OpenAI 兼容 /v1/chat/completions，否则降级本地规则引擎；能力=visit_script/birthday_copy/appointment_reply/churn_advice；每次生成落 ai_task_log（source=llm|rule）",
+      "MemberCrmService": "replyAppointment / submitCustomerMsg / upcomingBirthdays / runBirthdayRemind / churnList / visitAdvice",
+      "SmsService.sendNotify": "新增通用通知短信（占位实现，未接服务商时只落日志，不阻塞业务）"
+    },
+    "新增实体": "BirthdayRemindLog（幂等：商家+会员+年份+档位）、AiTaskLog（审计）",
+    "定时任务": "JobService.birthdayRemind（cron 0 0 9 * * ?）：7/3/1/0 四档；7 天档自动发立减券 PrizeType.CUT（券面额全局配置 birthday_coupon_value 默认 20）；商家每档站内提醒；顾客 7/0 档祝福",
+    "接口": {
+      "reply": "POST /api/merchant/appointments/{id}/reply（action=confirm|reschedule|cancel，content 留空则 AI 生成，sendSms 可选）",
+      "birthdays": "GET /api/merchant/members/birthdays?days=7",
+      "churn": "GET /api/merchant/members/churn",
+      "visit_advice": "GET /api/merchant/members/{phone}/visit-advice",
+      "birthday_copy": "POST /api/merchant/ai/birthday-copy",
+      "ai_status": "GET /api/merchant/ai/status"
+    },
+    "关键事实": "给顾客的真实触达通道是 user_message 站内消息；短信为占位实现。AI 未配置 api-key 时自动降级本地规则模式（功能不中断）。",
+    "生产验证": "2026-10-25 17:15 jar md5 d13cff2dd33fc50ad993650c7831e4f9；启动 8.353s 无异常；ai/status=rule 模式；birthdays 返真实会员（跨年天数正确）；churn 返 score/level/advice；异常入参正确报错不崩溃"
+  },
+  "ops_data_screen": {
+    "说明": "运营数据大屏/广告机降级屏/AI日志页 + /api/ops/** 接口（2026-10-26 上线）",
+    "接口前缀": "/api/ops/**（免登录，与 /api/tv 一致；避开 /api/merchant/** 的 MerchantAuthInterceptor）",
+    "接口清单": {
+      "screen": "GET /api/ops/screen?merchantNo=&date= → kpi/month/channels/funnel/flow/health/queue/member/ai",
+      "day": "GET /api/ops/day?merchantNo=&from=&to= → 14日趋势",
+      "kiosk": "GET /api/ops/kiosk?merchantNo=&date= → 广告机降级屏精简字段",
+      "ai_actions": "GET /api/ops/ai/actions?merchantNo=&page=&size=",
+      "ai_detail": "GET /api/ops/ai/actions/{actionNo}",
+      "ai_confirm": "POST /api/ops/ai/actions/{actionNo}/confirm"
+    },
+    "线上页面": {
+      "全渠道指挥屏": "https://ybgtc.com/h5/merchant/screen.html?merchantNo=M90380836（支持 &date= 回看）",
+      "AI执行日志": "https://ybgtc.com/h5/merchant/ai-log.html",
+      "广告机降级屏": "https://ybgtc.com/h5/merchant/kiosk.html?merchantNo=M90380836",
+      "电视叫号屏": "https://ybgtc.com/h5/tv.html（tv-v2 动效版已上线 2026-10-26：中奖弹屏分 4 种模式配色/动效/音效；极米投影已装 APK v1.5.1）"
+    },
+    "后端代码": {
+      "controller": "backend/src/main/java/com/ibigou/blindbox/controller/OpsController.java",
+      "service": "backend/src/main/java/com/ibigou/blindbox/service/OpsService.java",
+      "etl定时": "backend/src/main/java/com/ibigou/blindbox/service/OpsRebuildService.java（开关默认关）"
+    },
+    "配置项": "application.yml → app.ops.{token,source(realtime|mart),default-merchant,rebuild-enabled}",
+    "生产部署": {
+      "jar": "/www/wwwroot/ybgtc-app/ibigou.jar（PID 3607624，8085；ybgtc.com 下那个 jar 无进程，别传错）",
+      "页面目录": "/www/wwwroot/ybgtc.com/h5/merchant/（nginx 逐页 location = 精确匹配磁盘直放）",
+      "nginx配置": "/www/server/panel/vhost/nginx/ybgtc.com.conf（备份 .bak-20261026）"
+    },
+    "生产数据实况": {
+      "offline_order": "清理后 54 行（原 114，归档 60 笔 ≤0.02 元测试单），最后一单 2026-09-18 → 今日 KPI 全 0 属真实情况",
+      "member_profile": "仅 1 行",
+      "user_coupon": "清理后 39 行（原 48，归档 9 张 prize_value=9999 测试券）",
+      "merchant_queue_ticket": "清理后 55 行（归档 3 张等待超 24h 的异常票）",
+      "V20表": "2026-10-26 14:47 已全部建成并回填 90 天（8 表 + 2 视图 + sp_ops_rebuild），对账差额 0"
+    },
+    "V20生产上线要点": {
+      "不会自动建": "start.sh 带 -Dspring.flyway.enabled=false，必须手工执行 V20__ops_data_mart.sql + sp_ops_rebuild.sql",
+      "collation坑": "库默认 utf8mb4_unicode_ci vs 业务表 utf8mb4_general_ci → 存储过程参数必须显式 COLLATE utf8mb4_general_ci，否则 ERROR 1267",
+      "参数不编数": "merchant_ops_config 只插 merchant_no，month_target_amount=0 走自动推算；渠道只绑 walkin=1",
+      "脏数据流程": "先 CREATE TABLE _arch_*_20261026 AS SELECT 归档 → 校验行数 → DELETE → 重跑 sp_ops_rebuild（幂等）"
+    },
+    "验证脚本": "_live_check.js（大屏 13/13）、_live_check2.js（AI日志页+kiosk）、_check_screen_bind.py（静态绑定）、_check_win_fx.js（弹屏动效 35 项）、_check_win_fx_wav.py（音效 WAV 音高校验）",
+    "电视弹屏音效": "服务端 WAV /h5/fx/{mode}.wav（_gen_win_fx.py 生成，nginx 静态目录）；APK v1.5.1 用独立 MediaPlayer 播（playFx），老 APK 回落到 speakUrl 共用通道",
+    "待办": "①app.ops.source 切 mart（当前 realtime，需先确认对账）②开 app.ops.rebuild-enabled 定时增量 ③渠道打点（现渠道环只有 walkin）④GitHub 新 PAT（旧 token 401）⑤其余广告机需同步装 APK v1.5.1（v1.4.0 无独立音效通道，音效会被叫号语音掐断；旧于 v1.4.0 的原生码位置也对不上）"
+  },
+  "tv_screen_dual_mode_20261027": {
+    "需求": "店内大屏新增「盲盒活动屏」（无排队叫号，左区盲盒主视觉+大二维码，扫码参与盲盒），与「叫号屏」二选一，商家后台可切换",
+    "数据表": {
+      "表": "merchant_queue_config",
+      "新增列": "tv_mode VARCHAR(16) NOT NULL DEFAULT \"call\"",
+      "迁移文件": "backend/src/main/resources/db/migration/V23__tv_mode.sql",
+      "备注": "生产 flyway 关闭，需手工执行；已于 2026-10-27 实测确认列存在"
+    },
+    "后端接口": {
+      "GET /api/tv/{merchantNo}/screen": "新增返回 tvMode 字段（call/activity）",
+      "GET /api/tv/{merchantNo}/qr.svg": "按 tv_mode 编码目标地址（activity→h5/customer/index.html，call→h5/queue.html）",
+      "GET /api/merchant/config/tv-mode": "读模式，返回 {mode, qrTarget, appDomain}，需 X-Merchant-Token",
+      "POST /api/merchant/config/tv-mode?mode=call|activity": "写模式，需 X-Merchant-Token"
+    },
+    "代码位置": {
+      "实体字段": "backend/.../entity/MerchantQueueConfig.java (tvMode)",
+      "大屏控制器": "backend/.../controller/TvQueueController.java (screen/tvQrTarget)",
+      "后台控制器": "backend/.../controller/MerchantConfigController.java (GET/POST tv-mode)",
+      "大屏页源码": "tv.html (applyTvMode/renderTvQr) → _build_tv2.py → _redesign_v3/tv-v2.html",
+      "后台开关页": "backend/src/main/resources/static/h5/merchant/index.html (p8 设置面板，btnTvCall/btnTvActivity)",
+      "部署脚本": "_deploy_win_scene.py (已修：改用宿主机 mysql 加列)"
+    },
+    "线上状态_20261027": {
+      "jar": "远程 mvn BUILD SUCCESS 后替换并重启，screen 实测返回 tvMode=\"call\"",
+      "tv_mode 列": "已存在于生产库",
+      "商家后台": "磁盘 h5/merchant/index.html 已更新（含 btnTvCall×3）",
+      "大屏页": "磁盘 h5/tv.html 已更新（含 mode-activity/bbHero×8）",
+      "待办": "极米投影真机实测（需手动开 adb 网络调试 + 重启 App 拉新页面）"
+    },
+    "注意事项": [
+      "切换模式后必须重启大屏 App 才生效（WebView 只启动时拉一次 tv.html）",
+      "activity 模式会调 AndroidTV.setQrVisible(false) 隐藏原生二维码，避免双码",
+      "生产 MySQL 是宿主机原生宝塔，不是 docker 容器，禁止用 docker exec ibigou-mysql"
+    ]
+  },
+  "backup_status_20261027": {
+    "NAS": {
+      "commit": "ddfd0be",
+      "repo": "/volume1/docker/github-backup/ybg-master",
+      "status": "已完成（含四文档+双模式代码；顺带清理历史嵌套重复目录）"
+    },
+    "GitHub": {
+      "status": "阻塞：PAT 401 失效，本机无可用的明文 token（shared-memory 中按脱敏规矩只存占位）",
+      "需要": "用户提供新的 GitHub PAT 后重跑 _push_gh_tv.py"
+    },
+    "AOCI": {
+      "updated_entries": 9,
+      "stale_before": 28,
+      "stale_after": 19,
+      "missing": 123,
+      "orphan": 1,
+      "note": "残留为 2026-09-28 索引之后的存量漂移，G32.4 禁止批量编造条目，需逐个补"
+    }
   }
 }

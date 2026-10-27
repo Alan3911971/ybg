@@ -1,0 +1,611 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#ff5b3e">
+<title>盲盒抽奖 · 宜必购</title>
+<link rel="icon" href="data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='80' font-size='90'%3E%F0%9F%8E%81%3C/text%3E%3C/svg%3E">
+<style>
+  :root{
+    --c-primary:#ff5b3e; --c-primary-600:#e84a2f; --c-primary-100:#ffe9e3;
+    --c-accent:#ffb547; --c-success:#16a34a; --c-success-bg:#e8f7ee; --c-warning:#f59e0b; --c-warning-bg:#fff6e0;
+    --c-danger:#dc2626; --c-danger-bg:#fde8e8; --c-info:#2563eb; --c-info-bg:#e6efff;
+    --c-text:#1f2330; --c-text-2:#5a6072; --c-text-3:#8a90a2; --c-text-invert:#fff;
+    --c-bg:#f6f7fb; --c-surface:#fff; --c-border:#ececf3; --c-divider:#f0f1f6;
+    --c-grad-1:linear-gradient(135deg,#ff7150 0%,#ff9567 100%);
+    --c-grad-2:linear-gradient(135deg,#ffb547 0%,#ff7150 100%);
+    --r-sm:6px; --r-md:10px; --r-lg:14px; --r-xl:20px; --r-pill:999px;
+    --sh-1:0 1px 2px rgba(20,23,40,.04),0 1px 4px rgba(20,23,40,.06);
+    --sh-2:0 6px 16px rgba(20,23,40,.08);
+    --sh-press:0 0 0 4px rgba(255,91,62,.12);
+  }
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+  html,body{font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei","Helvetica Neue",Arial,sans-serif;color:var(--c-text);background:var(--c-bg);-webkit-font-smoothing:antialiased;}
+  body{min-height:100vh;padding-bottom:calc(76px + env(safe-area-inset-bottom));}
+  a{color:inherit;text-decoration:none;}
+  input,select,button{font-size:16px;}
+  button{font-family:inherit;}
+  .hero{background:var(--c-grad-1);color:#fff;padding:44px 20px 60px;border-bottom-left-radius:24px;border-bottom-right-radius:24px;position:relative;overflow:hidden;}
+  .hero::after{content:"\01F381";position:absolute;font-size:150px;opacity:.16;right:-16px;top:-8px;transform:rotate(-12deg);pointer-events:none;}
+  .hero h1{font-size:26px;font-weight:700;letter-spacing:.5px;}
+  .hero .sub{margin-top:6px;font-size:14px;opacity:.92;}
+  .hero .merchant-chip{display:inline-flex;align-items:center;gap:6px;margin-top:16px;padding:6px 12px;background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.26);border-radius:var(--r-pill);font-size:13px;backdrop-filter:blur(6px);}
+  .container{max-width:640px;margin:-40px 16px 0;padding:0 0 24px;}
+  .card{background:var(--c-surface);border-radius:var(--r-lg);padding:20px;margin-bottom:14px;box-shadow:var(--sh-1);border:1px solid var(--c-border);}
+  .card-title{display:flex;align-items:center;gap:8px;font-size:15px;color:var(--c-text);font-weight:600;}
+  .card-title .ic{width:26px;height:26px;border-radius:8px;background:var(--c-primary-100);color:var(--c-primary);display:inline-flex;align-items:center;justify-content:center;font-size:15px;flex:0 0 26px;}
+  .card .desc{font-size:12px;color:var(--c-text-3);margin-top:3px;line-height:1.6;}
+  .field{margin-top:14px;}
+  .field label{display:block;font-size:13px;color:var(--c-text-2);margin-bottom:6px;}
+  .input,.select{width:100%;height:48px;padding:0 14px;border:1px solid var(--c-border);border-radius:var(--r-md);background:#fff;font-size:16px;color:var(--c-text);transition:border-color .15s, box-shadow .15s;-webkit-appearance:none;appearance:none;}
+  .input:focus,.select:focus{outline:none;border-color:var(--c-primary);box-shadow:var(--sh-press);}
+  .input::placeholder{color:var(--c-text-3);}
+  .actions{display:grid;gap:10px;margin-top:18px;}
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:48px;padding:0 20px;border:none;border-radius:var(--r-md);font-size:16px;font-weight:600;cursor:pointer;transition:transform .12s, box-shadow .15s;user-select:none;}
+  .btn:active{transform:scale(.98);}
+  .btn--primary{background:var(--c-grad-1);color:#fff;box-shadow:0 6px 14px rgba(255,91,62,.28);}
+  .btn--soft{background:var(--c-primary-100);color:var(--c-primary);}
+  .btn--ghost{background:transparent;color:var(--c-primary);border:1.5px solid var(--c-primary);}
+  .btn--success{background:#16a34a;color:#fff;box-shadow:0 6px 14px rgba(22,163,74,.24);}
+  .btn--block{width:100%;}
+  .btn[disabled]{opacity:.5;cursor:not-allowed;}
+  .btn--sm{height:40px;padding:0 14px;font-size:14px;border-radius:8px;}
+  .seg{display:flex;background:#eef0f4;border-radius:999px;padding:4px;margin:12px 0 6px;}
+  .seg button{appearance:none;border:none;background:transparent;flex:1;padding:10px 4px;font-size:14px;color:var(--c-text-2);border-radius:999px;cursor:pointer;font-weight:500;}
+  .seg button.active{background:#fff;color:var(--c-primary);box-shadow:0 1px 4px rgba(0,0,0,.08);font-weight:600;}
+  .calc-box{margin-top:12px;background:#fbfafd;border:1px solid var(--c-border);border-radius:var(--r-md);padding:14px;font-size:14px;line-height:2;color:var(--c-text-2);}
+  .calc-box b{color:var(--c-text);}
+  .calc-box .pay{color:var(--c-primary);font-size:20px;font-weight:800;}
+  .link-bar{display:flex;justify-content:center;gap:22px;padding:10px 0 18px;font-size:14px;color:var(--c-primary);}
+  .tabs{position:fixed;bottom:0;left:0;right:0;height:calc(56px + env(safe-area-inset-bottom));background:rgba(255,255,255,.96);backdrop-filter:blur(8px);display:flex;border-top:1px solid var(--c-border);z-index:50;padding-bottom:env(safe-area-inset-bottom);}
+  .tab{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;color:var(--c-text-3);font-size:11px;cursor:pointer;}
+  .tab .ic{font-size:20px;}
+  .tab.active{color:var(--c-primary);font-weight:600;}
+  .toast-host{position:fixed;top:18px;left:50%;transform:translateX(-50%);z-index:80;display:flex;flex-direction:column;gap:8px;pointer-events:none;}
+  .toast{padding:10px 16px;border-radius:10px;background:rgba(0,0,0,.84);color:#fff;font-size:14px;opacity:0;transform:translateY(-6px);transition:opacity .2s,transform .2s;}
+  .toast.show{opacity:1;transform:none;}
+  .toast.success{background:#16a34a;}
+  .toast.warning{background:#f59e0b;}
+  .toast.danger{background:#dc2626;}
+  .toast.info{background:#2563eb;}
+  .mask{position:fixed;inset:0;background:rgba(10,12,24,.55);z-index:90;display:none;align-items:flex-end;justify-content:center;}
+  .mask.show{display:flex;}
+  .sheet{background:#fff;width:100%;max-width:560px;border-radius:22px 22px 0 0;padding:24px 20px calc(24px + env(safe-area-inset-bottom));animation:slideUp .26s cubic-bezier(.2,.7,.2,1);max-height:88vh;overflow-y:auto;}
+  @keyframes slideUp{from{transform:translateY(40%);opacity:.6;} to{transform:none;opacity:1;}}
+  .sheet h3{font-size:18px;display:flex;align-items:center;gap:8px;}
+  .sheet .sub{font-size:13px;color:var(--c-text-3);margin-top:4px;line-height:1.6;}
+  .prize-emoji{font-size:64px;text-align:center;margin:16px 0 8px;animation:jump .5s ease;}
+  @keyframes jump{0%{transform:scale(.4);}60%{transform:scale(1.15);}100%{transform:scale(1);}}
+  .prize-value{text-align:center;font-size:34px;font-weight:800;color:var(--c-primary);}
+  .prize-name{text-align:center;font-size:15px;color:var(--c-text-2);margin-top:4px;}
+  .prize-warn{text-align:center;font-size:13px;color:var(--c-text-3);margin-top:14px;line-height:1.7;background:#fbfafd;border-radius:10px;padding:10px;}
+  .qr-box{margin:16px auto 0;width:240px;height:240px;background:#fafbff;border:1px solid var(--c-border);border-radius:16px;padding:12px;display:flex;align-items:center;justify-content:center;}
+  .qr-box svg,.qr-box img{width:100%;height:100%;}
+  .tip-line{font-size:12px;color:var(--c-text-3);line-height:1.7;margin-top:12px;}
+  .order-mini{background:#fbfafd;border:1px solid var(--c-border);border-radius:10px;padding:12px;font-size:13px;line-height:1.9;margin-top:12px;color:var(--c-text-2);}
+  .order-mini b{color:var(--c-text);}
+  @media (min-width:768px){ body{background:#eceef4;} .container{margin-left:auto;margin-right:auto;} }
+</style>
+  <link rel="stylesheet" href="./lottery.css" data-cflow="spark-001">
+</head>
+<body>
+<div class="hero">
+  <h1>🎁 盲盒抽奖</h1>
+  <div class="sub">宜必购盲盒优惠券 &amp; 余额系统 · 抽盲盒 · 享优惠</div>
+  <div class="merchant-chip">🏪 门店：<b id="merchantChip">--</b></div>
+</div>
+
+<div class="container">
+
+  <div class="card">
+    <div class="card-title"><span class="ic">📱</span>手机号登录</div>
+    <div class="desc">首次登录自动注册；测试环境验证码固定 <b>123456</b>。</div>
+    <div class="field">
+      <label>手机号</label>
+      <input id="phone" class="input" type="tel" inputmode="numeric" maxlength="11" placeholder="请输入 11 位手机号">
+    </div>
+    <div class="field">
+      <label>门店编号</label>
+      <input id="merchantNo" class="input" placeholder="商家编号（如 m001）" autocomplete="off">
+    </div>
+    <button class="btn btn--soft btn--block" id="btnLogin" style="margin-top:14px;">登录 / 切换账号</button>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><span class="ic">🎰</span>普通盲盒</div>
+    <div class="desc">在本店消费前抽一盒：折扣券 / 立减券 / 余额赠送 / 团购免单，中奖自动进钱包。</div>
+    <button class="btn btn--primary btn--block" id="btnDraw" style="margin-top:14px;">🎲 抽一次盲盒</button>
+    <div class="tip-line">中奖后到店消费可自动抵扣（模式A）或生成凭证码（模式B）。</div>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><span class="ic">👥</span>团购登记盲盒</div>
+    <div class="desc">美团 / 饿了么 / 抖音到店客户：登记团购消费即可领取专属盲盒奖励（本次不可用，下次消费可用）。</div>
+    <div class="seg" id="groupSeg">
+      <button class="active" data-ch="1">美团</button>
+      <button data-ch="2">饿了么</button>
+      <button data-ch="3">抖音</button>
+    </div>
+    <div id="groupHint" class="tip-line" data-cflow="group-hint">本次团购不可抵扣，奖励下次本店自营或宜必购渠道可用。</div>
+    <div class="field" style="margin-top:8px;">
+      <label>团购消费金额（元）</label>
+      <input id="groupAmount" class="input" type="number" inputmode="decimal" min="0.01" step="0.01" placeholder="如 58.00">
+      <div id="groupConversionHint" class="tip-line" data-cflow="group-conv-hint" style="display:none;">当前折算规则：<span id="groupConversionText">请先抽奖获得奖品</span></div>
+    </div>
+    <button class="btn btn--primary btn--block" id="btnGroupDraw" style="margin-top:14px;">🎁 登记并抽奖</button>
+    <div class="tip-line">登记成功即自动完成奖品激活，可在钱包查看。</div>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><span class="ic">🛒</span>本店下单（模式A / 模式B）</div>
+    <div class="desc">先试算再下单：模式A 展示收款码扫码付款；模式B 生成一次性凭证码，商家确认后完成。</div>
+    <div class="seg" id="orderSeg">
+      <button class="active" data-m="1">模式A · 收款码</button>
+      <button data-m="2">模式B · 凭证码</button>
+    </div>
+    <div class="field" style="margin-top:8px;">
+      <label>订单金额（元）</label>
+      <input id="orderAmount" class="input" type="number" inputmode="decimal" min="0.01" step="0.01" placeholder="如 100.00">
+    </div>
+    <div class="field">
+      <label>使用优惠券（可选）</label>
+      <select id="orderCoupon" class="select"><option value="">不使用优惠券</option></select>
+    </div>
+    <div class="field">
+      <label>抽奖批次（可选，系统自动匹配最近一次）</label>
+      <input id="drawBatchNo" class="input" placeholder="留空自动匹配" autocomplete="off">
+    </div>
+    <button class="btn btn--primary btn--block" id="btnCalc" style="margin-top:14px;">🧮 试算优惠</button>
+    <div id="calcBox" class="calc-box" style="display:none;"></div>
+    <div class="actions" id="orderActions" style="display:none;">
+      <button class="btn btn--success btn--block" id="btnOrder">💳 确认下单</button>
+      <button class="btn btn--ghost btn--block" id="btnCancelCalc">返回修改</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><span class="ic">↩️</span>我的本店订单</div>
+    <div class="desc">最近订单与退款入口；退款自动恢复券与余额。</div>
+    <div id="myOrders"></div>
+  </div>
+
+  <div class="link-bar">
+    <a href="wallet.html">💰 我的钱包</a>
+    <a href="ibigou.html">🛍 宜必购商城</a>
+  </div>
+
+</div>
+
+<nav class="tabs" aria-label="主导航">
+  <div class="tab active" data-go="index.html"><span class="ic">🎯</span><span>抽盒</span></div>
+  <div class="tab" data-go="wallet.html"><span class="ic">💰</span><span>钱包</span></div>
+  <div class="tab" data-go="ibigou.html"><span class="ic">🛍</span><span>商城</span></div>
+</nav>
+
+<!-- 中奖弹窗 -->
+<div class="mask" id="prizeMask">
+  <div class="sheet">
+    <h3>🎉 恭喜中奖</h3>
+    <div class="prize-emoji" id="prizeEmoji">🎁</div>
+    <div class="prize-value" id="prizeValue">--</div>
+    <div class="prize-name" id="prizeName">--</div>
+    <div class="prize-warn" id="prizeWarn"></div>
+    <div class="actions">
+      <button class="btn btn--primary btn--block" id="btnGoWallet">💰 去钱包查看</button>
+      <button class="btn btn--ghost btn--block" id="btnClosePrize">继续抽奖</button>
+    </div>
+  </div>
+</div>
+
+<!-- 模式A 收款码 -->
+<div class="mask" id="payMask">
+  <div class="sheet">
+    <h3>💳 请扫码付款</h3>
+    <div class="sub" id="paySub">展示商家收款码，支付完成后自动完成抵扣。</div>
+    <div class="qr-box" id="payQr">加载中…</div>
+    <div id="payInfo" class="order-mini"></div>
+    <button class="btn btn--primary btn--block" id="btnPayDone" style="margin-top:16px;">我已完成付款</button>
+    <button class="btn btn--ghost btn--block" id="btnClosePay">暂不付款</button>
+  </div>
+</div>
+
+<!-- 模式B 凭证码 -->
+<div class="mask" id="voucherMask">
+  <div class="sheet">
+    <h3>🎫 消费凭证</h3>
+    <div class="sub">到收银台出示此凭证，商家扫码确认后完成订单。</div>
+    <div class="qr-box" id="voucherQr">加载中…</div>
+    <div id="voucherInfo" class="order-mini"></div>
+    <button class="btn btn--primary btn--block" id="btnVoucherDone" style="margin-top:16px;">我知道了</button>
+  </div>
+</div>
+
+<div class="toast-host" id="toastHost"></div>
+
+<script src="./lottery.js" data-cflow="spark-001"></script>
+  <script>
+const $ = id => document.getElementById(id);
+const A = "/api/customer";
+let customerPhone = localStorage.getItem("ibigou_phone") || "";
+let calcData = null;
+let orderMode = 1;
+
+function toast(msg, type){
+  const host = $("toastHost");
+  if (!host) return;
+  const t = document.createElement("div");
+  t.className = "toast " + (type || "");
+  t.textContent = msg;
+  host.appendChild(t);
+  requestAnimationFrame(function(){ t.classList.add("show"); });
+  setTimeout(function(){
+    t.classList.remove("show");
+    setTimeout(function(){ t.remove(); }, 220);
+  }, 2600);
+}
+
+async function post(path, body){
+  const params = new URLSearchParams();
+  if (body) Object.keys(body).forEach(function(k){
+    const v = body[k];
+    if (v !== undefined && v !== null && v !== "") params.append(k, v);
+  });
+  const headers = {};
+  const tk = localStorage.getItem("ibigou_user_token");
+  if (tk) headers["X-User-Token"] = tk;
+  const r = await fetch(A + path, { method: "POST", headers: headers, body: params.toString() }).then(function(r){ return r.json(); });
+  if (r.code === 401) { localStorage.removeItem("ibigou_user_token"); toast("登录已过期，请重新登录", "warning"); }
+  return r;
+}
+async function get(path){
+  const headers = {};
+  const tk = localStorage.getItem("ibigou_user_token");
+  if (tk) headers["X-User-Token"] = tk;
+  return fetch(A + path, { method: "GET", headers: headers }).then(function(r){ return r.json(); });
+}
+
+document.querySelectorAll(".tab").forEach(function(el){
+  el.addEventListener("click", function(){
+    const href = el.dataset.go;
+    if (href && location.pathname.indexOf(href) === -1) location.href = href;
+  });
+});
+
+const params = new URLSearchParams(location.search);
+if (params.get("merchantNo")) { $("merchantNo").value = params.get("merchantNo"); $("merchantChip").textContent = params.get("merchantNo"); }
+// 扫码带渠道参数（美团1/饿了么2/抖音3）→ 自动选中对应团购渠道按钮
+const qrCh = parseInt(params.get("channel") || "0", 10);
+if (qrCh === 1 || qrCh === 2 || qrCh === 3) {
+  document.querySelectorAll("#groupSeg button").forEach(function(b){
+    b.classList.toggle("active", Number(b.dataset.ch) === qrCh);
+  });
+  window.__cflowChannel = (qrCh >= 1 && qrCh <= 3) ? qrCh : 0;
+  // [YBG-C-FLOW-001] groupSeg 切换 -> 同步 window.__cflowChannel 与 groupHint 文案
+  function cflowUpdateHint(ch){
+    const hint = document.getElementById("groupHint");
+    if (!hint) return;
+    if (ch >= 1 && ch <= 3) hint.textContent = "本次团购不可抵扣，奖励下次本店自营或宜必购渠道可用。";
+    else hint.textContent = "本店渠道抵扣按现有规则，详见下方「本店下单」。";
+  }
+  cflowUpdateHint(window.__cflowChannel);
+  document.querySelectorAll("#groupSeg button").forEach(function(btn){
+    btn.addEventListener("click", function(){
+      const ch = Number(btn.dataset.ch) || 0;
+      window.__cflowChannel = ch;
+      window.__cflowDiscountPct = 0;
+      cflowUpdateHint(ch);
+    });
+  });
+}
+const lastPhone = localStorage.getItem("ibigou_phone");
+if (lastPhone) $("phone").value = lastPhone;
+$("phone").addEventListener("change", function(e){ localStorage.setItem("ibigou_phone", e.target.value.trim()); });
+$("merchantNo").addEventListener("input", function(e){ $("merchantChip").textContent = e.target.value.trim() || "--"; });
+
+async function loginCustomer(phone){
+  await post("/auth/send-code", { userPhone: phone });
+  const r = await post("/auth/login", { userPhone: phone, code: "123456" });
+  if (r.code === 0 && r.data) {
+    localStorage.setItem("ibigou_user_token", r.data);
+    localStorage.setItem("ibigou_phone", phone);
+    customerPhone = phone;
+    toast("登录成功", "success");
+    return r.data;
+  }
+  toast(r.msg || "登录失败", "danger");
+  return null;
+}
+
+async function ensureToken(){
+  const ph = $("phone").value.trim();
+  if (!/^1[3-9]\d{9}$/.test(ph)) { toast("请输入正确的手机号", "warning"); return null; }
+  let tk = localStorage.getItem("ibigou_user_token");
+  const last = localStorage.getItem("ibigou_phone");
+  if (!tk || last !== ph) tk = await loginCustomer(ph);
+  return tk;
+}
+
+function phoneFor(){
+  const ph = $("phone").value.trim();
+  return ph || customerPhone || localStorage.getItem("ibigou_phone") || "";
+}
+
+$("btnLogin").onclick = async function(){
+  const ph = $("phone").value.trim();
+  if (!/^1[3-9]\d{9}$/.test(ph)) { toast("请输入正确的手机号", "warning"); return; }
+  $("btnLogin").disabled = true;
+  try { await loginCustomer(ph); }
+  catch (err) { toast("网络异常，请稍后再试", "danger"); }
+  finally { $("btnLogin").disabled = false; }
+};
+
+// ---------- 团购渠道 / 订单模式切换 ----------
+document.querySelectorAll("#groupSeg button").forEach(function(b){
+  b.addEventListener("click", function(){
+    document.querySelectorAll("#groupSeg button").forEach(function(x){ x.classList.remove("active"); });
+    b.classList.add("active");
+  });
+});
+document.querySelectorAll("#orderSeg button").forEach(function(b){
+  b.addEventListener("click", function(){
+    document.querySelectorAll("#orderSeg button").forEach(function(x){ x.classList.remove("active"); });
+    b.classList.add("active");
+    orderMode = Number(b.dataset.m);
+    $("calcBox").style.display = "none";
+    $("orderActions").style.display = "none";
+    calcData = null;
+  });
+});
+
+const typeName = { 1:"折扣券", 2:"立减券", 3:"余额赠送", 4:"团购免单", 5:"谢谢参与" };
+function prizeDisplay(p){
+  if (p.prizeType === 1) return p.prizeValue + " 折";
+  return "¥" + p.prizeValue;
+}
+function money(v){ return (Number(v || 0)).toFixed(2); }
+
+function showPrize(d){
+  const t = typeName[d.prizeType] || "奖品";
+  $("prizeEmoji").textContent = d.prizeType === 3 ? "💰" : (d.prizeType === 4 ? "🧧" : "🎁");
+  $("prizeValue").textContent = prizeDisplay(d);
+  $("prizeName").textContent = t + (d.couponId ? " · 券号 " + d.couponId : "");
+  // [YBG-C-FLOW-001] 捕获 channel + prizeType 用于闭环折算说明
+  try {
+    if (typeof window.__cflowChannel === "number" && window.__cflowChannel >= 1 && window.__cflowChannel <= 3 && d && d.prizeType) {
+      const pct = (d.prizeType === 1) ? Number(d.prizeValue || 0)
+                  : (d.prizeType === 5) ? 5
+                  : null;
+      if (pct !== null && pct > 0) { window.__cflowDiscountPct = pct; }
+      else if (d.prizeType === 2 || d.prizeType === 3 || d.prizeType === 4) { window.__cflowDiscountPct = -1; }
+    }
+  } catch(e) {}
+  let warn = "";
+  if (d.prizeType === 3) warn = "余额已自动入账，可在「我的钱包」查看，到店消费自动抵扣。";
+  else if (d.prizeType === 4) warn = "团购免单资格已登记，请按门店规则使用。";
+  else if (d.prizeType === 5) warn = "谢谢参与，下次好运！";
+  else warn = "优惠券已发放到「我的钱包」，本店下单或到店出示即可核销。";
+  // [YBG-C-FLOW-001] 第三方渠道折算说明补充
+  try {
+    const ch = (typeof window.__cflowChannel === "number") ? window.__cflowChannel : 0;
+    const pct = (typeof window.__cflowDiscountPct === "number") ? window.__cflowDiscountPct : 0;
+    if (ch >= 1 && ch <= 3 && d && d.prizeType) {
+      let line = "";
+      if (d.prizeType === 1 && pct > 0) {
+        line = "【折算预告】抽中" + pct + "折！登记后将按团购金额的 " + pct + "% 返回余额，下次消费可用。";
+      } else if (d.prizeType === 5) {
+        line = "【折算预告】抽中 谢谢 ，将按团购金额的 5% 作为保底返还余额。";
+      } else if (d.prizeType === 2 || d.prizeType === 3 || d.prizeType === 4) {
+        line = "【折算预告】本奖品已发放，不再叠加折算。";
+      }
+      if (line) warn = (warn ? warn + " " : "") + line;
+    }
+  } catch(e) {}
+  $("prizeWarn").textContent = warn;
+  $("prizeMask").classList.add("show");
+  if (navigator.vibrate) navigator.vibrate(80);
+  // [YBG-C-FLOW-001-SPARK-001] 优先调用 LotteryFX 独立动效
+  try {
+    if (globalThis.LotteryFX && typeof globalThis.LotteryFX.show === "function") {
+      var sparkPayload = { value: d && d.prizeValue, name: t, originalAmount: d && (d.orderAmount || d.originalAmount) || 0 };
+      globalThis.LotteryFX.show(d && d.prizeType, sparkPayload, function(){});
+    }
+  } catch(e) {}
+}
+
+$("btnClosePrize").onclick = function(){ $("prizeMask").classList.remove("show"); };
+$("btnGoWallet").onclick = function(){ location.href = "wallet.html"; };
+$("prizeMask").addEventListener("click", function(e){ if (e.target === e.currentTarget) $("prizeMask").classList.remove("show"); });
+
+$("btnDraw").onclick = async function(){
+  const ph = phoneFor();
+  const mno = $("merchantNo").value.trim();
+  if (!/^1[3-9]\d{9}$/.test(ph)) { toast("请填写正确的手机号", "warning"); return; }
+  if (!mno) { toast("请填写或扫描门店编号", "warning"); return; }
+  $("btnDraw").disabled = true;
+  try {
+    if (!await ensureToken()) return;
+    $("merchantChip").textContent = mno;
+    const r = await post("/draw/normal", { userPhone: ph, merchantNo: mno });
+    if (r.code !== 0) { toast(r.msg || "抽奖失败", "danger"); return; }
+    showPrize(r.data);
+    if (r.data && r.data.drawBatchNo) {
+      $("drawBatchNo").value = r.data.drawBatchNo;
+      localStorage.setItem("ibigou_last_draw", r.data.drawBatchNo); // 闭环③：宜必购下单联动
+    }
+    loadMyCoupons();
+  } catch (err) { toast("网络异常，请稍后再试", "danger"); }
+  finally { $("btnDraw").disabled = false; }
+};
+
+$("btnGroupDraw").onclick = async function(){
+  const ph = phoneFor();
+  const mno = $("merchantNo").value.trim();
+  const ch = document.querySelector("#groupSeg button.active").dataset.ch;
+  const amt = parseFloat($("groupAmount").value || "0");
+  if (!/^1[3-9]\d{9}$/.test(ph)) { toast("请填写正确的手机号", "warning"); return; }
+  if (!mno) { toast("请填写门店编号", "warning"); return; }
+  if (!(amt > 0)) { toast("请填写团购消费金额", "warning"); return; }
+  $("btnGroupDraw").disabled = true;
+  try {
+    if (!await ensureToken()) return;
+    // 专属盲盒：无批次号先开奖（channel 专属池），再登记折算
+    let batch = ($("drawBatchNo").value || "").trim();
+    let prizeInfo;
+    if (!batch) {
+      const dq = await post("/draw/group", { merchantNo: mno, userPhone: ph, channel: ch, qrCodeUniqueKey: "QR-H5-" + Date.now() });
+      if (dq.code !== 0) { toast(dq.msg || "开奖失败", "danger"); return; }
+      batch = dq.data && dq.data.drawBatchNo;
+      if (batch) { prizeInfo = JSON.stringify({ prizeType: dq.data.prizeType, prizeValue: dq.data.prizeValue }); }
+      showPrize(dq.data);
+    }
+    const r = await post("/group/register", { merchantNo: mno, userPhone: ph, channel: ch, groupAmount: String(amt), drawBatchNo: batch || undefined, prizeInfo: prizeInfo });
+    if (r.code !== 0) { toast(r.msg || "登记失败", "danger"); return; }
+    const rb = r.data && r.data.returnBalance ? Number(r.data.returnBalance) : 0;
+    if (rb > 0) { toast("登记成功，获得返还余额 ¥" + rb + "（" + (r.data.returnDesc || "") + "）", "success"); }
+    else { toast("团购登记成功，奖品已激活", "success"); }
+    loadMyCoupons();
+  } catch (err) { toast("网络异常，请稍后再试", "danger"); }
+  finally { $("btnGroupDraw").disabled = false; }
+};
+
+// ---------- 优惠券下拉 ----------
+async function loadMyCoupons(){
+  const ph = phoneFor();
+  if (!/^1[3-9]\d{9}$/.test(ph)) return;
+  const r = await get("/wallet/" + ph);
+  const coupons = (r.data && r.data.available) || [];
+  const sel = $("orderCoupon");
+  sel.innerHTML = '<option value="">不使用优惠券</option>' + coupons.map(function(c){
+    const label = (typeName[c.prizeType] || "优惠券") + " " + (c.prizeType === 1 ? c.prizeValue + "折" : "¥" + c.prizeValue) + " · " + c.couponId;
+    return '<option value="' + c.couponId + '">' + label + '</option>';
+  }).join("");
+}
+
+// ---------- 试算 ----------
+$("btnCalc").onclick = async function(){
+  const ph = phoneFor();
+  const mno = $("merchantNo").value.trim();
+  const amt = parseFloat($("orderAmount").value || "0");
+  if (!/^1[3-9]\d{9}$/.test(ph)) { toast("请填写正确的手机号", "warning"); return; }
+  if (!mno) { toast("请填写门店编号", "warning"); return; }
+  if (!(amt > 0)) { toast("请填写订单金额", "warning"); return; }
+  $("btnCalc").disabled = true;
+  try {
+    if (!await ensureToken()) return;
+    const body = { userPhone: ph, merchantNo: mno, orderAmount: String(amt) };
+    const cid = $("orderCoupon").value;
+    if (cid) body.couponId = cid;
+    const r = await post("/offline/calc", body);
+    if (r.code !== 0) { toast(r.msg || "试算失败", "danger"); return; }
+    calcData = r.data;
+    showCalc(r.data);
+  } catch (err) { toast("网络异常，请稍后再试", "danger"); }
+  finally { $("btnCalc").disabled = false; }
+};
+
+function showCalc(d){
+  const rows = [];
+  rows.push('优惠券：<b>' + (d.coupon ? (typeName[d.coupon.prizeType] || "券") + " " + prizeDisplay(d.coupon) : "未使用") + '</b>');
+  rows.push('券后金额：<b>¥' + money(d.afterCoupon) + '</b>');
+  rows.push('理论抵扣：¥' + money(d.theoreticalDeduct) + '　实际抵扣：<b>¥' + money(d.actualDeduct) + '</b>');
+  rows.push('当日已用抵扣：¥' + money(d.dailyQuotaUsed));
+  rows.push('应付金额：<span class="pay">¥' + money(d.payAmount) + '</span>');
+  if (d.receiveMode === 2) rows.push('收款方式：模式B（生成凭证码，商家确认）');
+  else rows.push('收款方式：模式A（展示收款码）');
+  $("calcBox").innerHTML = rows.join('<br>');
+  $("calcBox").style.display = "block";
+  $("orderActions").style.display = "grid";
+}
+
+$("btnCancelCalc").onclick = function(){
+  $("calcBox").style.display = "none";
+  $("orderActions").style.display = "none";
+  calcData = null;
+};
+
+// ---------- 下单 ----------
+$("btnOrder").onclick = async function(){
+  const ph = phoneFor();
+  const mno = $("merchantNo").value.trim();
+  const amt = parseFloat($("orderAmount").value || "0");
+  if (!calcData) { toast("请先试算", "warning"); return; }
+  $("btnOrder").disabled = true;
+  try {
+    const body = { userPhone: ph, merchantNo: mno, orderAmount: String(amt) };
+    const cid = $("orderCoupon").value;
+    if (cid) body.couponId = cid;
+    const dbn = $("drawBatchNo").value.trim();
+    if (dbn) body.drawBatchNo = dbn;
+    let r;
+    if (orderMode === 1) {
+      body.paidAmount = String(calcData.payAmount);
+      r = await post("/offline/order", body);
+      if (r.code !== 0) { toast(r.msg || "下单失败", "danger"); return; }
+      await showPayQr(r.data);
+    } else {
+      r = await post("/offline/order-b", body);
+      if (r.code !== 0) { toast(r.msg || "下单失败", "danger"); return; }
+      await showVoucher(r.data);
+    }
+    loadMyOrders();
+  } catch (err) { toast("网络异常，请稍后再试", "danger"); }
+  finally { $("btnOrder").disabled = false; }
+};
+
+async function renderQr(content, el){
+  if (!content) { el.textContent = "无二维码内容"; return; }
+  el.innerHTML = "生成中…";
+  const r = await post("/qr-svg", { content: content });
+  if (r.code === 0 && r.data && r.data.svg) el.innerHTML = r.data.svg;
+  else el.textContent = content;
+}
+
+async function showPayQr(order){
+  $("paySub").textContent = "请使用微信 / 支付宝扫码支付 ¥" + money(order.payAmount || calcData.payAmount);
+  const qrUrl = (calcData && calcData.receiveQrImgWechat) ? calcData.receiveQrImgWechat : (calcData && calcData.receiveQrImgAlipay ? calcData.receiveQrImgAlipay : "");
+  const box = $("payQr");
+  if (qrUrl) { box.innerHTML = '<img src="' + qrUrl + '" alt="收款码" style="width:100%;height:100%;object-fit:contain;">'; }
+  else { await renderQr(order.offlineOrderNo || "", box); }
+  $("payInfo").innerHTML = '订单号：<b>' + (order.offlineOrderNo || "--") + '</b><br>订单金额：¥' + money(order.orderAmount) + '<br>余额抵扣：¥' + money(order.deductBalance) + '<br>应付金额：<b style="color:#ff5b3e;">¥' + money(order.payAmount) + '</b><br>状态：' + (order.orderStatus === 1 ? "已完成" : "待支付");
+  $("payMask").classList.add("show");
+}
+$("btnPayDone").onclick = function(){ $("payMask").classList.remove("show"); toast("订单已生成，可在订单列表查看", "success"); loadMyOrders(); };
+$("btnClosePay").onclick = function(){ $("payMask").classList.remove("show"); };
+
+async function showVoucher(order){
+  $("voucherInfo").innerHTML = '订单号：<b>' + (order.offlineOrderNo || "--") + '</b><br>应付：¥' + money(order.payAmount) + '<br>凭证：' + (order.voucherToken || "--");
+  const box = $("voucherQr");
+  if (order.voucherToken) await renderQr(order.voucherToken, box);
+  else box.textContent = "无凭证";
+  $("voucherMask").classList.add("show");
+}
+$("btnVoucherDone").onclick = function(){ $("voucherMask").classList.remove("show"); toast("凭证已生成，商家确认后订单完成", "success"); };
+
+// ---------- 我的本店订单（流水视角） ----------
+async function loadMyOrders(){
+  const ph = phoneFor();
+  const el = $("myOrders");
+  if (!/^1[3-9]\d{9}$/.test(ph)) { el.innerHTML = '<div class="tip-line">登录后显示最近订单</div>'; return; }
+  const r = await get("/wallet/" + ph);
+  const flows = (r.data && r.data.flows) || [];
+  el.innerHTML = "";
+  if (!flows.length) { el.innerHTML = '<div class="tip-line">暂无本店订单记录</div>'; return; }
+  const ftName = { 1:"发放", 2:"抵扣", 3:"退款" };
+  flows.slice(0, 8).forEach(function(f){
+    const row = document.createElement("div");
+    row.className = "order-mini";
+    row.innerHTML = '<b>' + (ftName[f.flowType] || "流水") + '</b>　¥' + money(f.amount)
+      + '<br>单号：' + (f.bizNo || "--") + '　时间：' + ((f.createTime || "").replace("T", " ").slice(0, 16))
+      + (f.remark ? '<br>' + f.remark : '')
+      + (f.bizNo && f.flowType === 2 ? '<br><a href="wallet.html" style="color:#ff5b3e;">查看身份码 → 商家退款</a>' : "");
+    el.appendChild(row);
+  });
+}
+
+// 初始化
+loadMyCoupons();
+loadMyOrders();
+</script>
+</body>
+</html>

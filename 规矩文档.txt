@@ -325,3 +325,49 @@ G20 | %s | 修改bug更新服务器后必须实际操作演示给用户看；演
 3. "最近中奖"列表带滚动：最多 6 条、向上无缝循环（wins-track CSS animation winScroll），不得静态堆叠
 4. 生产重启服务用 setsid nohup bash start.sh < /dev/null > log 2>&1 & 分离会话；pkill 关键字不要出现在承载命令的 ssh 命令行文本里（会误杀自身）
 ========================================================
+
+
+【G33 运营数据屏（/api/ops/** + 三块屏）开发与上线规范（2026-10-26 起强制执行）】
+1. 路径与鉴权：运营类接口一律放 `/api/ops/**`（免登录，与 `/api/tv/**` 一致）。禁止放 `/api/merchant/**` —— 该前缀被 MerchantAuthInterceptor 全量拦截，大屏/广告机没有登录态会 401。鉴权用 `app.ops.token`（配了才校验，没配内网裸奔）。
+2. 页面参数必须与接口对齐：接口新增查询参数（如 `date`）时，**页面也要同步透传**，否则页面永远只拿"今天"（今天没单就全 0，看起来像坏了）。回看历史日时 `/day` 必须以该日为终点往前 13 天拼 from/to，否则趋势图空。
+3. 不编数（口径文档第 0 节）：展示层的合计、环比、占比**一律按接口数据实算**，禁止在函数里写字面量（本轮踩到 kiosk 写死"合计 ¥1,286 · 28 单"）。HTML 骨架里的占位数字只为"首屏不白屏"，接口回来必须被替换。算不出的字段返回 null，页面显示「待接入」。
+4. 金额比率必须走 rate()：任何"金额/金额"的百分比都要用 `OpsService.rate(value, base)`，base 绝对值 < 1（元）返回 null。div() 只挡除零，挡不住 0.18 元这种极小分母（实测毛利率被算成 -4682400%）。
+5. 新 H5 页面上线 = 两件事：① scp 到 `/www/wwwroot/ybgtc.com/h5/<目录>/`；② 在 `/www/server/panel/vhost/nginx/ybgtc.com.conf` 加 `location = /h5/<路径> { root /www/wwwroot/ybgtc.com; charset utf-8; }` 再 `nginx -t` + `-s reload`。只做①会 404/500（G23 第③条）。
+6. 部署前确认 jar 路径：生产真正跑的是 `/www/wwwroot/ybgtc-app/ibigou.jar`（8085）；`/www/wwwroot/ybgtc.com/ibigou.jar` 是无进程的旧残留，别传错。用 `ps -eo pid,cmd | grep '[i]bigou.jar'` 确认，停进程用具体 PID（G02.1）。
+7. 无浏览器时的验证替代法：本机无 msedge/chrome、browser MCP 截图超 10MiB 时，用 `_live_check.js` / `_live_check2.js` —— 拉线上真实页面 HTML + 打线上真实接口，用最小 DOM 桩在 vm 里跑页面脚本，断言渲染值 == 接口真数。
+8. 讲数前先看数据实况：offline_order 最后一单 2026-09-18（长期无新单时"今日 KPI 全 0"是真实情况，不是 bug）。测试脏数据已于 2026-10-26 清理归档（60 笔 ≤0.02 元测试单 / 9 张 9999 元测试券 / 3 张等待超 24h 叫号票 → `_arch_*_20261026` 三张归档表），清之前毛利被算成 -31971.36、清之后 1654.40（毛利率 37.99%）。
+9. **V20 汇总层不会自动建**：生产 start.sh 带 `-Dspring.flyway.enabled=false`，`db/migration/V20__ops_data_mart.sql` 与 `db/etl/sp_ops_rebuild.sql` 必须手工在服务器上执行（本机无 mysql 客户端，走 ssh 在服务器执行）。上线顺序：全量 mysqldump 备份 → 建表 → 灌存储过程 → 写参数 → `CALL sp_ops_rebuild(...)` 回填 → **对账（channel_daily 汇总 vs offline_order 明细，差额必须为 0）**。
+10. **存储过程参数必须显式 COLLATE**：库默认 utf8mb4_unicode_ci、业务表列 utf8mb4_general_ci，参数不声明就报 ERROR 1267，ETL 一行跑不出。一律写成 `VARCHAR(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci`，禁止反向去改现有表 collation。
+11. **清生产脏数据 = 先归档再删**：`CREATE TABLE _arch_<表>_<日期> AS SELECT * FROM <表> WHERE <脏条件>` → 校验归档行数 == 待删行数 → 才 DELETE → 重跑 ETL（幂等）。禁止直接 DELETE。
+12. **比率的两个窗口必须一致**：分子分母必须是同一时间窗口、同一量纲（本轮踩到"近 30 天累计复购人数 ÷ 当日核销张数 = 200%"）。改口径时 Java（OpsService）与 ETL（sp_ops_rebuild）两处必须同步改，否则 realtime 与 mart 两个模式数字打架。
+
+【G34 电视大屏上线与实机验证规范（2026-10-26 起强制执行）】
+1. **页面与 APK 必须配套上线，顺序固定：先装 APK，再切页面。** tv-v2 页面把二维码放进右下角 184×184 独立区（跨底部行 128 + 字幕 56），这个位置只有 APK v1.4.0 的原生码层才能对上；v1.3.8 的原生码是 120×120、落在老位置。先切页面会出现「页面留了坑、码还在老地方」。
+2. **上线前四项必查**：① 线上旧页与新页 DOM id 逐一对比，确认没有功能被删（本次 comm 比对：仅新增 main/qrFloat/qrImg）；② 两版调用的后端接口路径完全一致；③ 新增/复用的接口线上实测 200 且内容类型正确（image/png、image/svg+xml）；④ 旧页面 `cp -p` 备份成 `tv.html.bak-<时间戳>`。
+3. **几何要像素级实测，不许只看 CSS。** 契约：码区 184×184 @ right16/bottom12，码 148×148 居中、顶部内缩 4。验证方法：`adb shell screencap -p` 抓 1280×720 → PIL 扫右下白底方块边界 → 实测应落在 x=1098-1246 / y=528-676。CSS 对了不代表原生层摆对了。
+4. **二维码必须真解码，不许只看图。** 用 `cv2.QRCodeDetector().detectAndDecodeMulti` 解出 `https://ybgtc.com/h5/queue.html?merchantNo=xxx` 才算合格。
+5. **判断「页面在真取数」靠因果验证，不靠 UA 猜。** WebView 请求的 UA 在 nginx 日志里认不出来。做法：`am force-stop` → 20s → 确认服务器端轮询停止 → `am start` → 确认轮询恢复。停/启对照才作数。
+6. **本机 adb 用法固定**：路径 `D:/workspace-java/android-sdk/platform-tools/adb.exe`（不在 PATH）；每条命令开头重新 `adb connect 192.168.31.28:5555`（adb server 随 shell 退出被回收）；`export MSYS_NO_PATHCONV=1` 防 Git Bash 路径转换，中文文件名先 cp 成 ASCII；设备无 root、但 `screencap` 可用（sdcard_rw 权限在）。
+7. **升级 APK 用 `adb install -r` 覆盖，不卸载**（签名一致，卸载会丢 SharedPreferences 里的商家号配置）。升级后必须 `dumpsys package` 确认 versionCode/versionName，再 `am start` 重启。
+8. **设备 ping 不通服务器不代表断网**（服务器禁 ICMP），判断连通性看 HTTP 轮询是否 200。
+
+【G35 中奖弹屏规范（2026-10-26 起强制执行）】
+1. **四种模式按奖品类型分，不许混用**：`detectWinMode(prizeName)` 判定顺序固定 —— 先"免"→free，再"余额/储值/充值"→balance，再"折"→discount，最后"立减/券/抵用/代金"→coupon，都不命中则 grand。顺序不能改："9.00折优惠券"含"折"必须判 discount，"立减5.00元券"不含"折"必须判 coupon。
+2. **每种模式必须同时具备四件套**：配色（卡片渐变 + 底色墨色 + 波纹色）、文案（英文 kicker + 中文标题 + 领取提示）、动效（波纹数量/间隔 + 流光）、音效（音型 + 音色 + 时长）。只改颜色不改音效、或只改音效不改文案，都算不合格。
+3. **弹屏底色必须完全不透明**：内圈用模式墨色、外圈用深底，`radial-gradient(ellipse at center, ink, outer 72%)`，两个色都必须是不透明色。任何"内圈半透明"的写法都会把队列区和广告画面透出来。
+4. **原生层必须在弹屏期间让位**：广告视频（TextureView）和二维码（ImageView）在 WebView 之上。广告要靠 APK 的 `setAdVisible(false)` 隐藏；二维码**保持可见**（取号入口不能被挡）。
+5. **状态守卫必须判断"调用那一刻"**：任何 `setTimeout` 延后触发的原生调用（如 `AndroidTV.playVideo`），守卫要写在回调内部，不能写在注册处。
+6. **音效与语音排队规则**：`playFx` 独立通道 → 语音延后 600ms（可叠音）；老 APK 只有 `speakUrl` 共用通道 → 语音延后 = 音效时长 + 520ms。绝不共用通道且同时发声。
+7. **音效文件规范**：`/h5/fx/{mode}.wav`，44.1kHz / 16bit / 单声道，峰值 0.88，末尾 30ms 必须淡出（否则播放末尾爆音）。生成脚本 `_gen_win_fx.py`，校验脚本 `_check_win_fx_wav.py`（Goertzel 测音高，阈值用相对能量：应有音 ≥0.05% 最强音，不该有的音 ≤0.5%）。
+8. **改完页面必须重启 App 再验证**：WebView 只在启动时拉一次 tv.html。
+9. **上线前必跑三项离线校验**：`_build_tv2.py`（4.4 兼容性自检，致命项必须 0）、`_check_win_fx.js`（动效与音效路由，35 项）、`_check_win_fx_wav.py`（音效文件）。
+10. **上线后必做真机验证**：四种模式各抓一张 `screencap`，用 PIL 采样像素确认底色不透明（广告画面区域应读不到高亮像素），并从 logcat 确认 `中奖音效(原生独立通道)` + `FX started` 都出现。
+
+【G36 大屏双模式与生产库迁移铁律（2026-10-27 起强制执行）】
+1. **生产 MySQL 是宿主机原生宝塔，不是 docker 容器**：`docker ps` 没有 `ibigou-mysql`，app 也是 `/www/wwwroot/ybgtc.com/ibigou.jar` 裸进程。**任何迁移/SQL 禁止用 `docker exec ibigou-mysql`**（必然失败），必须用宿主机 `/usr/bin/mysql` 客户端 + `/www/wwwroot/ybgtc.com/.env` 里的 `IBIGOU_DB_HOST/PORT/USER/PASSWORD/NAME`。密码含特殊字符用 `-p"'$PW'"`。
+2. **迁移必须真幂等，禁止假幂等**：`ALTER ... || echo "已存在"` 会把连接失败、容器不存在等**真实错误**都说成"已存在"，导致列没加上却显示成功（G114 已踩）。正确写法：先 `SELECT COUNT(*) FROM information_schema.COLUMNS WHERE TABLE_NAME='<表>' AND COLUMN_NAME='<列>'`，为 0 才 ALTER，且**不要吞 stderr**。
+3. **部署脚本的"加列"与"校验"两处要同步改**：只改一处会留下第二次踩坑（本次 `_deploy_win_scene.py` 2.5/5.5 均已修）。改完 `python -m py_compile` 确认。
+4. **验证接口字段别用 json.loads**：curl 返回体带额外尾部数据会报 `Extra data`，造成"字段缺失"的假阴性。判字段存在用 `grep -c "<字段名>"`。
+5. **大屏模式切换（`merchant_queue_config.tv_mode`）**：`call`=叫号屏、`activity`=盲盒活动屏。切换走商家后台 → `POST /api/merchant/config/tv-mode`；**切换后必须重启大屏 App**（WebView 只启动时拉一次 tv.html）。模式决定左区布局与二维码落点，activity 模式要 `AndroidTV.setQrVisible(false)` 隐藏原生码防双码。**该能力不改 APK**，不要为此重新打包。
+6. **商家后台等 H5 页面要单独传磁盘**：`h5/*` 真身是磁盘 `/www/wwwroot/ybgtc.com/h5/`，重打 jar 不会覆盖磁盘文件。改了 `static/h5/**` 的页面，除打包外还要单独 sftp 覆盖磁盘（先备份）。
+7. **无 token 访问需鉴权接口返回 HTTP 200 + `{"code":-1,"msg":"请先登录"}`** 属正常，不是 404、不是未注册，不要据此判定部署失败。

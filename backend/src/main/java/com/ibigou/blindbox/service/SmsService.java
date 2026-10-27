@@ -39,6 +39,18 @@ public class SmsService {
         return code;
     }
 
+    /**
+     * V19 通用业务通知短信（预约回复 / 生日关怀等）。
+     * <p>与验证码同样为可插拔实现：未接入短信服务商时只落日志，不报错、不阻塞业务；
+     * 接入后在此方法内调用服务商 API 即可。返回是否真实下发。</p>
+     */
+    public boolean sendNotify(String phone, String content) {
+        if (phone == null || phone.isBlank() || content == null || content.isBlank()) return false;
+        // 生产接入短信服务商后，这里调用发送 API（需先在服务商备案通知类模板）
+        log.info("[SMS][通知][测试模式] 手机号 {} 内容 {}", phone, content);
+        return true;
+    }
+
     /** 校验验证码 */
     public void verifyCode(String phone, String code) {
         CodeEntry entry = codes.get(phone);

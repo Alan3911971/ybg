@@ -32,7 +32,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class MerchantConfigController {
 
-    @org.springframework.beans.factory.annotation.Value("${app.domain}")
+    @org.springframework.beans.factory.annotation.Value("${app.domain:https://ybgtc.com}")
     private String appDomain;
 
     @org.springframework.beans.factory.annotation.Value("${app.upload-dir:./uploads}")
@@ -42,6 +42,7 @@ public class MerchantConfigController {
     private final MerchantConfigService configService;
     private final ReportService reportService;
     private final MerchantRepository merchantRepository;
+    private final MerchantQueueConfigRepository queueConfigRepository;
     private final BoxPrizePoolRepository prizePoolRepository;
     private final BoxPublicPoolRepository publicPoolRepository;
     private final BoxGroupPrizePoolRepository groupPoolRepository;
@@ -260,6 +261,45 @@ public class MerchantConfigController {
         // 域名走配置（禁硬编码）；页面为真实存在的顾客抽奖页 index.html
         return Result.ok(appDomain + "/h5/customer/index.html?merchantNo=" + merchantNo
                 + "&channel=" + channel);
+    }
+
+    // ---------------- 大屏显示模式（叫号屏 / 盲盒活动屏） ----------------
+
+    /** 读取当前大屏模式；同时返回该模式下二维码指向的落地页，便于后台预览 */
+    @GetMapping("/tv-mode")
+    public Result<java.util.Map<String, String>> tvMode(@RequestHeader("X-Merchant-Token") String token) {
+        String mno = authService.merchantNoByToken(token);
+        MerchantQueueConfig cfg = queueConfigRepository.findById(mno).orElse(null);
+        String mode = cfg != null && cfg.getTvMode() != null ? cfg.getTvMode() : "call";
+        String base = appDomain;
+        if (base != null && base.endsWith("/")) base = base.substring(0, base.length() - 1);
+        if (base == null || base.isEmpty()) base = "https://ybgtc.com";
+        String qrTarget = base + ("activity".equals(mode) ? "/h5/customer/index.html" : "/h5/queue.html")
+                + "?merchantNo=" + mno;
+        java.util.Map<String, String> m = new java.util.HashMap<>();
+        m.put("mode", mode);
+        m.put("qrTarget", qrTarget);
+        m.put("appDomain", base);
+        return Result.ok(m);
+    }
+
+    @PostMapping("/tv-mode")
+    public Result<Void> setTvMode(@RequestHeader("X-Merchant-Token") String token,
+                                 @RequestParam String mode) {
+        if (!"call".equals(mode) && !"activity".equals(mode)) {
+            throw new com.ibigou.blindbox.common.BizException("模式不合法，仅支持 call / activity");
+        }
+        String mno = authService.merchantNoByToken(token);
+        MerchantQueueConfig cfg = queueConfigRepository.findById(mno).orElse(null);
+        if (cfg == null) {
+            cfg = new MerchantQueueConfig();
+            cfg.setMerchantNo(mno);
+            cfg.setCreateTime(java.time.LocalDateTime.now());
+        }
+        cfg.setTvMode(mode);
+        cfg.setUpdateTime(java.time.LocalDateTime.now());
+        queueConfigRepository.save(cfg);
+        return Result.ok();
     }
 
     // ---------------- 5.2.3 外来流入优惠券 ----------------

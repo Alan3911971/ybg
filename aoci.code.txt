@@ -3,10 +3,10 @@
 ===D:/workspace-java/ybg-master/===
 AGENTS.md[SG7S]: F:项目AI协作纪律文档:绝对路径铁律、AOCI治理区块、多AI协作规则 | R:code:.aoci/config.json | A:- | S:AOCI治理区块由init追加勿删;路径以实际工作区为准
 README.md[SG5T]: F:宜必购盲盒系统总览:盲盒抽奖+商家端+物业模块,技术栈与目录结构 | R:- | A:- | S:后端SpringBoot+MySQL,前端H5直放
-规矩文档.txt[SG6M]: F:项目铁律文档:操作演示、完整闭环、四文档强制更新、G11双向备份、G32 AOCI索引规范等G系列规则 | R:- | A:- | S:改bug/更新后必须操作演示;换电脑先读G31
-采坑日志.txt[SG6L]: F:项目踩坑记录:G78换电脑恢复要点、G69-G78 AOCI使用坑与备份坑 | R:- | A:- | S:换电脑/新会话必读
-shared-memory.json[SG6L]: F:项目共享记忆:环境路径、生产服务器、账号、备份状态、toolchain、aoci配置 | R:- | A:- | S:密钥脱敏;勿写明文token/密码
-知识图谱.md[SG6L]: F:项目知识图谱:架构模块、环境工具链、GitHub/NAS对接、AOCI索引G94 | R:- | A:- | S:换电脑必读环境与工具链章节
+规矩文档.txt[SG6M]: F:项目铁律文档:G11双向备份/G12四文档/G15演示/G16闭环/G32AOCI/G34G35大屏/G36大屏双模式与生产库迁移铁律 | R:- | A:- | S:改bug后必须操作演示;换电脑先读G31;生产MySQL是宿主机原生宝塔非docker
+采坑日志.txt[SG6L]: F:项目踩坑记录;2026-10-27新增G114(生产库加列静默失败:docker exec ibigou-mysql不存在,须先information_schema查再ALTER且不吞stderr)与G115(GitHub PAT 401失效/NAS tar顶层chmod失败/AOCI残留为存量漂移) | R:- | A:- | S:-
+shared-memory.json[SG6L]: F:项目共享记忆:环境路径/生产服务器/账号/备份/toolchain/aoci配置;2026-10-27新增 tv_screen_dual_mode_20261027 与 backup_status_20261027(NAS ddfd0be 已备份/GitHub 因 PAT 失效阻塞) | R:- | A:- | S:密钥脱敏;勿写明文token/密码
+知识图谱.md[SG6L]: F:项目知识图谱:架构模块/接口/表名/线上状态;2026-10-27新增大屏双模式章节(merchant_queue_config.tv_mode、tv-mode接口、tv-v2双布局) | R:- | A:- | S:换电脑必读环境与工具链章节;表名必须查库核对
 api.js[IG5M]: F:顾客端/商家端API封装:登录、支付、抽奖等接口调用 | R:- | A:- | S:测试环境验证码123456;生产域名ybgtc.com
 choose.html[EU5T]: F:顾客端角色/商家选择入口页 | R:- | A:按merchantNo参数进入商家 | S:-
 .env.example[FC4T]: F:环境变量模板(数据库/支付等配置项示例) | R:- | A:- | S:模板非真实值,真实值见生产.env
@@ -25,7 +25,7 @@ merchant.html[EU4T]: F:根级商家页(旧版) | R:- | A:- | S:根级页面
 pay.html[EU4T]: F:根级支付页(旧版) | R:- | A:- | S:根级页面
 pay.js[DB4M]: F:支付逻辑(旧版) | R:- | A:- | S:旧版根级脚本
 queue.html[EU4T]: F:根级排队页(旧版) | R:- | A:- | S:根级页面
-tv.html[EU4T]: F:电视展示页 | R:- | A:- | S:根级页面
+tv.html[EU4L]: F:电视大屏页面源码(构建源):叫号/队列/广告/中奖弹屏;2026-10-27新增大屏双模式 applyTvMode/renderTvQr,按服务端 tv_mode 切 call 叫号屏与 activity 盲盒活动屏 | R:- | A:- | S:本文件是生成源,由 _build_tv2.py 抽取 script 产出 tv-v2.html,不要直接改产物
 tts.js[MM4M]: F:语音播报封装 | R:- | A:- | S:-
 wallet.html[EU4T]: F:根级钱包页(旧版) | R:- | A:- | S:根级页面
 api_live.js[IG4M]: F:线上调试API封装 | R:- | A:- | S:调试用
@@ -143,7 +143,7 @@ AdminController.java[AG8M]: F:管理后台API:登录/统计/配置管理 | R:- |
 CustomerController.java[AG8M]: F:顾客端API:首页/商家/抽奖/订单 | R:- | A:- | S:对外HTTP契约,改动需同步前端api.js
 CustomerPayController.java[AG8M]: F:顾客支付API:下单/拉起支付 | R:- | A:- | S:对外HTTP契约,改动需同步前端api.js
 MapController.java[AG8M]: F:地图/定位API:商家位置/导航 | R:- | A:- | S:对外HTTP契约,改动需同步前端api.js
-MerchantConfigController.java[AG8M]: F:商家配置API:收款码/打印/语音设置 | R:- | A:- | S:对外HTTP契约,改动需同步前端api.js
+MerchantConfigController.java[AG8L]: F:商家配置API:收款码/打印/语音设置;2026-10-27新增大屏显示模式读写 GET/POST /tv-mode(按 X-Merchant-Token 取商家号,读写 merchant_queue_config.tv_mode) | R:- | A:- | S:对外HTTP契约,改动需同步前端api.js
 MerchantController.java[AG8M]: F:商家端API:核销/订单/开奖 | R:- | A:- | S:对外HTTP契约,改动需同步前端api.js
 MerchantQueueController.java[AG8M]: F:商家排队API:取号/叫号 | R:- | A:- | S:对外HTTP契约,改动需同步前端api.js
 PayNotifyController.java[AG8M]: F:支付回调API:微信/支付宝异步通知 | R:- | A:- | S:对外HTTP契约,改动需同步前端api.js
@@ -155,7 +155,7 @@ PropertyOwnerController.java[AG8M]: F:业主端API:绑定/家庭成员/账单/�
 PropertyOwnerP1Controller.java[AG8M]: F:业主端一期API | R:- | A:- | S:对外HTTP契约,改动需同步前端api.js
 PropertyPayQrController.java[AG8M]: F:物业收款码API:获取二维码/轮询 | R:- | A:- | S:对外HTTP契约,改动需同步前端api.js
 TtsController.java[AG8M]: F:语音播报API:合成文本语音 | R:- | A:- | S:对外HTTP契约,改动需同步前端api.js
-TvQueueController.java[AG8M]: F:电视排队展示API | R:- | A:- | S:对外HTTP契约,改动需同步前端api.js
+TvQueueController.java[AG8M]: F:电视排队展示API;2026-10-27 screen 返回 tvMode,qr.svg/qr.png 按 tv_mode 编码(activity 跳盲盒主页 / call 跳取号页) | R:- | A:- | S:对外HTTP契约,改动需同步前端api.js
 UploadController.java[AG8M]: F:文件上传API:图片/收款码 | R:- | A:- | S:对外HTTP契约,改动需同步前端api.js
 WalletApiController.java[AG8M]: F:钱包API:余额/充值/明细 | R:- | A:- | S:对外HTTP契约,改动需同步前端api.js
 WxOAuthController.java[AG8M]: F:微信OAuth登录API | R:- | A:- | S:对外HTTP契约,改动需同步前端api.js
@@ -236,7 +236,7 @@ MerchantAd.java[PD6T]: F:商家广告实体 | R:- | A:映射表merchant_ad | S:J
 MerchantMemberType.java[PD6T]: F:商家会员类型实体 | R:- | A:映射表merchant_member_type | S:JPA实体,字段与表列一致
 MerchantMessage.java[PD6T]: F:商家消息实体 | R:- | A:映射表merchant_message | S:JPA实体,字段与表列一致
 MerchantPropertyBinding.java[PD6T]: F:商家物业绑定实体 | R:- | A:映射表merchant_property_binding | S:JPA实体,字段与表列一致
-MerchantQueueConfig.java[PD6T]: F:排队配置实体 | R:- | A:映射表merchant_queue_config | S:JPA实体,字段与表列一致
+MerchantQueueConfig.java[PD6T]: F:排队配置实体;2026-10-27新增 tv_mode 字段(call 叫号屏 / activity 盲盒活动屏,默认 call) | R:- | A:映射表merchant_queue_config | S:JPA实体,字段与表列一致;tv_mode 为 VARCHAR16 非空默认 call
 MerchantQueueTicket.java[PD6T]: F:排队票号实体 | R:- | A:映射表merchant_queue_ticket | S:JPA实体,字段与表列一致
 MerchantSession.java[PD6T]: F:商家会话实体 | R:- | A:映射表merchant_session | S:JPA实体,字段与表列一致
 OfflineOrder.java[PD6T]: F:离线订单实体 | R:- | A:映射表offline_order | S:JPA实体,字段与表列一致
@@ -455,7 +455,7 @@ wallet.html.bak_20260903-mine[ZZ3T]: F:历史备份文件 | R:- | A:- | S:勿删
 
 ===D:/workspace-java/ybg-master/backend/src/main/resources/static/h5/merchant/===
 api.js[IG5M]: F:商家端API(打包版) | R:- | A:- | S:-
-index.html[EU5T]: F:商家端主页(打包版) | R:- | A:- | S:收款码/开奖/播报
+index.html[EU6L]: F:商家后台主页面(设置/订单/奖品/核销等);2026-10-27 p8设置面板新增「大屏显示模式」开关(叫号屏/盲盒活动屏,读写 /api/merchant/config/tv-mode) | R:- | A:- | S:h5 真身在服务器磁盘 /www/wwwroot/ybgtc.com/h5/,改页面须单独 sftp 覆盖磁盘
 login.html[EU4T]: F:商家登录页(打包版) | R:- | A:- | S:-
 merchant.html[EU4T]: F:商家信息页(打包版) | R:- | A:- | S:-
 register.html[EU4T]: F:商家注册页(打包版) | R:- | A:- | S:-

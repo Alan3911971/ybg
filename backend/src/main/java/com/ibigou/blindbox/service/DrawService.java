@@ -205,15 +205,43 @@ public class DrawService {
         return new DrawResult(batchNo, prizeType, prizeValue, true);
     }
 
-    /** 开奖播报（第一段：立即播报中奖内容；第二段由结算页pay.html加载时触发） */
+    /**
+     * 开奖播报（第一段：立即播报中奖内容；第二段由结算页pay.html加载时触发）。
+     *
+     * <p>本次改动要点：</p>
+     * <ol>
+     *   <li><b>修 bug</b>：原实现按 {@code result.isCoupon()} 拼话术，"谢谢参与"
+     *       （prizeType=5，无资产）会落成"恭喜您的盲盒开中了余额0.00元。"——
+     *       大屏上会弹"恭喜中奖"，实际根本没中。改成按 PrizeType 枚举分派，
+     *       谢谢参与播"谢谢参与"，且不写 is_primary（TV 侧不弹中奖屏）。</li>
+     *   <li><b>结构化</b>：写入 prize_type/prize_value/customer_seq，
+     *       电视大屏据此按"中奖的内容"选场景，不再靠正则猜类型。</li>
+     *   <li><b>防重复</b>：本条标记 is_primary=1，是同一次抽奖的唯一权威开奖记录。</li>
+     * </ol>
+     */
     private void announceDraw(String merchantNo, String userPhone, DrawResult result, String channel) {
         try {
-            String prizeTxt = result.isCoupon()
-                    ? (result.prizeType() == 1 ? result.prizeValue() + "折优惠券" : "立减" + result.prizeValue() + "元券")
-                    : "余额" + result.prizeValue() + "元";
-            // 第一段：立即播报中奖内容
+            int prizeType = result.prizeType();
+            // 谢谢参与：没中任何资产，不能说"恭喜开中了…"。不写 is_primary，
+            // 大屏不会为它弹中奖屏（但仍会走语音播报告知顾客）。
+            if (prizeType == PrizeType.THANKS.getCode()) {
+                announceService.record(merchantNo, "draw", "很遗憾，本次抽中了谢谢参与，感谢您的光临。",
+                        userPhone, PrizeType.THANKS.getCode(), result.prizeValue(), null, 0);
+                return;
+            }
+            String prizeTxt = switch (prizeType) {
+                case 1 -> result.prizeValue() + "折优惠券";
+                case 2 -> "立减" + result.prizeValue() + "元券";
+                case 3 -> "余额" + result.prizeValue() + "元";
+                case 4 -> "免单" + result.prizeValue() + "元";
+                default -> "神秘礼品";
+            };
+            // 本店第几位顾客 = 该商家累计参与人次（与播报话术口径一致）
+            long seq = statRepository.countByMerchantNo(merchantNo);
+            // 第一段：立即播报中奖内容（唯一权威开奖记录）
             String firstContent = "恭喜您的盲盒开中了" + prizeTxt + "。";
-            announceService.record(merchantNo, "draw", firstContent, userPhone);
+            announceService.record(merchantNo, "draw", firstContent, userPhone,
+                    prizeType, result.prizeValue(), (int) seq, 1);
         } catch (Exception e) {
             // 播报失败不影响主流程
         }

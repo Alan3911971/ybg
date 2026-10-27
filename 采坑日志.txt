@@ -1275,3 +1275,93 @@ G98 双数据+ABCD排号修复（2026-10-20）：①双数据根因=旧代码tic
 预防：生产重启命令避免在命令行文本中出现被 pkill 匹配的关键字；启动服务用 setsid + </dev/null 分离；SQL 用 base64 管道执行；验证接口用 grep -o 提取 JSON 片段。
 【G105-补】滚动不动的第二根因（2026-10-20）：Android 4.4 WebView 对 JS 设置的无前缀 style.transform/style.transition 不生效（实测 wins 区两帧像素差异 0.0%），CSS 动画必须 -webkit- 双前缀（队列列表 scrollUp 一直用 -webkit-animation + @-webkit-keyframes 所以正常）。修复：wins-track 恢复 CSS animation 并写 -webkit-animation/-webkit-transform 双前缀（@-webkit-keyframes winScroll），JS 重启动画时同时设 box.style.webkitAnimation 和 box.style.animation；5 秒轮询会重建 DOM 重置动画 → renderWins 加 JSON 缓存比较，数据不变直接 return 不动 DOM。验证：连拍三帧 wins 区像素差异 30.9%/33.6%/17.2%（持续滚动+循环）。
 
+【G106】V19 会员 CRM 增强：预约回复 / 生日提醒 / AI Agent 三块从"设计稿标注缺失"到真正实现（2026-10-25）
+背景：设计稿 merchant-member.html 标注了三处"生产缺失"——①预约回复（MemberAppointment 无回复字段 + 无顾客触达通道）②生日提醒（birthday 只有存取无定时任务）③AI Agent（后端零大模型接入）。用户要求"没有的部分补上，完成"→ 需落地真实后端能力而非改稿。
+实现：①迁移 V19__member_crm_ai.sql：member_appointment 加 customer_msg/reply_status/reply_content/reply_time/reply_by/reply_sent/reply_channel 七列，新建 birthday_remind_log（唯一键 商家+会员+年份+档位，幂等去重）、ai_task_log（记录 source=llm/rule 便于审计）。②新服务 AiAgentService：可插拔——app.ai.enabled 且配了 api-key/base-url 才走 OpenAI 兼容 /v1/chat/completions，否则降级本地规则引擎（ruleVisitScript/ruleBirthdayCopy/ruleAppointmentReply/ruleChurnAdvice），四项能力（回访话术/生日文案/预约回复/流失建议）照常返回，每次生成落 ai_task_log。③新服务 MemberCrmService：replyAppointment（写回复字段 + pushUserMessage 触达顾客 + 可选 SmsService.sendNotify）、upcomingBirthdays（MM-dd 解析 + 跨年 + 2-29 兜底）、runBirthdayRemind（7/3/1/0 四档，7 天档自动发立减券 PrizeType.CUT，券面额走全局配置 birthday_coupon_value 默认 20，商家每档站内提醒，顾客 7/0 档祝福）、churnList（风险分规则：30/60/90 天 + 频次 + 消费）。④JobService 加 birthdayRemind（cron 0 0 9 * * ?）。⑤MerchantController 加 /appointments/{id}/reply、/members/birthdays、/members/churn、/members/{phone}/visit-advice、/ai/birthday-copy、/ai/status。
+踩坑（8 条，均实测）：
+①本地 java 报"Failed setting boot class path"≠ 不能构建：PATH 里默认 java 坏了，但 JAVA_HOME=D:\devtools\jdk 的 java -version 正常。用 PATH="$JAVA_HOME/bin:$PATH" mvn ... 即可本地构建（**修正 G104"本地 JDK 损坏必须在生产服务器构建"的结论**——指定 JAVA_HOME 就能本地跑，不必上服务器）。
+②本地首次构建必须联网：本地仓库缺 flyway-core/flyway-mysql/wechatpay-java/alipay-sdk/zxing/httpcomponents，-o 离线直接失败；联网一次后本地 compile 仅 20~40 秒。
+③**生产启动参数是 -Dspring.flyway.enabled=false**（start.sh 第 21 行）→ 新增迁移脚本不会自动执行，必须手动跑 SQL，否则应用起来就报字段不存在。
+④mysql -e "USE x; source /tmp/a.sql" 报 ERROR 1064：source 是 mysql client 命令，非交互模式不支持。改为在 SQL 文件首行写 USE `库名`; 再 mysql ... < file。
+⑤库名 ybgtc.com 带点不能当 mysql 的 db 位置参数（会被解析为 db.table）。统一在文件内 USE \`ybgtc.com\`;（单引号包裹远程命令，反引号不被 shell 当命令替换）。
+⑥UserCoupon 主键字段是 couponId 不是 id → c.getId() 编译失败，用 getCouponId()。
+⑦MemberVisitRepository 只有 findByMerchantNoAndUserPhoneOrderBy**CreateTime**Desc，按 visitTime 排序的方法不存在（MerchantController 里用的是 v.getVisitTime() 取值，别混淆取值与排序）。
+⑧ObjectMapper.readValue 抛受检 JsonProcessingException，必须 try-catch，否则编译失败（Spring Boot 3 + Jackson 必检）。
+部署：本地 mvn -DskipTests package（102,402,850 字节，md5 d13cff2dd33fc50ad993650c7831e4f9）→ scp 到 /www/wwwroot/ybgtc-app/ibigou.jar.new → cp 备份旧 jar → 手动执行 V19 SQL → 替换并重启。
+预防：新增任何 Entity 字段时先确认生产 flyway 是否启用（本项目已禁用，必须手动迁移）；写 Repository 方法名先 grep 现有接口确认；本地构建优先试 JAVA_HOME/bin/java 再判定"JDK 损坏"。
+
+
+【G107】重启时序坑：kill 旧进程后 Spring Boot 是"优雅停机"，3 秒根本退不完，紧接着 start.sh 会撞上 Port 8085 was already in use 直接退出——结果旧进程随后也退了，线上变成**完全无监听的真实宕机**（2026-10-25 17:57 踩到）。
+正确做法：①kill 后**轮询端口直到释放**（最多等 60s）再启动，不要 sleep 固定秒数；②启动后必须 `ss -tlnp | grep :8085` + `curl /actuator/health` 双确认，缺一不可；③失败日志会写进 start.sh 的 nohup 输出文件（本次 ibigou-restart-20261025-ai.log），先 tail 它再下判断。
+附：scp 上传 102MB jar 约需 5 分钟，前台 120s 会被 SIGTERM 掉 → 用后台任务 + `mv ibigou.jar.new ibigou.jar` 原子替换，避免留下半截 jar。
+
+【G108】OpenAI 兼容端点 base-url 拼接坑：AiAgentService 原实现无条件拼 `/v1/chat/completions`，遇到已带 /v1 的 base-url（如 http://host:20128/v1）会拼成 `/v1/v1/chat/completions` 报 404。已修：先去尾斜杠，若以 /v1 结尾则只追加 /chat/completions。
+另：application.yml 里 `app.ai.enabled` 原先写死 false，**环境变量覆盖不了字面量**；改为 `enabled: ${AI_ENABLED:false}` 后，生产只需改 .env（AI_ENABLED / AI_BASE_URL / AI_MODEL / AI_API_KEY）+ 重启，无需重新打包。
+
+【G109】设计稿底部 tabbar "浮在页面中间"（2026-10-25 用户截图指出）：`.tabbar` 是 `position:absolute;bottom:0`，却被写进了 `.screen`（`height:812px;overflow-y:auto` 的滚动容器）。absolute 的包含块是滚动容器的 padding box（高 812），**不随视口固定、而是跟着内容一起滚**——内容一超过 812px，tab 就停在"内容坐标 812"处，视觉上浮在页面中间把卡片切两半（核销页尤其明显）。
+正确结构：`.phone > .notch + .screen + nav.tabbar`，nav 必须是 **.phone 的直接子级**（.phone 有 position:relative），才能钉在机身底部；卡片内容靠 `.body{padding-bottom:76px}` 留白，滚到底不被遮。
+已写两个脚本防复发：`_fix_tabbar.py`（把 nav 从 .screen 搬到 .phone，幂等，16+4 处）与 `_check_tabbar.py`（用 HTMLParser 校验每个 nav.tabbar 的祖先链里不能出现 .screen）。以后新增手机稿一律先跑 check。
+附带：tabbar 底色由 rgba(255,255,255,.96)+blur 改为纯白 + 向上柔影，鼠标/截图下"内容被切断"看起来才是分层而不是渲染坏了。
+
+【G110】运营数据屏（/api/ops/** + 三块屏上线）踩坑合集（2026-10-26）
+①**生产到底跑的是哪个 jar**：/www/wwwroot/ybgtc.com/ibigou.jar（10-20，102377380B）**没有进程在跑**；真正提供服务的是 /www/wwwroot/ybgtc-app/ibigou.jar（8085，PID 3607624）。两个目录都有 jar，部署前必须 `ps -eo pid,cmd | grep '[i]bigou.jar'` 确认，别传错目录。
+②**nginx 的 /h5/ 是逐页精确匹配**：站点配置里每个页面都是 `location = /h5/xxx.html { root /www/wwwroot/ybgtc.com; charset utf-8; }` 磁盘直放。新页面只 scp 上去**不会生效**（实测 404/500），必须同时加 location 再 `nginx -t` + `-s reload`（G23 第③条）。改配置前先 sftp 拉回本地改好再回传（远端 python3/heredoc 插入中文内容不可靠）。
+③**mysql 必须显式指定库**：.env 里变量名是 IBIGOU_DB_HOST/PORT/USER/PASSWORD/NAME（不是 MYSQL_*）。不带 `-D"$IBIGOU_DB_NAME"` 时 `SELECT DATABASE()` 返回 NULL，所有查询报 ERROR 1046 No database selected。库名 ybgtc.com 带点，SQL 里一律反引号。
+④**小基数比率会算出天文数字**：实收 0.18 元那天毛利率算出 **-4682400%**（div 只挡了除零，挡不住 0.18 这种极小分母）。已加 rate(value, base)：base 绝对值 < 1（元）直接返回 null，页面显示「待接入」。同类点：kpi.grossMarginRate / kpi.ownRatio / month.achieveRate / month.forecastRate / day.grossMarginRate。
+⑤**页面没透传 date = 只能看今天**：接口 /api/ops/screen 和 kiosk 都支持 date，但页面只从 URL 取 merchantNo，不带 date 请求 → 拿到的永远是"今天"（今天无单就全 0，看着像坏了）。已修：三块屏都从 location.search 取 date 并透传；/day 还要以该日为终点往前 13 天拼 from/to，否则趋势图也是空的。
+⑥**kiosk 里写死的"合计 ¥1,286 · 28 单"就是编数**：renderChannels 把合计硬编码了。已改为按接口数据实算（sumV/sumN）。HTML 骨架里的 1,286 是"首屏不白屏"占位、接口回来必被替换，可以留；函数里算出来的必须实算。
+⑦**本机无浏览器 + browser MCP 截图超 10MB 限制**：msedge/chrome 本机不存在；mcp__browser 的 screenshot 无论 png/jpeg/怎么裁都报 exceeds 10MiB。替代验证法：`_live_check.js` / `_live_check2.js` —— 拉**线上真实页面 HTML** + 打**线上真实接口**，用最小 DOM 桩在 vm 里跑页面脚本，断言渲染值 == 接口真数（大屏 13/13 通过）。桩的坑：num 元素顺序按 HTML 出现顺序（0=月目标完成率，1=今日实收…），不是面板逻辑顺序；canvas 需要 getContext 桩；断言别查错元素（AI 日志页的「设计示例数据」写在 #logTip 不是 #logList）。
+⑧**生产数据本身的脏/测试残留（不是 bug，但讲数时必须知道）**：offline_order 最后一单是 2026-09-18（本轮上线时已 38 天无新单，所以"今日"KPI 全是 0，属真实情况）；member_profile 只有 1 行（会员面板显示 1 位）；user_coupon 混有 prize_value=9999.00 的测试券，会把"让利成本"顶到 20067.60；2026-09-10 有 26 笔 0.01 元测试单（order_no 为 OFF- 前缀，pay_amount 0.00/0.01）。要干净的大屏数字，得先清这几类测试数据。
+预防：①部署前先 ps 确认 jar 路径；②新 H5 页面 = scp + nginx location 两件事；③任何"金额比率"都要走 rate()；④新增查询参数要同时在页面和接口两边对齐；⑤展示层的合计/环比一律实算，禁止字面量。
+
+【G111】V20 运营数据中台**生产上线**踩坑合集（2026-10-26，G110 的续篇：那次只是"页面接了实时数"，这次才真正把汇总层建起来）
+①**V20 迁移永远不会自动执行**：生产 start.sh 带 `-Dspring.flyway.enabled=false`，V20__ops_data_mart.sql 放进 db/migration 也**不会跑**（上线前体检：8 表 + 2 视图 + sp_ops_rebuild 全都没有，页面一直靠 realtime 兜底）。必须手工：`mysql -D"$IBIGOU_DB_NAME" < V20__ops_data_mart.sql`，再灌 sp_ops_rebuild.sql。
+②**ERROR 1267 Illegal mix of collations（ETL 一行都跑不出来）**：库默认 utf8mb4_unicode_ci，而业务表（offline_order/user_coupon/channel_daily）的列是 utf8mb4_general_ci。存储过程参数 `IN p_merchant VARCHAR(64)` 继承**库默认**，与表列比较直接报错。修法：参数显式写 `VARCHAR(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci`，**不要去改现有表的 collation**（风险大得多）。已把这段原因写进 sp_ops_rebuild.sql 文件头，别删。
+③**脏数据会让毛利变成负数**：建表回填后 gross_profit = **-31971.36**、毛利率 -7.34，不是代码错——user_coupon 混了 9 张 prize_value=9999 测试券（8 张已核销），券面额被算成 80269.90。处理流程（已验证可还原）：先 `CREATE TABLE _arch_xxx_20261026 AS SELECT * FROM ... WHERE <脏条件>` 归档 → 校验归档行数 == 待删行数 → 才 DELETE → 重跑 sp_ops_rebuild（幂等）。本次归档 60 笔 ≤0.02 元测试单 + 9 张测试券 + 3 张等待超 24h 的叫号票，重跑后毛利 1654.40 / 毛利率 37.99%，且与明细对账差额为 0。
+④**漏斗「二次到店」窗口不一致会算出 200%**：repurchase 统计的是"近 30 天下单≥2 次的人"（累计口径），分母却是"当日核销张数"，2026-09-08 实测 2/1 = 200%，上屏就是误导。正确口径：二次到店 = **当日成交客户里此前 30 天也买过**的回头客；转化率分母 = **当日成交客户数**。Java（OpsService.funnel）与 ETL（sp 7a + 新增 7a-2）两处必须同步改，否则切 mart 后两个模式的数字会打架。
+⑤**参数表别写编的数**：merchant_ops_config 只插 merchant_no 即可，month_target_amount 留 0（表设计 0 = 按近 28 日日均×当月天数自动推）；脚本注释里举例的 39000/0.40/0.42 是行业假设值，**不是这家店的真数**，不要照抄进生产。merchant_channel_bind 同理：订单没有渠道打点，只插 walkin=1，"已接通 5 · 待授权 2 · 仅素材 2" 是设计稿编的接入状态。
+⑥**上线的正确顺序**：全量 mysqldump 备份 → 建表 → 灌存储过程 → 写参数 → 回填 90 天 → 对账（channel_daily 汇总 vs offline_order 明细，差额必须为 0）→ 再决定要不要切 `app.ops.source=mart`。
+预防：①手工 SQL 上线前先跑一遍体检（表/存储过程在不在）；②存储过程参数凡与业务表列比较的一律显式 COLLATE；③汇总数字出现负毛利/超 100% 转化率，先查脏数据再怀疑代码；④任何"看起来很像配置示例"的数字，写入生产前先问一句是不是真数。
+
+【G112】电视大屏 tv-v2 上线到极米投影（192.168.31.28）实机验证（2026-10-26）
+①**adb 不在 PATH，在 Android SDK 里**：`D:/workspace-java/android-sdk/platform-tools/adb.exe`（本机无独立 adb 安装，where/which 都查不到）。连设备：`adb connect 192.168.31.28:5555`（极米 4.4 需先在设置里开 adb 调试）。
+②**adb server 随 shell 退出被回收**：WorkBuddy 里每条 Bash 命令是独立 shell，`adb devices` 第二次就变 "no devices found"。解法：**每条命令开头都重新 `adb connect`**（或 `adb start-server` 后再连），别依赖上一条的连接状态。
+③**Git Bash 路径转换会毁掉 adb pull/install 的本地路径**：`adb pull /data/app/x.apk /d/workspace/...` 会被转成 Windows 相对路径而报 "does not exist"。解法：`export MSYS_NO_PATHCONV=1`；且 **cd 到目标目录后用相对文件名**（`cd /d/xxx && adb pull /data/app/x.apk x.apk`）最稳。中文文件名（宜必购电视大屏-v1.4.0.apk）传不进 adb，先 `cp` 成 ASCII 名。
+④**判断"页面在真取数"要靠因果验证，不能靠 UA 猜**：nginx 日志里 WebView 请求的 UA 是空/异常，认不出来。做法：`adb shell am force-stop com.ibigou.tv` → 等 20s → 看服务器端 `/api/tv/{no}/screen` 轮询是否**停止**（实测 15:17:00 停），再 `am start` → 轮询**恢复**（15:17:41 起）。停/启对照才能证明请求来自这台设备而不是别人的客户端。
+⑤**设备 ping 不通服务器 ≠ 不通**：服务器禁 ICMP，但设备 WebView 的 HTTP 轮询 5s 一次全部 200。别拿 ping 失败就判"设备没网"。
+⑥**v1.3.8 与 v1.4.0 的原生码来源不同（决定切换顺序）**：v1.3.8 的 dex 里是**外网** `api.qrserver.com/v1/create-qr-code/?size=120x120`（依赖外网、码小、位置老）；v1.4.0 改成自家 `http://ybgtc.com/api/tv/{no}/qr.png`（148×148，落在 184×184 独立区）。**先装 v1.4.0 再切 tv-v2 页面**，否则新页面的 184 独立区会和老 APK 的老位置对不上。
+⑦**上线 tv-v2 前的检查项**：① 线上旧 tv.html 与新页 DOM id 对比（comm 比对，本次仅新增 main/qrFloat/qrImg，无删减）② 两版调用的后端接口路径一致（都用 /api/tv/{no}/screen + /api/tv/{no}/qr.svg + /api/tts）③ 新增接口线上实测 200（/api/tv/M90380836/qr.png 200 image/png 9309B；qr.svg 200 32006B）④ 旧页面先 `cp -p` 备份成 tv.html.bak-<时间戳>。
+⑧**几何必须像素级实测，不能只看 CSS**：`screencap` 抓到 1280×720 后用 PIL 扫右下白底方块边界，实测白块 x=1098-1245 / y=528-675（148×148），与契约（码区 184@right16/bottom12 → 码 148 居中偏上 4px）**完全吻合**。只看 CSS 写对了不代表 APK 原生层摆对了。
+⑨**二维码必须真解码验证**：`cv2.QRCodeDetector().detectAndDecodeMulti` 解出 `https://ybgtc.com/h5/queue.html?merchantNo=M90380836` 才算"能扫"。只看图有黑白格子不算数。
+⑩**两个 APK 的签名必须一致才能 -r 覆盖**：v1.3.8(versionCode 21) → v1.4.0(23) 用 `adb install -r` 直接 Success，不用卸载（卸载会丢 SharedPreferences 里的商家号配置）。
+
+【G113】中奖弹屏升级：分模式动效 + 动感音效（tv-v2 + APK v1.5.1，2026-10-26）
+①**4.4 的 WebView 没有 Web Audio API**：极米投影（Android 4.4.2 / Chromium 30）实测 `window.AudioContext` 与 `window.webkitAudioContext` **都是 undefined**，`[AUDIO] 音效通道: 无 AudioContext`。页面里用振荡器合成音效在这台设备上必然静默——之前只看到"没报错"，差点以为音效在响，其实根本没这个 API。**做电视端动效前必须先在真机上确认 API 存在**。
+②**音效改走服务端 WAV + 原生 MediaPlayer**：APK 的 `AndroidTV.speakUrl(url)` 就是通用 MediaPlayer，能播任意 URL。做法：Python 纯数学合成 5 段 WAV（`_gen_win_fx.py`，不依赖 ffmpeg/lame，本机也没有）→ 传到 nginx `/h5/fx/*.wav`（新增 `location ^~ /h5/fx/` + `default_type audio/wav`，因为 nginx 的 mime.types **没有 wav 映射**）→ 页面调原生播放。**这样不改 APK 也能出声，所有已部署广告机立刻受益**。
+③**音效与语音共用 MediaPlayer 会互相掐断**：`speakUrl` 开头会 `releaseMediaPlayer()`。而叫号语音 `speakCall` 里是 `for(i=0;i<3;i++) setTimeout(playTts, i*8000)`——**每 8 秒重播一次、共 3 次**（这是设计不是 bug，一开始误判成 bug）。结果：弹屏音效刚起 0.3 秒就被叫号切掉，等于没声音。解法：APK 加 `playFx()` 用**独立 MediaPlayer**（`NativeTTS.fxPlayer`），与语音互不干扰，还能叠着播。
+④**原生层永远盖在 WebView 之上**：广告视频是 APK 的 `TextureView`，层级高于网页，**网页弹屏遮不住它**，实测广告画面直接压在弹屏上。解法：APK 加 `setAdVisible(boolean)`，页面弹屏时调用隐藏、关闭时恢复。
+⑤**延迟调用要判断"调用那一刻"的状态**：`renderAd()` 里 `AndroidTV.playVideo` 是 `setTimeout(800ms)` 延后调的。守卫写在 renderAd 里会漏——实测 renderAd 在弹屏**前 95ms** 执行，playVideo 落在弹屏**期间**，广告照样压上来。必须把 `if(winActive)` 判断挪进 setTimeout 回调里。
+⑥**弹屏底色必须不透明**：早期用 `radial-gradient(内圈 26% 不透明)`，弹屏正中央把队列区和广告画面透出来（实测广告画面像素 (185,175,167) 几乎原色），显得杂乱不绚丽。改成内圈=模式墨色、外圈=深底的**两个不透明色**，`radial-gradient(ellipse at center, ink, outer 72%)`。
+⑦**`console.log('[AUDIO]', msg)` 在设备上看不到内容**：Android WebView 的 `onConsoleMessage` 只取**第一个参数**（APK 里是 `consoleMessage.message()`），两个参数时 logcat 里只剩 `[AUDIO]`。必须拼成单参数 `console.log('[AUDIO] ' + msg)`。这条是 tv.html 里的**既有 bug**，之前排查页面问题一直没输出就是它造成的。
+⑧**`typeof AndroidTV.speakUrl` 会抛 ReferenceError**：`typeof` 只保护标识符本身，不保护属性解引用。AndroidTV 不存在时 `typeof AndroidTV.speakUrl` 直接抛错。要写成 `var n = window.AndroidTV; if(!n && typeof AndroidTV !== 'undefined') n = AndroidTV;`。
+⑨**APK 编译**：本机 gradle 在 `%USERPROFILE%\.gradle\wrapper\dists\gradle-8.7-bin\bhs2wmbdwecv87pi65oeuq5iu\gradle-8.7\bin\gradle.bat`（仓库无 gradlew），用 `assembleDebug`（debug 签名一致才能 `adb install -r` 覆盖安装）。**`java` 必须先 `unset CLASSPATH`**，否则报 "Failed setting boot class path"（环境里有个坏 CLASSPATH）。
+⑩**弹屏触发靠 winIds 变化**：`announce_log` 里 event_type='draw' 的最近 4 条 ID 拼起来与上次不同才触发，取最新一条播报。测试各模式的做法：往生产 `announce_log` 插一行 draw 记录（内容形如"恭喜您的盲盒开中了免单大奖。"，`briefPrize` 按"开中了/开出"+首个分隔符截断取奖品名），**测完按 announce_id 精确删除**（本次插了 237-248 共 12 行，已删净，draw 总数复原 121）。
+⑪**改完页面必须重启 App 才生效**：WebView 只在启动时拉一次 tv.html，页面改了不重启就还是旧版——曾因此误判"改了没效果"。
+
+【G114】大屏双模式（叫号屏/盲盒活动屏）上线 + 生产库加列"静默失败"（2026-10-27）
+①**生产 MySQL 不是 docker 容器，是宿主机原生宝塔**：`docker ps` 只有一个 `dk_openclaw-*`，`ibigou-mysql` **根本不存在**；app 也是 `/www/wwwroot/ybgtc.com/ibigou.jar` 裸进程（`java -jar` 起的，不是 docker compose）。部署脚本里用 `docker exec ibigou-mysql` 跑迁移必然失败。
+②**`ALTER ... || echo "已存在"` 是假幂等，会静默吞掉真错误**：本次 V23 加 `tv_mode` 列就是这样——`2>/dev/null` 吞了 stderr，`||` 又把"连不上/容器不存在"报成"tv_mode 列已存在（可忽略）"，随后 `screen` 接口查不到该列而报错，一度误判成"新 jar 没生效"。**正确做法：先 `SELECT COUNT(*) FROM information_schema.COLUMNS WHERE TABLE_NAME='<表>' AND COLUMN_NAME='<列>'` 判断是否已存在，不存在才 ALTER，并且不要把 stderr 吞掉**。
+③**正确连库姿势**：`set -a; source /www/wwwroot/ybgtc.com/.env; set +a` 后取 `IBIGOU_DB_HOST/PORT/USER/PASSWORD/NAME`，用**宿主机 `mysql` 客户端**（`/usr/bin/mysql`，宝塔装在 `/www/server/mysql`，端口 3306，socket `/tmp/mysql.sock`）。密码含特殊字符时用 `-p"'$PW'"`（单引号裹变量值）最稳。
+④**部署脚本的校验步骤要同步改**：原 `_deploy_win_scene.py` step 5.5 也用 `docker exec` 查列，同样失败；已改成宿主机 mysql + information_schema。改完必须 `python -m py_compile` 确认语法再上线。
+⑤**验证脚本别用 json.loads 判接口字段**：curl 返回体带额外尾部数据时 `json.loads` 报 `Extra data: line 2 column 1`，会**误判成字段缺失**（本次 `screen` 明明返回了 `"tvMode":"call"` 却判 FAIL）。判字段存在直接用 `grep -c "tvMode"` 更稳。
+⑥**商家后台页面要单独传磁盘**：`h5/*` 虽由 nginx 反代到 app，但真身是磁盘 `/www/wwwroot/ybgtc.com/h5/`，jar 重打**不会**覆盖磁盘文件——新增的商家后台 `index.html`（大屏模式开关）必须单独 sftp 上传并先备份。
+⑦**功能侧事实**：`merchant_queue_config.tv_mode`（VARCHAR(16)，NOT NULL 默认 'call'，已实测在库）；`TvQueueController.screen()` 返回 `tvMode`；`qr.svg`/`qr.png` 按模式编码（activity→`/h5/customer/index.html`、call→`/h5/queue.html`）；商家后台 `GET/POST /api/merchant/config/tv-mode`（需 X-Merchant-Token）。**切换后必须重启大屏 App**（WebView 只在启动时拉一次 tv.html）。
+⑧**无 token 时 `/api/merchant/config/tv-mode` 返回 HTTP 200 + `{"code":-1,"msg":"请先登录"}`**：这是鉴权正常的正确表现，不是 404、也不是接口没注册，别误判成部署失败。
+⑨**大屏双模式不改 APK**：模式由服务端 `tv_mode` 决定，页面用 `body.mode-call`/`body.mode-activity` 切换，APK 启动地址不变——所以只需"后台切换 + 重启 App"，不需要重新打包 APK。
+
+【G115】收尾备份踩坑：GitHub PAT 失效 + NAS tar 解压权限（2026-10-27）
+①**GitHub PAT 已失效**：`_push_gh.py` 里硬编码的 PAT 调 `api.github.com` 返回 **401 Unauthorized**（能连通，是凭据问题不是网络问题）。`shared-memory.json` 里 `github_token`(126字符) 与 `github.pat` 都是**脱敏占位文本**（按"文档一律脱敏"规矩故意不存明文），所以本机**没有任何可用 token** → GitHub 推送**真实阻塞**，必须由用户提供新 PAT 才能完成 G11 的一半。
+②**NAS tar 解压会因顶层目录 chmod 失败**：`cd /volume1/docker/github-backup && tar -xf /tmp/ybg_sync.tar` 报 `Cannot change mode to rwxr-xr-x: Operation not permitted`（tar 想改已存在目录的权限）。解法：进仓库目录用 `--strip-components=1 --no-overwrite-dir --no-same-owner` 解压，既避开顶层 chmod 又不会产生 `ybg-master/ybg-master/` 嵌套。
+③**发现并清理了历史遗留的嵌套重复目录**：NAS 仓库里此前误提交了一份 `ybg-master/*` 的嵌套副本（约 18 万行重复），本次提交（ddfd0be）顺带将其删除，仓库恢复扁平。解压后务必 `ls -d ybg-master` 确认无嵌套再 `git add -A`。
+④**AOCI verify 残留属历史遗留**：本次回写 9 条改动文件条目后 stale 由 28→19（我改的 9 个已清零），但仍有 **missing 123 / stale 19 / orphan 1**——这些是 2026-09-28 建索引之后（10-25/26 会话）新增或改动的存量文件。**G32.4 明令"条目语义必须来自对真实文件的读取理解，禁止按文件名/路径模板批量编造"**，因此不能批量补条目凑成 governance_aligned=true，只能逐个读懂后补，列为待办。
+⑤**本机 AOCI 没有 `maintain` 子命令**：规矩里写的 `aoci maintain` 是 MCP 工具；CLI 可用的是 `aoci source manifest --json`（取 `files[].sha256` 源码指纹）→ `aoci update-entry --path --entry --source-sha256`。含中文的条目必须用 Python subprocess 传参（PowerShell/Bash 传中文不可靠）。

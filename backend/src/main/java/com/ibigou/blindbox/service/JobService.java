@@ -39,6 +39,7 @@ public class JobService {
     private final com.ibigou.blindbox.repository.UserMessageRepository userMessageRepository;
     private final com.ibigou.blindbox.repository.AuditLogRepository auditLogRepository;
     private final com.ibigou.blindbox.repository.MemberAppointmentRepository memberAppointmentRepository;
+    private final MemberCrmService memberCrmService;
 
     /** 过期券标记：每小时执行 */
     @Scheduled(cron = "0 5 * * * ?")
@@ -143,6 +144,21 @@ public class JobService {
             } catch (Exception e) {
                 log.warn("预约提醒失败 id={} err={}", a.getId(), e.getMessage());
             }
+        }
+    }
+
+    /**
+     * V19 生日关怀提醒：每日 09:00 扫描生日临近会员（提前 7/3/1/0 天）。
+     * 商家站内提醒每个档位各一次；7 天档自动发关怀券；7/0 档触达顾客祝福。
+     * 按 商家+会员+年份+档位 幂等，重复执行不会重复发券或重复打扰。
+     */
+    @Scheduled(cron = "0 0 9 * * ?")
+    public void birthdayRemind() {
+        try {
+            int n = memberCrmService.runBirthdayRemind();
+            if (n > 0) log.info("定时任务：生日关怀提醒完成 count={}", n);
+        } catch (Exception e) {
+            log.warn("生日关怀提醒失败 err={}", e.getMessage());
         }
     }
 }
