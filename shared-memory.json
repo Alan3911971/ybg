@@ -1,6 +1,6 @@
 {
   "project": "宜必购盲盒系统 (ybgtc.com)",
-  "last_updated": "2026-10-27",
+  "last_updated": "2026-10-27（G38 副本分叉订正 / jar 路径冲突标注 / pending_tasks 换成真实现期待办 / 音效 12 vs 17 口径）",
   "note": "AOCI 仓库认知索引已建立（641条 aligned）",
   "environment": {
     "code_root": "D:\\workspace-java\\ybg-master",
@@ -40,7 +40,13 @@
       "user": "su3911971",
       "password": "宝塔密码（已脱敏）"
     },
-    "web_root": "/www/wwwroot/ybgmh"
+    "web_root": "/www/wwwroot/ybgmh",
+    "jar_path_conflict_20261027": {
+      "冲突": "本文件 production_server.jar 与 G01/G36.1 写 /www/wwwroot/ybgtc.com/ibigou.jar；tv_screen_dual_mode_20261027 写真正跑的是 /www/wwwroot/ybgtc-app/ibigou.jar（ybgtc.com 下那个无进程）",
+      "状态": "未实测确认（本机 SSH 被安全策略拦截，无法 ps 复核）",
+      "硬性前置": "每次部署前先 ps -eo pid,cmd | grep '[i]bigou.jar' 读真实路径再决定上传目录（G33.6 第6条）",
+      "风险": "传错目录 = 生产不生效但表面显示成功"
+    }
   },
   "database": {
     "name": "ybgtc.com（带点号，SQL需反引号）",
@@ -240,12 +246,14 @@
     }
   ],
   "pending_tasks": [
-    "补齐D盘IbigouService.java播报改造（模板已还原，待插入代码）",
-    "APP商家端播报没声音（主线）：需确认APP WebView支持哪种语音方案，测试播报按钮无声音",
-    "多商户支付方案（公共小程序+支付到每商户）未选型：服务商模式/代收+分账/静态收款码",
-    "小程序开发暂停",
-    "订单详情页底部申请退款按钮是否删除未确认",
-    "Z盘NAS未恢复：新会话须选 D:\\workspace-java\\ybg-master 或确认subst映射"
+    "【待办】订正四文档 jar 路径矛盾：ps 实测 /www/wwwroot/ybgtc.com vs ybgtc-app 谁是真正跑的，再统一四文档口径",
+    "【待办】订正投影 IP 矛盾：MEMORY.md 记 192.168.31.27，知识图谱 G112/G113 记 .28，实机确认后统一",
+    "【待办】AOCI 索引存量漂移清理：missing 123 / stale 19 / orphan 1，G32.4 禁止批量编造，只能逐个读懂后补",
+    "【待办】仓库根 41 个 _*.py/_*.js 归置：长期资产 11 个留仓库根，临时脚本 30 个移 D:\\workspace-java\\（G39）",
+    "【阻塞】极米投影真机实测大屏双模式：投影息屏后 adb 网络调试不常驻，需用户在投影端手动开启",
+    "【阻塞】GitHub 推送：PAT 401 失效，shared-memory 内为脱敏占位，需用户提供新 PAT 才能完成 G11 的一半",
+    "【待确认】任务#14「准备生产建表与回填脚本」是否已被后续迁移覆盖，需查生产库目标表是否已存在",
+    "【待办】微信 H5 支付产品未开通（MWEB 降级 native）；JSAPI 缺公众号 AppSecret"
   ],
   "announce_system": {
     "根因": "nginx location=/h5/merchant/index.html root /www/wwwroot/ybgtc.com 直读磁盘，jar里的H5修改不生效；磁盘旧版用/tts(500)无声",
@@ -883,7 +891,8 @@
       "task": "大屏双模式（叫号屏/盲盒活动屏）",
       "result": "后端+大屏页+商家后台开关已上线并通过服务端校验；投影真机实测待办"
     },
-    "2026-10-27 GitHub 备份闭环：用户提供 PAT → commit 73435e0（master）；PAT 改走 GH_PAT 环境变量，不落盘"
+    "2026-10-27 GitHub 备份闭环：用户提供 PAT → commit 73435e0（master）；PAT 改走 GH_PAT 环境变量，不落盘",
+    "2026-10-27 立 G37 工作面板机制：规矩文档末尾【工作面板】登记 已完成/未完成，下次开工先读面板接着做"
   ],
   "spec_kit": {
     "version": "1.0.7.dev0",
@@ -1216,5 +1225,94 @@
     "branch": "master（不是 main）",
     "precheck": "GET /user 看 login=Alan3911971；GET /repos/Alan3911971/ybg 看 default_branch",
     "verify": "GET /contents/<path>?ref=master 取 base64 回读 grep 关键字；注意关键字大小写（如 mysql 非 MYSQL）"
+  },
+  "work_panel_mechanism": {
+    "rule": "G37 规矩文档",
+    "location": "规矩文档.txt 末尾【工作面板】章节",
+    "entry_format": "[状态] 日期 | 事项 | 阻塞/原因 | 下一步动作 | 依赖 | 证据",
+    "states": [
+      "待办",
+      "进行中",
+      "阻塞",
+      "已完成"
+    ],
+    "start_of_day": "先读面板，从 待办/进行中 挑一条继续，不重新通读项目",
+    "on_finish": "更新四文档 → 面板 → GitHub → NAS（G12.6 修订顺序）"
+  },
+  "work_panel_20261027": {
+    "done": [
+      "2026-10-27 大屏双模式叫号屏/盲盒活动屏 + 商家后台切换开关上线；证据 GitHub 73435e0/921136f、NAS 7fe36af、screen 接口含 tvMode、库列 tv_mode 存在、health UP",
+      "2026-10-27 双向备份闭环：NAS 4 次提交 + GitHub 3 次提交"
+    ],
+    "open": [
+      {
+        "state": "阻塞",
+        "item": "极米投影真机实测两种模式各截一张",
+        "block": "投影 adb 网络调试不常驻，本机无法远程唤醒",
+        "next": "用户手动开 adb → adb connect <IP>:5555 → 重启 App → screencap",
+        "dep": "需用户手动操作"
+      },
+      {
+        "state": "阻塞",
+        "item": "盲盒活动屏端到端验收，扫码应跳 /h5/customer/index.html?merchantNo=",
+        "block": "服务端已验证编码，未真机扫码",
+        "next": "切 activity → 重启 App → 真扫一次",
+        "dep": "需投影在线"
+      },
+      {
+        "state": "待办",
+        "item": "订正四文档三处矛盾：jar 路径 ybgtc.com vs ybgtc-app、投影 IP .27 vs .28、G35 弹屏口径过时",
+        "block": "文档只增不改导致口径打架",
+        "next": "以 ps/ping/查库实测定性后统一，改旧口径不改新结论",
+        "dep": "需服务器与投影实测"
+      },
+      {
+        "state": "待办",
+        "item": "AOCI 存量漂移 missing 123 / stale 19 / orphan 1",
+        "block": "10-25/26 会话改动未登记",
+        "next": "逐个读文件后 update-entry 补条目",
+        "dep": "人工逐个读，G32.4 禁批量编造"
+      },
+      {
+        "state": "待确认",
+        "item": "任务#14 生产建表与回填脚本是否仍适用",
+        "block": "早于本轮工作，不确定是否被后续迁移覆盖",
+        "next": "查生产库目标表是否存在再决定",
+        "dep": "需用户确认"
+      }
+    ]
+  },
+  "pending_tasks_202609_已废止": [
+    "（旧）补齐D盘IbigouService.java播报改造",
+    "（旧）Z盘NAS未恢复 —— Z盘已删除，G18.2 明令任何 Z:\\ 路径失效，本条作废",
+    "（旧）小程序开发暂停 / 多商户支付方案未选型 / 订单详情页退款按钮未确认"
+  ],
+  "doc_copies_fork_20261027": {
+    "事实": "项目四文档在多个本地副本间分叉，且权威路径指向了落后副本",
+    "实测对照": {
+      "UNC \\\\DESKTOP-GGR22BK\\ybg-master": {
+        "规矩文档": "373 行（含 G36）",
+        "采坑日志": "1381 行",
+        "shared-memory": "1219 行",
+        "知识图谱": "846 行"
+      },
+      "D:\\workspace-java\\ybg-master": {
+        "规矩文档": "327 行（止于 G32，缺 G33-G36）",
+        "采坑日志": "1277 行",
+        "shared-memory": "1060 行",
+        "知识图谱": "755 行"
+      }
+    },
+    "危险点": "规矩 G18.3 / G31 指定 D 盘为唯一权威路径，而它落后两轮迭代",
+    "权威副本": "UNC 副本（含最新 G 条目）",
+    "判定三步": "① 比规矩文档最大 G 编号 ② 四文档 md5sum 比对 ③ 不看 .git（两副本均无 .git 配置）",
+    "原则": "代码本身仍以生产 jar 为唯一最新源（G10），副本只决定在哪干活"
+  },
+  "win_fx_count_20261027": {
+    "中奖音效数": "12 个 = 4 场景（discount/coupon/balance/free）× 3 档（t1/t2/t3）",
+    "目录文件总数": "17 个（/h5/fx/*.wav，含叫号等非中奖音效）",
+    "铁律": "说几个音效必须指明口径，否则 12 与 17 永远打架",
+    "校验脚本": "_check_win_fx.js 63 项 / _check_win_fx_wav.py 12 个",
+    "旧口径已废止": "_check_win_fx.js 35 项 / _check_win_fx_wav.py 5 段（30-26 早先版本，知识图谱 116 行仍停留在此）"
   }
 }
