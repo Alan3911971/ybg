@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover">
+<meta name="theme-color" content="#4f46e5">
+<title>我的 · 我的物业</title>
+<style>
+:root{--pri:#4f46e5;--pri-grad:linear-gradient(135deg,#4f46e5,#7c3aed);--pri-bg:#eef2ff;--text:#1e293b;--text-2:#64748b;--text-3:#94a3b8;--bg:#f8fafc;--surface:#fff;--border:#e2e8f0;--shadow-card:0 2px 12px rgba(0,0,0,.04);--r-md:14px;--r-lg:20px;--r-full:999px;--safe-bottom:env(safe-area-inset-bottom,0px);--success:#16a34a;--success-bg:#ecfdf5;--warning:#f59e0b;--warning-bg:#fffbeb;--danger:#dc2626;--danger-bg:#fef2f2;}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+html,body{font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif;color:var(--text);background:var(--bg);-webkit-font-smoothing:antialiased;font-size:15px;}
+body{min-height:100vh;padding-bottom:calc(74px + var(--safe-bottom));max-width:480px;margin:0 auto;}
+a{color:inherit;text-decoration:none;}button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit;}
+.hd{background:var(--pri-grad);color:#fff;padding:calc(18px + env(safe-area-inset-top,0px)) 18px 20px;border-radius:0 0 var(--r-lg) var(--r-lg);position:relative;overflow:hidden;}
+.hd::after{content:"";position:absolute;top:-60px;right:-40px;width:170px;height:170px;background:rgba(255,255,255,.08);border-radius:50%;}
+.hd .row{display:flex;align-items:center;gap:10px;position:relative;z-index:1;}
+.hd .back{width:32px;height:32px;border-radius:50%;background:rgba(255,255,255,.16);display:flex;align-items:center;justify-content:center;font-size:17px;}
+.hd h1{font-size:18px;font-weight:700;flex:1;}
+.hd .tag{font-size:11px;background:rgba(255,255,255,.18);padding:4px 10px;border-radius:var(--r-full);}
+.hd .meta{font-size:11.5px;opacity:.85;margin-top:7px;position:relative;z-index:1;}
+.wrap{padding:0 16px;}
+.card{background:#fff;border-radius:var(--r-md);box-shadow:var(--shadow-card);margin-top:12px;padding:14px;}
+.card .ct{font-size:14px;font-weight:700;margin-bottom:10px;display:flex;align-items:center;gap:6px;}
+.card .ct .more{margin-left:auto;font-size:12px;color:var(--text-3);font-weight:500;}
+.walletbox{margin:-18px 16px 0;background:linear-gradient(135deg,#4338ca,#7c3aed);color:#fff;border-radius:var(--r-md);box-shadow:0 8px 24px rgba(79,70,229,.28);padding:20px 18px;position:relative;z-index:2;overflow:hidden;}
+.walletbox::after{content:"";position:absolute;top:-40px;right:-30px;width:140px;height:140px;background:rgba(255,255,255,.08);border-radius:50%;}
+.walletbox .lab{font-size:12px;opacity:.85;position:relative;z-index:1;}
+.walletbox .num{font-size:36px;font-weight:800;font-family:ui-monospace,Menlo,Consolas,monospace;letter-spacing:-1px;margin:4px 0 8px;position:relative;z-index:1;}
+.split{display:flex;gap:10px;position:relative;z-index:1;}
+.split .col{flex:1;background:rgba(255,255,255,.14);border-radius:10px;padding:8px 10px;}
+.split .col .k{font-size:11px;opacity:.8;}
+.split .col .v{font-size:17px;font-weight:700;font-family:ui-monospace,Menlo,Consolas,monospace;margin-top:2px;}
+.walletbox .tip{font-size:11.5px;opacity:.85;line-height:1.6;margin-top:10px;position:relative;z-index:1;}
+.grid3{display:flex;gap:10px;margin-top:12px;}
+.grid3 .g{flex:1;background:#fff;border-radius:var(--r-md);box-shadow:var(--shadow-card);padding:13px 8px;text-align:center;}
+.grid3 .g .v{font-size:18px;font-weight:800;color:var(--pri);font-family:ui-monospace,Menlo,Consolas,monospace;}
+.grid3 .g .k{font-size:11px;color:var(--text-3);margin-top:3px;}
+.line{display:flex;align-items:center;gap:10px;padding:11px 0;border-bottom:1px solid #f1f5f9;}
+.line:last-child{border-bottom:none;}
+.line .main{flex:1;min-width:0;}
+.line .tt{font-size:13.5px;font-weight:600;}
+.line .dd{font-size:11.5px;color:var(--text-3);margin-top:2px;line-height:1.5;}
+.line .act{flex:0 0 auto;font-size:12px;color:var(--pri);font-weight:600;padding:5px 12px;border:1px solid var(--pri);border-radius:var(--r-full);}
+.badge{font-size:10.5px;padding:2px 8px;border-radius:var(--r-full);background:var(--success-bg);color:#15803d;font-weight:600;flex:0 0 auto;}
+.coupon{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px dashed var(--border);}
+.coupon:last-child{border-bottom:none;}
+.coupon .amt{font-size:19px;font-weight:800;color:var(--danger);font-family:ui-monospace,Menlo,Consolas,monospace;flex:0 0 auto;}
+.coupon .info{flex:1;min-width:0;}
+.coupon .nm{font-size:13px;font-weight:600;}
+.coupon .dd{font-size:11px;color:var(--text-3);margin-top:2px;}
+.coupon .st{font-size:11px;color:var(--text-3);flex:0 0 auto;}
+.bar{height:6px;border-radius:var(--r-full);background:var(--border);overflow:hidden;margin-top:8px;}
+.bar i{display:block;height:100%;background:var(--pri-grad);border-radius:var(--r-full);}
+.note{font-size:12.5px;color:var(--text-2);line-height:1.7;margin-top:10px;}
+.empty{text-align:center;padding:26px 20px;color:var(--text-3);font-size:12.5px;}
+.ask{margin:12px 16px 0;display:flex;gap:8px;align-items:center;background:#fff;border-radius:var(--r-full);box-shadow:var(--shadow-card);padding:6px 6px 6px 16px;}
+.ask input{flex:1;border:none;outline:none;font-size:13.5px;background:transparent;height:34px;}
+.ask button{height:34px;padding:0 16px;border-radius:var(--r-full);background:var(--pri-grad);color:#fff;font-size:13px;font-weight:600;}
+.tabbar{position:fixed;left:0;right:0;bottom:0;max-width:480px;margin:0 auto;background:#fff;border-top:1px solid var(--border);display:flex;padding:7px 0 calc(7px + var(--safe-bottom));z-index:50;}
+.tabbar a{flex:1;text-align:center;font-size:11px;color:var(--text-3);}
+.tabbar a .ic{font-size:19px;display:block;margin-bottom:2px;}
+.tabbar a.on{color:var(--pri);font-weight:600;}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:92px;background:rgba(17,24,39,.92);color:#fff;font-size:13px;padding:10px 18px;border-radius:var(--r-full);z-index:99;opacity:0;transition:opacity .2s;pointer-events:none;max-width:78%;text-align:center;}
+.toast.show{opacity:1;}
+</style>
+</head>
+<body>
+<div class="hd">
+  <div class="row"><a class="back" href="index.html">‹</a><h1>我的</h1><span class="tag" id="tagBind">—</span></div>
+  <div class="meta" id="meta">加载中…</div>
+</div>
+
+<div class="walletbox">
+  <div class="lab">物业钱包 · 抵物业费</div>
+  <div class="num" id="wNum">￥0.00</div>
+  <div class="split">
+    <div class="col"><div class="k">本月可用</div><div class="v" id="wNow">￥0.00</div></div>
+    <div class="col"><div class="k">次月可抵</div><div class="v" id="wNext">￥0.00</div></div>
+  </div>
+  <div class="tip" id="wTip">只能抵物业费、车位费、公摊水电；不能提现、不能转赠、不能抵商城消费。</div>
+</div>
+
+<div class="wrap">
+  <div class="grid3">
+    <div class="g"><div class="v" id="mBal">￥0.00</div><div class="k">商户余额（本店）</div></div>
+    <div class="g"><div class="v" id="cCnt">0 张</div><div class="k">优惠券</div></div>
+    <div class="g"><div class="v" id="aCnt">0/0</div><div class="k">收藏图鉴</div></div>
+  </div>
+
+  <div class="card">
+    <div class="ct">🏠 我的物业</div>
+    <div id="homeBox"><div class="line"><div class="main"><div class="tt">加载中…</div></div></div></div>
+    <div class="line">
+      <div class="main"><div class="tt">家庭成员</div><div class="dd" id="famDd">—</div></div>
+      <a class="act" href="family.html">管理</a>
+    </div>
+    <div class="line">
+      <div class="main"><div class="tt">核销码</div><div class="dd">到店消费时给商家扫，用于绑定这笔消费</div></div>
+      <a class="act" href="#" onclick="showQr(event)">出示</a>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="ct">🎟️ 我的券与收藏<span class="more" id="cMore">—</span></div>
+    <div id="couponBox"><div class="empty">加载中…</div></div>
+  </div>
+
+  <div class="card">
+    <div class="ct">📖 收藏图鉴</div>
+    <div id="albumBox"><div class="empty">加载中…</div></div>
+  </div>
+
+  <div class="card">
+    <div class="ct">⚠️ 两个钱包必须是两个数</div>
+    <div class="note">左边 ￥<b id="n1">0</b> 是<b>抵物业费的</b>，右边是本店零钱。合成一个「余额」，业主就会问「我能不能提现」，物业就答不上来——<b>钱的性质写清楚，比数字大更重要</b>。当月新进的钱次月才抵，所以上面把「本月可用 / 次月可抵」分开写了。</div>
+  </div>
+</div>
+
+<div class="ask"><input id="askIn" placeholder="问一句，比如「分账明细在哪看」"><button onclick="ask()">问</button></div>
+
+<div class="tabbar">
+  <a href="index.html"><span class="ic">🏠</span>首页</a>
+  <a href="mall.html"><span class="ic">🛒</span>商城</a>
+  <a href="group.html"><span class="ic">💬</span>消息</a>
+  <a href="mine.html" class="on"><span class="ic">👤</span>我的</a>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+var TOKEN = localStorage.getItem("property_owner_token") || "";
+function $(id){return document.getElementById(id)}
+function toast(m){var t=$("toast");t.textContent=m;t.classList.add("show");setTimeout(function(){t.classList.remove("show")},2200)}
+function money(n){return "￥" + (Number(n||0)).toFixed(2)}
+function esc(s){return String(s==null?"":s).replace(/[&<>"]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})}
+function api(path,opt){opt=opt||{};opt.headers=Object.assign({"X-Owner-Token":TOKEN},opt.headers||{});return fetch(path,opt).then(function(r){return r.json()})}
+
+function load(){
+  api("/api/property/mall/mine").then(function(r){
+    if(r.code !== 0){ toast(r.msg||"加载失败"); $("meta").textContent = r.msg||"加载失败"; return }
+    var d = r.data, w = d.propertyWallet || {};
+    $("meta").textContent = (d.ownerName || "业主") + " · " + (d.phone || "");
+    $("tagBind").textContent = (d.homes && d.homes.length) ? "已绑定" : "未绑定";
+    $("wNum").textContent = money(w.balance);
+    $("wNow").textContent = money(w.usableNow);
+    $("wNext").textContent = money(w.nextMonth);
+    if(w.tip) $("wTip").textContent = w.tip;
+    $("mBal").textContent = money((d.merchantBalance||{}).balance);
+    $("cCnt").textContent = (d.couponCount||0) + " 张";
+    $("aCnt").textContent = (d.album.have||0) + "/" + (d.album.total||0);
+    $("n1").textContent = (Number(w.balance)||0).toFixed(2);
+
+    var hh = "";
+    if(!d.homes || !d.homes.length){
+      hh = '<div class="line"><div class="main"><div class="tt">还没绑定房产</div>'
+         + '<div class="dd">绑房后才能缴物业费、报修、开门</div></div><a class="act" href="bind.html">去绑房</a></div>';
+    } else {
+      d.homes.forEach(function(h){
+        hh += '<div class="line"><div class="main"><div class="tt">房号 ' + esc(h.roomId || "—") + '</div>'
+            + '<div class="dd">物业公司 ID ' + esc(h.companyId) + '</div></div><span class="badge">已绑定</span></div>';
+      });
+    }
+    $("homeBox").innerHTML = hh;
+    $("famDd").textContent = d.familyCount > 0
+      ? ("已绑 " + d.familyCount + " 人（可代办报修、代缴）")
+      : "还没绑家人，绑了可代办报修、代缴";
+
+    $("cMore").textContent = (d.couponCount||0) + " 张 · " + (d.album.have||0) + "/" + (d.album.total||0);
+    var ch = "";
+    if(!d.coupons || !d.coupons.length){
+      ch = '<div class="empty">还没有可用优惠券<br>缴费、抽盒、推荐商家都会给券</div>';
+    } else {
+      d.coupons.slice(0,6).forEach(function(c){
+        ch += '<div class="coupon"><div class="amt">' + money(c.value) + '</div>'
+            + '<div class="info"><div class="nm">' + esc(c.merchantName) + '</div>'
+            + '<div class="dd">到期 ' + esc(c.validEnd || "—") + '</div></div>'
+            + '<div class="st">未使用</div></div>';
+      });
+    }
+    $("couponBox").innerHTML = ch;
+
+    var pct = d.album.total ? Math.round(d.album.have * 100 / d.album.total) : 0;
+    $("albumBox").innerHTML = '<div style="font-size:13.5px">已集 ' + d.album.have + ' 款 / 共 '
+      + d.album.total + ' 款<div class="bar"><i style="width:' + pct + '%"></i></div>'
+      + '<div class="note">集满规则由物业在后台配置；这里的进度按你在本小区买过的不同商品数实算，不虚标。</div></div>';
+  }).catch(function(){ toast("网络异常") });
+}
+
+function showQr(e){
+  e.preventDefault();
+  api("/api/property/mall/qr?content=" + encodeURIComponent("owner:" + TOKEN)).then(function(r){
+    if(r.code === 0 && r.data && r.data.svg){
+      var w = window.open("", "_blank");
+      if(w){ w.document.write('<div style="text-align:center;font-family:sans-serif;padding:20px">' + r.data.svg + '<p style="font-size:13px;color:#666">到店给商家扫</p></div>'); }
+      else { toast("请允许弹出窗口") }
+    } else { toast(r.msg || "生成失败") }
+  });
+}
+function ask(){ var v=$("askIn").value.trim(); if(!v) return; toast("已收到：" + v + "（问答接口待接入）"); $("askIn").value=""; }
+load();
+</script>
+</body>
+</html>

@@ -1526,3 +1526,28 @@ msedge --headless --window-size=420,900 --virtual-time-budget=4000 --screenshot=
 原因：PropertyOwnerController.TOKEN_STORE 是静态 ConcurrentHashMap，只在内存里，进程重启即清空。
 影响：任何 jar 重启后，E2E/截图前必须重新登录取 token，否则误判为"接口坏了"。
 （这也是生产上的真实体验问题：每次发版所有业主都要重新登录——后续如需避免，得把 token 持久化到表或 Redis。）
+
+【G130】顾客端 v3 落地第二批（choose / draw）：配色迁移法 + DOM 文本隐藏依赖 + 截图底边裁切（2026-10-28 凌晨）
+①**整页换配色别逐行改，先统计再映射**：draw.html 是 375 行 / 26KB 的"橙红 + 紫霓虹 3D 抽奖页"，硬编码颜色 30+ 个。稳法：用脚本统计 CSS 里全部 hex / rgba 出现频次 → 建一张"旧色→v3 色"映射表 → 只替换 `</style>` 之前的 CSS 段 → 保留全部 DOM id 与动画类名。**先备份 `*.bak-v3pre-*`**，替换范围严格限定在 CSS 段，DOM 与 JS 依赖零改动，动画（cube 3D / fireworks / particles）全部存活。
+②**DOM 文本可能是 JS 的隐式输入**：draw.js 的 `getShopFruits()` 靠 `document.querySelector(".shop-name").textContent` 匹配关键词来决定立方体六面用哪些水果 emoji —— 把店名改成动态拉取（"鲜果时光（生产水果店）"）后，水果映射会走 fallback。**改任何"看起来只是展示"的文本前，先 grep 它是否被 JS 读取**。
+③**截图底边会裁掉 fixed 底导航**：G129③ 的 390 iframe 法里，若 iframe 高 1500 = 窗口高 1500，`position:fixed;bottom:0` 的 nav 正好落在窗口最后一行像素上，视觉模型会报"最右项被裁"。**iframe 高度必须小于窗口高度**（本次 1400 / 1460），nav 才完整入画。
+④**nginx 回读必须带 Host** 再次验证（同 G129⑤）：`curl -H "Host: ybgtc.com" http://127.0.0.1/h5/customer/choose.html` 命中新内容；不带 Host 会打到默认 vhost 判假阴性。
+⑤**改 CSS 变量值 ≠ 改语义**：draw.html 用的是旧命名 `--c-primary/--c-text/--c-grad-1`，本次只改值不改名（`#ff5b3e→#0e7a6b` 等），避免连锁改 40 处引用。跨页统一设计语言时，**先对齐"值"，别急着统一"名"**。
+
+【2026-10-28 01:10】写券/写流水前先查目标表的非空约束，不然 500 在上线后才冒出来
+现象：抽奖接口 /api/property/draw/run 连着 500 三次，每次都是不同的列：source_merchant_no → update_time → bill_id。
+原因：user_coupon 的 source_merchant_no / update_time 非空、property_deduct_log 的 bill_id 非空，
+而我按"业务上不需要"就没赋值。JPA 不会在编译期提醒，只有真跑才炸。
+修法：①source_merchant_no 取本小区已过审特约商户（设计稿口径：奖池成本记在商户营销费里），无商户则记 PROPERTY；
+②update_time 一并设；③bill_id 语义是"抵扣哪张账单"，而抽奖入账时还没有账单 → 改表放开为 NULL（入账≠抵扣）。
+教训：往一张不熟的表写数据前，先 `SHOW COLUMNS` 看 Null 列；"这个字段我用不上"不等于"它可以为 null"。
+
+【2026-10-28 01:26】Edge headless 视口比页面窄，会伪造出"右侧文字被裁"的假 bug
+现象：--window-size=440 截 480px 的移动端页，四行金额全被截断成"￥241."，一度以为样式崩了。
+复核：改用 560 宽重截，全部完整。页面本身没问题。
+教训：截图验收的视口必须 ≥ 页面 max-width，否则会把视口裁切误判成布局 bug（这是第二次踩，见 10-27 登录页那条）。
+
+【2026-10-28 01:24】按钮副标题写死，会和真实状态打架
+现象：抽盲盒页剩余 0 次，按钮被 disable 了，但副标题还写着"100% 中"。
+修法：副标题按 LEFT 动态给（有次数→"100% 中"/"连抽 N 次"；0 次→"没有次数"）。
+教训：任何"状态 + 文案"同时出现的控件，文案必须跟着状态走，只改 disabled 是不够的。

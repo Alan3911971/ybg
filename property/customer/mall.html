@@ -93,7 +93,7 @@ a{color:inherit;text-decoration:none;}button{font-family:inherit;cursor:pointer;
   <a href="index.html"><span class="ic">🏠</span>首页</a>
   <a href="mall.html" class="on"><span class="ic">🛒</span>商城</a>
   <a href="group.html"><span class="ic">💬</span>消息</a>
-  <a href="orders.html"><span class="ic">📋</span>订单</a>
+  <a href="mine.html"><span class="ic">👤</span>我的</a>
 </div>
 <div class="toast" id="toast"></div>
 
@@ -133,7 +133,7 @@ function renderList(){
   if(!l.length){$("goodsList").innerHTML='<div class="empty"><div class="big">🛒</div>本小区还没有商户上架商品<br>业主邀一家店入驻后这里就有货了</div>';return;}
   var h="";
   l.forEach(function(g){
-    h+='<div class="gcard"><div class="ph">🛍️</div><div class="info">'
+    h+='<div class="gcard" onclick="location.href=\'checkout.html?items='+g.goodsId+':1\'"><div class="ph">🛍️</div><div class="info">'
       +'<div class="nm">'+esc(g.goodsName)+'</div>'
       +'<div class="mch">'+esc(g.merchantName||"")+(g.description?(" · "+esc(g.description)):"")+'</div>'
       +'<div class="bt"><span class="pr">'+money(g.price)+'</span>'

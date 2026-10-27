@@ -912,6 +912,28 @@
       "deployed": true,
       "tested": true,
       "pending": "jar 内旧副本待下次打包同步；抽盒/开盒/选参与方式三页仍是旧版；真机扫码验收待用户"
+    },
+    {
+      "date": "2026-10-28",
+      "features": [
+        "顾客端 v3 落地第二批：choose.html 按 v3 设计重写（店铺卡+2x2渠道卡+胶囊CTA+余额说明+4tab导航），保留渠道选择与 draw.html?channel= 跳转、登录态校验，新增 merchantNo 透传与商户名动态拉取",
+        "draw.html 配色迁移：橙红+紫霓虹 → 深青+胶囊色系，仅改 CSS 段，DOM id / 3D cube 动画 / fireworks / particles / live-bar 全部保留；draw.js 仅改烟花配色数组",
+        "draw.html 补 v3 底导航（首页/抽盒/商城/我的）与 body 留白，店铺栏头像改 svg、店名改动态拉取"
+      ],
+      "files_changed": [
+        "backend/src/main/resources/static/h5/customer/choose.html (v3 重写)",
+        "customer/choose.html (同步)",
+        "backend/src/main/resources/static/h5/customer/draw.html (配色迁移 + v3 底导航 + 动态店名)",
+        "customer/draw.html + customer/draw.html.bak-v3pre-20261028 (备份)",
+        "customer/draw.js + backend/.../draw.js (烟花配色 v3 五色)",
+        "生产 /www/wwwroot/ybgtc.com/h5/customer/{choose.html,draw.html,draw.js} (备份 .bak-20261028_005448)",
+        "采坑日志.txt (G130)",
+        "知识图谱.md",
+        "规矩文档.txt (工作面板)"
+      ],
+      "deployed": true,
+      "tested": true,
+      "pending": "unbox 开盒瞬间页未落地；pay/wallet/ibigou/login 仍旧版；jar 内旧副本待打包同步；首页 CTA 未接 choose（待用户确认）；真机扫码验收"
     }
   ],
   "spec_kit": {
@@ -1440,5 +1462,59 @@
       "登录页补设计"
     ],
     "data_caveat": "商城真实数据仅 1 家商户 4 件卡类商品；距离/步行无数据源，未编造"
+  },
+  "property_customer_p1_20261028": {
+    "date": "2026-10-28",
+    "scope": "业主端 P1：㉑收银台 ㉓我的 ㉔缴费 ㉕抽盲盒 ㉖开盒结果",
+    "backend": {
+      "new": "PropertyDrawController（pool/run/records）",
+      "extended": "PropertyMallController + /checkout + /mine",
+      "sql": "V26__property_draw.sql（property_draw_record + deduct_log.bill_id 放开 NULL）",
+      "jar_backup": "ibigou.jar.bak-20261028_0048",
+      "page_backup": "/tmp/prop_bak_p1/"
+    },
+    "pages": [
+      "checkout.html(new)",
+      "mine.html(new)",
+      "draw.html(重做)",
+      "draw-result.html(new)",
+      "bills.html(重做)",
+      "index.html(+2入口)",
+      "mall.html(卡片进收银台)",
+      "referral/orders(P0 tabbar 统一)"
+    ],
+    "e2e": {
+      "script": "_e2e_property_p1.py",
+      "total": 47,
+      "pass": 47,
+      "fail": 0
+    },
+    "shots": [
+      "_shots/p1/checkout_w.png",
+      "_shots/p1/mine_w.png",
+      "_shots/p1/draw_w.png",
+      "_shots/p1/draw-result_w.png",
+      "_shots/p1/bills_w.png"
+    ],
+    "formulas": {
+      "times": "已缴账单数 + 商城已付订单数 − 已抽次数",
+      "prob": "prize.weight / Σweight（生产 5 档 37/29.6/18.5/11.1/3.7%）",
+      "usable": "本月可用 = 上月及以前入账；次月 = 当月新进",
+      "checkout": "实付 = 商品原价 − 立减券；物业钱包恒不可用"
+    },
+    "bugs_fixed": [
+      "user_coupon.source_merchant_no 非空 → 取本小区特约商户/PROPERTY",
+      "user_coupon.update_time 未设",
+      "property_deduct_log.bill_id 非空 → 入账类放开 NULL",
+      "0 次时按钮副标题仍写「100% 中」"
+    ],
+    "test_data_restored": [
+      "property_bill#147 (E2ERELIEF001) 已恢复 status=0/paid=NULL"
+    ],
+    "pending": [
+      "P2 九页换壳",
+      "P3 五屏确认",
+      "登录页补设计"
+    ]
   }
 }

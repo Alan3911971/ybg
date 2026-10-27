@@ -4,507 +4,220 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover">
 <meta name="theme-color" content="#4f46e5">
-<title>账单 · 我的物业</title>
-<link rel="icon" href="data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='80' font-size='90'%3E🏠%3C/text%3E%3C/svg%3E">
+<title>缴费 · 我的物业</title>
 <style>
-:root {
-  --pri: #4f46e5; --pri-hover: #4338ca; --pri-light: #818cf8; --pri-bg: #eef2ff; --pri-grad: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
-  --gold: #f59e0b; --gold-bg: #fffbeb;
-  --success: #10b981; --success-bg: #ecfdf5;
-  --danger: #ef4444; --danger-bg: #fef2f2;
-  --text: #1e293b; --text-2: #64748b; --text-3: #94a3b8;
-  --bg: #f8fafc; --surface: #ffffff; --border: #e2e8f0; --divider: #f1f5f9;
-  --shadow-card: 0 2px 12px rgba(0,0,0,.04);
-  --shadow-float: 0 8px 30px rgba(0,0,0,.08);
-  --r-md: 14px; --r-lg: 20px; --r-xl: 24px; --r-full: 999px;
-  --safe-bottom: env(safe-area-inset-bottom, 0px);
-  --ease: cubic-bezier(.4,0,.2,1);
-}
+:root{--pri:#4f46e5;--pri-grad:linear-gradient(135deg,#4f46e5,#7c3aed);--pri-bg:#eef2ff;--text:#1e293b;--text-2:#64748b;--text-3:#94a3b8;--bg:#f8fafc;--surface:#fff;--border:#e2e8f0;--shadow-card:0 2px 12px rgba(0,0,0,.04);--r-md:14px;--r-lg:20px;--r-full:999px;--safe-bottom:env(safe-area-inset-bottom,0px);--success:#16a34a;--success-bg:#ecfdf5;--warning:#f59e0b;--warning-bg:#fffbeb;--danger:#dc2626;--danger-bg:#fef2f2;}
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
-html,body{font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","SF Pro Display","Helvetica Neue",sans-serif;color:var(--text);background:var(--bg);-webkit-font-smoothing:antialiased;font-size:15px;}
-body{min-height:100vh;}
-a{color:inherit;text-decoration:none;}
-button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit;}
-
-@keyframes fadeInUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
-
-.app-shell{max-width:480px;margin:0 auto;min-height:100vh;background:var(--bg);position:relative;}
-
-.hero{background:var(--pri-grad);color:#fff;padding:48px 20px 28px;position:relative;overflow:hidden;}
-.hero::before{content:"";position:absolute;top:-60px;right:-40px;width:200px;height:200px;background:rgba(255,255,255,.08);border-radius:50%;}
-.hero::after{content:"";position:absolute;bottom:-30px;left:-20px;width:120px;height:120px;background:rgba(255,255,255,.06);border-radius:50%;}
-.hero h1{font-size:22px;font-weight:800;position:relative;z-index:1;letter-spacing:-.3px;}
-.hero .sub{font-size:13px;opacity:.85;margin-top:6px;position:relative;z-index:1;font-weight:500;}
-
-.content{padding:20px 20px calc(80px + var(--safe-bottom));}
-
-/* Segment Tabs */
-.seg{display:flex;background:var(--bg);border-radius:var(--r-full);padding:4px;margin-bottom:16px;box-shadow:inset 0 1px 3px rgba(0,0,0,.06);}
-.seg button{flex:1;padding:10px 4px;font-size:13px;color:var(--text-2);border-radius:var(--r-full);cursor:pointer;font-weight:600;transition:all .25s var(--ease);}
-.seg button.active{background:var(--surface);color:var(--pri);box-shadow:0 2px 8px rgba(0,0,0,.08);}
-
-/* Bill Card */
-.bill-card{background:var(--surface);border-radius:var(--r-lg);margin-bottom:16px;overflow:hidden;box-shadow:var(--shadow-card);transition:all .25s var(--ease);animation:fadeInUp .4s var(--ease) both;}
-.bill-card .bill-main{padding:20px;cursor:pointer;}
-.bill-card .bill-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
-.bill-card .bill-no{font-size:12px;color:var(--text-3);font-weight:500;}
-.bill-card .bill-badge{display:inline-block;padding:4px 12px;border-radius:var(--r-full);font-size:11px;font-weight:700;}
-.bill-card .bill-badge.unpaid{background:var(--danger-bg);color:var(--danger);}
-.bill-card .bill-badge.paid{background:var(--success-bg);color:var(--success);}
-.bill-card .bill-badge.partial{background:var(--gold-bg);color:var(--gold);}
-.bill-card .bill-badge.overdue{background:var(--danger-bg);color:var(--danger);}
-.bill-card .bill-period{font-size:13px;color:var(--text-2);margin-bottom:10px;font-weight:500;}
-.bill-card .bill-amount{display:flex;align-items:flex-end;gap:4px;}
-.bill-card .bill-amount .sym{font-size:16px;color:var(--text-2);padding-bottom:4px;font-weight:600;}
-.bill-card .bill-amount .num{font-size:32px;font-weight:800;color:var(--pri);line-height:1;letter-spacing:-1px;}
-.bill-card .bill-row{display:flex;gap:16px;margin-top:10px;font-size:12px;}
-.bill-card .bill-row .item{display:flex;align-items:center;gap:4px;font-weight:500;}
-.bill-card .bill-row .green{color:var(--success);font-weight:700;}
-.bill-card .bill-row .red{color:var(--danger);font-weight:700;}
-.bill-card .bill-footer{display:flex;align-items:center;justify-content:space-between;margin-top:12px;font-size:11px;color:var(--text-3);font-weight:500;}
-.bill-card .expand-icon{transition:transform .25s var(--ease);font-size:12px;color:var(--text-3);}
-.bill-card.expanded .expand-icon{transform:rotate(180deg);}
-
-/* Expanded Detail */
-.bill-detail{display:none;padding:0 20px 20px;border-top:1px solid var(--divider);background:var(--bg);}
-.bill-card.expanded .bill-detail{display:block;}
-.bill-detail .detail-title{font-size:13px;font-weight:700;color:var(--text-2);margin:14px 0 8px;text-transform:uppercase;letter-spacing:.5px;}
-.detail-item{display:flex;align-items:center;justify-content:space-between;padding:8px 0;font-size:13px;border-bottom:1px solid var(--divider);}
-.detail-item:last-child{border-bottom:none;}
-.detail-item .d-label{color:var(--text-2);font-weight:500;}
-.detail-item .d-value{font-weight:700;}
-.detail-item .d-value.green{color:var(--success);}
-.detail-item .d-value.red{color:var(--danger);}
-.detail-loading{text-align:center;padding:20px;font-size:12px;color:var(--text-3);}
-
-/* Deduct Logs Table */
-.log-table{width:100%;border-collapse:collapse;font-size:12px;}
-.log-table th{text-align:left;padding:12px 10px;background:var(--bg);color:var(--text-2);font-weight:700;border-bottom:1px solid var(--border);white-space:nowrap;font-size:11px;text-transform:uppercase;letter-spacing:.3px;}
-.log-table td{padding:12px 10px;border-bottom:1px solid var(--divider);color:var(--text);}
-.log-table tr:last-child td{border-bottom:none;}
-.log-table .amt{font-weight:800;color:var(--danger);}
-
-/* Parking Fee Table */
-.fee-table{width:100%;border-collapse:collapse;font-size:12px;}
-.fee-table th{text-align:left;padding:12px 10px;background:var(--bg);color:var(--text-2);font-weight:700;border-bottom:1px solid var(--border);white-space:nowrap;font-size:11px;text-transform:uppercase;letter-spacing:.3px;}
-.fee-table td{padding:12px 10px;border-bottom:1px solid var(--divider);color:var(--text);}
-.fee-table tr:last-child td{border-bottom:none;}
-.fee-table .amt{font-weight:800;color:var(--gold);}
-
-.card{background:var(--surface);border-radius:var(--r-lg);padding:8px 12px;box-shadow:var(--shadow-card);overflow-x:auto;animation:fadeInUp .4s var(--ease) both;}
-
-.empty{text-align:center;padding:40px 16px;color:var(--text-3);font-size:13px;}
-.empty .emoji{font-size:40px;display:block;margin-bottom:10px;}
-
-.nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:480px;z-index:100;background:rgba(255,255,255,.85);backdrop-filter:blur(20px) saturate(180%);-webkit-backdrop-filter:blur(20px) saturate(180%);border-top:.5px solid rgba(0,0,0,.06);display:flex;padding-bottom:var(--safe-bottom);}
-.nav .tab{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;color:var(--text-3);font-size:10px;padding:8px 0;font-weight:500;transition:color .2s;}
-.nav .tab .ic{font-size:22px;line-height:1;}
-.nav .tab.active{color:var(--pri);font-weight:700;}
-.nav .tab.active::after{content:"";width:4px;height:4px;border-radius:50%;background:var(--pri);margin-top:2px;}
-.nav .tab.active .ic{transform:translateY(-2px);}
-
-.toast-host{position:fixed;top:16px;left:50%;transform:translateX(-50%);z-index:200;display:flex;flex-direction:column;align-items:center;gap:8px;pointer-events:none;width:100%;max-width:480px;padding:0 16px;}
-.toast{background:rgba(30,41,59,.92);backdrop-filter:blur(10px);color:#fff;padding:10px 20px;border-radius:var(--r-full);font-size:13px;font-weight:600;max-width:90%;text-align:center;opacity:0;transform:translateY(-12px);transition:all .3s var(--ease);box-shadow:var(--shadow-float);}
-.toast.show{opacity:1;transform:translateY(0);}
-.toast.success{background:rgba(16,185,129,.92);}
-.toast.warning{background:rgba(245,158,11,.92);}
-.toast.danger{background:rgba(239,68,68,.92);}
-.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:none;font-weight:600;cursor:pointer;transition:all .2s cubic-bezier(.4,0,.2,1);letter-spacing:.2px;white-space:nowrap;}
-.btn-xs{height:28px;padding:0 10px;font-size:12px;border-radius:6px;}
-.btn-sm{height:36px;padding:0 16px;font-size:13px;border-radius:8px;}
-.badge{display:inline-block;padding:2px 10px;border-radius:10px;font-size:12px;font-weight:600;}
-.badge.green{background:rgba(22,163,74,.12);color:#16a34a;}
-.badge.gray{background:rgba(100,116,139,.12);color:#64748b;}
-
-.btn-md{height:44px;padding:0 24px;font-size:14px;border-radius:10px;}
-.btn-lg{height:52px;padding:0 32px;font-size:16px;border-radius:12px;}
-.btn-xl{height:60px;padding:0 40px;font-size:18px;border-radius:14px;}
-.btn-block{width:100%;}
-.btn-icon{width:44px;height:44px;padding:0;border-radius:12px;}
-.btn-primary{background:linear-gradient(135deg,#4f46e5 0%,#7c3aed 100%);color:#fff;box-shadow:0 4px 14px rgba(79,70,229,.3);}
-.btn-secondary{background:var(--surface);color:var(--text);border:1.5px solid var(--border);}
-.btn-soft{background:var(--pri-bg);color:var(--pri);}
-.btn-ghost{background:transparent;color:var(--pri);}
-.btn-success{background:linear-gradient(135deg,#10b981,#059669);color:#fff;box-shadow:0 4px 14px rgba(16,185,129,.3);}
-.btn-danger{background:linear-gradient(135deg,#ef4444,#dc2626);color:#fff;box-shadow:0 4px 14px rgba(239,68,68,.3);}
-.btn-warning{background:linear-gradient(135deg,#f59e0b,#d97706);color:#fff;box-shadow:0 4px 14px rgba(245,158,11,.3);}
-.btn:hover{transform:translateY(-1px);filter:brightness(1.05);}
-.btn:active{transform:scale(.97);filter:brightness(.95);}
-.btn:focus-visible{outline:2px solid var(--pri);outline-offset:2px;}
-.btn[disabled]{opacity:.45;cursor:not-allowed;transform:none!important;filter:none!important;}
-.btn.loading{pointer-events:none;position:relative;color:transparent!important;}
-.btn.loading::after{content:"";position:absolute;width:18px;height:18px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:btn-spin .6s linear infinite;}
-@keyframes btn-spin{to{transform:rotate(360deg);}}
-.fab{position:fixed;bottom:calc(88px + var(--safe-bottom));right:20px;width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,#4f46e5,#7c3aed);color:#fff;display:flex;align-items:center;justify-content:center;font-size:24px;box-shadow:0 6px 20px rgba(79,70,229,.4);z-index:40;border:none;cursor:pointer;transition:transform .15s;}
-.fab:active{transform:scale(.9);}
-.btn-cta{width:100%;height:56px;font-size:17px;font-weight:700;border-radius:16px;letter-spacing:.3px;}
-
-/* 缴费弹窗 */
-.pay-mask{position:fixed;inset:0;background:rgba(15,23,42,.45);z-index:300;animation:fadeIn .2s var(--ease);}
-@keyframes fadeIn{from{opacity:0}to{opacity:1}}
-.pay-sheet{position:fixed;left:50%;bottom:0;transform:translateX(-50%);width:100%;max-width:480px;background:var(--surface);border-radius:24px 24px 0 0;padding:24px 20px calc(28px + var(--safe-bottom));z-index:301;box-shadow:0 -8px 30px rgba(0,0,0,.12);animation:sheetUp .3s var(--ease);}
-@keyframes sheetUp{from{transform:translateX(-50%) translateY(100%)}to{transform:translateX(-50%) translateY(0)}}
-.pay-sheet .pay-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;}
-.pay-sheet .pay-title{font-size:17px;font-weight:800;}
-.pay-sheet .pay-amount{font-size:24px;font-weight:800;color:var(--pri);}
-.pay-sheet .pay-close{width:32px;height:32px;border-radius:50%;background:var(--bg);color:var(--text-2);font-size:16px;display:flex;align-items:center;justify-content:center;}
-.pay-channels{display:flex;flex-direction:column;gap:12px;}
-.pay-channel{display:flex;align-items:center;justify-content:space-between;padding:16px;border:1.5px solid var(--border);border-radius:14px;font-size:15px;font-weight:700;background:var(--surface);transition:all .2s var(--ease);}
-.pay-channel:active{transform:scale(.98);border-color:var(--pri);}
-.pay-channel .ch-ic{font-size:22px;margin-right:10px;}
-.pay-channel .ch-arrow{color:var(--text-3);font-size:12px;}
-.pay-qr{text-align:center;padding-top:6px;}
-.pay-qr .qr-box{width:220px;height:220px;margin:0 auto 12px;border:2px dashed var(--border);border-radius:16px;display:flex;align-items:center;justify-content:center;background:var(--surface);}
-.pay-qr img{width:200px;height:200px;display:block;}
-.pay-qr .qr-tip{font-size:13px;color:var(--text-2);font-weight:600;margin-bottom:4px;}
-.pay-qr .qr-sub{font-size:12px;color:var(--text-3);margin-bottom:14px;}
-.pay-qr .pay-status{font-size:13px;color:var(--pri);font-weight:700;margin-bottom:14px;}
-.pay-qr .btn{width:100%;}
+html,body{font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif;color:var(--text);background:var(--bg);-webkit-font-smoothing:antialiased;font-size:15px;}
+body{min-height:100vh;padding-bottom:calc(112px + var(--safe-bottom));max-width:480px;margin:0 auto;}
+a{color:inherit;text-decoration:none;}button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit;}
+.hd{background:var(--pri-grad);color:#fff;padding:calc(18px + env(safe-area-inset-top,0px)) 18px 20px;border-radius:0 0 var(--r-lg) var(--r-lg);position:relative;overflow:hidden;}
+.hd::after{content:"";position:absolute;top:-60px;right:-40px;width:170px;height:170px;background:rgba(255,255,255,.08);border-radius:50%;}
+.hd .row{display:flex;align-items:center;gap:10px;position:relative;z-index:1;}
+.hd .back{width:32px;height:32px;border-radius:50%;background:rgba(255,255,255,.16);display:flex;align-items:center;justify-content:center;font-size:17px;}
+.hd h1{font-size:18px;font-weight:700;flex:1;}
+.hd .tag{font-size:11px;background:rgba(255,255,255,.18);padding:4px 10px;border-radius:var(--r-full);}
+.hd .meta{font-size:11.5px;opacity:.85;margin-top:7px;position:relative;z-index:1;}
+.wrap{padding:0 16px;}
+.card{background:#fff;border-radius:var(--r-md);box-shadow:var(--shadow-card);margin-top:12px;padding:14px;}
+.card .ct{font-size:14px;font-weight:700;margin-bottom:10px;display:flex;align-items:center;gap:6px;}
+.billbox{margin:-18px 16px 0;background:#fff;border-radius:var(--r-md);box-shadow:0 6px 20px rgba(79,70,229,.12);padding:18px 16px;position:relative;z-index:2;}
+.billbox .due{display:inline-block;font-size:11px;background:var(--warning-bg);color:#b45309;padding:4px 10px;border-radius:var(--r-full);font-weight:600;}
+.billbox .nm{font-size:14px;font-weight:600;margin-top:10px;line-height:1.5;}
+.billbox .amt{font-size:34px;font-weight:800;color:var(--pri);font-family:ui-monospace,Menlo,Consolas,monospace;letter-spacing:-1px;margin-top:4px;}
+.rowline{display:flex;align-items:center;justify-content:space-between;padding:9px 0;border-bottom:1px dashed var(--border);font-size:13.5px;}
+.rowline:last-child{border-bottom:none;}
+.rowline .k{color:var(--text-2);}
+.rowline .v{font-weight:600;font-variant-numeric:tabular-nums;}
+.rowline .v.cut{color:var(--success);}
+.rowline .v.off{color:var(--text-3);font-weight:500;}
+.rowline .v.big{font-size:19px;font-weight:800;color:var(--pri);}
+.rowline .why{display:block;font-size:11px;color:var(--text-3);margin-top:3px;font-weight:400;}
+.sub{font-size:11px;color:var(--text-3);padding:7px 0 0;line-height:1.6;}
+.drawrow{display:flex;align-items:center;gap:10px;background:var(--pri-bg);border-radius:12px;padding:12px;margin-top:10px;}
+.drawrow .ic{width:36px;height:36px;border-radius:10px;background:#fff;display:flex;align-items:center;justify-content:center;font-size:18px;flex:0 0 36px;}
+.drawrow .info{flex:1;min-width:0;}
+.drawrow .tt{font-size:13.5px;font-weight:700;color:#4338ca;}
+.drawrow .dd{font-size:11.5px;color:#6366f1;margin-top:2px;line-height:1.5;}
+.drawrow .btn{flex:0 0 auto;font-size:12.5px;font-weight:700;color:#fff;background:var(--pri-grad);padding:8px 14px;border-radius:var(--r-full);}
+.won{display:flex;align-items:center;gap:10px;background:var(--success-bg);border-radius:12px;padding:12px;margin-top:10px;}
+.won .ic{width:36px;height:36px;border-radius:10px;background:#fff;display:flex;align-items:center;justify-content:center;font-size:18px;flex:0 0 36px;}
+.won .info{flex:1;min-width:0;}
+.won .tt{font-size:13.5px;font-weight:700;color:#15803d;}
+.won .dd{font-size:11.5px;color:#166534;margin-top:2px;}
+.won .amt{font-size:17px;font-weight:800;color:#15803d;font-family:ui-monospace,Menlo,Consolas,monospace;flex:0 0 auto;}
+.note{font-size:12.5px;color:var(--text-2);line-height:1.7;margin-top:10px;}
+.empty{text-align:center;padding:40px 20px;color:var(--text-3);font-size:13px;line-height:1.7;}
+.empty .big{font-size:34px;margin-bottom:10px;}
+.paybar{position:fixed;left:0;right:0;bottom:calc(58px + var(--safe-bottom));max-width:480px;margin:0 auto;padding:10px 16px;background:rgba(255,255,255,.96);border-top:1px solid var(--border);display:flex;align-items:center;gap:12px;z-index:40;}
+.paybar .amt{font-size:20px;font-weight:800;color:var(--pri);font-family:ui-monospace,Menlo,Consolas,monospace;}
+.paybar .amt small{font-size:11px;color:var(--text-3);font-weight:500;display:block;font-family:inherit;}
+.paybar .btn{flex:1;height:44px;border-radius:var(--r-full);background:var(--pri-grad);color:#fff;font-size:15px;font-weight:700;box-shadow:0 6px 16px rgba(79,70,229,.28);}
+.tabbar{position:fixed;left:0;right:0;bottom:0;max-width:480px;margin:0 auto;background:#fff;border-top:1px solid var(--border);display:flex;padding:7px 0 calc(7px + var(--safe-bottom));z-index:50;}
+.tabbar a{flex:1;text-align:center;font-size:11px;color:var(--text-3);}
+.tabbar a .ic{font-size:19px;display:block;margin-bottom:2px;}
+.tabbar a.on{color:var(--pri);font-weight:600;}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:92px;background:rgba(17,24,39,.92);color:#fff;font-size:13px;padding:10px 18px;border-radius:var(--r-full);z-index:99;opacity:0;transition:opacity .2s;pointer-events:none;max-width:78%;text-align:center;}
+.toast.show{opacity:1;}
 </style>
 </head>
 <body>
-<div class="app-shell">
-<div class="hero">
-  <h1>📋 我的账单</h1>
-  <div class="sub">物业费、车位费账单明细与抵扣记录</div>
+<div class="hd">
+  <div class="row"><a class="back" href="index.html">‹</a><h1 id="h1">缴费</h1><span class="tag">平台代收</span></div>
+  <div class="meta" id="meta">加载中…</div>
 </div>
 
-<div class="content">
-  <div class="seg" id="billTabs">
-    <button class="active" data-tab="property">物业费</button>
-    <button data-tab="parking">车位费</button>
-    <button data-tab="deduct">抵扣日志</button>
+<div id="main">
+  <div class="billbox" style="display:none" id="billBox">
+    <span class="due" id="dueTag">—</span>
+    <div class="nm" id="billNm">加载中…</div>
+    <div class="amt" id="billAmt">￥0.00</div>
   </div>
-  <div id="billList"></div>
+
+  <div class="wrap">
+    <div class="card" id="cutCard" style="display:none">
+      <div class="ct">💰 钱包余额抵扣 · 自动</div>
+      <div id="cutRows"></div>
+      <div class="sub" id="cutSub"></div>
+    </div>
+
+    <div class="card" id="drawCard" style="display:none">
+      <div class="ct">🎁 缴费前抽一次 · 小区商户出奖</div>
+      <div class="drawrow" id="drawRow">
+        <div class="ic">🎁</div>
+        <div class="info"><div class="tt">还有抽奖机会</div><div class="dd">中奖直接抵进本单，不用先付后返</div></div>
+        <button class="btn" id="btnDraw" onclick="drawOnce()">抽一次</button>
+      </div>
+      <div id="wonBox"></div>
+      <div class="note" id="drawNote">这一种是<b>立减</b>（当场少付现金），不是钱包里的抵扣券——两种奖走两个口袋。</div>
+    </div>
+
+    <div class="card" id="sumCard" style="display:none">
+      <div class="ct">🧾 实付怎么算出来的</div>
+      <div id="sumRows"></div>
+      <div class="note">微信 / 支付宝 / 前台现金 · 平台代收、物业月结 · 缴完在「我的」看凭证。</div>
+    </div>
+
+    <div class="card">
+      <div class="ct">❓ 余额怎么来的</div>
+      <div class="note">小区商户分账（你每单消费的 8%）+ 抽盒中奖 + 推荐商家奖励。这些钱<b>只能抵物业费</b>，不能提现、不能转赠、不能拿去买东西——两个口袋分开记，账才对得上。</div>
+    </div>
+  </div>
 </div>
 
-<div class="toast-host" id="toastHost"></div>
-<div class="pay-mask" id="payMask" style="display:none"></div>
-<div class="pay-sheet" id="paySheet" style="display:none">
-  <div class="pay-head">
-    <span class="pay-title" id="payTitle">缴纳物业费</span>
-    <span class="pay-amount" id="payAmount">¥0.00</span>
-    <button class="pay-close" onclick="closePay()">✕</button>
-  </div>
-  <div class="pay-channels" id="payChannels">
-    <button class="pay-channel" onclick="startPay('wechat')"><span><span class="ch-ic">💚</span>微信支付</span><span class="ch-arrow">›</span></button>
-    <button class="pay-channel" onclick="startPay('alipay')"><span><span class="ch-ic">💙</span>支付宝</span><span class="ch-arrow">›</span></button>
-  </div>
-  <div class="pay-qr" id="payQr" style="display:none">
-    <div class="qr-box"><img id="payQrImg" alt="支付二维码"></div>
-    <div class="qr-tip" id="payQrTip">请使用微信扫一扫完成付款</div>
-    <div class="qr-sub">支付成功后将自动确认，请勿关闭页面</div>
-    <div class="pay-status" id="payStatusText">等待支付...</div>
-    <button class="btn btn-secondary btn-md" onclick="closePay()">稍后支付</button>
-  </div>
+<div class="paybar" id="paybar" style="display:none">
+  <div class="amt" id="barAmt">￥0.00<small id="barSub">实付</small></div>
+  <button class="btn" id="btnPay">确认支付</button>
 </div>
 
-<nav class="nav">
-  <div class="tab" data-go="index.html"><span class="ic">🏠</span><span>首页</span></div>
-  <div class="tab" data-go="access.html"><span class="ic">🚪</span><span>门禁</span></div>
-  <div class="tab active" data-go="bills.html"><span class="ic">📋</span><span>账单</span></div>
-  <div class="tab" data-go="bind.html"><span class="ic">👤</span><span>我的</span></div>
-</nav>
+<div class="tabbar">
+  <a href="index.html"><span class="ic">🏠</span>首页</a>
+  <a href="mall.html"><span class="ic">🛒</span>商城</a>
+  <a href="group.html"><span class="ic">💬</span>消息</a>
+  <a href="mine.html" class="on"><span class="ic">👤</span>我的</a>
 </div>
+<div class="toast" id="toast"></div>
 
 <script>
-const $=id=>document.getElementById(id);
-const API="/api/property/owner";
-function toast(m,t){const h=$("toastHost");if(!h)return;const e=document.createElement("div");e.className="toast "+(t||"");e.textContent=m;h.appendChild(e);requestAnimationFrame(()=>e.classList.add("show"));setTimeout(()=>{e.classList.remove("show");setTimeout(()=>e.remove(),220)},2400)}
+var TOKEN = localStorage.getItem("property_owner_token") || "";
+function $(id){return document.getElementById(id)}
+function toast(m){var t=$("toast");t.textContent=m;t.classList.add("show");setTimeout(function(){t.classList.remove("show")},2200)}
+function money(n){return "￥" + (Number(n||0)).toFixed(2)}
+function esc(s){return String(s==null?"":s).replace(/[&<>"]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})}
+function api(path,opt){opt=opt||{};opt.headers=Object.assign({"X-Owner-Token":TOKEN},opt.headers||{});return fetch(path,opt).then(function(r){return r.json()})}
 
-const tk=localStorage.getItem("property_owner_token");
-if(!tk){location.href="login.html"}
+var BILL = null, WALLET = null, DRAW_CUT = 0, BUSY = false;
 
-async function req(path,method,body){
-  const p=new URLSearchParams();
-  if(body)Object.keys(body).forEach(k=>{const v=body[k];if(v!=null&&v!=="")p.append(k,v)});
-  const h={};const token=localStorage.getItem("property_owner_token");
-  if(token)h["X-Owner-Token"]=token;
-  if(token)h["Authorization"]="Bearer "+token;
-  const o={method:method||"GET",headers:h};
-  if(method==="POST"||method==="PUT"||method==="DELETE"){h["Content-Type"]="application/x-www-form-urlencoded";o.body=p.toString()}
-  try{
-    const r=await fetch(API+path,o).then(r=>r.json());
-    if(r.code===401){localStorage.removeItem("property_owner_token");toast("登录已过期，请重新登录","warning");setTimeout(()=>{location.href="login.html"},1500)}
-    return r;
-  }catch(e){return{code:-1,msg:e.message}}
-}
-const get=p=>req(p,"GET");
-
-function emptyBox(emoji,text){return '<div class="empty"><span class="emoji">'+emoji+'</span>'+text+'</div>'}
-function fmtDate(s){return s?s.slice(0,10):""}
-function fmtTime(s){return s?s.replace("T"," ").slice(0,16):""}
-
-let curTab="property";
-
-// Check URL params for initial tab
-(function(){
-  const params=new URLSearchParams(location.search);
-  const t=params.get("tab");
-  if(t&&["property","parking","deduct"].indexOf(t)>=0){
-    curTab=t;
-    document.querySelectorAll("#billTabs button").forEach(x=>{
-      x.classList.toggle("active",x.dataset.tab===t);
-    });
-  }
-})();
-
-// Tab switch
-document.querySelectorAll("#billTabs button").forEach(b=>{
-  b.addEventListener("click",()=>{
-    document.querySelectorAll("#billTabs button").forEach(x=>x.classList.remove("active"));
-    b.classList.add("active");
-    curTab=b.dataset.tab;
-    loadCurrentTab();
-  });
-});
-
-// Status badge
-function billBadge(status){
-  const map={
-    "unpaid":{cls:"unpaid",text:"待缴费"},
-    "paid":{cls:"paid",text:"已缴清"},
-    "partial":{cls:"partial",text:"部分抵扣"},
-    "overdue":{cls:"overdue",text:"已逾期"},
-    "0":{cls:"unpaid",text:"待缴费"},
-    "1":{cls:"paid",text:"已缴清"},
-    "2":{cls:"partial",text:"部分抵扣"},
-    "3":{cls:"overdue",text:"已逾期"}
-  };
-  const s=map[status]||map[String(status)]||{cls:"unpaid",text:String(status||"未知")};
-  return '<span class="bill-badge '+s.cls+'">'+s.text+'</span>';
-}
-
-function renderBillCard(b){
-  const bid=b.billId||b.id;
-  const amount=Number(b.amount||0).toFixed(2);
-  const deducted=Number(b.deducted||b.deductedAmount||0).toFixed(2);
-  const paid=Number(b.paid||0).toFixed(2);
-  const remaining=Math.max(0,Number(b.amount||0)-Number(b.deducted||0)-Number(b.paid||0)).toFixed(2);
-  const period=b.billPeriod||"";
-  const dueDate=fmtDate(b.dueDate||b.deadline);
-  const payable=Number(remaining)>0&&(b.status===0||b.status===2||b.status==null);
-
-  return '<div class="bill-card" data-id="'+bid+'" onclick="toggleBill(this,'+bid+')">'
-    +'<div class="bill-main">'
-    +'<div class="bill-header">'
-    +'<span class="bill-no">'+(b.billNo||bid||"--")+'</span>'
-    +billBadge(b.status)
-    +'</div>'
-    +'<div class="bill-period">📅 '+(period!==""?"账单周期 "+period:"--")+'</div>'
-    +'<div class="bill-amount"><span class="sym">¥</span><span class="num">'+amount+'</span></div>'
-    +'<div class="bill-row">'
-    +'<span class="item">已抵扣 <span class="green">¥'+deducted+'</span></span>'
-    +'<span class="item">已缴 <span class="green">¥'+paid+'</span></span>'
-    +'<span class="item">待缴 <span class="red">¥'+remaining+'</span></span>'
-    +'</div>'
-    +'<div class="bill-footer">'
-    +'<span>到期日：'+(dueDate||"--")+'</span>'
-    +'<span style="display:flex;align-items:center;gap:8px">'
-    +(payable?'<button class="btn btn-primary btn-xs" onclick="event.stopPropagation();payBill('+bid+','+remaining+')">去缴费</button>':'')
-    +'<span class="expand-icon">▼ 详情</span>'
-    +'</span>'
-    +'</div>'
-    +'</div>'
-    +'<div class="bill-detail" id="detail-'+bid+'"><div class="detail-loading">点击加载详情...</div></div>'
-    +'</div>';
-}
-
-// Toggle bill expand — fetches detail from GET /api/property/owner/bills/{id}
-window.toggleBill=function(el,id){
-  const wasExpanded=el.classList.contains("expanded");
-  // Close all others
-  document.querySelectorAll(".bill-card.expanded").forEach(c=>{
-    if(c!==el)c.classList.remove("expanded");
-  });
-  el.classList.toggle("expanded");
-  if(!wasExpanded&&id){
-    loadBillDetail(id);
-  }
-};
-
-async function loadBillDetail(id){
-  const container=$("detail-"+id);
-  if(!container)return;
-  container.innerHTML='<div class="detail-loading">加载中...</div>';
-  try{
-    const r=await get("/bills/"+id);
-    if(r.code===0&&r.data){
-      const d=r.data;
-      const deductions=d.deductions||d.deductionDetails||[];
-      const paidAmt=Number(d.paid||0).toFixed(2);
-      const remainAmt=Math.max(0,Number(d.amount||0)-Number(d.deducted||0)-Number(d.paid||0)).toFixed(2);
-      let html='<div class="detail-title">账单信息</div>';
-      html+='<div class="detail-item"><span class="d-label">账单编号</span><span class="d-value">'+(d.billNo||d.billId||"--")+'</span></div>';
-      html+='<div class="detail-item"><span class="d-label">账单金额</span><span class="d-value">¥'+(Number(d.amount||0).toFixed(2))+'</span></div>';
-      html+='<div class="detail-item"><span class="d-label">已抵扣</span><span class="d-value green">¥'+(Number(d.deducted||d.deductedAmount||0).toFixed(2))+'</span></div>';
-      html+='<div class="detail-item"><span class="d-label">已缴</span><span class="d-value green">¥'+paidAmt+'</span></div>';
-      html+='<div class="detail-item"><span class="d-label">待缴</span><span class="d-value red">¥'+remainAmt+'</span></div>';
-      html+='<div class="detail-item"><span class="d-label">到期日</span><span class="d-value">'+(fmtDate(d.dueDate||d.deadline)||"--")+'</span></div>';
-      if(d.companyName){
-        html+='<div class="detail-item"><span class="d-label">物业公司</span><span class="d-value">'+d.companyName+'</span></div>';
-      }
-      if(deductions.length){
-        html+='<div class="detail-title">抵扣明细</div>';
-        deductions.forEach(function(dd){
-          html+='<div class="detail-item">'
-            +'<span class="d-label">'+(dd.source||dd.type||"抵扣")+' · '+fmtTime(dd.deductTime||dd.createTime)+'</span>'
-            +'<span class="d-value green">-¥'+(Number(dd.amount||0).toFixed(2))+'</span>'
-            +'</div>';
-        });
-      }else{
-        html+='<div class="detail-title">暂无抵扣记录</div>';
-      }
-      container.innerHTML=html;
-    }else{
-      container.innerHTML='<div class="detail-loading">加载失败：'+(r.msg||"未知错误")+'</div>';
+function load(){
+  api("/api/property/owner/bills").then(function(r){
+    if(r.code !== 0){ toast(r.msg||"加载失败"); $("meta").textContent = r.msg||"加载失败"; return }
+    var list = (r.data||[]).filter(function(b){ return b.status === 0 || b.status == null });
+    if(!list.length){
+      list = (r.data||[]).slice().sort(function(a,b){ return String(a.dueDate||"").localeCompare(String(b.dueDate||"")) });
     }
-  }catch(e){
-    container.innerHTML='<div class="detail-loading">网络异常</div>';
-  }
+    if(!list.length){
+      $("main").innerHTML = '<div class="empty"><div class="big">🧾</div>当前没有待缴账单<br>缴物业费还能得 1 次抽奖机会</div>';
+      $("meta").textContent = "暂无待缴账单";
+      return;
+    }
+    BILL = list[0];
+    render();
+    return api("/api/property/mall/mine");
+  }).then(function(r){
+    if(!r || r.code !== 0) return;
+    WALLET = (r.data && r.data.propertyWallet) || {balance:0, usableNow:0, nextMonth:0};
+    render();
+  }).catch(function(){ toast("网络异常") });
 }
 
-// Load deduct logs — GET /api/property/owner/deduct-logs
-async function loadDeductLogs(){
-  $("billList").innerHTML='<div style="text-align:center;padding:20px;color:var(--text-3);font-size:13px;">加载中...</div>';
-  const r=await get("/deduct-logs");
-  if(r.code===0&&r.data&&r.data.length){
-    const list=r.data;
-    let html='<div class="card"><table class="log-table"><thead><tr>'
-      +'<th>时间</th><th>说明</th><th>来源</th><th>金额</th>'
-      +'</tr></thead><tbody>';
-    list.forEach(function(c){
-      html+='<tr>'
-        +'<td>'+fmtTime(c.createTime||c.deductTime)+'</td>'
-        +'<td>'+(c.remark||c.description||"扣款")+'</td>'
-        +'<td>'+(c.sourceType===1?"分账结算":(c.source||"--"))+'</td>'
-        +'<td class="amt">-¥'+(Number(c.deductAmount||0).toFixed(2))+'</td>'
-        +'</tr>';
-    });
-    html+='</tbody></table></div>';
-    $("billList").innerHTML=html;
-  }else{
-    $("billList").innerHTML=emptyBox("📋","暂无抵扣日志");
+function render(){
+  if(!BILL) return;
+  var period = BILL.billPeriod || "";
+  $("h1").textContent = "缴费 " + period;
+  $("meta").textContent = (BILL.billNo ? BILL.billNo + " · " : "") + "阳光花园 · 平台代收";
+  $("billBox").style.display = "";
+  $("dueTag").textContent = BILL.dueDate ? (BILL.dueDate + " 到期") : "待缴";
+  $("billNm").textContent = period.replace("-", " 年 ").replace(/-$/,"") + " 月物业费 · " + (BILL.roomId || "");
+  var amount = Number(BILL.amount||0) - Number(BILL.paid||0);
+  amount = Math.max(0, amount);
+  $("billAmt").textContent = money(amount);
+
+  var usable = WALLET ? Number(WALLET.usableNow||0) : 0;
+  var cut = Math.min(usable, amount);
+  $("cutCard").style.display = "";
+  var h = "";
+  h += '<div class="rowline"><span class="k">钱包余额（本月可用）<span class="why">分账 / 抽奖 / 推荐奖励累计</span></span><span class="v">' + money(usable) + '</span></div>';
+  if(WALLET && Number(WALLET.nextMonth||0) > 0){
+    h += '<div class="rowline"><span class="k">次月才生效<span class="why">当月新进的钱，次月账单才能抵</span></span><span class="v off">' + money(WALLET.nextMonth) + '</span></div>';
   }
+  h += '<div class="rowline"><span class="k">本次抵扣</span><span class="v cut">-' + money(cut) + '</span></div>';
+  $("cutRows").innerHTML = h;
+  $("cutSub").textContent = usable > amount
+    ? "本月可用额度 " + money(usable) + "，本单只需抵 " + money(cut) + "，剩下的留到下次账单。"
+    : "本月可用额度 " + money(usable) + "；另有 " + money(WALLET ? WALLET.nextMonth : 0) + " 是当月刚进的，次月账单才能抵。";
+
+  $("drawCard").style.display = "";
+  $("sumCard").style.display = "";
+
+  var s = "";
+  s += '<div class="rowline"><span class="k">账单金额</span><span class="v">' + money(amount) + '</span></div>';
+  s += '<div class="rowline"><span class="k">钱包抵扣</span><span class="v cut">-' + money(cut) + '</span></div>';
+  if(DRAW_CUT > 0){
+    s += '<div class="rowline"><span class="k">抽盒立减</span><span class="v cut">-' + money(DRAW_CUT) + '</span></div>';
+  }
+  var pay = Math.max(0, amount - cut - DRAW_CUT);
+  s += '<div class="rowline"><span class="k">实付（' + money(amount) + ' − ' + money(cut) + (DRAW_CUT>0 ? ' − ' + money(DRAW_CUT) : '') + '）</span><span class="v big">' + money(pay) + '</span></div>';
+  $("sumRows").innerHTML = s;
+  $("paybar").style.display = "";
+  $("barAmt").innerHTML = money(pay) + '<small>实付</small>';
+  $("btnPay").textContent = "确认支付 " + money(pay);
+  $("btnPay").onclick = function(){ toast("支付链路接微信商户号后开放，当前为演示态") };
 }
 
-// Load parking fees — GET /api/property/owner/parking-fees
-async function loadParkingFees(){
-  $("billList").innerHTML='<div style="text-align:center;padding:20px;color:var(--text-3);font-size:13px;">加载中...</div>';
-  const r=await get("/parking-fees");
-  if(r.code===0&&r.data&&r.data.length){
-    const list=r.data;
-    let html='<div class="card"><table class="fee-table"><thead><tr>'
-      +'<th>车牌</th><th>周期</th><th>状态</th><th>金额</th><th>操作</th>'
-      +'</tr></thead><tbody>';
-    list.forEach(function(f){
-      var isPaid = String(f.status||"0")==="1";
-      var remain = Number(f.amount||0)-Number(f.deducted||0)-Number(f.paid||0);
-      var stBadge = isPaid ? '<span class="badge green">已缴</span>' : '<span class="badge gray">待缴</span>';
-      var btn = isPaid ? '' : '<button class="btn btn-primary btn-xs" onclick="payParking('+f.feeId+','+remain+')">去缴费</button>';
-      html+='<tr>'
-        +'<td>'+(f.plateNumber||"--")+'</td>'
-        +'<td>'+(f.period||fmtDate(f.createTime))+'</td>'
-        +'<td>'+stBadge+'</td>'
-        +'<td class="amt">¥'+(Number(f.amount||0).toFixed(2))+'</td>'
-        +'<td>'+btn+'</td>'
-        +'</tr>';
-    });
-    html+='</tbody></table></div>';
-    $("billList").innerHTML=html;
-  }else{
-    $("billList").innerHTML=emptyBox("🅿️","暂无车位费账单");
-  }
+function drawOnce(){
+  if(BUSY) return;
+  BUSY = true; $("btnDraw").textContent = "抽奖中…";
+  api("/api/property/draw/run?count=1", {method:"POST"}).then(function(r){
+    BUSY = false; $("btnDraw").textContent = "再抽一次";
+    if(r.code !== 0){ toast(r.msg || "没有可抽次数了"); return }
+    var res = (r.data.results||[])[0] || {};
+    if(Number(res.value) > 0 && !res.toWallet){
+      DRAW_CUT = Number(res.value);
+      $("wonBox").innerHTML = '<div class="won"><div class="ic">' + (res.emoji||"🎉") + '</div>'
+        + '<div class="info"><div class="tt">已抽中 · 立减 ' + money(res.value) + '</div>'
+        + '<div class="dd">' + esc(res.typeName) + ' · 券号 ' + esc(res.couponNo||"—") + ' · 已直接抵进本单</div></div>'
+        + '<div class="amt">已抵</div></div>';
+      $("drawRow").style.display = "none";
+      render();
+    } else if(res.toWallet){
+      toast("抽中 " + money(res.value) + " 抵扣券，已进钱包——下月账单抵，本单不减");
+    } else {
+      toast("这次没中，本单金额不变");
+    }
+  }).catch(function(){ BUSY=false; $("btnDraw").textContent="抽一次"; toast("网络异常") });
 }
 
-// Load property bills — GET /api/property/owner/bills
-async function loadPropertyBills(){
-  $("billList").innerHTML='<div style="text-align:center;padding:20px;color:var(--text-3);font-size:13px;">加载中...</div>';
-  const r=await get("/bills");
-  if(r.code===0&&r.data&&r.data.length){
-    $("billList").innerHTML=r.data.map(renderBillCard).join("");
-  }else{
-    $("billList").innerHTML=emptyBox("📋","暂无物业费账单");
-  }
-}
-
-function loadCurrentTab(){
-  if(curTab==="property"){
-    loadPropertyBills();
-  }else if(curTab==="parking"){
-    loadParkingFees();
-  }else if(curTab==="deduct"){
-    loadDeductLogs();
-  }
-}
-
-// Nav
-document.querySelectorAll(".nav .tab").forEach(el=>el.addEventListener("click",()=>{
-  const h=el.dataset.go;if(h)location.href=h;
-}));
-
-// ======================== 账单在线缴费 ========================
-let _payBillId=null,_payPaymentNo=null,_payTimer=null,_payType="bill";
-
-window.payBill=function(id,amount){
-  _payBillId=id;_payPaymentNo=null;_payType="bill";
-  $("payTitle").textContent="缴纳物业费";
-  if(_payTimer){clearInterval(_payTimer);_payTimer=null}
-  $("payAmount").textContent="¥"+Number(amount||0).toFixed(2);
-  $("payChannels").style.display="flex";
-  $("payQr").style.display="none";
-  $("payMask").style.display="block";
-  $("paySheet").style.display="block";
-};
-
-window.payParking=function(id,amount){
-  _payBillId=id;_payPaymentNo=null;_payType="parking";
-  $("payTitle").textContent="缴纳车位费";
-  if(_payTimer){clearInterval(_payTimer);_payTimer=null}
-  $("payAmount").textContent="¥"+Number(amount||0).toFixed(2);
-  $("payChannels").style.display="flex";
-  $("payQr").style.display="none";
-  $("payMask").style.display="block";
-  $("paySheet").style.display="block";
-};
-
-window.closePay=function(){
-  $("payMask").style.display="none";
-  $("paySheet").style.display="none";
-  if(_payTimer){clearInterval(_payTimer);_payTimer=null}
-};
-
-window.startPay=async function(channel){
-  if(!_payBillId)return;
-  $("payStatusText").textContent="正在下单...";
-  const r=await req("/"+(_payType==="parking"?"parking-fees":"bills")+"/"+_payBillId+"/pay","POST",{channel:channel});
-  if(r.code!==0){
-    toast(r.msg||"下单失败","danger");
-    closePay();
-    return;
-  }
-  _payPaymentNo=r.data.paymentNo;
-  const qrData=r.data.qrCode||"";
-  $("payQrImg").src="https://api.qrserver.com/v1/create-qr-code/?size=240x240&data="+encodeURIComponent(qrData);
-  $("payQrTip").textContent=channel==="wechat"?"请使用微信扫一扫完成付款":"请使用支付宝扫一扫完成付款";
-  $("payChannels").style.display="none";
-  $("payQr").style.display="block";
-  $("payStatusText").textContent="等待支付，成功后自动确认...";
-  _payTimer=setInterval(pollPayStatus,2500);
-};
-
-async function pollPayStatus(){
-  if(!_payBillId||!_payPaymentNo)return;
-  const r=await get("/"+(_payType==="parking"?"parking-fees":"bills")+"/"+_payBillId+"/pay-status?paymentNo="+encodeURIComponent(_payPaymentNo));
-  if(r.code===0&&r.data&&r.data.paid){
-    if(_payTimer){clearInterval(_payTimer);_payTimer=null}
-    $("payStatusText").textContent="✅ 缴费成功";
-    toast("缴费成功","success");
-    setTimeout(function(){closePay();loadCurrentTab()},900);
-  }
-}
-
-loadCurrentTab();
+load();
 </script>
 </body>
 </html>

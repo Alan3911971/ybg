@@ -556,6 +556,27 @@ P3 五屏待确认（物业端②③⑰ / 业主端⑲㉚）+ 业主端登录页
 数据口径提醒：商城现只有 1 家商户 4 件卡类商品（真实数据），设计稿是 6 家 12 件生鲜；
 距离/步行时间无数据源（商户表无坐标），nearby 页如实不显示、接口也不返回，待字段补全
 
+27. [完成] 2026-10-28 凌晨 | 业主端按设计稿补齐第二批（P1：收银台/我的/缴费/抽盒/开盒结果）：
+①后端：新增 PropertyDrawController（/api/property/draw：pool 奖池+概率公开 / run 抽奖 / records 我的中奖）
++ PropertyMallController 扩 /checkout（收银台逐项）与 /mine（我的：物业钱包本月可用与次月分开、商户余额、券、图鉴、
+房产、家人）；新增 V26__property_draw.sql（property_draw_record 表 + property_deduct_log.bill_id 放开非空）；
+②前端：新页 4 个（checkout.html㉑ / mine.html㉓ / draw.html㉕重做 / draw-result.html㉖），
+重做 bills.html㉔；四页 tabbar 统一为 首页/商城/消息/我的（P0 四页同步改）；index.html 加抽盲盒+我的两入口；
+mall.html 商品卡点击进收银台；
+③口径全是真实数据不编造：次数=已缴账单数+商城已付订单数−已抽次数；概率=prize.weight/Σweight 实时算（生产 5 档
+37/29.6/18.5/11.1/3.7%）；奖类型 0普通 1折扣 2立减 3余额 4团购免单；type=3 进物业钱包、其余发 user_coupon；
+本月可用=上月及以前入账、次月=当月新进；商户余额无数据源如实返回 0；
+④部署：jar 备份 ibigou.jar.bak-20261028_0048，页面备份 /tmp/prop_bak_p1/；
+⑤验证：_e2e_property_p1.py（G39）47 项全过——概率和 99.9%、次数=earned−used、抽奖出第 1 位与券号
+BZ-20261028-0001、剩余次数递减、records 落库、收银台实付=原价−券且钱包抵扣恒为不可用、mine 本月可用+次月=余额、
+手机号脱敏、无 token 均被拒、7 页 200；截图 _shots/p1/*_w.png 五张肉眼验收；
+⑥修的真 bug（三个，都是被真实数据打出来的）：a) 发券缺 source_merchant_no（非空）→ 取本小区已过审特约商户
+作出资方，没有则记 PROPERTY；b) user_coupon.update_time 未设；c) property_deduct_log.bill_id 非空但「入账」类
+流水没有账单 → 放开为 NULL；另修 UI：0 次时「抽一个」按钮仍写「100% 中」，改为按状态给文案；
+⑦已知限制（不编造）：3D 抽奖盒在无 preserve-3d 的 headless 下只渲染正面，真机正常；商户余额/收藏图鉴规则
+需业务配数据；| 未完成（下批）：P2 九个物业域老页换壳（access/bind/family/family-bind/vehicles/face/
+visitor-parking/reservation/services）、P3 五屏待确认（物业端②③⑰ / 业主端⑲㉚）+ 业主端登录页补设计
+
 ■ 面板维护提示
 - 改状态不改历史：进行中/已完成要在原条目上改，已完成的连同证据移入"已完成（归档）"。
 - 每完成一条就顺手同步 GitHub + NAS（G11），别攒着。
@@ -564,3 +585,6 @@ P3 五屏待确认（物业端②③⑰ / 业主端⑲㉚）+ 业主端登录页
 
 - [已完成] 2026-10-27 深夜 | 顾客端扫码落地页 v3 上线（本次）：用户反馈"大屏二维码扫进去的页面不是我们设计的页面"。查实：v3 顾客端只有设计稿（`_redesign_v3/customer-home|choose|draw|unbox.html`，10-25，静态未接线），生产 `/h5/customer/index.html` 仍是 9 月版「宜必购盒盒」。按 v3 设计（深青主色 + 扭蛋胶囊母题 + 暖黄点缀）重写首页，**保留全部接口与 DOM 逻辑**（recent-wins / wallet / 物业 lookup / 登录跳转 / propCard），并把统计的 random 假数据换成真实数据 | 依赖：- | 证据：仓库 `backend/src/.../static/h5/customer/index.html` 与 `customer/index.html` 已同步为同一份 md5 `9f3d3582`；生产磁盘落位同 md5，公网回读命中「今天，抽点好的」×1 /「抽个盲盒」×1 / cap-float×3；备份 `index.html.bak-20261027_224723`；390px iframe 截图 `_shots/customer_home/m390b_224617.png` 版式完整
 - [待办] 2026-10-27 深夜 | ① jar 内 `static/h5/customer/index.html` 仍是旧版，下次打 jar 前确认源码已同步（否则包覆盖即回退）；② 抽盒/开盒/选参与方式三页仍是旧版，未同步 v3 设计；③ 手机真机扫码验收（本次只做了 HTTP 回读 + 离线截图）| 依赖：下次 jar 打包 / 用户提供真机扫码结果
+
+- [已完成] 2026-10-28 凌晨 | 顾客端 v3 落地第二批（本次）：`choose.html` 按 v3 设计重写（店铺卡 + 2×2 渠道卡 + 胶囊 CTA + 余额说明 + 4tab 导航），保留渠道选择与 `draw.html?channel=` 跳转、登录态校验，新增 merchantNo 透传与商户名动态拉取；`draw.html` 做配色迁移（橙红+紫霓虹 → 深青+胶囊色系，仅改 CSS 段，DOM id / 3D 动画 / fireworks / live-bar 全保留），`draw.js` 仅改烟花配色，补 v3 底导航与动态店名 | 依赖：- | 证据：生产 md5 全 SAME（choose `393c748e`、draw `71c3ea2e`、draw.js `028ae61d`），备份 `*.bak-20261028_005448`；带 Host 回读命中「选择参与方式」×3 /「打开您的盲盒」×1；390 iframe 截图 `_shots/customer_pages/choose_005337.png`、`draw_005348.png` 版式与配色完整（舞台深青、底导航 4 项齐全）
+- [待办] 2026-10-28 凌晨 | ① v3 设计稿 `unbox`（开盒瞬间）未落地——需新增页面并从 draw 开奖后接入（`draw.js` 三处 `buildPayUrl` 调用点）；② `pay.html` / `wallet.html` / `ibigou.html` / `login.html` 仍是旧版橙红设计；③ jar 内 `static/h5/customer/*` 仍为旧版，下次打 jar 前确认源码已同步；④ 首页 CTA「抽个盲盒」目前仍是 toast 提示未接 choose（属业务规则，需用户确认后再改）；⑤ 手机真机扫码验收 | 依赖：用户确认范围 / 下次 jar 打包

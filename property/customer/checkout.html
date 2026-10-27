@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover">
+<meta name="theme-color" content="#4f46e5">
+<title>收银台 · 我的物业</title>
+<style>
+:root{--pri:#4f46e5;--pri-grad:linear-gradient(135deg,#4f46e5,#7c3aed);--pri-bg:#eef2ff;--text:#1e293b;--text-2:#64748b;--text-3:#94a3b8;--bg:#f8fafc;--surface:#fff;--border:#e2e8f0;--shadow-card:0 2px 12px rgba(0,0,0,.04);--r-md:14px;--r-lg:20px;--r-full:999px;--safe-bottom:env(safe-area-inset-bottom,0px);--success:#16a34a;--success-bg:#ecfdf5;--warning:#f59e0b;--warning-bg:#fffbeb;--danger:#dc2626;--danger-bg:#fef2f2;}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+html,body{font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif;color:var(--text);background:var(--bg);-webkit-font-smoothing:antialiased;font-size:15px;}
+body{min-height:100vh;padding-bottom:calc(74px + var(--safe-bottom));max-width:480px;margin:0 auto;}
+a{color:inherit;text-decoration:none;}button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit;}
+.hd{background:var(--pri-grad);color:#fff;padding:calc(18px + env(safe-area-inset-top,0px)) 18px 20px;border-radius:0 0 var(--r-lg) var(--r-lg);position:relative;overflow:hidden;}
+.hd::after{content:"";position:absolute;top:-60px;right:-40px;width:170px;height:170px;background:rgba(255,255,255,.08);border-radius:50%;}
+.hd .row{display:flex;align-items:center;gap:10px;position:relative;z-index:1;}
+.hd .back{width:32px;height:32px;border-radius:50%;background:rgba(255,255,255,.16);display:flex;align-items:center;justify-content:center;font-size:17px;}
+.hd h1{font-size:18px;font-weight:700;flex:1;}
+.hd .tag{font-size:11px;background:rgba(255,255,255,.18);padding:4px 10px;border-radius:var(--r-full);}
+.hd .meta{font-size:11.5px;opacity:.85;margin-top:7px;position:relative;z-index:1;}
+.wrap{padding:0 16px;}
+.card{background:#fff;border-radius:var(--r-md);box-shadow:var(--shadow-card);margin-top:12px;padding:14px;}
+.card .ct{font-size:14px;font-weight:700;margin-bottom:10px;display:flex;align-items:center;gap:6px;}
+.paybox{margin:-18px 16px 0;background:#fff;border-radius:var(--r-md);box-shadow:0 6px 20px rgba(79,70,229,.12);padding:20px 16px;text-align:center;position:relative;z-index:2;}
+.paybox .lab{font-size:12px;color:var(--text-3);}
+.paybox .num{font-size:36px;font-weight:800;color:var(--pri);font-family:ui-monospace,Menlo,Consolas,monospace;letter-spacing:-1px;margin:4px 0 6px;}
+.paybox .sub{font-size:12px;color:var(--text-2);}
+.rowline{display:flex;align-items:center;justify-content:space-between;padding:9px 0;border-bottom:1px dashed var(--border);font-size:13.5px;}
+.rowline:last-child{border-bottom:none;}
+.rowline .k{color:var(--text-2);}
+.rowline .v{font-weight:600;font-variant-numeric:tabular-nums;}
+.rowline .v.cut{color:var(--success);}
+.rowline .v.off{color:var(--text-3);font-weight:500;}
+.rowline .v.big{font-size:17px;font-weight:800;color:var(--pri);}
+.rowline .why{display:block;font-size:11px;color:var(--text-3);margin-top:3px;font-weight:400;}
+.bring{background:var(--success-bg);border-radius:12px;padding:12px 14px;margin-top:10px;}
+.bring .t{font-size:13.5px;font-weight:700;color:#15803d;}
+.bring .d{font-size:12px;color:#166534;line-height:1.65;margin-top:5px;}
+.dlv{display:flex;align-items:center;gap:10px;padding:11px 0;border-bottom:1px solid #f1f5f9;}
+.dlv:last-child{border-bottom:none;}
+.dlv .ic{width:34px;height:34px;border-radius:10px;background:var(--pri-bg);display:flex;align-items:center;justify-content:center;font-size:16px;flex:0 0 34px;}
+.dlv .tt{font-size:13.5px;font-weight:600;}
+.dlv .dd{font-size:11.5px;color:var(--text-3);margin-top:2px;}
+.dlv .fee{margin-left:auto;font-size:12px;color:var(--success);font-weight:600;}
+.note{font-size:12.5px;color:var(--text-2);line-height:1.7;margin-top:10px;}
+.compare{display:flex;gap:10px;}
+.compare .col{flex:1;border-radius:10px;padding:10px;font-size:12px;line-height:1.55;}
+.compare .col.bad{background:var(--danger-bg);color:#b91c1c;}
+.compare .col.good{background:var(--success-bg);color:#15803d;}
+.compare .col b{display:block;font-size:13.5px;margin-bottom:3px;}
+.paybar{position:fixed;left:0;right:0;bottom:calc(58px + var(--safe-bottom));max-width:480px;margin:0 auto;padding:10px 16px;background:rgba(255,255,255,.96);border-top:1px solid var(--border);display:flex;align-items:center;gap:12px;z-index:40;}
+.paybar .amt{font-size:20px;font-weight:800;color:var(--pri);font-family:ui-monospace,Menlo,Consolas,monospace;}
+.paybar .amt small{font-size:11px;color:var(--text-3);font-weight:500;display:block;font-family:inherit;}
+.paybar .btn{flex:1;height:44px;border-radius:var(--r-full);background:var(--pri-grad);color:#fff;font-size:15px;font-weight:700;box-shadow:0 6px 16px rgba(79,70,229,.28);}
+.ask{margin:12px 16px 0;display:flex;gap:8px;align-items:center;background:#fff;border-radius:var(--r-full);box-shadow:var(--shadow-card);padding:6px 6px 6px 16px;}
+.ask input{flex:1;border:none;outline:none;font-size:13.5px;background:transparent;height:34px;}
+.ask button{height:34px;padding:0 16px;border-radius:var(--r-full);background:var(--pri-grad);color:#fff;font-size:13px;font-weight:600;}
+.tabbar{position:fixed;left:0;right:0;bottom:0;max-width:480px;margin:0 auto;background:#fff;border-top:1px solid var(--border);display:flex;padding:7px 0 calc(7px + var(--safe-bottom));z-index:50;}
+.tabbar a{flex:1;text-align:center;font-size:11px;color:var(--text-3);}
+.tabbar a .ic{font-size:19px;display:block;margin-bottom:2px;}
+.tabbar a.on{color:var(--pri);font-weight:600;}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:92px;background:rgba(17,24,39,.92);color:#fff;font-size:13px;padding:10px 18px;border-radius:var(--r-full);z-index:99;opacity:0;transition:opacity .2s;pointer-events:none;max-width:78%;text-align:center;}
+.toast.show{opacity:1;}
+</style>
+</head>
+<body>
+<div class="hd">
+  <div class="row"><a class="back" href="mall.html">‹</a><h1>收银台</h1><span class="tag" id="tagState">待支付</span></div>
+  <div class="meta" id="meta">加载中…</div>
+</div>
+
+<div class="paybox">
+  <div class="lab">应付</div>
+  <div class="num" id="payNum">￥0.00</div>
+  <div class="sub" id="paySub">—</div>
+</div>
+
+<div class="wrap">
+  <div class="card">
+    <div class="ct">🧾 这笔钱怎么算 · 逐项</div>
+    <div id="billRows"><div class="rowline"><span class="k">加载中…</span></div></div>
+    <div class="bring" id="bringBox" style="display:none">
+      <div class="t" id="bringT"></div>
+      <div class="d" id="bringD"></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="ct">🚚 配送与自提</div>
+    <div id="dlvBox"><div class="dlv"><span class="k">加载中…</span></div></div>
+  </div>
+
+  <div class="card">
+    <div class="ct">🤔 两个钱包为什么不合并</div>
+    <div class="compare">
+      <div class="col" style="background:var(--pri-bg);color:#4338ca"><b>物业钱包</b>抵物业费的专用账户<br>分账 / 抽奖 / 推荐奖励进这里</div>
+      <div class="col" style="background:var(--warning-bg);color:#b45309"><b>商户余额</b>本店消费的零钱<br>只能在这家店抵</div>
+    </div>
+    <div class="note">混在一起就会出现「用抵物业费的钱去买水果」——账一乱，物业和业主都不认。所以收银台里物业钱包显示<b>不可用</b>，这里买东西走微信，付完 8% 回到物业钱包，下月自动抵物业费。</div>
+  </div>
+</div>
+
+<div class="ask"><input id="askIn" placeholder="问一句，比如「能开票吗」"><button onclick="ask()">问</button></div>
+
+<div class="paybar">
+  <div class="amt" id="barAmt">￥0.00<small id="barSub">微信支付</small></div>
+  <button class="btn" id="btnPay">微信支付</button>
+</div>
+
+<div class="tabbar">
+  <a href="index.html"><span class="ic">🏠</span>首页</a>
+  <a href="mall.html" class="on"><span class="ic">🛒</span>商城</a>
+  <a href="group.html"><span class="ic">💬</span>消息</a>
+  <a href="mine.html"><span class="ic">👤</span>我的</a>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+var TOKEN = localStorage.getItem("property_owner_token") || "";
+function $(id){return document.getElementById(id)}
+function toast(m){var t=$("toast");t.textContent=m;t.classList.add("show");setTimeout(function(){t.classList.remove("show")},2200)}
+function money(n){return "￥" + (Number(n||0)).toFixed(2)}
+function esc(s){return String(s==null?"":s).replace(/[&<>"]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})}
+function api(path,opt){opt=opt||{};opt.headers=Object.assign({"X-Owner-Token":TOKEN},opt.headers||{});return fetch(path,opt).then(function(r){return r.json()})}
+
+var ITEMS = new URLSearchParams(location.search).get("items");
+
+function load(){
+  api("/api/property/mall/checkout" + (ITEMS ? "?items=" + encodeURIComponent(ITEMS) : ""))
+  .then(function(r){
+    if(r.code !== 0){ toast(r.msg || "加载失败"); $("meta").textContent = r.msg || "加载失败"; return }
+    var d = r.data, b = d.bill;
+    $("meta").textContent = (d.merchantSummary||[]).join(" / ") + " · " + (d.itemCount||0) + " 件商品";
+    $("payNum").textContent = money(b.payAmount);
+    $("barAmt").innerHTML = money(b.payAmount) + '<small>微信支付</small>';
+    $("paySub").textContent = "共 " + d.itemCount + " 件 · " + (d.merchantSummary||[]).join(" / ");
+
+    var h = "";
+    h += '<div class="rowline"><span class="k">商品原价</span><span class="v">' + money(b.goodsTotal) + '</span></div>';
+    if(d.usedCoupon){
+      h += '<div class="rowline"><span class="k">' + esc(d.usedCoupon.merchantName) + ' 立减券</span><span class="v cut">-' + money(b.couponCut) + '</span></div>';
+    } else {
+      h += '<div class="rowline"><span class="k">可用券<span class="why">当前没有可用的立减券</span></span><span class="v off">-￥0.00</span></div>';
+    }
+    h += '<div class="rowline"><span class="k">物业钱包抵扣<span class="why">' + esc(b.walletCutReason||"") + '</span></span><span class="v off">不可用</span></div>';
+    h += '<div class="rowline"><span class="k">微信支付</span><span class="v big">' + money(b.payAmount) + '</span></div>';
+    $("billRows").innerHTML = h;
+
+    if(d.bringBack){
+      $("bringBox").style.display = "";
+      $("bringT").textContent = "这一单给你带回来 · 抽 " + d.bringBack.drawTimes + " 次 + " + money(d.bringBack.splitAmount);
+      $("bringD").textContent = d.bringBack.desc;
+    }
+    var dh = "";
+    (d.delivery||[]).forEach(function(x,i){
+      dh += '<div class="dlv"><div class="ic">' + (x.type==="pickup"?"🏪":"🛵") + '</div>'
+          + '<div><div class="tt">' + esc(x.title) + '</div><div class="dd">' + esc(x.desc) + '</div></div>'
+          + '<div class="fee">' + esc(x.fee) + '</div></div>';
+    });
+    $("dlvBox").innerHTML = dh;
+  })
+  .catch(function(e){ toast("网络异常"); $("meta").textContent = "网络异常" });
+}
+
+$("btnPay").addEventListener("click", function(){
+  toast("收银台为演示态：支付链路接微信商户号后开放");
+});
+function ask(){
+  var v = $("askIn").value.trim();
+  if(!v) return;
+  toast("已收到：" + v + "（问答接口待接入）");
+  $("askIn").value = "";
+}
+load();
+</script>
+</body>
+</html>

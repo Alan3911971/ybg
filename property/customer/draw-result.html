@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover">
+<meta name="theme-color" content="#4f46e5">
+<title>开盒结果 · 我的物业</title>
+<style>
+:root{--pri:#4f46e5;--pri-grad:linear-gradient(135deg,#4f46e5,#7c3aed);--pri-bg:#eef2ff;--text:#1e293b;--text-2:#64748b;--text-3:#94a3b8;--bg:#f8fafc;--surface:#fff;--border:#e2e8f0;--shadow-card:0 2px 12px rgba(0,0,0,.04);--r-md:14px;--r-lg:20px;--r-full:999px;--safe-bottom:env(safe-area-inset-bottom,0px);--success:#16a34a;--success-bg:#ecfdf5;--warning:#f59e0b;--warning-bg:#fffbeb;--danger:#dc2626;--danger-bg:#fef2f2;}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+html,body{font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif;color:var(--text);background:var(--bg);-webkit-font-smoothing:antialiased;font-size:15px;}
+body{min-height:100vh;padding-bottom:calc(74px + var(--safe-bottom));max-width:480px;margin:0 auto;}
+a{color:inherit;text-decoration:none;}button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit;}
+.hd{background:var(--pri-grad);color:#fff;padding:calc(18px + env(safe-area-inset-top,0px)) 18px 20px;border-radius:0 0 var(--r-lg) var(--r-lg);position:relative;overflow:hidden;}
+.hd::after{content:"";position:absolute;top:-60px;right:-40px;width:170px;height:170px;background:rgba(255,255,255,.08);border-radius:50%;}
+.hd .row{display:flex;align-items:center;gap:10px;position:relative;z-index:1;}
+.hd .back{width:32px;height:32px;border-radius:50%;background:rgba(255,255,255,.16);display:flex;align-items:center;justify-content:center;font-size:17px;}
+.hd h1{font-size:18px;font-weight:700;flex:1;}
+.hd .tag{font-size:11px;background:rgba(255,255,255,.18);padding:4px 10px;border-radius:var(--r-full);}
+.hd .meta{font-size:11.5px;opacity:.85;margin-top:7px;position:relative;z-index:1;}
+.wrap{padding:0 16px;}
+.card{background:#fff;border-radius:var(--r-md);box-shadow:var(--shadow-card);margin-top:12px;padding:14px;}
+.card .ct{font-size:14px;font-weight:700;margin-bottom:10px;display:flex;align-items:center;gap:6px;}
+.prize{margin:-14px 16px 0;background:linear-gradient(160deg,#4f46e5,#a855f7);color:#fff;border-radius:var(--r-md);padding:24px 18px 22px;text-align:center;position:relative;z-index:2;overflow:hidden;box-shadow:0 10px 28px rgba(79,70,229,.32);}
+.prize::before{content:"";position:absolute;top:-70px;left:-50px;width:190px;height:190px;background:rgba(255,255,255,.08);border-radius:50%;}
+.prize::after{content:"";position:absolute;bottom:-80px;right:-50px;width:200px;height:200px;background:rgba(255,255,255,.06);border-radius:50%;}
+.prize .cong{font-size:12.5px;opacity:.9;position:relative;z-index:1;}
+.prize .em{font-size:52px;margin:6px 0 2px;position:relative;z-index:1;animation:pop .45s cubic-bezier(.2,1.4,.4,1) both;}
+@keyframes pop{from{transform:scale(.3);opacity:0}to{transform:scale(1);opacity:1}}
+.prize .val{font-size:40px;font-weight:800;font-family:ui-monospace,Menlo,Consolas,monospace;letter-spacing:-1px;position:relative;z-index:1;}
+.prize .tn{font-size:14px;font-weight:600;margin-top:2px;position:relative;z-index:1;}
+.prize .flow{display:inline-flex;align-items:center;gap:8px;margin-top:12px;background:rgba(255,255,255,.16);border-radius:var(--r-full);padding:7px 14px;font-size:12.5px;position:relative;z-index:1;font-family:ui-monospace,Menlo,Consolas,monospace;}
+.prize .flow .ar{opacity:.7;}
+.prize .auto{font-size:12px;opacity:.9;margin-top:10px;position:relative;z-index:1;line-height:1.6;}
+.two{display:flex;gap:10px;}
+.two .col{flex:1;border-radius:12px;padding:11px 12px;font-size:12px;line-height:1.7;}
+.two .col.ok{background:var(--success-bg);color:#15803d;}
+.two .col.no{background:var(--danger-bg);color:#b91c1c;}
+.two .col b{display:block;font-size:13px;margin-bottom:4px;}
+.kv{display:flex;align-items:center;justify-content:space-between;padding:9px 0;border-bottom:1px dashed var(--border);font-size:13px;}
+.kv:last-child{border-bottom:none;}
+.kv .k{color:var(--text-2);}
+.kv .v{font-weight:600;font-family:ui-monospace,Menlo,Consolas,monospace;}
+.evt{display:flex;gap:10px;padding:10px 0;border-bottom:1px solid #f1f5f9;}
+.evt:last-child{border-bottom:none;}
+.evt .ic{width:32px;height:32px;border-radius:10px;background:var(--pri-bg);display:flex;align-items:center;justify-content:center;font-size:15px;flex:0 0 32px;}
+.evt .tt{font-size:13px;font-weight:600;}
+.evt .dd{font-size:11.5px;color:var(--text-3);margin-top:2px;line-height:1.5;}
+.evt .st{margin-left:auto;font-size:11px;color:var(--success);font-weight:600;flex:0 0 auto;}
+.acts{display:flex;gap:10px;margin-top:14px;}
+.acts .b{flex:1;height:46px;border-radius:var(--r-full);font-size:14px;font-weight:700;display:flex;align-items:center;justify-content:center;}
+.acts .b.s{background:var(--pri-grad);color:#fff;box-shadow:0 6px 16px rgba(79,70,229,.28);}
+.acts .b.o{background:#fff;color:var(--pri);border:1px solid var(--pri);}
+.note{font-size:12.5px;color:var(--text-2);line-height:1.7;margin-top:10px;}
+.ask{margin:12px 16px 0;display:flex;gap:8px;align-items:center;background:#fff;border-radius:var(--r-full);box-shadow:var(--shadow-card);padding:6px 6px 6px 16px;}
+.ask input{flex:1;border:none;outline:none;font-size:13.5px;background:transparent;height:34px;}
+.ask button{height:34px;padding:0 16px;border-radius:var(--r-full);background:var(--pri-grad);color:#fff;font-size:13px;font-weight:600;}
+.tabbar{position:fixed;left:0;right:0;bottom:0;max-width:480px;margin:0 auto;background:#fff;border-top:1px solid var(--border);display:flex;padding:7px 0 calc(7px + var(--safe-bottom));z-index:50;}
+.tabbar a{flex:1;text-align:center;font-size:11px;color:var(--text-3);}
+.tabbar a .ic{font-size:19px;display:block;margin-bottom:2px;}
+.tabbar a.on{color:var(--pri);font-weight:600;}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:92px;background:rgba(17,24,39,.92);color:#fff;font-size:13px;padding:10px 18px;border-radius:var(--r-full);z-index:99;opacity:0;transition:opacity .2s;pointer-events:none;max-width:78%;text-align:center;}
+.toast.show{opacity:1;}
+</style>
+</head>
+<body>
+<div class="hd">
+  <div class="row"><a class="back" href="draw.html">‹</a><h1>开盒结果</h1><span class="tag" id="tagState">已入账</span></div>
+  <div class="meta" id="meta">加载中…</div>
+</div>
+
+<div class="prize">
+  <div class="cong" id="cong">恭喜</div>
+  <div class="em" id="pEm">🎉</div>
+  <div class="val" id="pVal">￥0.00</div>
+  <div class="tn" id="pTn">奖品</div>
+  <div class="flow" id="pFlow" style="display:none"><span id="pB">￥0.00</span><span class="ar">→</span><span id="pA">￥0.00</span></div>
+  <div class="auto" id="pAuto">已存进你的物业钱包，下月账单自动抵扣，你不用做任何操作</div>
+</div>
+
+<div class="wrap">
+  <div class="card">
+    <div class="ct">🧭 这钱能怎么用 · 说清楚</div>
+    <div class="two">
+      <div class="col ok"><b>能</b>抵物业费<br>抵车位费<br>抵公摊水电</div>
+      <div class="col no"><b>不能</b>提现<br>转赠<br>抵商城消费</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="ct">🎫 凭证</div>
+    <div class="kv"><span class="k">券号（可查、可核对）</span><span class="v" id="kNo">—</span></div>
+    <div class="kv"><span class="k">有效期</span><span class="v" id="kEnd">—</span></div>
+    <div class="kv"><span class="k">本期第几位</span><span class="v" id="kSeq">—</span></div>
+    <div class="kv"><span class="k">钱包余额</span><span class="v" id="kBal">—</span></div>
+  </div>
+
+  <div class="card" id="multiCard" style="display:none">
+    <div class="ct">🎁 这次还开出了</div>
+    <div id="multiBox"></div>
+  </div>
+
+  <div class="card">
+    <div class="ct">📣 同时发生了两件事</div>
+    <div class="evt">
+      <div class="ic">📺</div>
+      <div><div class="tt">商家端已播报</div><div class="dd">本小区业主开出的奖品会推给商户收银屏</div></div>
+      <div class="st">已完成</div>
+    </div>
+    <div class="evt">
+      <div class="ic">👥</div>
+      <div><div class="tt">邻居能看到</div><div class="dd">只显示 3-1-20* 这类脱敏房号，不显示姓名与手机号</div></div>
+      <div class="st">脱敏</div>
+    </div>
+  </div>
+
+  <div class="acts">
+    <button class="b o" onclick="share()">分享给邻居</button>
+    <button class="b s" id="bAgain" onclick="again()">再抽一次</button>
+  </div>
+
+  <div class="card">
+    <div class="ct">🔒 为什么把这三件事都写出来</div>
+    <div class="note">开盒是整条链的信任点，所以必须同时给出：<b>钱到哪了</b>（余额变化、下月自动抵）、<b>边界在哪</b>（不能提现/转赠/抵消费）、<b>凭证是什么</b>（券号可核）。少一样，业主就会怀疑「是不是又是个噱头」。</div>
+  </div>
+</div>
+
+<div class="ask"><input id="askIn" placeholder="问一句，比如「这 20 什么时候抵」"><button onclick="ask()">问</button></div>
+
+<div class="tabbar">
+  <a href="index.html"><span class="ic">🏠</span>首页</a>
+  <a href="mall.html"><span class="ic">🛒</span>商城</a>
+  <a href="group.html"><span class="ic">💬</span>消息</a>
+  <a href="mine.html"><span class="ic">👤</span>我的</a>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+var TOKEN = localStorage.getItem("property_owner_token") || "";
+function $(id){return document.getElementById(id)}
+function toast(m){var t=$("toast");t.textContent=m;t.classList.add("show");setTimeout(function(){t.classList.remove("show")},2200)}
+function money(n){return "￥" + (Number(n||0)).toFixed(2)}
+function esc(s){return String(s==null?"":s).replace(/[&<>"]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})}
+var LEFT = 0;
+
+function render(){
+  var raw = null;
+  try { raw = JSON.parse(localStorage.getItem("last_draw") || "null") } catch(e){}
+  if(!raw || !raw.results || !raw.results.length){
+    $("meta").textContent = "没有待展示的开盒结果";
+    $("pVal").textContent = "—"; $("pTn").textContent = "去抽一个吧";
+    $("bAgain").textContent = "去抽盲盒";
+    return;
+  }
+  var r = raw.results[0];
+  LEFT = raw.left || 0;
+  $("meta").textContent = "本期第 " + r.seq + " 位 · 剩余 " + LEFT + " 次";
+  $("cong").textContent = "恭喜 · 本期第 " + r.seq + " 位";
+  $("pEm").textContent = r.emoji || "🎉";
+  $("pVal").textContent = Number(r.value) > 0 ? money(r.value) : "谢谢参与";
+  $("pTn").textContent = r.typeName || "奖品";
+  $("kNo").textContent = r.couponNo || "—";
+  $("kEnd").textContent = (r.validEnd || "—") + "（12 个月，随账单自动核销）";
+  $("kSeq").textContent = "第 " + r.seq + " 位";
+  $("kBal").textContent = money(raw.walletBalance);
+
+  if(r.toWallet){
+    $("pFlow").style.display = "";
+    $("pB").textContent = money(r.walletBefore);
+    $("pA").textContent = money(r.walletAfter);
+    $("pAuto").textContent = "已存进你的物业钱包：" + money(r.walletBefore) + " → " + money(r.walletAfter)
+      + "，下月账单自动抵扣，你不用做任何操作";
+  } else if(Number(r.value) > 0){
+    $("pFlow").style.display = "none";
+    $("pAuto").textContent = "已存进「我的 · 我的券」，到店结账时直接抵，不是现金也不是钱包余额";
+  } else {
+    $("pFlow").style.display = "none";
+    $("pAuto").textContent = "这次没中，次数已消耗——再缴一次费或下一单就能再得 1 次";
+  }
+  $("tagState").textContent = Number(r.value) > 0 ? "已入账" : "未中奖";
+  $("bAgain").textContent = LEFT > 0 ? ("再抽一次（剩 " + LEFT + "）") : "去赚次数";
+
+  if(raw.results.length > 1){
+    $("multiCard").style.display = "";
+    var h = "";
+    raw.results.slice(1).forEach(function(x){
+      h += '<div class="evt"><div class="ic">' + (x.emoji||"🎁") + '</div>'
+         + '<div><div class="tt">' + (Number(x.value)>0 ? money(x.value) + " " + esc(x.typeName) : esc(x.typeName)) + '</div>'
+         + '<div class="dd">券号 ' + esc(x.couponNo || "—") + ' · 第 ' + x.seq + ' 位</div></div>'
+         + '<div class="st">' + (x.toWallet ? "已进钱包" : "已发券") + '</div></div>';
+    });
+    $("multiBox").innerHTML = h;
+  }
+}
+
+function again(){
+  if(LEFT > 0) location.href = "draw.html";
+  else location.href = "mall.html";
+}
+function share(){ toast("分享到业主群的功能待接入（链路已留）") }
+function ask(){ var v=$("askIn").value.trim(); if(!v) return; toast("已收到：" + v + "（问答接口待接入）"); $("askIn").value=""; }
+render();
+</script>
+</body>
+</html>
