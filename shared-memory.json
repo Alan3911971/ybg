@@ -1355,6 +1355,31 @@
     "deploy": "jar=ibigou.jar（备份 ibigou.jar.bak-20261027_2115）；后台 30 页 + customer/login.html；截图 _shots/pv/v2_*.png",
     "backup": "GitHub commit d737763（403 文件，base_tree 叠加）· NAS commit 90ecf0a",
     "cleanup": "验收完可删：DELETE FROM property_bill WHERE bill_no LIKE 'E2ERELIEF%'; DELETE FROM property_bill_relief WHERE bill_id IN (SELECT bill_id FROM property_bill WHERE bill_no LIKE 'E2ERELIEF%'); DELETE FROM property_action_log WHERE create_time>='2026-10-27'; DELETE FROM property_admin WHERE account='e2eops';",
-    "pending": "微信真机需公众号后台把 ybgtc.com 加入网页授权域名（代码已通，配置项不在仓库）"
+    "pending": "微信真机需公众号后台把 ybgtc.com 加入网页授权域名（代码已通，配置项不在仓库）",
+    "wx_login_fallback": {
+      "date": "2026-10-27",
+      "file": "property/customer/login.html",
+      "rule": "IN_WX = /micromessenger/i.test(navigator.userAgent); 非微信移除 .wx-area 整块",
+      "why": "公众号网页授权只在微信内置浏览器成立，外部浏览器必报 10003 redirect_uri 域名不一致",
+      "verified": {
+        "local": [
+          "_shots/wxfallback/out_browser.png 无微信按钮",
+          "_shots/wxfallback/out_wx.png 有按钮+提示"
+        ],
+        "live": [
+          "_shots/wxfallback/live_browser.png 无微信按钮",
+          "_shots/wxfallback/live_wx.png 有按钮+提示"
+        ],
+        "live_file_bytes": 15296,
+        "prod_backup": "/tmp/prop_bak_login_wx_20261027_2148.html"
+      }
+    }
+  },
+  "_env_facts": {
+    "nas_is_localhost": {
+      "date": "2026-10-27",
+      "fact": "DESKTOP-GGR22BK 是本机；共享 ybg-master -> D://workspace-java//ybg-master",
+      "impact": "G38 权威副本判定在本项目上无意义（同一份文件）；异地备份只有 GitHub"
+    }
   }
 }

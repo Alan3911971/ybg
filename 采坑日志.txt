@@ -1474,3 +1474,22 @@ G98 双数据+ABCD排号修复（2026-10-20）：①双数据根因=旧代码tic
 ⑥**撤回断言要把 status 一起判**：`canUndo` 是「status==1 且未过截止时间」，只比截止时间会把"已撤回"的行误报成 bug（本轮出现过 1 次假失败，改断言后 63/63）。
 ⑦**`INSERT ... SELECT` 造测试账号要先看 NOT NULL 无默认列**：property_admin.phone 无默认值，漏了直接 1364，报错在 line 1 看不出是哪列。
 ⑧**存量 HTML 同一规则有 6 种写法**：`.main` 在 30 个后台页里有 `margin:0 auto` / `max-width:1200px` / `margin-right:0;max-width:none` 等变体，批量替换前先 `grep -h | sort | uniq -c`，否则只改到一部分页面还以为全改完了。
+
+【2026-10-27 21:48】微信公众号网页授权不是"在哪都能用"，必须按环境降级
+现象：业主端 login.html 加了「微信一键登录」，在手机浏览器 / App WebView 里点下去必然失败。
+原因：snsapi_base 走的是公众号网页授权，微信强制校验回调域名在公众号后台白名单内，非微信环境
+打开授权页直接报「10003 redirect_uri 域名与后台配置不一致」，这是微信侧策略，代码绕不过。
+修法：加 IN_WX = /micromessenger/i.test(navigator.userAgent)，非微信把 .wx-area 整块从 DOM 移除
+（含分割线+按钮+提示），而不是置灰或保留——置灰会让人以为坏了。同时给 wxHint / btnWx 引用加判空。
+教训：任何"依赖宿主环境"的入口（微信/支付宝/小程序/App SDK）都要先问一句"不在宿主里怎么办"，
+答案是"消失"，不是"报错"。
+另：网页授权接口权限只有已微信认证的公众号才有；配域名时微信会要求把 MP_verify_xxx.txt 放站点根目录。
+验证手法：Edge headless 支持 --user-agent 注入，一行命令模拟宿主环境，比改 UA 插件快得多：
+msedge --headless --window-size=420,900 --virtual-time-budget=4000 --screenshot=out.png --user-agent="..."
+
+【2026-10-27 21:48】本机以为的"NAS 权威副本"其实是同一份文件
+现象：cp 本地 login.html 到 \\DESKTOP-GGR22BK\ybg-master\ 报 "are the same file"。
+查实：hostname 就是 DESKTOP-GGR22BK，`net share` 显示 ybg-master 共享指向 D://workspace-java//ybg-master。
+所以 G38 判定出来的"权威副本"与工作副本是同一份物理文件，md5 比对恒等于 SAME，不具校验意义。
+影响：本项目异地备份实际只有 GitHub（外加生产服务器 /tmp/prop_bak_* 的页面备份）；
+所谓 NAS 同步不构成容灾，别拿它当兜底。要真异地备份得另配一台机器或云端。

@@ -138,6 +138,14 @@ function validPhone(v){return /^1[3-9]\d{9}$/.test(v)}
 
 // ===== 微信一键登录相关 =====
 const Q = new URLSearchParams(location.search);
+// 公众号网页授权只在微信内置浏览器成立：外部浏览器 / App WebView 里必然报
+// 「10003 redirect_uri 域名与后台配置不一致」。与其留一个点了必失败的按钮，
+// 不如整块不出现——业主在微信里打开自然就有，其他地方老实用手机号登录。
+const IN_WX = /micromessenger/i.test(navigator.userAgent || "");
+if (!IN_WX) {
+  var wxArea = document.querySelector(".wx-area");
+  if (wxArea) wxArea.parentNode.removeChild(wxArea);
+}
 // 微信授权回调已签发 token：直接进首页
 if (Q.get("owner_token")) {
   localStorage.setItem("property_owner_token", Q.get("owner_token"));
@@ -149,10 +157,10 @@ if (Q.get("wx_error")) toast("微信授权失败：" + Q.get("wx_error"), "dange
 // 首次授权：openid 还没绑，登录一次即自动绑定
 const WX_OPENID = Q.get("wx_openid") || localStorage.getItem("wx_openid") || "";
 if (Q.get("wx_openid")) localStorage.setItem("wx_openid", Q.get("wx_openid"));
-if (WX_OPENID && Q.get("wx_unbound") === "1") {
+if (WX_OPENID && Q.get("wx_unbound") === "1" && $("wxHint")) {
   $("wxHint").innerHTML = "已获取微信身份，<b>用手机号登录一次</b>即完成绑定，下次可免密进入";
 }
-$("btnWx").addEventListener("click", async function(){
+if ($("btnWx")) $("btnWx").addEventListener("click", async function(){
   const btn = $("btnWx");
   btn.disabled = true; btn.innerHTML = '<span class="wx-ic">微</span>正在唤起微信…';
   try {

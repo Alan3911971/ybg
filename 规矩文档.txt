@@ -518,6 +518,21 @@
 ⑤部署：jar=ibigou.jar（备份 ibigou.jar.bak-20261027_2115），后台 30 页 + customer/login.html 覆盖上传，验收壳用后即删；
 ⑥验证：_e2e_property_ops.py（G39）63 项全过：四因子 4 项且总分=分项和、三档分级、无候选拒空派单、派单→撤回回滚、重复撤回被拒、跨工种拆单 2 条子单→撤回全关、驳回不改数据；减免候选 2 户 A/B 分级、证据包六段、超额度 status=3 且账目 0 变动、额度内待批、自批被拒、第二人通过 deducted=30 且 deduct_log source_type=9、撤回回抵扣 0、驳回不动账；执行记录 13 条四档统计 + L3 过滤 + 审计说明；微信 oauth-url 返回 snsapi_base 链接且回调指业主侧、openid 未绑状态、手机号登录顺带绑定并落库；8 个页面 HTTP 200、侧栏三入口在；线上截图 D:/workspace-java/_shots/pv/v2_*.png（三页 + 登录页）肉眼验收 | 备份链：GitHub commit d737763（403 文件，凭据管理器 token，base_tree 叠加）· NAS commit 90ecf0a | 未完成：微信真机走通需在公众号后台把 ybgtc.com 加入「网页授权域名」（代码与调用链已验证，配置项不在仓库）；减免审批需第二个管理员账号（现为超管 admin + 测试 e2eops 客服）；E2E 造的测试数据留在生产公司 1（业主 13900000099 / 账单 E2ERELIEF001-002 / 客服 e2eops）供验收，清理见 shared-memory
 
+25. [已完成] 2026-10-27 深夜 | 业主端微信登录「环境降级」（用户选「先做降级」）：
+①问题：公众号网页授权（snsapi_base）只在微信内置浏览器成立，外部浏览器 / App WebView 里点了必然报
+「10003 redirect_uri 域名与后台配置不一致」——留一个必失败的按钮是死路；
+②改法：property/customer/login.html 加 IN_WX 环境判断（UA 含 micromessenger 才保留），非微信环境
+整块 .wx-area（含「或」分割线 + 按钮 + 提示）从 DOM 移除，不做灰态、不留疑问；同时给 wxHint / btnWx
+两处引用加判空，避免元素被移除后脚本报错；微信内行为不变，授权失败仍走 wx_error 原话 toast；
+③验证：本地 + 线上各两种 UA 截图（Edge --headless --user-agent 注入 MicroMessenger/8.0.42）：
+非微信 → 无微信按钮、表单完整；微信内 → 「或」+ 绿按钮 + 两行提示齐全。
+线上 curl 校验 IN_WX 在位（15296 bytes）；线上备份 /tmp/prop_bak_login_wx_20261027_2148.html；
+截图 D:/workspace-java/_shots/wxfallback/{live,out}_{wx,browser}.png（4 张）；
+④顺带查实的环境事实：DESKTOP-GGR22BK 就是本机，共享 ybg-master 指向 D://workspace-java//ybg-master，
+所谓「权威副本 vs 本地副本」是同一份物理文件，NAS 不构成异地备份——本项目异地备份实际只有 GitHub；
+| 未完成：微信真机走通仍需在公众号后台把 ybgtc.com 加入「网页授权域名」并放 MP_verify 校验文件
+（已降级，不配也不影响业主用手机号登录）；公众号还需已微信认证才有网页授权接口权限
+
 ■ 面板维护提示
 - 改状态不改历史：进行中/已完成要在原条目上改，已完成的连同证据移入"已完成（归档）"。
 - 每完成一条就顺手同步 GitHub + NAS（G11），别攒着。
